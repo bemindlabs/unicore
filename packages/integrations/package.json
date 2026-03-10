@@ -1,0 +1,43 @@
+{
+  "name": "@unicore/integrations",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./adapters/stripe": {
+      "types": "./dist/adapters/stripe/index.d.ts",
+      "default": "./dist/adapters/stripe/index.js"
+    },
+    "./adapters/plaid": {
+      "types": "./dist/adapters/plaid/index.d.ts",
+      "default": "./dist/adapters/plaid/index.js"
+    },
+    "./adapters/email": {
+      "types": "./dist/adapters/email/index.d.ts",
+      "default": "./dist/adapters/email/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest --passWithNoTests",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "@unicore/shared-types": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/nodemailer": "^6.4.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.0",
+    "typescript": "^5.5.0"
+  }
+}
