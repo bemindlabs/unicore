@@ -1,0 +1,19 @@
+{
+  "task": "UNC-3",
+  "title": "Implement @unicore/shared-types package",
+  "status": "completed",
+  "branch": "feature/unc-3-shared-types",
+  "completedAt": "2026-03-10T00:00:00Z",
+  "artifacts": [
+    "packages/shared-types/package.json",
+    "packages/shared-types/tsconfig.json",
+    "packages/shared-types/src/auth.ts",
+    "packages/shared-types/src/config.ts",
+    "packages/shared-types/src/erp.ts",
+    "packages/shared-types/src/agents.ts",
+    "packages/shared-types/src/api.ts",
+    "packages/shared-types/src/license.ts",
+    "packages/shared-types/src/workflow.ts",
+    "packages/shared-types/src/index.ts"
+  ]
+}
