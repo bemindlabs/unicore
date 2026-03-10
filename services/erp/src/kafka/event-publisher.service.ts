@@ -1,50 +1,45 @@
-import { Inject, Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
-import { v4 as uuidv4 } from 'uuid';
-import { KAFKA_CLIENT } from './kafka.module';
-import type { ErpEventEnvelope, ErpTopic } from '../events/event-types';
+import { randomUUID } from 'crypto';
+import { ErpEventEnvelope, ErpTopic } from '../events/event-types';
 
+/**
+ * Thin wrapper around the Kafka producer client.
+ * Inject this service to emit typed ERP domain events from any feature module.
+ */
 @Injectable()
-export class EventPublisherService implements OnModuleInit, OnModuleDestroy {
+export class EventPublisherService implements OnModuleInit {
   private readonly logger = new Logger(EventPublisherService.name);
-  private ready = false;
 
-  constructor(@Inject(KAFKA_CLIENT) private readonly kafkaClient: ClientKafka) {}
+  constructor(
+    @Inject('ERP_KAFKA_PRODUCER')
+    private readonly kafkaClient: ClientKafka,
+  ) {}
 
   async onModuleInit(): Promise<void> {
     await this.kafkaClient.connect();
-    this.ready = true;
     this.logger.log('Kafka producer connected');
   }
 
-  async onModuleDestroy(): Promise<void> {
-    await this.kafkaClient.close();
-    this.ready = false;
-    this.logger.log('Kafka producer disconnected');
-  }
-
-  async publish<T = unknown>(topic: ErpTopic, payload: T, key?: string): Promise<void> {
-    if (!this.ready) {
-      this.logger.warn(`Kafka not ready - dropping event for topic "${topic}"`);
-      return;
-    }
+  /**
+   * Publish a domain event to the given Kafka topic.
+   * Wraps the payload in a typed ErpEventEnvelope with a new UUID and timestamp.
+   */
+  async publish<T>(topic: ErpTopic, payload: T): Promise<void> {
     const envelope: ErpEventEnvelope<T> = {
-      eventId: uuidv4(), occurredAt: new Date().toISOString(),
-      type: topic, source: 'erp-service', schemaVersion: 1, payload,
+      eventId: randomUUID(),
+      occurredAt: new Date().toISOString(),
+      type: topic,
+      source: 'erp-service',
+      schemaVersion: 1,
+      payload,
     };
-    try {
-      this.kafkaClient.emit(topic, {
-        key: key ?? envelope.eventId,
-        value: JSON.stringify(envelope),
-        headers: {
-          'x-event-id': envelope.eventId, 'x-event-type': topic,
-          'x-schema-version': String(envelope.schemaVersion), 'x-source': envelope.source,
-        },
-      });
-      this.logger.log(`Event published: topic="${topic}" eventId="${envelope.eventId}"`);
-    } catch (err) {
-      this.logger.error(`Failed to publish event: topic="${topic}"`, err instanceof Error ? err.stack : String(err));
-      throw err;
-    }
+
+    this.kafkaClient.emit(topic, {
+      key: envelope.eventId,
+      value: JSON.stringify(envelope),
+    });
+
+    this.logger.debug(`Published ${topic}: ${envelope.eventId}`);
   }
 }

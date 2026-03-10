@@ -29,10 +29,13 @@ export class InventoryService {
     if (existing) throw new ConflictException(`Product with SKU ${dto.sku} already exists`);
     const product = await this.prisma.product.create({
       data: {
-        sku: dto.sku, name: dto.name, description: dto.description, category: dto.category,
-        unitPrice: dto.unitPrice, costPrice: dto.costPrice ?? 0, quantity: dto.quantity ?? 0,
-        reservedQuantity: dto.reservedQuantity ?? 0, lowStockThreshold: dto.lowStockThreshold ?? 10,
-        warehouseId: dto.warehouseId, supplierId: dto.supplierId, tags: dto.tags ?? [],
+        sku: dto.sku, name: dto.name, description: dto.description,
+        category: dto.category, unitPrice: dto.unitPrice,
+        costPrice: dto.costPrice ?? 0, quantity: dto.quantity ?? 0,
+        reservedQuantity: dto.reservedQuantity ?? 0,
+        lowStockThreshold: dto.lowStockThreshold ?? 10,
+        warehouseId: dto.warehouseId, supplierId: dto.supplierId,
+        tags: dto.tags ?? [],
       },
     });
     this.logger.log(`Product created: ${product.sku}`);
@@ -103,16 +106,24 @@ export class InventoryService {
   async adjustStock(id: string, dto: AdjustStockDto): Promise<ProductRecord> {
     const product = await this.findOne(id);
     const newQty = product.quantity + dto.delta;
-    if (newQty < 0) throw new BadRequestException(`Stock adjustment would result in negative quantity for ${product.sku}`);
+    if (newQty < 0) {
+      throw new BadRequestException(`Stock adjustment would result in negative quantity for ${product.sku}`);
+    }
     await this.prisma.stockMovement.create({
-      data: { productId: id, delta: dto.delta, reason: dto.reason, referenceId: dto.referenceId, quantityBefore: product.quantity, quantityAfter: newQty, performedBy: dto.performedBy },
+      data: {
+        productId: id, delta: dto.delta, reason: dto.reason,
+        referenceId: dto.referenceId,
+        quantityBefore: product.quantity, quantityAfter: newQty,
+        performedBy: dto.performedBy,
+      },
     });
     const updated = await this.prisma.product.update({ where: { id }, data: { quantity: newQty } });
     if (newQty <= product.lowStockThreshold && dto.delta < 0) {
       this.eventPublisher.publish(ERP_TOPICS.INVENTORY_LOW, {
         productId: id, productName: product.name, sku: product.sku,
         currentQuantity: newQty, threshold: product.lowStockThreshold,
-        warehouseId: product.warehouseId ?? undefined, supplierId: product.supplierId ?? undefined,
+        warehouseId: product.warehouseId ?? undefined,
+        supplierId: product.supplierId ?? undefined,
       }, id).catch((err: unknown) => this.logger.error('Failed to publish inventory.low', err));
     }
     return updated;
@@ -122,13 +133,19 @@ export class InventoryService {
     const product = await this.findOne(id);
     const newQty = product.quantity + dto.quantity;
     await this.prisma.stockMovement.create({
-      data: { productId: id, delta: dto.quantity, reason: 'manual_restock', referenceId: dto.purchaseOrderId, quantityBefore: product.quantity, quantityAfter: newQty, performedBy: dto.performedBy },
+      data: {
+        productId: id, delta: dto.quantity, reason: 'manual_restock',
+        referenceId: dto.purchaseOrderId,
+        quantityBefore: product.quantity, quantityAfter: newQty,
+        performedBy: dto.performedBy,
+      },
     });
     const updated = await this.prisma.product.update({ where: { id }, data: { quantity: newQty } });
     this.eventPublisher.publish(ERP_TOPICS.INVENTORY_RESTOCKED, {
       productId: id, productName: product.name, sku: product.sku,
       previousQuantity: product.quantity, quantityAdded: dto.quantity, newQuantity: newQty,
-      warehouseId: product.warehouseId ?? undefined, purchaseOrderId: dto.purchaseOrderId,
+      warehouseId: product.warehouseId ?? undefined,
+      purchaseOrderId: dto.purchaseOrderId,
     }, id).catch((err: unknown) => this.logger.error('Failed to publish inventory.restocked', err));
     this.logger.log(`Product restocked: ${product.sku} +${dto.quantity}`);
     return updated;
@@ -136,12 +153,18 @@ export class InventoryService {
 
   async getStockMovements(productId: string, limit = 50): Promise<StockMovementRecord[]> {
     await this.findOne(productId);
-    return this.prisma.stockMovement.findMany({ where: { productId }, orderBy: { createdAt: 'desc' }, take: limit });
+    return this.prisma.stockMovement.findMany({
+      where: { productId },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
   }
 
   async getLowStockProducts(): Promise<ProductRecord[]> {
-    return this.prisma.$queryRaw<ProductRecord[]>\`
-      SELECT * FROM "Product" WHERE quantity <= "lowStockThreshold" ORDER BY quantity ASC
-    \`;
+    return this.prisma.$queryRaw<ProductRecord[]>`
+      SELECT * FROM "Product"
+      WHERE quantity <= "lowStockThreshold"
+      ORDER BY quantity ASC
+    `;
   }
 }

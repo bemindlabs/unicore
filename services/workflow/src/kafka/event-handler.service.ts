@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { WorkflowTopic } from './constants/kafka.constants';
-import type { EventEnvelopeDto } from './dto/event-envelope.dto';
+import { WorkflowTopic } from './constants/kafka.constants';
+import { EventEnvelopeDto } from './dto/event-envelope.dto';
 
 export interface EventHandlerResult {
   topic: WorkflowTopic;

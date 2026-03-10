@@ -1,8 +1,8 @@
 /**
  * SendNotificationExecutor — dispatches a notification through a channel.
  *
- * Channels: email, slack, line, webhook.
- * Trigger payload is spread at the root of the interpolation context.
+ * Channels supported in this stub: email, slack, line, webhook.
+ * Production implementations delegate to the Comms service.
  */
 import { Injectable, Logger } from '@nestjs/common';
 import type { SendNotificationAction } from '../schema/workflow-definition.schema';
@@ -28,9 +28,7 @@ export class SendNotificationExecutor
       action.config;
 
     const interpolationCtx: Record<string, unknown> = {
-      ...(typeof context.triggerPayload === 'object' && context.triggerPayload !== null
-        ? (context.triggerPayload as Record<string, unknown>)
-        : {}),
+      payload: context.triggerPayload,
       outputs: context.previousOutputs,
     };
 
@@ -48,9 +46,12 @@ export class SendNotificationExecutor
 
     try {
       // TODO: delegate to Comms service via Kafka or HTTP.
+      // await this.commsClient.send({ channel, recipient, subject, body });
+
       this.logger.log(
         `[${context.instanceId}] Notification sent via ${channel} to "${recipient}"`,
       );
+
       return {
         success: true,
         output: { channel, recipient, subject, bodyPreview: body.slice(0, 120) },
@@ -58,7 +59,7 @@ export class SendNotificationExecutor
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       this.logger.error(
-        `[${context.instanceId}] Notification failed (${channel} to ${recipient}): ${message}`,
+        `[${context.instanceId}] Notification failed (${channel} → ${recipient}): ${message}`,
       );
       return { success: false, error: message };
     }

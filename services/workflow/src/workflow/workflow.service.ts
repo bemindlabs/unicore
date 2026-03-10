@@ -1,5 +1,7 @@
 /**
- * WorkflowService — application-layer facade over WorkflowEngineService.
+ * WorkflowService — application-layer façade over WorkflowEngineService.
+ *
+ * Provides a clean public API consumed by WorkflowController.
  */
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { WorkflowEngineService } from '../engine/workflow-engine.service';
@@ -15,6 +17,10 @@ export class WorkflowService {
     private readonly engine: WorkflowEngineService,
     private readonly stateStore: WorkflowStateStore,
   ) {}
+
+  // -------------------------------------------------------------------------
+  // Definitions
+  // -------------------------------------------------------------------------
 
   registerDefinition(definition: WorkflowDefinition): WorkflowDefinition {
     this.engine.registerDefinition(definition);
@@ -34,14 +40,28 @@ export class WorkflowService {
     return { deleted };
   }
 
-  async trigger(workflowId: string, payload: unknown): Promise<WorkflowInstance> {
+  // -------------------------------------------------------------------------
+  // Execution
+  // -------------------------------------------------------------------------
+
+  async trigger(
+    workflowId: string,
+    payload: unknown,
+  ): Promise<WorkflowInstance> {
     this.logger.log(`Manual trigger: workflow ${workflowId}`);
     return this.engine.trigger(workflowId, payload ?? {});
   }
 
-  async handleEvent(eventType: string, payload: unknown): Promise<WorkflowInstance[]> {
+  async handleEvent(
+    eventType: string,
+    payload: unknown,
+  ): Promise<WorkflowInstance[]> {
     return this.engine.handleEvent(eventType, payload ?? {});
   }
+
+  // -------------------------------------------------------------------------
+  // Instance queries
+  // -------------------------------------------------------------------------
 
   getInstance(instanceId: string): WorkflowInstance {
     const inst = this.stateStore.findById(instanceId);

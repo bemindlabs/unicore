@@ -1,5 +1,6 @@
 /**
  * WorkflowController — REST endpoints for the workflow engine.
+ *
  * Base path: /workflows
  */
 import {
@@ -25,6 +26,10 @@ const PIPE = new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })
 export class WorkflowController {
   constructor(private readonly workflowService: WorkflowService) {}
 
+  // -----------------------------------------------------------------------
+  // Definition endpoints
+  // -----------------------------------------------------------------------
+
   @Post('definitions')
   @UsePipes(PIPE)
   registerDefinition(@Body() dto: RegisterDefinitionDto) {
@@ -47,6 +52,10 @@ export class WorkflowController {
     return this.workflowService.removeDefinition(id);
   }
 
+  // -----------------------------------------------------------------------
+  // Execution endpoints
+  // -----------------------------------------------------------------------
+
   @Post('trigger')
   @UsePipes(PIPE)
   trigger(@Body() dto: TriggerWorkflowDto) {
@@ -58,6 +67,10 @@ export class WorkflowController {
   handleEvent(@Body() dto: HandleEventDto) {
     return this.workflowService.handleEvent(dto.eventType, dto.payload ?? {});
   }
+
+  // -----------------------------------------------------------------------
+  // Instance endpoints
+  // -----------------------------------------------------------------------
 
   @Get('instances')
   listInstances() {

@@ -3,8 +3,8 @@ import { MessagePattern, Payload, Ctx, KafkaContext } from '@nestjs/microservice
 import { WORKFLOW_TOPICS } from '../constants/kafka.constants';
 import { deserializeEnvelope, deserializePayload } from '../utils/event-deserializer';
 import { EventHandlerService } from '../event-handler.service';
-import { WorkflowEngineService } from '../../engine/workflow-engine.service';
-import type {
+import { WorkflowService } from '../../workflow/workflow.service';
+import {
   OrderCreatedPayloadDto,
   OrderUpdatedPayloadDto,
   OrderFulfilledPayloadDto,
@@ -13,8 +13,9 @@ import type {
 /**
  * OrderConsumerService handles all Kafka messages on the order.* topics.
  *
- * Each method is bound to its topic via @MessagePattern and delegates
- * to the WorkflowEngineService to fire matching pre-built workflow templates.
+ * Each method is bound to its topic via @MessagePattern, deserializes and
+ * validates the event, then delegates to EventHandlerService which forwards
+ * the payload into the WorkflowService.handleEvent() pipeline.
  */
 @Controller()
 export class OrderConsumerService {
@@ -22,7 +23,7 @@ export class OrderConsumerService {
 
   constructor(
     private readonly eventHandler: EventHandlerService,
-    private readonly engine: WorkflowEngineService,
+    private readonly workflowService: WorkflowService,
   ) {}
 
   // ---------------------------------------------------------------------------
@@ -31,33 +32,21 @@ export class OrderConsumerService {
 
   @MessagePattern(WORKFLOW_TOPICS.ORDER_CREATED)
   async handleOrderCreated(
-    @Payload() _message: unknown,
+    @Payload() message: unknown,
     @Ctx() context: KafkaContext,
   ): Promise<void> {
     const raw = context.getMessage().value;
-    const envelope = await deserializeEnvelope<OrderCreatedPayloadDto>(
-      raw as Buffer | string | null,
-    );
+    const envelope = await deserializeEnvelope(raw as Buffer | string | null);
     if (!envelope) return;
 
-    const payload = await deserializePayload(
-      class {} as new () => OrderCreatedPayloadDto,
-      envelope.payload,
-    );
+    const payload = await deserializePayload(OrderCreatedPayloadDto, envelope.payload);
     if (!payload) return;
 
     await this.eventHandler.handle({ ...envelope, payload }, async (p) => {
       this.logger.log(
-        `Processing order.created — orderId=${p.orderId} customerId=${p.customerId} total=${p.total} ${p.currency}`,
+        `order.created — orderId=${p.orderId} customerId=${p.customerId} total=${p.total} ${p.currency}`,
       );
-      // Trigger matching pre-built workflow templates (e.g. order-to-invoice)
-      const instances = await this.engine.handleEvent(
-        `erp.${WORKFLOW_TOPICS.ORDER_CREATED}`,
-        { payload: p },
-      );
-      this.logger.log(
-        `order.created triggered ${instances.length} workflow instance(s)`,
-      );
+      await this.workflowService.handleEvent(WORKFLOW_TOPICS.ORDER_CREATED, p);
     });
   }
 
@@ -67,26 +56,21 @@ export class OrderConsumerService {
 
   @MessagePattern(WORKFLOW_TOPICS.ORDER_UPDATED)
   async handleOrderUpdated(
-    @Payload() _message: unknown,
+    @Payload() message: unknown,
     @Ctx() context: KafkaContext,
   ): Promise<void> {
     const raw = context.getMessage().value;
-    const envelope = await deserializeEnvelope<OrderUpdatedPayloadDto>(
-      raw as Buffer | string | null,
-    );
+    const envelope = await deserializeEnvelope(raw as Buffer | string | null);
     if (!envelope) return;
 
-    const payload = await deserializePayload(
-      class {} as new () => OrderUpdatedPayloadDto,
-      envelope.payload,
-    );
+    const payload = await deserializePayload(OrderUpdatedPayloadDto, envelope.payload);
     if (!payload) return;
 
     await this.eventHandler.handle({ ...envelope, payload }, async (p) => {
       this.logger.log(
-        `Processing order.updated — orderId=${p.orderId} ${p.previousStatus} → ${p.newStatus}`,
+        `order.updated — orderId=${p.orderId} ${p.previousStatus} → ${p.newStatus}`,
       );
-      await this.engine.handleEvent(`erp.${WORKFLOW_TOPICS.ORDER_UPDATED}`, { payload: p });
+      await this.workflowService.handleEvent(WORKFLOW_TOPICS.ORDER_UPDATED, p);
     });
   }
 
@@ -96,26 +80,21 @@ export class OrderConsumerService {
 
   @MessagePattern(WORKFLOW_TOPICS.ORDER_FULFILLED)
   async handleOrderFulfilled(
-    @Payload() _message: unknown,
+    @Payload() message: unknown,
     @Ctx() context: KafkaContext,
   ): Promise<void> {
     const raw = context.getMessage().value;
-    const envelope = await deserializeEnvelope<OrderFulfilledPayloadDto>(
-      raw as Buffer | string | null,
-    );
+    const envelope = await deserializeEnvelope(raw as Buffer | string | null);
     if (!envelope) return;
 
-    const payload = await deserializePayload(
-      class {} as new () => OrderFulfilledPayloadDto,
-      envelope.payload,
-    );
+    const payload = await deserializePayload(OrderFulfilledPayloadDto, envelope.payload);
     if (!payload) return;
 
     await this.eventHandler.handle({ ...envelope, payload }, async (p) => {
       this.logger.log(
-        `Processing order.fulfilled — orderId=${p.orderId} tracking=${p.trackingNumber ?? 'N/A'}`,
+        `order.fulfilled — orderId=${p.orderId} tracking=${p.trackingNumber ?? 'N/A'}`,
       );
-      await this.engine.handleEvent(`erp.${WORKFLOW_TOPICS.ORDER_FULFILLED}`, { payload: p });
+      await this.workflowService.handleEvent(WORKFLOW_TOPICS.ORDER_FULFILLED, p);
     });
   }
 }

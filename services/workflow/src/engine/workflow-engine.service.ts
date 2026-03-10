@@ -19,6 +19,7 @@ import { ActionExecutorService } from './action-executor.service';
 @Injectable()
 export class WorkflowEngineService {
   private readonly logger = new Logger(WorkflowEngineService.name);
+  /** In-memory definition registry. Replace with DB-backed store in production. */
   private readonly definitions = new Map<string, WorkflowDefinition>();
 
   constructor(
@@ -55,7 +56,14 @@ export class WorkflowEngineService {
   // Trigger evaluation
   // -------------------------------------------------------------------------
 
-  matchingDefinitions(eventType: string, payload: unknown): WorkflowDefinition[] {
+  /**
+   * Returns all enabled definitions whose trigger type matches `eventType`
+   * and whose conditions are satisfied by `payload`.
+   */
+  matchingDefinitions(
+    eventType: string,
+    payload: unknown,
+  ): WorkflowDefinition[] {
     return Array.from(this.definitions.values()).filter(
       (def) =>
         def.enabled &&
@@ -68,7 +76,14 @@ export class WorkflowEngineService {
   // Execution
   // -------------------------------------------------------------------------
 
-  async trigger(workflowId: string, triggerPayload: unknown): Promise<WorkflowInstance> {
+  /**
+   * Triggers a workflow by definition ID.
+   * Creates and persists a new WorkflowInstance, then runs actions async.
+   */
+  async trigger(
+    workflowId: string,
+    triggerPayload: unknown,
+  ): Promise<WorkflowInstance> {
     const definition = this.getDefinition(workflowId);
 
     if (!definition.enabled) {
@@ -97,12 +112,20 @@ export class WorkflowEngineService {
       `Created instance ${instance.instanceId} for workflow "${definition.name}"`,
     );
 
+    // Execute asynchronously so the caller gets the instance immediately.
     void this.runInstance(instance, definition);
 
     return instance;
   }
 
-  async handleEvent(eventType: string, payload: unknown): Promise<WorkflowInstance[]> {
+  /**
+   * Handles an incoming event: evaluates all matching definitions and
+   * triggers each one.  Returns the spawned instances.
+   */
+  async handleEvent(
+    eventType: string,
+    payload: unknown,
+  ): Promise<WorkflowInstance[]> {
     const matched = this.matchingDefinitions(eventType, payload);
 
     if (matched.length === 0) {
@@ -110,9 +133,15 @@ export class WorkflowEngineService {
       return [];
     }
 
-    this.logger.log(`Event "${eventType}" matched ${matched.length} workflow(s)`);
+    this.logger.log(
+      `Event "${eventType}" matched ${matched.length} workflow(s)`,
+    );
 
-    return Promise.all(matched.map((def) => this.trigger(def.id, payload)));
+    const instances = await Promise.all(
+      matched.map((def) => this.trigger(def.id, payload)),
+    );
+
+    return instances;
   }
 
   // -------------------------------------------------------------------------
@@ -123,27 +152,19 @@ export class WorkflowEngineService {
     instance: WorkflowInstance,
     definition: WorkflowDefinition,
   ): Promise<void> {
+    // Transition to running
     this.updateInstance(instance, { status: 'running' });
 
     const previousOutputs: Record<string, unknown> = {};
-    let orderedActions: WorkflowAction[];
+    const actionMap = new Map<string, WorkflowAction>(
+      definition.actions.map((a) => [a.id, a]),
+    );
 
-    try {
-      orderedActions = this.topologicalSort(definition.actions);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      this.updateInstance(instance, {
-        status: 'failed',
-        completedAt: new Date().toISOString(),
-        error: message,
-      });
-      this.logger.error(
-        `[${instance.instanceId}] Workflow "${instance.workflowName}" FAILED (topology): ${message}`,
-      );
-      return;
-    }
+    // Execute actions in topological order (serial walk respecting dependsOn)
+    const orderedActions = this.topologicalSort(definition.actions);
 
     for (const action of orderedActions) {
+      // Check if all dependencies succeeded
       const deps = action.dependsOn ?? [];
       const depsFailed = deps.some((depId) => {
         const depExec = instance.actions.find((ae) => ae.actionId === depId);
@@ -158,10 +179,12 @@ export class WorkflowEngineService {
         continue;
       }
 
+      // Mark action as running
       this.updateActionStatus(instance, action.id, 'running', {
         startedAt: new Date().toISOString(),
       });
 
+      // Apply per-action timeout
       const timeoutMs = action.timeoutMs ?? 30_000;
       let result: Awaited<ReturnType<ActionExecutorService['execute']>>;
 
@@ -228,7 +251,10 @@ export class WorkflowEngineService {
   // Helpers
   // -------------------------------------------------------------------------
 
-  private updateInstance(instance: WorkflowInstance, patch: Partial<WorkflowInstance>): void {
+  private updateInstance(
+    instance: WorkflowInstance,
+    patch: Partial<WorkflowInstance>,
+  ): void {
     Object.assign(instance, patch, { updatedAt: new Date().toISOString() });
     this.stateStore.save(instance);
   }
@@ -247,8 +273,8 @@ export class WorkflowEngineService {
   }
 
   /**
-   * Kahn's topological sort — returns actions in dependency-safe order.
-   * Throws if a cycle is detected.
+   * Kahn's algorithm — returns actions sorted so that every action appears
+   * after all its dependencies.  Detects cycles and throws.
    */
   private topologicalSort(actions: WorkflowAction[]): WorkflowAction[] {
     const inDegree = new Map<string, number>(actions.map((a) => [a.id, 0]));

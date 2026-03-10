@@ -19,7 +19,7 @@
         "channel": "email",
         "recipient": "{{payload.customerId}}",
         "subject": "Payment Reminder — Invoice {{payload.invoiceNumber}} is overdue",
-        "bodyTemplate": "Dear Customer,\n\nThis is a reminder that invoice {{payload.invoiceNumber}} is now {{payload.daysOverdue}} day(s) overdue.\n\nOutstanding amount: {{payload.total}} {{payload.currency}}\nDue date: {{payload.dueAt}}\n\nPlease arrange payment at your earliest convenience.\n\nIf you have already made payment, please disregard this notice."
+        "bodyTemplate": "Dear Customer,\n\nThis is a reminder that invoice *{{payload.invoiceNumber}}* is now {{payload.daysOverdue}} day(s) overdue.\n\nOutstanding amount: {{payload.total}} {{payload.currency}}\nDue date: {{payload.dueAt}}\n\nPlease arrange payment at your earliest convenience.\n\nIf you have already made payment, please disregard this notice.\n\nThank you."
       }
     },
     {
@@ -31,7 +31,8 @@
       "timeoutMs": 8000,
       "config": {
         "agentName": "finance-agent",
-        "promptTemplate": "Flag invoice {{payload.invoiceNumber}} (ID: {{payload.invoiceId}}) for manual review. It is {{payload.daysOverdue}} day(s) overdue with an outstanding balance of {{payload.total}} {{payload.currency}} from customer {{payload.customerId}}. Due date was {{payload.dueAt}}. Add this to the overdue AR report and escalate if over 14 days."
+        "promptTemplate": "Flag invoice {{payload.invoiceNumber}} (ID: {{payload.invoiceId}}) for manual review. It is {{payload.daysOverdue}} day(s) overdue with an outstanding balance of {{payload.total}} {{payload.currency}} from customer {{payload.customerId}}. Due date was {{payload.dueAt}}. Add this to the overdue AR report and escalate if over 14 days.",
+        "model": null
       }
     }
   ],

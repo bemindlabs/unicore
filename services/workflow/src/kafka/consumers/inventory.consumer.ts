@@ -3,15 +3,12 @@ import { MessagePattern, Payload, Ctx, KafkaContext } from '@nestjs/microservice
 import { WORKFLOW_TOPICS } from '../constants/kafka.constants';
 import { deserializeEnvelope, deserializePayload } from '../utils/event-deserializer';
 import { EventHandlerService } from '../event-handler.service';
-import { WorkflowEngineService } from '../../engine/workflow-engine.service';
-import type {
-  InventoryLowPayloadDto,
-  InventoryRestockedPayloadDto,
-} from '../dto/inventory-events.dto';
+import { WorkflowService } from '../../workflow/workflow.service';
+import { InventoryLowPayloadDto, InventoryRestockedPayloadDto } from '../dto/inventory-events.dto';
 
 /**
- * InventoryConsumerService handles Kafka messages on the inventory.* topics.
- * Fires matching workflow templates (e.g. low-stock-reorder).
+ * InventoryConsumerService handles Kafka messages on the inventory.* topics
+ * and forwards validated payloads into the workflow engine.
  */
 @Controller()
 export class InventoryConsumerService {
@@ -19,7 +16,7 @@ export class InventoryConsumerService {
 
   constructor(
     private readonly eventHandler: EventHandlerService,
-    private readonly engine: WorkflowEngineService,
+    private readonly workflowService: WorkflowService,
   ) {}
 
   // ---------------------------------------------------------------------------
@@ -28,33 +25,21 @@ export class InventoryConsumerService {
 
   @MessagePattern(WORKFLOW_TOPICS.INVENTORY_LOW)
   async handleInventoryLow(
-    @Payload() _message: unknown,
+    @Payload() message: unknown,
     @Ctx() context: KafkaContext,
   ): Promise<void> {
     const raw = context.getMessage().value;
-    const envelope = await deserializeEnvelope<InventoryLowPayloadDto>(
-      raw as Buffer | string | null,
-    );
+    const envelope = await deserializeEnvelope(raw as Buffer | string | null);
     if (!envelope) return;
 
-    const payload = await deserializePayload(
-      class {} as new () => InventoryLowPayloadDto,
-      envelope.payload,
-    );
+    const payload = await deserializePayload(InventoryLowPayloadDto, envelope.payload);
     if (!payload) return;
 
     await this.eventHandler.handle({ ...envelope, payload }, async (p) => {
-      this.logger.warn(
-        `Processing inventory.low — productId=${p.productId} sku=${p.sku} qty=${p.currentQuantity}/${p.threshold}`,
-      );
-      // Trigger matching pre-built workflow templates (e.g. low-stock-reorder)
-      const instances = await this.engine.handleEvent(
-        `erp.${WORKFLOW_TOPICS.INVENTORY_LOW}`,
-        { payload: p },
-      );
       this.logger.log(
-        `inventory.low triggered ${instances.length} workflow instance(s)`,
+        `inventory.low — sku=${p.sku} qty=${p.currentQuantity}/${p.threshold} warehouse=${p.warehouseId ?? 'default'}`,
       );
+      await this.workflowService.handleEvent(WORKFLOW_TOPICS.INVENTORY_LOW, p);
     });
   }
 
@@ -64,29 +49,21 @@ export class InventoryConsumerService {
 
   @MessagePattern(WORKFLOW_TOPICS.INVENTORY_RESTOCKED)
   async handleInventoryRestocked(
-    @Payload() _message: unknown,
+    @Payload() message: unknown,
     @Ctx() context: KafkaContext,
   ): Promise<void> {
     const raw = context.getMessage().value;
-    const envelope = await deserializeEnvelope<InventoryRestockedPayloadDto>(
-      raw as Buffer | string | null,
-    );
+    const envelope = await deserializeEnvelope(raw as Buffer | string | null);
     if (!envelope) return;
 
-    const payload = await deserializePayload(
-      class {} as new () => InventoryRestockedPayloadDto,
-      envelope.payload,
-    );
+    const payload = await deserializePayload(InventoryRestockedPayloadDto, envelope.payload);
     if (!payload) return;
 
     await this.eventHandler.handle({ ...envelope, payload }, async (p) => {
       this.logger.log(
-        `Processing inventory.restocked — productId=${p.productId} qty=${p.previousQuantity}→${p.newQuantity}`,
+        `inventory.restocked — sku=${p.sku} +${p.quantityAdded} → ${p.newQuantity}`,
       );
-      await this.engine.handleEvent(
-        `erp.${WORKFLOW_TOPICS.INVENTORY_RESTOCKED}`,
-        { payload: p },
-      );
+      await this.workflowService.handleEvent(WORKFLOW_TOPICS.INVENTORY_RESTOCKED, p);
     });
   }
 }

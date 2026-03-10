@@ -46,7 +46,14 @@ export class OrdersService {
       const product = productMap.get(li.productId)!;
       const unitPrice = li.unitPrice ?? Number(product.unitPrice);
       const totalPrice = unitPrice * li.quantity;
-      return { product: { connect: { id: li.productId } }, sku: product.sku, productName: product.name, quantity: li.quantity, unitPrice, totalPrice };
+      return {
+        product: { connect: { id: li.productId } },
+        sku: product.sku,
+        productName: product.name,
+        quantity: li.quantity,
+        unitPrice,
+        totalPrice,
+      };
     });
 
     const subtotal = lineItemsData.reduce((sum, li) => sum + Number(li.totalPrice), 0);
@@ -58,15 +65,22 @@ export class OrdersService {
 
     const order = await this.prisma.order.create({
       data: {
-        orderNumber, contact: { connect: { id: dto.contactId } }, status: OrderStatus.PENDING,
-        lineItems: { create: lineItemsData }, subtotal, taxRate, taxAmount, discount, total,
-        currency: dto.currency ?? 'USD', notes: dto.notes, shippingAddress: dto.shippingAddress,
+        orderNumber,
+        contact: { connect: { id: dto.contactId } },
+        status: OrderStatus.PENDING,
+        lineItems: { create: lineItemsData },
+        subtotal, taxRate, taxAmount, discount, total,
+        currency: dto.currency ?? 'USD',
+        notes: dto.notes,
+        shippingAddress: dto.shippingAddress,
       },
       include: ORDER_INCLUDE,
     });
 
     this.eventPublisher.publish(ERP_TOPICS.ORDER_CREATED, {
-      orderId: order.id, customerId: dto.contactId, customerEmail: contact.email ?? undefined,
+      orderId: order.id,
+      customerId: dto.contactId,
+      customerEmail: contact.email ?? undefined,
       status: 'pending',
       lineItems: order.lineItems.map((li) => ({
         productId: li.productId, productName: li.productName, sku: li.sku,
@@ -83,7 +97,8 @@ export class OrdersService {
     const { page = 1, limit = 20, status, contactId, search } = query;
     const skip = (page - 1) * limit;
     const where: Prisma.OrderWhereInput = {
-      ...(status && { status }), ...(contactId && { contactId }),
+      ...(status && { status }),
+      ...(contactId && { contactId }),
       ...(search && {
         OR: [
           { orderNumber: { contains: search, mode: 'insensitive' } },
@@ -119,7 +134,9 @@ export class OrdersService {
     const fromStatus = order.status as OrderStatus;
     if (!canTransition(fromStatus, toStatus)) {
       const allowed = getAllowedTransitions(fromStatus);
-      throw new BadRequestException(`Cannot transition from ${fromStatus} to ${toStatus}. Allowed: ${allowed.join(', ') || 'none'}`);
+      throw new BadRequestException(
+        `Cannot transition from ${fromStatus} to ${toStatus}. Allowed: ${allowed.join(', ') || 'none'}`,
+      );
     }
     const updated = await this.prisma.order.update({ where: { id }, data: { status: toStatus }, include: ORDER_INCLUDE });
     this.eventPublisher.publish(ERP_TOPICS.ORDER_UPDATED, {
@@ -139,7 +156,11 @@ export class OrdersService {
     }
     return this.prisma.order.update({
       where: { id },
-      data: { status: OrderStatus.SHIPPED, ...(dto.trackingNumber && { trackingNumber: dto.trackingNumber }), ...(dto.carrier && { carrier: dto.carrier }) },
+      data: {
+        status: OrderStatus.SHIPPED,
+        ...(dto.trackingNumber && { trackingNumber: dto.trackingNumber }),
+        ...(dto.carrier && { carrier: dto.carrier }),
+      },
       include: ORDER_INCLUDE,
     });
   }
@@ -150,6 +171,7 @@ export class OrdersService {
     if (!canTransition(fromStatus, OrderStatus.FULFILLED)) {
       throw new BadRequestException(`Cannot fulfill order in status ${fromStatus}`);
     }
+
     await this.prisma.$transaction(async (tx) => {
       for (const item of order.lineItems) {
         const product = await tx.product.findUnique({ where: { id: item.productId } });
@@ -158,25 +180,37 @@ export class OrdersService {
         if (newQty < 0) throw new BadRequestException(`Insufficient stock for product ${product.sku}`);
         await tx.product.update({ where: { id: item.productId }, data: { quantity: newQty } });
         await tx.stockMovement.create({
-          data: { productId: item.productId, delta: -item.quantity, reason: 'order_fulfillment', referenceId: id, quantityBefore: product.quantity, quantityAfter: newQty },
+          data: {
+            productId: item.productId,
+            delta: -item.quantity,
+            reason: 'order_fulfillment',
+            referenceId: id,
+            quantityBefore: product.quantity,
+            quantityAfter: newQty,
+          },
         });
       }
     });
+
     const now = new Date();
     const fulfilled = await this.prisma.order.update({
       where: { id },
       data: {
-        status: OrderStatus.FULFILLED, fulfilledAt: now,
+        status: OrderStatus.FULFILLED,
+        fulfilledAt: now,
         ...(dto.trackingNumber && { trackingNumber: dto.trackingNumber }),
         ...(dto.carrier && { carrier: dto.carrier }),
         ...(dto.notes && { notes: dto.notes }),
       },
       include: ORDER_INCLUDE,
     });
+
     this.eventPublisher.publish(ERP_TOPICS.ORDER_FULFILLED, {
       orderId: id, customerId: order.contact.id,
-      trackingNumber: dto.trackingNumber, carrier: dto.carrier, fulfilledAt: now.toISOString(),
+      trackingNumber: dto.trackingNumber, carrier: dto.carrier,
+      fulfilledAt: now.toISOString(),
     }, id).catch((err: unknown) => this.logger.error('Failed to publish order.fulfilled', err));
+
     this.logger.log(`Order fulfilled: ${order.orderNumber}`);
     return fulfilled;
   }
@@ -189,7 +223,11 @@ export class OrdersService {
     }
     return this.prisma.order.update({
       where: { id },
-      data: { status: OrderStatus.CANCELLED, cancelledAt: new Date(), ...(dto.reason && { notes: dto.reason }) },
+      data: {
+        status: OrderStatus.CANCELLED,
+        cancelledAt: new Date(),
+        ...(dto.reason && { notes: dto.reason }),
+      },
       include: ORDER_INCLUDE,
     });
   }

@@ -17,7 +17,8 @@
       "timeoutMs": 10000,
       "config": {
         "agentName": "ops-agent",
-        "promptTemplate": "Create an urgent reorder request for product {{payload.productName}} (SKU: {{payload.sku}}, ID: {{payload.productId}}). Current stock is {{payload.currentQuantity}} units, which is below the threshold of {{payload.threshold}}. Suggested reorder quantity: {{payload.threshold}} units. Priority: high."
+        "promptTemplate": "Create an urgent reorder request for product {{payload.productName}} (SKU: {{payload.sku}}, ID: {{payload.productId}}). Current stock is {{payload.currentQuantity}} units, which is below the threshold of {{payload.threshold}}. Suggested reorder quantity: {{payload.threshold}} units. Supplier ID: {{payload.supplierId}}. Priority: high.",
+        "model": null
       }
     },
     {
@@ -31,7 +32,7 @@
         "channel": "slack",
         "recipient": "#ops-alerts",
         "subject": "Low Stock Alert: {{payload.productName}}",
-        "bodyTemplate": "Low Stock Alert!\n\nProduct: {{payload.productName}} (SKU: {{payload.sku}})\nCurrent stock: {{payload.currentQuantity}} units (threshold: {{payload.threshold}})\n\nA reorder request has been created automatically. Please review and approve."
+        "bodyTemplate": ":warning: *Low Stock Alert*\n\nProduct: *{{payload.productName}}* (SKU: `{{payload.sku}}`)\nCurrent stock: *{{payload.currentQuantity}} units* (threshold: {{payload.threshold}})\nWarehouse: {{payload.warehouseId}}\n\nA reorder request has been created automatically. Please review and approve."
       }
     }
   ],

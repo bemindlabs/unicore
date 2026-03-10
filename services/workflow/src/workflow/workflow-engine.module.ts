@@ -1,5 +1,5 @@
 /**
- * WorkflowEngineModule — NestJS module wiring for the workflow service.
+ * WorkflowEngineModule — NestJS module wiring for the entire workflow package.
  */
 import { Module } from '@nestjs/common';
 import { WorkflowController } from './workflow.controller';
@@ -14,10 +14,14 @@ import { SendNotificationExecutor } from '../executors/send-notification.executo
 @Module({
   controllers: [WorkflowController],
   providers: [
+    // Application layer
     WorkflowService,
+    // Core engine
     WorkflowEngineService,
     ActionExecutorService,
+    // State
     WorkflowStateStore,
+    // Action executors
     CallAgentExecutor,
     UpdateErpExecutor,
     SendNotificationExecutor,

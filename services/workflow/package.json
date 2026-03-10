@@ -8,9 +8,9 @@
     "start": "node dist/main",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,test}/**/*.ts\"",
-    "test": "jest --forceExit",
+    "test": "jest",
     "test:watch": "jest --watch",
-    "test:cov": "jest --coverage --forceExit",
+    "test:cov": "jest --coverage",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

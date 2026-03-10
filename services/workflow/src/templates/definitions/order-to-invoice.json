@@ -17,7 +17,8 @@
       "timeoutMs": 15000,
       "config": {
         "agentName": "finance-agent",
-        "promptTemplate": "Generate an invoice for order {{payload.orderId}}. Customer: {{payload.customerId}}. Total: {{payload.total}} {{payload.currency}}. Include all line items and set payment terms to 30 days."
+        "promptTemplate": "Generate an invoice for order {{payload.orderId}}. Customer: {{payload.customerId}}. Total: {{payload.total}} {{payload.currency}}. Include all line items and set payment terms to 30 days.",
+        "model": null
       }
     },
     {
@@ -30,7 +31,7 @@
       "config": {
         "channel": "email",
         "recipient": "{{payload.customerEmail}}",
-        "subject": "Your order {{payload.orderId}} has been confirmed",
+        "subject": "Your order {{payload.orderId}} has been confirmed — invoice enclosed",
         "bodyTemplate": "Dear Customer,\n\nThank you for your order ({{payload.orderId}}).\n\nYour invoice has been generated. Total due: {{payload.total}} {{payload.currency}}.\n\nPayment is due within 30 days.\n\nThank you for your business."
       }
     }

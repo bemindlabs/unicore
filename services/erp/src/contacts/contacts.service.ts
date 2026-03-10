@@ -1,4 +1,6 @@
-import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
+import {
+  Injectable, NotFoundException, ConflictException, Logger,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateContactDto } from './dto/create-contact.dto';
@@ -11,6 +13,7 @@ type ContactRecord = Prisma.ContactGetPayload<Record<string, never>>;
 @Injectable()
 export class ContactsService {
   private readonly logger = new Logger(ContactsService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateContactDto): Promise<ContactRecord> {
@@ -20,11 +23,20 @@ export class ContactsService {
     }
     const contact = await this.prisma.contact.create({
       data: {
-        type: dto.type ?? 'LEAD', firstName: dto.firstName, lastName: dto.lastName,
-        email: dto.email, phone: dto.phone, company: dto.company, website: dto.website,
-        address: dto.address, city: dto.city, country: dto.country,
-        currency: dto.currency ?? 'USD', leadScore: dto.leadScore ?? 0,
-        tags: dto.tags ?? [], notes: dto.notes,
+        type: dto.type ?? 'LEAD',
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        email: dto.email,
+        phone: dto.phone,
+        company: dto.company,
+        website: dto.website,
+        address: dto.address,
+        city: dto.city,
+        country: dto.country,
+        currency: dto.currency ?? 'USD',
+        leadScore: dto.leadScore ?? 0,
+        tags: dto.tags ?? [],
+        notes: dto.notes,
       },
     });
     this.logger.log(`Contact created: ${contact.id}`);

@@ -1,35 +1,31 @@
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, Logger } from '@nestjs/common';
-import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { getKafkaConfig } from './kafka/kafka.config';
 
-async function bootstrap() {
-  const logger = new Logger('Bootstrap');
-
-  const port = process.env.PORT ?? 4600;
-
-  if (!process.env.DATABASE_URL) {
-    logger.error('DATABASE_URL environment variable is required');
-    process.exit(1);
-  }
-
+async function bootstrap(): Promise<void> {
+  const logger = new Logger('ERP Bootstrap');
   const app = await NestFactory.create(AppModule);
 
-  app.use(helmet());
+  // Connect Kafka microservice consumer
+  app.connectMicroservice(getKafkaConfig());
 
-  app.enableCors();
-
+  // Global validation pipe — strip unknown properties, whitelist known ones
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
-      transformOptions: { enableImplicitConversion: true },
     }),
   );
 
+  app.setGlobalPrefix('api');
+
+  await app.startAllMicroservices();
+
+  const port = process.env['PORT'] ?? 4100;
   await app.listen(port);
-  logger.log(`ERP service running on port ${port}`);
+  logger.log(`ERP service listening on port ${port}`);
 }
 
-bootstrap();
+void bootstrap();
