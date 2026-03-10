@@ -1,5 +1,5 @@
 {
-  "extends": "@unicore/config/typescript/nest",
+  "extends": "../../packages/config/src/typescript/nest.json",
   "compilerOptions": {
     "outDir": "./dist",
     "baseUrl": "./",
@@ -8,5 +8,5 @@
     }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "test", "src/auth"]
+  "exclude": ["node_modules", "dist", "test"]
 }

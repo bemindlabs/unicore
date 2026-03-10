@@ -5,8 +5,15 @@ import type { ReactNode } from 'react';
 import type { User } from '@unicore/shared-types';
 import { api } from '@/lib/api';
 
+interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  role: User['role'];
+}
+
 export interface AuthState {
-  user: User | null;
+  user: AuthUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -16,17 +23,18 @@ export interface AuthState {
 export const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem('auth_token');
     if (token) {
       api
-        .get<{ data: User }>('/auth/me')
-        .then((res) => setUser(res.data))
+        .get<AuthUser>('/auth/me')
+        .then((res) => setUser(res))
         .catch(() => {
           localStorage.removeItem('auth_token');
+          localStorage.removeItem('refresh_token');
         })
         .finally(() => setIsLoading(false));
     } else {
@@ -35,16 +43,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const res = await api.post<{ data: { user: User; token: string } }>('/auth/login', {
-      email,
-      password,
-    });
-    localStorage.setItem('auth_token', res.data.token);
-    setUser(res.data.user);
+    const res = await api.post<{
+      accessToken: string;
+      refreshToken: string;
+      expiresIn: number;
+      user: AuthUser;
+    }>('/auth/login', { email, password });
+    localStorage.setItem('auth_token', res.accessToken);
+    localStorage.setItem('refresh_token', res.refreshToken);
+    setUser(res.user);
   }, []);
 
   const logout = useCallback(() => {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (refreshToken) {
+      api.post('/auth/logout', { refreshToken }).catch(() => {});
+    }
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('refresh_token');
     setUser(null);
   }, []);
 
