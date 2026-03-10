@@ -1,16 +1,20 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule, RequestMethod } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/auth.module';
+import { ProxyModule } from './proxy/proxy.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
+import { RateLimitStore } from './common/middleware/rate-limit.store';
+import { RateLimitMiddleware } from './common/middleware/rate-limit.middleware';
+import { RequestValidationMiddleware } from './common/middleware/request-validation.middleware';
 
 @Module({
-  imports: [PrismaModule, HealthModule, AuthModule],
+  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule],
   controllers: [AppController],
   providers: [
     {
@@ -29,6 +33,13 @@ import { RolesGuard } from './auth/guards/roles.guard';
       provide: APP_GUARD,
       useClass: RolesGuard,
     },
+    RateLimitStore,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer
+      .apply(RequestValidationMiddleware, RateLimitMiddleware)
+      .forRoutes({ path: '*', method: RequestMethod.ALL });
+  }
+}
