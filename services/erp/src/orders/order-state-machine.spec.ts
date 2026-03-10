@@ -2,62 +2,32 @@ import { canTransition, getAllowedTransitions, isTerminalStatus, OrderStatus } f
 
 describe('OrderStateMachine', () => {
   describe('canTransition', () => {
-    it('should allow PENDING -> CONFIRMED', () => {
-      expect(canTransition(OrderStatus.PENDING, OrderStatus.CONFIRMED)).toBe(true);
-    });
-
-    it('should allow PENDING -> CANCELLED', () => {
-      expect(canTransition(OrderStatus.PENDING, OrderStatus.CANCELLED)).toBe(true);
-    });
-
-    it('should allow CONFIRMED -> PROCESSING', () => {
-      expect(canTransition(OrderStatus.CONFIRMED, OrderStatus.PROCESSING)).toBe(true);
-    });
-
-    it('should allow PROCESSING -> SHIPPED', () => {
-      expect(canTransition(OrderStatus.PROCESSING, OrderStatus.SHIPPED)).toBe(true);
-    });
-
-    it('should allow SHIPPED -> FULFILLED', () => {
-      expect(canTransition(OrderStatus.SHIPPED, OrderStatus.FULFILLED)).toBe(true);
-    });
-
-    it('should NOT allow PENDING -> FULFILLED directly', () => {
-      expect(canTransition(OrderStatus.PENDING, OrderStatus.FULFILLED)).toBe(false);
-    });
-
-    it('should NOT allow CANCELLED -> CONFIRMED', () => {
-      expect(canTransition(OrderStatus.CANCELLED, OrderStatus.CONFIRMED)).toBe(false);
-    });
-
-    it('should NOT allow FULFILLED -> CONFIRMED', () => {
-      expect(canTransition(OrderStatus.FULFILLED, OrderStatus.CONFIRMED)).toBe(false);
-    });
-  });
-
-  describe('getAllowedTransitions', () => {
-    it('should return [CONFIRMED, CANCELLED] for PENDING', () => {
-      const allowed = getAllowedTransitions(OrderStatus.PENDING);
-      expect(allowed).toContain(OrderStatus.CONFIRMED);
-      expect(allowed).toContain(OrderStatus.CANCELLED);
-    });
-
-    it('should return empty array for CANCELLED', () => {
-      expect(getAllowedTransitions(OrderStatus.CANCELLED)).toHaveLength(0);
+    it('allows PENDING -> CONFIRMED', () => expect(canTransition(OrderStatus.PENDING, OrderStatus.CONFIRMED)).toBe(true));
+    it('allows PENDING -> CANCELLED', () => expect(canTransition(OrderStatus.PENDING, OrderStatus.CANCELLED)).toBe(true));
+    it('allows CONFIRMED -> PROCESSING', () => expect(canTransition(OrderStatus.CONFIRMED, OrderStatus.PROCESSING)).toBe(true));
+    it('allows PROCESSING -> SHIPPED', () => expect(canTransition(OrderStatus.PROCESSING, OrderStatus.SHIPPED)).toBe(true));
+    it('allows SHIPPED -> FULFILLED', () => expect(canTransition(OrderStatus.SHIPPED, OrderStatus.FULFILLED)).toBe(true));
+    it('allows SHIPPED -> REFUNDED', () => expect(canTransition(OrderStatus.SHIPPED, OrderStatus.REFUNDED)).toBe(true));
+    it('disallows PENDING -> FULFILLED', () => expect(canTransition(OrderStatus.PENDING, OrderStatus.FULFILLED)).toBe(false));
+    it('disallows FULFILLED -> CONFIRMED', () => expect(canTransition(OrderStatus.FULFILLED, OrderStatus.CONFIRMED)).toBe(false));
+    it('disallows CANCELLED -> anything', () => {
+      for (const s of Object.values(OrderStatus)) {
+        expect(canTransition(OrderStatus.CANCELLED, s as OrderStatus)).toBe(false);
+      }
     });
   });
 
   describe('isTerminalStatus', () => {
-    it('should identify CANCELLED as terminal', () => {
-      expect(isTerminalStatus(OrderStatus.CANCELLED)).toBe(true);
-    });
+    it('marks CANCELLED as terminal', () => expect(isTerminalStatus(OrderStatus.CANCELLED)).toBe(true));
+    it('marks REFUNDED as terminal', () => expect(isTerminalStatus(OrderStatus.REFUNDED)).toBe(true));
+    it('does not mark FULFILLED as terminal', () => expect(isTerminalStatus(OrderStatus.FULFILLED)).toBe(false));
+    it('does not mark PENDING as terminal', () => expect(isTerminalStatus(OrderStatus.PENDING)).toBe(false));
+  });
 
-    it('should identify REFUNDED as terminal', () => {
-      expect(isTerminalStatus(OrderStatus.REFUNDED)).toBe(true);
+  describe('getAllowedTransitions', () => {
+    it('returns [CONFIRMED, CANCELLED] for PENDING', () => {
+      expect(getAllowedTransitions(OrderStatus.PENDING)).toEqual([OrderStatus.CONFIRMED, OrderStatus.CANCELLED]);
     });
-
-    it('should NOT identify PENDING as terminal', () => {
-      expect(isTerminalStatus(OrderStatus.PENDING)).toBe(false);
-    });
+    it('returns [] for CANCELLED', () => expect(getAllowedTransitions(OrderStatus.CANCELLED)).toEqual([]));
   });
 });

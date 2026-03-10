@@ -1,7 +1,4 @@
-import {
-  Controller, Get, Post, Patch, Body, Param, Query,
-  HttpCode, HttpStatus, ParseUUIDPipe,
-} from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, ParseUUIDPipe, HttpCode, HttpStatus } from '@nestjs/common';
 import { InvoicesService } from './invoices.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
@@ -12,14 +9,20 @@ import { RecordPaymentDto } from './dto/record-payment.dto';
 export class InvoicesController {
   constructor(private readonly invoicesService: InvoicesService) {}
 
-  @Post()
-  create(@Body() dto: CreateInvoiceDto) { return this.invoicesService.create(dto); }
-
   @Get()
-  findAll(@Query() query: QueryInvoicesDto) { return this.invoicesService.findAll(query); }
+  findAll(@Query() query: QueryInvoicesDto) {
+    return this.invoicesService.findAll(query);
+  }
 
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) { return this.invoicesService.findOne(id); }
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.invoicesService.findOne(id);
+  }
+
+  @Post()
+  create(@Body() dto: CreateInvoiceDto) {
+    return this.invoicesService.create(dto);
+  }
 
   @Patch(':id')
   update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateInvoiceDto) {
@@ -27,20 +30,28 @@ export class InvoicesController {
   }
 
   @Post(':id/send')
-  @HttpCode(HttpStatus.OK)
-  send(@Param('id', ParseUUIDPipe) id: string) { return this.invoicesService.send(id); }
+  send(@Param('id', ParseUUIDPipe) id: string) {
+    return this.invoicesService.send(id);
+  }
 
   @Post(':id/payments')
-  @HttpCode(HttpStatus.OK)
   recordPayment(@Param('id', ParseUUIDPipe) id: string, @Body() dto: RecordPaymentDto) {
     return this.invoicesService.recordPayment(id, dto);
   }
 
-  @Post(':id/overdue')
-  @HttpCode(HttpStatus.OK)
-  markOverdue(@Param('id', ParseUUIDPipe) id: string) { return this.invoicesService.markOverdue(id); }
-
   @Post(':id/cancel')
-  @HttpCode(HttpStatus.OK)
-  cancel(@Param('id', ParseUUIDPipe) id: string) { return this.invoicesService.cancel(id); }
+  cancel(@Param('id', ParseUUIDPipe) id: string) {
+    return this.invoicesService.cancel(id);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.invoicesService.remove(id);
+  }
+
+  @Post('mark-overdue')
+  markOverdue() {
+    return this.invoicesService.markOverdue();
+  }
 }

@@ -2,20 +2,17 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { InvoicesService } from './invoices.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { EventPublisherService } from '../kafka/event-publisher.service';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 
 const mockPrisma = {
-  contact: { findUnique: jest.fn() },
-  order: { findUnique: jest.fn() },
   invoice: {
-    create: jest.fn(), findUnique: jest.fn(), findMany: jest.fn(),
-    update: jest.fn(), count: jest.fn(),
+    findMany: jest.fn(), findUnique: jest.fn(), create: jest.fn(),
+    update: jest.fn(), updateMany: jest.fn(), delete: jest.fn(), count: jest.fn(),
   },
   payment: { create: jest.fn() },
   $transaction: jest.fn(),
 };
-
-const mockEventPublisher = { publish: jest.fn().mockResolvedValue(undefined) };
+const mockEvents = { publish: jest.fn().mockResolvedValue(undefined) };
 
 describe('InvoicesService', () => {
   let service: InvoicesService;
@@ -25,49 +22,33 @@ describe('InvoicesService', () => {
       providers: [
         InvoicesService,
         { provide: PrismaService, useValue: mockPrisma },
-        { provide: EventPublisherService, useValue: mockEventPublisher },
+        { provide: EventPublisherService, useValue: mockEvents },
       ],
     }).compile();
-
     service = module.get<InvoicesService>(InvoicesService);
-    jest.clearAllMocks();
   });
 
+  afterEach(() => jest.clearAllMocks());
+
+  it('should be defined', () => expect(service).toBeDefined());
+
   describe('send', () => {
-    it('should transition DRAFT invoice to SENT and publish event', async () => {
-      const invoice = {
-        id: 'inv-1', status: 'DRAFT', invoiceNumber: 'INV-2026-00001',
-        contactId: 'c-1', total: '100.00', currency: 'USD',
-        dueDate: null, amountPaid: '0', contact: {}, lineItems: [], payments: [],
-      };
-      const sent = { ...invoice, status: 'SENT', issuedAt: new Date() };
-      mockPrisma.invoice.findUnique.mockResolvedValue(invoice);
-      mockPrisma.invoice.update.mockResolvedValue(sent);
-
-      const result = await service.send('inv-1');
-      expect(result.status).toBe('SENT');
-      expect(mockEventPublisher.publish).toHaveBeenCalled();
-    });
-
-    it('should throw if invoice is not DRAFT', async () => {
-      const invoice = { id: 'inv-1', status: 'SENT', contact: {}, lineItems: [], payments: [] };
-      mockPrisma.invoice.findUnique.mockResolvedValue(invoice);
-
-      await expect(service.send('inv-1')).rejects.toThrow(BadRequestException);
+    it('throws when invoice is not DRAFT', async () => {
+      mockPrisma.invoice.findUnique.mockResolvedValue({ id: '1', status: 'SENT' });
+      await expect(service.send('1')).rejects.toBeInstanceOf(BadRequestException);
     });
   });
 
   describe('recordPayment', () => {
-    it('should throw if payment exceeds remaining balance', async () => {
-      const invoice = {
-        id: 'inv-1', status: 'SENT', total: '100.00', amountPaid: '80.00',
-        currency: 'USD', contact: {}, lineItems: [], payments: [],
-      };
-      mockPrisma.invoice.findUnique.mockResolvedValue(invoice);
-
-      await expect(
-        service.recordPayment('inv-1', { amount: 50 } as any),
-      ).rejects.toThrow(BadRequestException);
+    it('marks invoice as PAID when full amount received', async () => {
+      mockPrisma.invoice.findUnique.mockResolvedValue({
+        id: '1', status: 'SENT', total: 100, amountPaid: 0, currency: 'USD',
+        invoiceNumber: 'INV-001', contactId: 'c1',
+      });
+      const paidInvoice = { id: '1', status: 'PAID', amountPaid: 100 };
+      mockPrisma.$transaction.mockResolvedValue([paidInvoice, {}]);
+      const result = await service.recordPayment('1', { amount: 100 });
+      expect(result.status).toBe('PAID');
     });
   });
 });

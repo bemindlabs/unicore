@@ -1,6 +1,4 @@
-import {
-  Controller, Get, Query, ParseIntPipe,
-} from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { ReportsService } from './reports.service';
 
 @Controller('erp/reports')
@@ -8,39 +6,32 @@ export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
   @Get('dashboard')
-  getDashboard() { return this.reportsService.getDashboardSummary(); }
-
-  @Get('revenue')
-  getRevenue(
-    @Query('from') from?: string,
-    @Query('to') to?: string,
-    @Query('currency') currency?: string,
-  ) {
-    const fromDate = from ? new Date(from) : new Date(new Date().setDate(1));
-    const toDate = to ? new Date(to) : new Date();
-    return this.reportsService.getRevenueSummary(fromDate, toDate, currency);
+  getDashboard() {
+    return this.reportsService.getDashboardSummary();
   }
 
-  @Get('expenses')
-  getExpenses(
-    @Query('from') from?: string,
-    @Query('to') to?: string,
-  ) {
-    const fromDate = from ? new Date(from) : new Date(new Date().setDate(1));
-    const toDate = to ? new Date(to) : new Date();
-    return this.reportsService.getExpenseSummaryByCategory(fromDate, toDate);
+  @Get('revenue')
+  getRevenue(@Query('from') from?: string, @Query('to') to?: string) {
+    return this.reportsService.getRevenueSummary(from, to);
+  }
+
+  @Get('expenses/categories')
+  getExpensesByCategory(@Query('from') from?: string, @Query('to') to?: string) {
+    return this.reportsService.getExpenseSummaryByCategory(from, to);
   }
 
   @Get('inventory')
-  getInventory() { return this.reportsService.getInventoryReport(); }
-
-  @Get('top-products')
-  getTopProducts(@Query('limit', new ParseIntPipe({ optional: true })) limit = 10) {
-    return this.reportsService.getTopProducts(limit);
+  getInventory() {
+    return this.reportsService.getInventoryReport();
   }
 
-  @Get('top-contacts')
-  getTopContacts(@Query('limit', new ParseIntPipe({ optional: true })) limit = 10) {
-    return this.reportsService.getTopContacts(limit);
+  @Get('products/top')
+  getTopProducts(@Query('limit') limit?: string) {
+    return this.reportsService.getTopProducts(limit ? parseInt(limit, 10) : 10);
+  }
+
+  @Get('contacts/top')
+  getTopContacts(@Query('limit') limit?: string) {
+    return this.reportsService.getTopContacts(limit ? parseInt(limit, 10) : 10);
   }
 }

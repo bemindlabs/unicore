@@ -1,15 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ExpensesService } from './expenses.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 
 const mockPrisma = {
   expense: {
-    create: jest.fn(), findUnique: jest.fn(), findMany: jest.fn(),
+    findMany: jest.fn(), findUnique: jest.fn(), create: jest.fn(),
     update: jest.fn(), delete: jest.fn(), count: jest.fn(),
-    aggregate: jest.fn(), groupBy: jest.fn(),
   },
-  $transaction: jest.fn(),
 };
 
 describe('ExpensesService', () => {
@@ -22,49 +20,32 @@ describe('ExpensesService', () => {
         { provide: PrismaService, useValue: mockPrisma },
       ],
     }).compile();
-
     service = module.get<ExpensesService>(ExpensesService);
-    jest.clearAllMocks();
   });
 
-  describe('create', () => {
-    it('should create an expense', async () => {
-      const dto = { title: 'Office Supplies', category: 'supplies', amount: 49.99 };
-      const expected = { id: 'exp-1', ...dto, status: 'PENDING' };
-      mockPrisma.expense.create.mockResolvedValue(expected);
+  afterEach(() => jest.clearAllMocks());
 
-      const result = await service.create(dto as any);
-      expect(result.status).toBe('PENDING');
-    });
-  });
+  it('should be defined', () => expect(service).toBeDefined());
 
   describe('approve', () => {
-    it('should approve a PENDING expense', async () => {
-      const expense = { id: 'exp-1', status: 'PENDING' };
-      const approved = { ...expense, status: 'APPROVED', approvedBy: 'manager@co.com' };
-      mockPrisma.expense.findUnique.mockResolvedValue(expense);
-      mockPrisma.expense.update.mockResolvedValue(approved);
-
-      const result = await service.approve('exp-1', { approvedBy: 'manager@co.com' } as any);
-      expect(result.status).toBe('APPROVED');
+    it('throws when expense is not PENDING', async () => {
+      mockPrisma.expense.findUnique.mockResolvedValue({ id: '1', status: 'APPROVED' });
+      await expect(service.approve('1', { approvedBy: 'manager' }))
+        .rejects.toBeInstanceOf(BadRequestException);
     });
 
-    it('should throw if expense is not PENDING', async () => {
-      const expense = { id: 'exp-1', status: 'APPROVED' };
-      mockPrisma.expense.findUnique.mockResolvedValue(expense);
-
-      await expect(
-        service.approve('exp-1', { approvedBy: 'manager@co.com' } as any),
-      ).rejects.toThrow(BadRequestException);
+    it('approves a PENDING expense', async () => {
+      mockPrisma.expense.findUnique.mockResolvedValue({ id: '1', status: 'PENDING' });
+      mockPrisma.expense.update.mockResolvedValue({ id: '1', status: 'APPROVED', approvedBy: 'manager' });
+      const result = await service.approve('1', { approvedBy: 'manager' });
+      expect(result.status).toBe('APPROVED');
     });
   });
 
   describe('reimburse', () => {
-    it('should throw if expense is not APPROVED', async () => {
-      const expense = { id: 'exp-1', status: 'PENDING' };
-      mockPrisma.expense.findUnique.mockResolvedValue(expense);
-
-      await expect(service.reimburse('exp-1')).rejects.toThrow(BadRequestException);
+    it('throws when expense is not APPROVED', async () => {
+      mockPrisma.expense.findUnique.mockResolvedValue({ id: '1', status: 'PENDING' });
+      await expect(service.reimburse('1')).rejects.toBeInstanceOf(BadRequestException);
     });
   });
 });

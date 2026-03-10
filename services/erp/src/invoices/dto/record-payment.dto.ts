@@ -1,33 +1,15 @@
-import { IsNumber, IsString, IsOptional, IsEnum, Min, IsNotEmpty } from 'class-validator';
+import { IsNumber, IsString, IsOptional, IsEnum, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export enum PaymentMethodDto {
-  CASH = 'CASH',
-  BANK_TRANSFER = 'BANK_TRANSFER',
-  CREDIT_CARD = 'CREDIT_CARD',
-  DEBIT_CARD = 'DEBIT_CARD',
-  CRYPTO = 'CRYPTO',
-  OTHER = 'OTHER',
+  CASH = 'CASH', BANK_TRANSFER = 'BANK_TRANSFER', CREDIT_CARD = 'CREDIT_CARD',
+  DEBIT_CARD = 'DEBIT_CARD', CRYPTO = 'CRYPTO', OTHER = 'OTHER',
 }
 
 export class RecordPaymentDto {
-  @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0.01)
-  amount!: number;
-
-  @IsString()
-  @IsOptional()
-  currency?: string = 'USD';
-
-  @IsEnum(PaymentMethodDto)
-  @IsOptional()
-  method?: PaymentMethodDto = PaymentMethodDto.BANK_TRANSFER;
-
-  @IsString()
-  @IsNotEmpty()
-  @IsOptional()
-  reference?: string;
-
-  @IsString()
-  @IsOptional()
-  notes?: string;
+  @IsNumber() @Min(0.01) @Type(() => Number) amount: number;
+  @IsOptional() @IsString() currency?: string;
+  @IsOptional() @IsEnum(PaymentMethodDto) method?: PaymentMethodDto;
+  @IsOptional() @IsString() reference?: string;
+  @IsOptional() @IsString() notes?: string;
 }

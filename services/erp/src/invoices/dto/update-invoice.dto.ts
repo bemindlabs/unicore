@@ -1,12 +1,3 @@
-import { IsString, IsOptional, IsDateString, MaxLength } from 'class-validator';
-
-export class UpdateInvoiceDto {
-  @IsString()
-  @IsOptional()
-  @MaxLength(1000)
-  notes?: string;
-
-  @IsDateString()
-  @IsOptional()
-  dueDate?: string;
-}
+import { PartialType } from '@nestjs/mapped-types';
+import { CreateInvoiceDto } from './create-invoice.dto';
+export class UpdateInvoiceDto extends PartialType(CreateInvoiceDto) {}
