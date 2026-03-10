@@ -1,4 +1,5 @@
-import { Bot } from 'lucide-react';
+import Link from 'next/link';
+import { Bot, ExternalLink } from 'lucide-react';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 
 export default function AgentsPage() {
@@ -12,9 +13,14 @@ export default function AgentsPage() {
           <p className="text-muted-foreground">Manage and monitor your AI agents</p>
         </div>
       </div>
-      <div className="flex h-64 items-center justify-center rounded-lg border border-dashed text-muted-foreground">
-        Agent management interface coming soon
-      </div>
+      <Link
+        href="/backoffice"
+        className="flex items-center justify-center gap-2 rounded-lg border border-dashed p-6 text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+      >
+        <Bot className="h-5 w-5" />
+        <span>Open Backoffice — Pixel Art Team Overview</span>
+        <ExternalLink className="h-4 w-4" />
+      </Link>
     </div>
   );
 }

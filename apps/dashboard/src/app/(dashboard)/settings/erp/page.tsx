@@ -1,0 +1,169 @@
+'use client';
+
+import { useCallback, useState } from 'react';
+import {
+  BookOpen,
+  DollarSign,
+  FileText,
+  Package,
+  ShoppingCart,
+  TrendingUp,
+  Users,
+} from 'lucide-react';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Label,
+  Separator,
+  Switch,
+  toast,
+} from '@unicore/ui';
+import type { ErpModulesConfig } from '@unicore/shared-types';
+import { Breadcrumb } from '@/components/layout/breadcrumb';
+
+interface ErpModuleDefinition {
+  key: keyof ErpModulesConfig;
+  label: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+  requiredBy?: string[];
+}
+
+const ERP_MODULES: ErpModuleDefinition[] = [
+  {
+    key: 'contacts',
+    label: 'Contacts & CRM',
+    description: 'Manage customers, suppliers, and leads',
+    icon: Users,
+  },
+  {
+    key: 'orders',
+    label: 'Orders',
+    description: 'Track sales orders and purchase orders',
+    icon: ShoppingCart,
+    requiredBy: ['Invoicing'],
+  },
+  {
+    key: 'inventory',
+    label: 'Inventory',
+    description: 'Monitor stock levels, locations, and movements',
+    icon: Package,
+  },
+  {
+    key: 'invoicing',
+    label: 'Invoicing',
+    description: 'Create, send, and track invoices and payments',
+    icon: FileText,
+  },
+  {
+    key: 'expenses',
+    label: 'Expenses',
+    description: 'Record and categorise business expenses',
+    icon: DollarSign,
+  },
+  {
+    key: 'reports',
+    label: 'Reports',
+    description: 'Revenue, profit, and operational dashboards',
+    icon: TrendingUp,
+  },
+];
+
+const DEFAULT_MODULES: ErpModulesConfig = {
+  contacts: true,
+  orders: true,
+  inventory: true,
+  invoicing: true,
+  expenses: false,
+  reports: true,
+};
+
+export default function SettingsErpPage() {
+  const [modules, setModules] = useState<ErpModulesConfig>(DEFAULT_MODULES);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleToggle = useCallback((key: keyof ErpModulesConfig, enabled: boolean) => {
+    setModules((prev) => ({ ...prev, [key]: enabled }));
+  }, []);
+
+  const handleSave = useCallback(async () => {
+    setIsSaving(true);
+    try {
+      // TODO: api.put('/settings/erp/modules', modules)
+      await new Promise((r) => setTimeout(r, 600));
+      toast({ title: 'Saved', description: 'ERP modules updated. Navigation will refresh.' });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [modules]);
+
+  const enabledCount = Object.values(modules).filter(Boolean).length;
+
+  return (
+    <div className="space-y-6">
+      <Breadcrumb />
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <BookOpen className="h-5 w-5 text-primary" />
+            <CardTitle>ERP Modules</CardTitle>
+          </div>
+          <CardDescription>
+            Enable only the modules your business needs. Disabled modules are hidden from the sidebar
+            and inaccessible to all team members. {enabledCount} of {ERP_MODULES.length} modules
+            active.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {ERP_MODULES.map((mod) => {
+            const Icon = mod.icon;
+            return (
+              <div
+                key={mod.key}
+                className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/40"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                    <Icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <Label
+                      htmlFor={`erp-${mod.key}`}
+                      className="cursor-pointer text-sm font-medium"
+                    >
+                      {mod.label}
+                    </Label>
+                    <p className="text-xs text-muted-foreground">{mod.description}</p>
+                    {mod.requiredBy && (
+                      <p className="text-xs text-amber-600 dark:text-amber-400">
+                        Required by: {mod.requiredBy.join(', ')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <Switch
+                  id={`erp-${mod.key}`}
+                  checked={modules[mod.key]}
+                  onCheckedChange={(checked) => handleToggle(mod.key, checked)}
+                />
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
+
+      <Separator />
+
+      <div className="flex justify-end">
+        <Button onClick={handleSave} disabled={isSaving}>
+          {isSaving ? 'Saving…' : 'Save Changes'}
+        </Button>
+      </div>
+    </div>
+  );
+}
