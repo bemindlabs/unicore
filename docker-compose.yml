@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-  # Infrastructure (always on)
+  # ─── Infrastructure ───────────────────────────────────────────────
   unicore-postgres:
     image: postgres:16-alpine
     environment:
@@ -9,16 +9,26 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: unicore
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U unicore"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   unicore-redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   unicore-vectordb:
     image: qdrant/qdrant:latest
@@ -26,6 +36,11 @@ services:
       - "6333:6333"
     volumes:
       - vectordb_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:6333/healthz || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   unicore-zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
@@ -40,11 +55,159 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: unicore-zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://unicore-kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     ports:
       - "9092:9092"
     profiles: [workflows]
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ─── Backend Services ─────────────────────────────────────────────
+  unicore-api-gateway:
+    build:
+      context: .
+      dockerfile: services/api-gateway/Dockerfile
+    ports:
+      - "4000:4000"
+    environment:
+      DATABASE_URL: postgresql://unicore:password@unicore-postgres:5432/unicore?schema=public
+      REDIS_URL: redis://unicore-redis:6379
+      JWT_SECRET: change-me-in-production
+      PORT: "4000"
+      ERP_SERVICE_HOST: unicore-erp
+      ERP_SERVICE_PORT: "4100"
+      AI_ENGINE_SERVICE_HOST: unicore-ai-engine
+      AI_ENGINE_SERVICE_PORT: "4200"
+      RAG_SERVICE_HOST: unicore-rag
+      RAG_SERVICE_PORT: "4300"
+      BOOTSTRAP_SERVICE_HOST: unicore-bootstrap
+      BOOTSTRAP_SERVICE_PORT: "4500"
+    depends_on:
+      unicore-postgres:
+        condition: service_healthy
+      unicore-redis:
+        condition: service_healthy
+    profiles: [apps]
+
+  unicore-erp:
+    build:
+      context: .
+      dockerfile: services/erp/Dockerfile
+    ports:
+      - "4100:4100"
+    environment:
+      DATABASE_URL: postgresql://unicore:password@unicore-postgres:5432/unicore?schema=public
+      REDIS_URL: redis://unicore-redis:6379
+      PORT: "4100"
+      KAFKA_BROKERS: unicore-kafka:9092
+    depends_on:
+      unicore-postgres:
+        condition: service_healthy
+    profiles: [apps]
+
+  unicore-ai-engine:
+    build:
+      context: .
+      dockerfile: services/ai-engine/Dockerfile
+    ports:
+      - "4200:4200"
+    environment:
+      PORT: "4200"
+      REDIS_URL: redis://unicore-redis:6379
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    depends_on:
+      unicore-redis:
+        condition: service_healthy
+    profiles: [apps]
+
+  unicore-rag:
+    build:
+      context: .
+      dockerfile: services/rag/Dockerfile
+    ports:
+      - "4300:4300"
+    environment:
+      PORT: "4300"
+      QDRANT_URL: http://unicore-vectordb:6333
+      REDIS_URL: redis://unicore-redis:6379
+    depends_on:
+      unicore-vectordb:
+        condition: service_healthy
+      unicore-redis:
+        condition: service_healthy
+    profiles: [apps]
+
+  unicore-bootstrap:
+    build:
+      context: .
+      dockerfile: services/bootstrap/Dockerfile
+    ports:
+      - "4500:4500"
+    environment:
+      DATABASE_URL: postgresql://unicore:password@unicore-postgres:5432/unicore?schema=public
+      PORT: "4500"
+    depends_on:
+      unicore-postgres:
+        condition: service_healthy
+    profiles: [apps]
+
+  unicore-openclaw-gateway:
+    build:
+      context: .
+      dockerfile: services/openclaw-gateway/Dockerfile
+    ports:
+      - "18789:18789"
+    environment:
+      PORT: "18789"
+      REDIS_URL: redis://unicore-redis:6379
+    depends_on:
+      unicore-redis:
+        condition: service_healthy
+    profiles: [apps]
+
+  unicore-workflow:
+    build:
+      context: .
+      dockerfile: services/workflow/Dockerfile
+    environment:
+      KAFKA_BROKERS: unicore-kafka:9092
+      REDIS_URL: redis://unicore-redis:6379
+      ERP_SERVICE_URL: http://unicore-erp:4100
+      OPENCLAW_GATEWAY_URL: ws://unicore-openclaw-gateway:18789
+    depends_on:
+      unicore-erp:
+        condition: service_started
+    profiles: [workflows]
+
+  # ─── Frontend Apps ────────────────────────────────────────────────
+  unicore-dashboard:
+    build:
+      context: .
+      dockerfile: apps/dashboard/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+    depends_on:
+      - unicore-api-gateway
+    profiles: [apps]
+
+  unicore-onboarding:
+    build:
+      context: .
+      dockerfile: apps/onboarding/Dockerfile
+    ports:
+      - "3100:3100"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+    depends_on:
+      - unicore-api-gateway
+    profiles: [apps]
 
 volumes:
   postgres_data:
