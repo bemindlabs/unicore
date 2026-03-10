@@ -8,11 +8,9 @@ export const ERP_TOPICS = {
   ORDER_CREATED: 'order.created',
   ORDER_UPDATED: 'order.updated',
   ORDER_FULFILLED: 'order.fulfilled',
-
   // Inventory domain
   INVENTORY_LOW: 'inventory.low',
   INVENTORY_RESTOCKED: 'inventory.restocked',
-
   // Invoice domain
   INVOICE_CREATED: 'invoice.created',
   INVOICE_OVERDUE: 'invoice.overdue',

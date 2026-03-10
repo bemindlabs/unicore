@@ -1,24 +1,48 @@
-import { IsString, IsNotEmpty, IsNumber, IsEnum, IsOptional, ValidateNested, ArrayMinSize, Min } from 'class-validator';
+import {
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Min,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
-export enum OrderStatus {
-  PENDING = 'pending',
-  CONFIRMED = 'confirmed',
-  PROCESSING = 'processing',
-  SHIPPED = 'shipped',
-  FULFILLED = 'fulfilled',
-  CANCELLED = 'cancelled',
-  REFUNDED = 'refunded',
+export enum OrderStatusEvent {
+  DRAFT = 'DRAFT',
+  QUOTED = 'QUOTED',
+  CONFIRMED = 'CONFIRMED',
+  PROCESSING = 'PROCESSING',
+  PARTIALLY_FULFILLED = 'PARTIALLY_FULFILLED',
+  FULFILLED = 'FULFILLED',
+  SHIPPED = 'SHIPPED',
+  DELIVERED = 'DELIVERED',
+  RETURNED = 'RETURNED',
+  CANCELLED = 'CANCELLED',
+  REFUNDED = 'REFUNDED',
+}
+
+export enum FulfillmentStatusEvent {
+  PENDING = 'PENDING',
+  PICKING = 'PICKING',
+  PACKED = 'PACKED',
+  DISPATCHED = 'DISPATCHED',
+  IN_TRANSIT = 'IN_TRANSIT',
+  DELIVERED = 'DELIVERED',
+  FAILED = 'FAILED',
+  RETURNED = 'RETURNED',
 }
 
 export class OrderLineItemDto {
-  @IsString()
-  @IsNotEmpty()
+  @IsUUID()
   productId!: string;
 
   @IsString()
   @IsNotEmpty()
-  productName!: string;
+  name!: string;
 
   @IsString()
   @IsNotEmpty()
@@ -34,29 +58,31 @@ export class OrderLineItemDto {
 
   @IsNumber()
   @Min(0)
-  totalPrice!: number;
+  lineTotal!: number;
 }
 
 export class OrderCreatedEventDto {
-  @IsString()
-  @IsNotEmpty()
+  @IsUUID()
   orderId!: string;
 
   @IsString()
   @IsNotEmpty()
-  customerId!: string;
+  orderNumber!: string;
 
   @IsOptional()
-  @IsString()
-  customerEmail?: string;
+  @IsUUID()
+  contactId?: string;
 
-  @IsEnum(OrderStatus)
-  status!: OrderStatus;
+  @IsEnum(OrderStatusEvent)
+  status!: OrderStatusEvent;
 
+  @IsEnum(FulfillmentStatusEvent)
+  fulfillmentStatus!: FulfillmentStatusEvent;
+
+  @IsArray()
   @ValidateNested({ each: true })
-  @ArrayMinSize(1)
   @Type(() => OrderLineItemDto)
-  lineItems!: OrderLineItemDto[];
+  items!: OrderLineItemDto[];
 
   @IsNumber()
   @Min(0)
@@ -64,7 +90,7 @@ export class OrderCreatedEventDto {
 
   @IsNumber()
   @Min(0)
-  tax!: number;
+  taxAmount!: number;
 
   @IsNumber()
   @Min(0)
@@ -76,19 +102,14 @@ export class OrderCreatedEventDto {
 }
 
 export class OrderUpdatedEventDto {
-  @IsString()
-  @IsNotEmpty()
+  @IsUUID()
   orderId!: string;
 
-  @IsString()
-  @IsNotEmpty()
-  customerId!: string;
+  @IsEnum(OrderStatusEvent)
+  previousStatus!: OrderStatusEvent;
 
-  @IsEnum(OrderStatus)
-  previousStatus!: OrderStatus;
-
-  @IsEnum(OrderStatus)
-  newStatus!: OrderStatus;
+  @IsEnum(OrderStatusEvent)
+  newStatus!: OrderStatusEvent;
 
   @IsOptional()
   @IsString()
@@ -99,13 +120,11 @@ export class OrderUpdatedEventDto {
 }
 
 export class OrderFulfilledEventDto {
-  @IsString()
-  @IsNotEmpty()
+  @IsUUID()
   orderId!: string;
 
-  @IsString()
-  @IsNotEmpty()
-  customerId!: string;
+  @IsEnum(FulfillmentStatusEvent)
+  fulfillmentStatus!: FulfillmentStatusEvent;
 
   @IsOptional()
   @IsString()

@@ -1,16 +1,6 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Delete,
-  Body,
-  Param,
-  Query,
-  HttpCode,
-  HttpStatus,
-  ParseUUIDPipe,
-  ParseIntPipe,
+  Controller, Get, Post, Patch, Delete, Body, Param, Query,
+  HttpCode, HttpStatus, ParseUUIDPipe, ParseIntPipe,
 } from '@nestjs/common';
 import { ContactsService } from './contacts.service';
 import { CreateContactDto } from './dto/create-contact.dto';
@@ -22,30 +12,22 @@ export class ContactsController {
   constructor(private readonly contactsService: ContactsService) {}
 
   @Post()
-  create(@Body() dto: CreateContactDto) {
-    return this.contactsService.create(dto);
-  }
+  create(@Body() dto: CreateContactDto) { return this.contactsService.create(dto); }
 
   @Get()
-  findAll(@Query() query: QueryContactsDto) {
-    return this.contactsService.findAll(query);
-  }
+  findAll(@Query() query: QueryContactsDto) { return this.contactsService.findAll(query); }
 
   @Get('leads/top')
-  getTopLeads(@Query('minScore', new ParseIntPipe({ optional: true })) minScore = 50) {
-    return this.contactsService.getLeadsByScore(minScore);
-  }
+  getTopLeads(
+    @Query('minScore', new ParseIntPipe({ optional: true })) minScore = 50,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit = 20,
+  ) { return this.contactsService.getTopLeads(minScore, limit); }
 
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.contactsService.findOne(id);
-  }
+  findOne(@Param('id', ParseUUIDPipe) id: string) { return this.contactsService.findOne(id); }
 
   @Patch(':id')
-  update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateContactDto,
-  ) {
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateContactDto) {
     return this.contactsService.update(id, dto);
   }
 
@@ -53,13 +35,9 @@ export class ContactsController {
   updateLeadScore(
     @Param('id', ParseUUIDPipe) id: string,
     @Body('score', ParseIntPipe) score: number,
-  ) {
-    return this.contactsService.updateLeadScore(id, score);
-  }
+  ) { return this.contactsService.updateLeadScore(id, score); }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.contactsService.remove(id);
-  }
+  remove(@Param('id', ParseUUIDPipe) id: string) { return this.contactsService.remove(id); }
 }

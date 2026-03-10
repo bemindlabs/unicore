@@ -1,61 +1,33 @@
-import { Inject, Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
-import { v4 as uuidv4 } from 'uuid';
-import { KAFKA_CLIENT } from './kafka.module';
-import type { ErpEventEnvelope, ErpTopic } from '../events/event-types';
+import { randomUUID } from 'crypto';
+import { ErpEventEnvelope, ErpTopic } from '../events/event-types';
 
 /**
- * EventPublisherService
- *
- * Central service for publishing domain events to Kafka.
- * All ERP domain services (orders, inventory, invoices) delegate to this service.
- *
- * Key design decisions:
- * - Idempotent producer: each message has a stable eventId (UUID v4) so
- *   Kafka's idempotent producer can deduplicate retries at the broker level.
- * - Fire-and-forget with structured logging: callers are not blocked on
- *   broker acknowledgement beyond the producer's own retry policy.
- * - Strict typing: every publish call is parameterised so callers cannot
- *   misuse the envelope shape.
+ * Thin wrapper around the Kafka producer client.
+ * Inject this service to emit typed ERP domain events from any feature module.
  */
 @Injectable()
-export class EventPublisherService implements OnModuleInit, OnModuleDestroy {
+export class EventPublisherService implements OnModuleInit {
   private readonly logger = new Logger(EventPublisherService.name);
-  private ready = false;
 
   constructor(
-    @Inject(KAFKA_CLIENT)
+    @Inject('ERP_KAFKA_PRODUCER')
     private readonly kafkaClient: ClientKafka,
   ) {}
 
   async onModuleInit(): Promise<void> {
     await this.kafkaClient.connect();
-    this.ready = true;
     this.logger.log('Kafka producer connected');
   }
 
-  async onModuleDestroy(): Promise<void> {
-    await this.kafkaClient.close();
-    this.ready = false;
-    this.logger.log('Kafka producer disconnected');
-  }
-
   /**
-   * Publishes a typed domain event to the given Kafka topic.
-   *
-   * @param topic  - One of the ERP_TOPICS constants.
-   * @param payload - Domain-specific event payload.
-   * @param key    - Optional Kafka partition key (e.g. orderId / customerId).
-   *                 Using a stable key ensures ordering within a partition.
+   * Publish a domain event to the given Kafka topic.
+   * Wraps the payload in a typed ErpEventEnvelope with a new UUID and timestamp.
    */
-  async publish<T = unknown>(topic: ErpTopic, payload: T, key?: string): Promise<void> {
-    if (!this.ready) {
-      this.logger.warn(`Kafka producer not ready — dropping event for topic "${topic}"`);
-      return;
-    }
-
+  async publish<T>(topic: ErpTopic, payload: T): Promise<void> {
     const envelope: ErpEventEnvelope<T> = {
-      eventId: uuidv4(),
+      eventId: randomUUID(),
       occurredAt: new Date().toISOString(),
       type: topic,
       source: 'erp-service',
@@ -63,27 +35,11 @@ export class EventPublisherService implements OnModuleInit, OnModuleDestroy {
       payload,
     };
 
-    try {
-      // emit() is fire-and-forget; the ClientKafka producer handles retries
-      // internally per the retry policy set in KafkaModule.
-      this.kafkaClient.emit(topic, {
-        key: key ?? envelope.eventId,
-        value: JSON.stringify(envelope),
-        headers: {
-          'x-event-id': envelope.eventId,
-          'x-event-type': topic,
-          'x-schema-version': String(envelope.schemaVersion),
-          'x-source': envelope.source,
-        },
-      });
+    this.kafkaClient.emit(topic, {
+      key: envelope.eventId,
+      value: JSON.stringify(envelope),
+    });
 
-      this.logger.log(`Event published: topic="${topic}" eventId="${envelope.eventId}" key="${key ?? envelope.eventId}"`);
-    } catch (err) {
-      this.logger.error(
-        `Failed to publish event: topic="${topic}" eventId="${envelope.eventId}"`,
-        err instanceof Error ? err.stack : String(err),
-      );
-      throw err;
-    }
+    this.logger.debug(`Published ${topic}: ${envelope.eventId}`);
   }
 }

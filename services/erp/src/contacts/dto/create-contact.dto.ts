@@ -1,15 +1,5 @@
 import {
-  IsString,
-  IsEmail,
-  IsOptional,
-  IsEnum,
-  IsInt,
-  Min,
-  Max,
-  IsArray,
-  IsUrl,
-  MinLength,
-  MaxLength,
+  IsString, IsEmail, IsOptional, IsEnum, IsInt, Min, Max, IsArray, MinLength, MaxLength,
 } from 'class-validator';
 
 export enum ContactType {
@@ -47,7 +37,7 @@ export class CreateContactDto {
   @MaxLength(200)
   company?: string;
 
-  @IsUrl()
+  @IsString()
   @IsOptional()
   website?: string;
 

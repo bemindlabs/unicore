@@ -2,13 +2,13 @@
  * Order Fulfillment State Machine
  *
  * Valid transitions:
- *   PENDING    → CONFIRMED | CANCELLED
- *   CONFIRMED  → PROCESSING | CANCELLED
- *   PROCESSING → SHIPPED | CANCELLED
- *   SHIPPED    → FULFILLED | REFUNDED
- *   FULFILLED  → REFUNDED
- *   CANCELLED  → (terminal)
- *   REFUNDED   → (terminal)
+ *   PENDING    -> CONFIRMED | CANCELLED
+ *   CONFIRMED  -> PROCESSING | CANCELLED
+ *   PROCESSING -> SHIPPED | CANCELLED
+ *   SHIPPED    -> FULFILLED | REFUNDED
+ *   FULFILLED  -> REFUNDED
+ *   CANCELLED  -> (terminal)
+ *   REFUNDED   -> (terminal)
  */
 
 export enum OrderStatus {
@@ -40,11 +40,5 @@ export function getAllowedTransitions(from: OrderStatus): OrderStatus[] {
 }
 
 export function isTerminalStatus(status: OrderStatus): boolean {
-  return (
-    status === OrderStatus.CANCELLED || status === OrderStatus.REFUNDED
-  );
-}
-
-export function isFulfillableStatus(status: OrderStatus): boolean {
-  return status === OrderStatus.PROCESSING || status === OrderStatus.SHIPPED;
+  return status === OrderStatus.CANCELLED || status === OrderStatus.REFUNDED;
 }

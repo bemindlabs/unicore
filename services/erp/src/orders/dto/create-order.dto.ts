@@ -1,14 +1,5 @@
 import {
-  IsString,
-  IsOptional,
-  IsArray,
-  IsNumber,
-  IsInt,
-  Min,
-  ValidateNested,
-  IsUUID,
-  IsNotEmpty,
-  MaxLength,
+  IsString, IsOptional, IsArray, IsNumber, IsInt, Min, ValidateNested, IsUUID, MaxLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -23,7 +14,7 @@ export class CreateOrderItemDto {
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   @IsOptional()
-  unitPrice?: number; // Override price; falls back to product.unitPrice if omitted
+  unitPrice?: number;
 }
 
 export class CreateOrderDto {

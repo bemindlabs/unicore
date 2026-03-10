@@ -1,19 +1,19 @@
 import { Module } from '@nestjs/common';
+import { HealthModule } from './health/health.module';
 import { KafkaModule } from './kafka/kafka.module';
-import { OrdersModule } from './orders/orders.module';
-import { InventoryModule } from './inventory/inventory.module';
-import { InvoicesModule } from './invoices/invoices.module';
+import { PrismaModule } from './prisma/prisma.module';
 
 /**
- * Root application module for the ERP microservice.
+ * Root module for the UniCore ERP microservice (port 4100).
  *
- * Imports:
- * - KafkaModule        — Kafka producer client + EventPublisherService
- * - OrdersModule       — order.created / order.updated / order.fulfilled
- * - InventoryModule    — inventory.low / inventory.restocked
- * - InvoicesModule     — invoice.created / invoice.overdue / invoice.paid
+ * Feature modules for Contacts, Orders, Inventory, Invoices, Expenses,
+ * and Reports will be imported here once implemented in subsequent tickets.
  */
 @Module({
-  imports: [KafkaModule, OrdersModule, InventoryModule, InvoicesModule],
+  imports: [
+    PrismaModule,
+    KafkaModule,
+    HealthModule,
+  ],
 })
 export class AppModule {}

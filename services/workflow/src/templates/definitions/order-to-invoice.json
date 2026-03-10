@@ -1,0 +1,45 @@
+{
+  "name": "Order to Invoice",
+  "description": "Automatically generates an invoice when an order is created and sends a confirmation email with the invoice attached.",
+  "enabled": true,
+  "schemaVersion": 1,
+  "trigger": {
+    "type": "erp.order.created",
+    "conditions": []
+  },
+  "actions": [
+    {
+      "id": "generate-invoice",
+      "type": "call_agent",
+      "label": "Generate Invoice",
+      "dependsOn": [],
+      "continueOnError": false,
+      "timeoutMs": 15000,
+      "config": {
+        "agentName": "finance-agent",
+        "promptTemplate": "Generate an invoice for order {{payload.orderId}}. Customer: {{payload.customerId}}. Total: {{payload.total}} {{payload.currency}}. Include all line items and set payment terms to 30 days.",
+        "model": null
+      }
+    },
+    {
+      "id": "send-confirmation-email",
+      "type": "send_notification",
+      "label": "Send Order Confirmation Email",
+      "dependsOn": ["generate-invoice"],
+      "continueOnError": false,
+      "timeoutMs": 10000,
+      "config": {
+        "channel": "email",
+        "recipient": "{{payload.customerEmail}}",
+        "subject": "Your order {{payload.orderId}} has been confirmed — invoice enclosed",
+        "bodyTemplate": "Dear Customer,\n\nThank you for your order ({{payload.orderId}}).\n\nYour invoice has been generated. Total due: {{payload.total}} {{payload.currency}}.\n\nPayment is due within 30 days.\n\nThank you for your business."
+      }
+    }
+  ],
+  "meta": {
+    "category": "finance",
+    "agents": ["finance-agent", "comms-agent"],
+    "requiredModules": ["orders", "invoicing"],
+    "estimatedDurationSec": 30
+  }
+}

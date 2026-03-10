@@ -1,65 +1,55 @@
-import { IsString, IsNotEmpty, IsNumber, IsOptional, Min } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, IsUUID, Min } from 'class-validator';
 
 export class InventoryLowEventDto {
-  @IsString()
-  @IsNotEmpty()
-  productId!: string;
+  @IsUUID()
+  inventoryItemId!: string;
 
-  @IsString()
-  @IsNotEmpty()
-  productName!: string;
+  @IsUUID()
+  productId!: string;
 
   @IsString()
   @IsNotEmpty()
   sku!: string;
 
+  @IsString()
+  @IsNotEmpty()
+  productName!: string;
+
+  @IsUUID()
+  warehouseId!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  warehouseName!: string;
+
+  @IsNumber()
+  quantityAvailable!: number;
+
+  @IsNumber()
+  reorderPoint!: number;
+
   @IsNumber()
   @Min(0)
-  currentQuantity!: number;
-
-  @IsNumber()
-  @Min(0)
-  threshold!: number;
-
-  @IsOptional()
-  @IsString()
-  warehouseId?: string;
-
-  @IsOptional()
-  @IsString()
-  supplierId?: string;
+  reorderQty!: number;
 }
 
 export class InventoryRestockedEventDto {
-  @IsString()
-  @IsNotEmpty()
-  productId!: string;
+  @IsUUID()
+  inventoryItemId!: string;
 
-  @IsString()
-  @IsNotEmpty()
-  productName!: string;
+  @IsUUID()
+  productId!: string;
 
   @IsString()
   @IsNotEmpty()
   sku!: string;
 
-  @IsNumber()
-  @Min(0)
-  previousQuantity!: number;
+  @IsUUID()
+  warehouseId!: string;
 
   @IsNumber()
-  @Min(1)
   quantityAdded!: number;
 
   @IsNumber()
-  @Min(0)
-  newQuantity!: number;
-
-  @IsOptional()
-  @IsString()
-  warehouseId?: string;
-
-  @IsOptional()
-  @IsString()
-  purchaseOrderId?: string;
+  newQuantityOnHand!: number;
 }
