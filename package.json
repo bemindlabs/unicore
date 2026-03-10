@@ -1,0 +1,18 @@
+{
+  "name": "unicore",
+  "private": true,
+  "workspaces": ["apps/*", "services/*", "packages/*"],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "typecheck": "turbo typecheck",
+    "prisma": "prisma"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "typescript": "^5.5.0",
+    "prisma": "^6.0.0"
+  }
+}

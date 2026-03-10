@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+.next/
+out/
+
+# Turbo
+.turbo/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Config secrets
+unicore.config.json
+
+# Testing
+coverage/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# Prisma
+prisma/*.db
+
+# Misc
+*.pem

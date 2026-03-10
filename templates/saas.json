@@ -1,0 +1,9 @@
+{
+  "name": "SaaS",
+  "description": "Software-as-a-Service, subscription businesses, digital platforms",
+  "erp": { "contacts": true, "orders": true, "inventory": false, "invoicing": true, "expenses": true, "reports": true },
+  "agents": { "comms": true, "finance": true, "growth": true, "ops": true, "research": true, "erp": true, "builder": true },
+  "dashboard": { "widgets": ["mrr", "churn", "signups", "active_users"] },
+  "channels": ["email", "web", "slack"],
+  "workflows": ["trial_expiry", "churn_risk", "invoice_overdue", "onboarding_drip"]
+}

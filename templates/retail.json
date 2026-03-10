@@ -1,0 +1,9 @@
+{
+  "name": "Retail",
+  "description": "Brick-and-mortar stores, POS-integrated shops, chains",
+  "erp": { "contacts": true, "orders": true, "inventory": true, "invoicing": true, "expenses": true, "reports": true },
+  "agents": { "comms": true, "finance": true, "growth": true, "ops": true, "research": false, "erp": true, "builder": false },
+  "dashboard": { "widgets": ["revenue", "foot_traffic", "inventory", "top_products"] },
+  "channels": ["line", "web", "pos"],
+  "workflows": ["low_stock_alert", "daily_sales_report", "supplier_reorder", "invoice_overdue"]
+}

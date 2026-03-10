@@ -1,0 +1,362 @@
+{
+  "project": "UNC",
+  "exportDate": "2026-03-09",
+  "items": [
+    {
+      "type": "Epic",
+      "summary": "Foundation & Shared Packages",
+      "description": "Core libraries that all services and apps depend on. Includes @unicore/shared-types, @unicore/config, @unicore/ui, @unicore/integrations.",
+      "priority": "Highest",
+      "labels": ["unicore", "foundation"],
+      "children": [
+        {
+          "type": "Story",
+          "summary": "@unicore/shared-types — TypeScript type definitions",
+          "description": "Define core domain types (User, Role, Agent, ERP entities), API request/response types, event types (Kafka message schemas). Export all types from package index.",
+          "priority": "Highest",
+          "labels": ["unicore", "packages"]
+        },
+        {
+          "type": "Story",
+          "summary": "@unicore/config — Shared ESLint, Tailwind, TS configs",
+          "description": "Create shared ESLint config (base + Next.js + NestJS), shared Tailwind config (theme, colors, fonts), shared tsconfig base for apps/services/packages.",
+          "priority": "Highest",
+          "labels": ["unicore", "packages"]
+        },
+        {
+          "type": "Story",
+          "summary": "@unicore/ui — Shared component library (shadcn/ui)",
+          "description": "Initialize shadcn/ui with Tailwind. Create base components (Button, Input, Card, Dialog, Table, Toast), layout components (Sidebar, Header, PageContainer), widget components (StatCard, Chart, DataTable).",
+          "priority": "Highest",
+          "labels": ["unicore", "packages"]
+        },
+        {
+          "type": "Story",
+          "summary": "@unicore/integrations — External service adapters",
+          "description": "Create adapter interface (connect, disconnect, sync). Implement Stripe payment adapter, Plaid bank feed adapter, Email adapter (SMTP/SendGrid/Mailgun).",
+          "priority": "Medium",
+          "labels": ["unicore", "packages"]
+        }
+      ]
+    },
+    {
+      "type": "Epic",
+      "summary": "API Gateway Service",
+      "description": "Central auth, routing, and rate limiting service (NestJS). Port 4000. Handles JWT auth, session management, request proxy to downstream services, license validation.",
+      "priority": "Highest",
+      "labels": ["unicore", "services"],
+      "children": [
+        {
+          "type": "Story",
+          "summary": "API Gateway — NestJS project scaffold & Prisma config",
+          "description": "Initialize NestJS app with TypeScript. Configure Prisma ORM with PostgreSQL schema (User, Session, ApiKey models). Setup Redis connection for sessions/cache. Configure connection pooling.",
+          "priority": "Highest",
+          "labels": ["unicore", "api-gateway"]
+        },
+        {
+          "type": "Story",
+          "summary": "API Gateway — JWT authentication & session management",
+          "description": "Implement JWT token generation (access + refresh), NextAuth callback integration, auth guards (JwtAuthGuard, RolesGuard), session management with Redis.",
+          "priority": "Highest",
+          "labels": ["unicore", "api-gateway"]
+        },
+        {
+          "type": "Story",
+          "summary": "API Gateway — Routing & proxy to downstream services",
+          "description": "Create proxy module routing to ERP (:4100), AI Engine (:4200), RAG (:4300), Bootstrap (:4500). Implement request validation middleware. Add rate limiting (per-user, per-IP).",
+          "priority": "High",
+          "labels": ["unicore", "api-gateway"]
+        },
+        {
+          "type": "Story",
+          "summary": "API Gateway — License key validation integration",
+          "description": "Read UNICORE_LICENSE_KEY from env. Create feature flag middleware to gate Pro features. Cache license status locally with weekly revalidation.",
+          "priority": "High",
+          "labels": ["unicore", "api-gateway"]
+        }
+      ]
+    },
+    {
+      "type": "Epic",
+      "summary": "Bootstrap Wizard",
+      "description": "First-run setup flow — 6-step wizard. Includes Bootstrap API service (NestJS, port 4500) and Onboarding UI (Next.js, port 3100).",
+      "priority": "Highest",
+      "labels": ["unicore", "bootstrap"],
+      "children": [
+        {
+          "type": "Story",
+          "summary": "Bootstrap API — Template loader & provisioning engine",
+          "description": "Read 7 JSON templates from templates/. Provisioning engine creates DB schemas, roles, agents from config. Config writer generates unicore.config.json. Re-run wizard endpoint (POST /bootstrap/reset).",
+          "priority": "Highest",
+          "labels": ["unicore", "bootstrap"]
+        },
+        {
+          "type": "Story",
+          "summary": "Onboarding UI — 6-step wizard (Next.js)",
+          "description": "Step 1: Business Profile (type, name, currency, language, timezone). Step 2: Team & Roles. Step 3: AI Agents config (toggle, channels, autonomy, LLM provider). Step 4: ERP Modules toggle. Step 5: Integrations. Step 6: Review & Launch.",
+          "priority": "Highest",
+          "labels": ["unicore", "onboarding"]
+        }
+      ]
+    },
+    {
+      "type": "Epic",
+      "summary": "Dashboard App",
+      "description": "Main operations UI (Next.js, port 3000). Includes layout, widget framework, settings pages, and template-driven KPIs.",
+      "priority": "Highest",
+      "labels": ["unicore", "apps"],
+      "children": [
+        {
+          "type": "Story",
+          "summary": "Dashboard — Layout & navigation with role-based menu",
+          "description": "App shell with sidebar navigation. Role-based menu rendering. NextAuth session integration with api-gateway.",
+          "priority": "Highest",
+          "labels": ["unicore", "dashboard"]
+        },
+        {
+          "type": "Story",
+          "summary": "Dashboard — Widget framework & template rendering",
+          "description": "Dynamic widget grid loaded from unicore.config.json. Widget components: revenue, orders, inventory, channels, MRR, churn, signups, active_users, foot_traffic, top_products, audience, engagement, content_calendar, billable_hours, clients, pipeline. Data fetching with SWR/React Query.",
+          "priority": "High",
+          "labels": ["unicore", "dashboard"]
+        },
+        {
+          "type": "Story",
+          "summary": "Dashboard — Settings pages",
+          "description": "General settings (business name, currency, language, timezone). Team & Roles management. AI Agents configuration. ERP Modules toggle. Integrations management. License status & activation. Re-run Wizard trigger.",
+          "priority": "High",
+          "labels": ["unicore", "dashboard"]
+        }
+      ]
+    },
+    {
+      "type": "Epic",
+      "summary": "Internal ERP Service",
+      "description": "CRM, Orders, Inventory, Invoicing, Expenses, Reports (NestJS, port 4100). Lightweight ERP designed for 1-5 person teams.",
+      "priority": "High",
+      "labels": ["unicore", "services"],
+      "children": [
+        {
+          "type": "Story",
+          "summary": "ERP — Database schema (Prisma models)",
+          "description": "Contact model (profiles, interaction history, lead scoring, pipeline stages). Order model (quotes, orders, fulfillment tracking, returns). Inventory model (SKU, stock levels, multi-warehouse, low-stock thresholds). Invoice model (generation, payment tracking, recurring billing, tax calc). Expense model (receipt capture, categories, monthly summaries). Report views (revenue, P&L, cash flow).",
+          "priority": "High",
+          "labels": ["unicore", "erp"]
+        },
+        {
+          "type": "Story",
+          "summary": "ERP — REST API (NestJS CRUD endpoints)",
+          "description": "Contacts CRUD + search + pipeline. Orders CRUD + fulfillment state machine. Inventory CRUD + stock deduction + low-stock alerts. Invoicing CRUD + payment recording + recurring. Expenses CRUD + categorization + receipt upload. Reports aggregation (revenue, P&L, cash flow).",
+          "priority": "High",
+          "labels": ["unicore", "erp"]
+        },
+        {
+          "type": "Story",
+          "summary": "ERP — Kafka event publishing",
+          "description": "Publish order.created, order.updated, order.fulfilled. Publish inventory.low, inventory.restocked. Publish invoice.created, invoice.overdue, invoice.paid.",
+          "priority": "Medium",
+          "labels": ["unicore", "erp"]
+        }
+      ]
+    },
+    {
+      "type": "Epic",
+      "summary": "AI Engine & RAG Pipeline",
+      "description": "LLM orchestration and prompt routing (port 4200). RAG pipeline for embeddings, retrieval, context (port 4300). Qdrant vector DB integration.",
+      "priority": "High",
+      "labels": ["unicore", "services", "ai"],
+      "children": [
+        {
+          "type": "Story",
+          "summary": "AI Engine — LLM provider abstraction & prompt management",
+          "description": "LLM provider abstraction (OpenAI, Anthropic, Ollama). Prompt template management (per-agent, per-template). Token usage tracking and cost monitoring. Provider failover (primary to fallback).",
+          "priority": "High",
+          "labels": ["unicore", "ai-engine"]
+        },
+        {
+          "type": "Story",
+          "summary": "RAG Service — Qdrant integration & retrieval pipeline",
+          "description": "Qdrant vector DB integration (embeddings CRUD). Document ingestion pipeline (chunking, embedding, storage). Context retrieval endpoint (query to relevant chunks). Memory scoping per agent/workspace.",
+          "priority": "High",
+          "labels": ["unicore", "rag"]
+        }
+      ]
+    },
+    {
+      "type": "Epic",
+      "summary": "OpenClaw Agent System",
+      "description": "Multi-agent orchestration via WebSocket (port 18789). Router Agent + 7 specialist agents. Each agent has own system prompt, tools, and memory scope.",
+      "priority": "High",
+      "labels": ["unicore", "agents"],
+      "children": [
+        {
+          "type": "Story",
+          "summary": "OpenClaw Gateway — WebSocket hub & agent lifecycle",
+          "description": "WebSocket hub (ws://localhost:18789). Agent registration and lifecycle management. Inter-agent message routing. Health check and heartbeat monitoring.",
+          "priority": "High",
+          "labels": ["unicore", "openclaw"]
+        },
+        {
+          "type": "Story",
+          "summary": "Router Agent — Intent classification & task delegation",
+          "description": "Intent classification prompt. Task delegation logic (route to specialist). Fallback handling (unknown intents). Always-on agent.",
+          "priority": "Highest",
+          "labels": ["unicore", "agents"]
+        },
+        {
+          "type": "Story",
+          "summary": "Specialist Agents — 7 agent implementations",
+          "description": "Comms Agent (email/social drafting, inbox triage, outreach). Finance Agent (transaction categorization, cash flow forecasting, invoicing). Growth Agent (funnel analysis, A/B tests, ad monitoring). Ops Agent (task management, scheduling, projects). Research Agent (market intel, competitors, news). ERP Agent (natural language CRUD). Builder Agent (code generation, deployment automation).",
+          "priority": "High",
+          "labels": ["unicore", "agents"]
+        }
+      ]
+    },
+    {
+      "type": "Epic",
+      "summary": "Workflow Engine",
+      "description": "Event-driven automation via Kafka (NestJS, port 4400). Consumes events from ERP, triggers agent actions, manages workflow state.",
+      "priority": "Medium",
+      "labels": ["unicore", "services"],
+      "children": [
+        {
+          "type": "Story",
+          "summary": "Workflow — Kafka consumer framework",
+          "description": "Connect to Kafka brokers. Create topic consumers (order.created, inventory.low, invoice.overdue). Event deserialization and validation.",
+          "priority": "Medium",
+          "labels": ["unicore", "workflow"]
+        },
+        {
+          "type": "Story",
+          "summary": "Workflow — Basic execution engine",
+          "description": "Workflow definition schema (trigger to actions). Action executors (call agent, update ERP, send notification). Workflow state tracking (running, completed, failed).",
+          "priority": "Medium",
+          "labels": ["unicore", "workflow"]
+        },
+        {
+          "type": "Story",
+          "summary": "Workflow — Pre-built workflow templates",
+          "description": "New order to invoice to confirmation email. Low stock to reorder task to owner notification. Invoice overdue to payment reminder to flag in reports.",
+          "priority": "Medium",
+          "labels": ["unicore", "workflow"]
+        }
+      ]
+    },
+    {
+      "type": "Epic",
+      "summary": "License Server",
+      "description": "Key validation, feature flags, machine binding (unicore-license repo). Includes license-api (NestJS), admin-dashboard (Next.js), key-generator CLI, shared crypto and types packages.",
+      "priority": "High",
+      "labels": ["unicore-license", "licensing"],
+      "children": [
+        {
+          "type": "Story",
+          "summary": "@unicore-license/license-types — Shared type definitions",
+          "description": "License, FeatureFlag, MachineFingerprint, ValidationResponse interfaces. Edition enums (community, pro) with feature mappings.",
+          "priority": "Highest",
+          "labels": ["unicore-license", "types"]
+        },
+        {
+          "type": "Story",
+          "summary": "@unicore-license/crypto — Key cryptography",
+          "description": "RSA key pair generation for license signing. Key encoder: license data to UC-XXXX-XXXX-XXXX-XXXX format. Key validator: verify signature, check expiry, detect tampering. Machine fingerprint hashing.",
+          "priority": "Highest",
+          "labels": ["unicore-license", "crypto"]
+        },
+        {
+          "type": "Story",
+          "summary": "License API — NestJS validation service",
+          "description": "Prisma schema (License, MachineBinding, AuditLog, FeatureFlag tables). CRUD endpoints (/api/v1/licenses). Validation endpoint (POST /api/v1/validate). Feature flag distribution (GET /api/v1/features/:key). Machine binding and transfer. Rate limiting and admin auth.",
+          "priority": "High",
+          "labels": ["unicore-license", "license-api"]
+        },
+        {
+          "type": "Story",
+          "summary": "License Admin Dashboard (Next.js)",
+          "description": "Admin login with ADMIN_SECRET. License list, search, detail views. Key generation UI. Usage analytics charts. Machine binding management.",
+          "priority": "Medium",
+          "labels": ["unicore-license", "admin"]
+        },
+        {
+          "type": "Story",
+          "summary": "Key Generator CLI",
+          "description": "Generate command with edition/expiry/features flags. Validate command for offline key verification. Batch generation from CSV.",
+          "priority": "Medium",
+          "labels": ["unicore-license", "cli"]
+        }
+      ]
+    },
+    {
+      "type": "Epic",
+      "summary": "Pro Extension Packages",
+      "description": "Advanced features gated by license key (unicore-pro repo). 9 packages: license-client, rbac, agents-pro, channels, workflows-advanced, branding, sso, audit, agent-builder.",
+      "priority": "High",
+      "labels": ["unicore-pro"],
+      "children": [
+        {
+          "type": "Story",
+          "summary": "@unicore/license-client — License validation client",
+          "description": "HTTP client for license server communication. Machine fingerprint generation (cross-platform). Offline validation cache (30-day grace). NestJS injectable module with license guards.",
+          "priority": "Highest",
+          "labels": ["unicore-pro", "license"]
+        },
+        {
+          "type": "Story",
+          "summary": "@unicore/rbac — Full role-based access control",
+          "description": "RBAC data model (Role, Permission, RoleAssignment) + Prisma schema. RoleService, PermissionService, AuthorizationService. Default 5 roles (Owner, Operator, Marketer, Finance, Viewer) seed. Bootstrap wizard Step 2 integration.",
+          "priority": "High",
+          "labels": ["unicore-pro", "rbac"]
+        },
+        {
+          "type": "Story",
+          "summary": "@unicore/agents-pro — All 7 specialist agents",
+          "description": "Agent definition interface + prompt templates. Industry-specific prompts per business template. Agent spawning/lifecycle via OpenClaw Gateway.",
+          "priority": "High",
+          "labels": ["unicore-pro", "agents"]
+        },
+        {
+          "type": "Story",
+          "summary": "@unicore/channels — 21+ communication channels",
+          "description": "Channel adapter framework (base interface + registry). Social channels: LINE, Facebook, Instagram, TikTok, WhatsApp, Telegram. Team channels: Slack, Discord, Email, WebChat. Channel management dashboard UI. Channel-to-agent binding.",
+          "priority": "High",
+          "labels": ["unicore-pro", "channels"]
+        },
+        {
+          "type": "Story",
+          "summary": "@unicore/workflows-advanced — Advanced workflow engine",
+          "description": "Workflow DSL (JSON/YAML with branching, loops, parallel). Execution engine with state management. Workflow template library (5+ pre-built). Visual workflow builder UI.",
+          "priority": "Medium",
+          "labels": ["unicore-pro", "workflows"]
+        },
+        {
+          "type": "Story",
+          "summary": "@unicore/branding — White-label customization",
+          "description": "Branding config storage (colors, logo, fonts). CSS theme generator from config. Remove UniCore branding option. Branding management UI.",
+          "priority": "Medium",
+          "labels": ["unicore-pro", "branding"]
+        },
+        {
+          "type": "Story",
+          "summary": "@unicore/sso — SSO / SAML integration",
+          "description": "SAML 2.0 Service Provider implementation. IdP integration (Azure AD, Okta, Google Workspace). JIT user provisioning from SAML groups. SSO configuration UI.",
+          "priority": "Medium",
+          "labels": ["unicore-pro", "sso"]
+        },
+        {
+          "type": "Story",
+          "summary": "@unicore/audit — Audit logging",
+          "description": "AuditLog data model (immutable, indexed). NestJS middleware for automatic action logging. Data change tracking (before/after diffs). Audit dashboard with search, filter, export.",
+          "priority": "Medium",
+          "labels": ["unicore-pro", "audit"]
+        },
+        {
+          "type": "Story",
+          "summary": "@unicore/agent-builder — Custom agent creation",
+          "description": "Custom agent definition storage + versioning. Agent tool registry (discoverable tools). Agent prompt editor with preview. Agent builder wizard (6-step). Agent testing and debugging simulator.",
+          "priority": "Low",
+          "labels": ["unicore-pro", "agent-builder"]
+        }
+      ]
+    }
+  ]
+}

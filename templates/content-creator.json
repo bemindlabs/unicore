@@ -1,0 +1,9 @@
+{
+  "name": "Content Creator",
+  "description": "YouTubers, influencers, media producers, bloggers",
+  "erp": { "contacts": true, "orders": false, "inventory": false, "invoicing": true, "expenses": true, "reports": false },
+  "agents": { "comms": true, "finance": false, "growth": true, "ops": false, "research": true, "erp": false, "builder": false },
+  "dashboard": { "widgets": ["audience", "engagement", "revenue", "content_calendar"] },
+  "channels": ["youtube", "instagram", "tiktok", "web"],
+  "workflows": ["sponsorship_followup", "content_schedule", "invoice_overdue"]
+}

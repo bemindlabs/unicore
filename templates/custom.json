@@ -1,0 +1,9 @@
+{
+  "name": "Custom",
+  "description": "Start from scratch with a blank configuration",
+  "erp": { "contacts": false, "orders": false, "inventory": false, "invoicing": false, "expenses": false, "reports": false },
+  "agents": { "comms": false, "finance": false, "growth": false, "ops": false, "research": false, "erp": false, "builder": false },
+  "dashboard": { "widgets": [] },
+  "channels": [],
+  "workflows": []
+}
