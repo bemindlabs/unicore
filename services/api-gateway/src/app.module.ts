@@ -5,6 +5,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/auth.module';
 import { ProxyModule } from './proxy/proxy.module';
+import { LicenseModule } from './license/license.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
@@ -14,7 +15,7 @@ import { RateLimitMiddleware } from './common/middleware/rate-limit.middleware';
 import { RequestValidationMiddleware } from './common/middleware/request-validation.middleware';
 
 @Module({
-  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule],
+  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule],
   controllers: [AppController],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
