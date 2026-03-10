@@ -1,0 +1,45 @@
+{
+  "name": "Low Stock Reorder",
+  "description": "Triggers when inventory drops below the configured threshold. Automatically creates a reorder request via the Ops Agent and notifies the operations team via Slack.",
+  "enabled": true,
+  "schemaVersion": 1,
+  "trigger": {
+    "type": "erp.inventory.low",
+    "conditions": []
+  },
+  "actions": [
+    {
+      "id": "create-reorder-request",
+      "type": "call_agent",
+      "label": "Create Reorder Request",
+      "dependsOn": [],
+      "continueOnError": false,
+      "timeoutMs": 10000,
+      "config": {
+        "agentName": "ops-agent",
+        "promptTemplate": "Create an urgent reorder request for product {{payload.productName}} (SKU: {{payload.sku}}, ID: {{payload.productId}}). Current stock is {{payload.currentQuantity}} units, which is below the threshold of {{payload.threshold}}. Suggested reorder quantity: {{payload.threshold}} units. Supplier ID: {{payload.supplierId}}. Priority: high.",
+        "model": null
+      }
+    },
+    {
+      "id": "notify-ops-team",
+      "type": "send_notification",
+      "label": "Notify Ops Team via Slack",
+      "dependsOn": ["create-reorder-request"],
+      "continueOnError": true,
+      "timeoutMs": 8000,
+      "config": {
+        "channel": "slack",
+        "recipient": "#ops-alerts",
+        "subject": "Low Stock Alert: {{payload.productName}}",
+        "bodyTemplate": ":warning: *Low Stock Alert*\n\nProduct: *{{payload.productName}}* (SKU: `{{payload.sku}}`)\nCurrent stock: *{{payload.currentQuantity}} units* (threshold: {{payload.threshold}})\nWarehouse: {{payload.warehouseId}}\n\nA reorder request has been created automatically. Please review and approve."
+      }
+    }
+  ],
+  "meta": {
+    "category": "inventory",
+    "agents": ["ops-agent", "comms-agent"],
+    "requiredModules": ["inventory"],
+    "estimatedDurationSec": 20
+  }
+}
