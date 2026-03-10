@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import {
   Bot,
   Building2,
+  Globe,
   KeyRound,
   Package,
   Plug,
@@ -52,6 +53,12 @@ const settingsNavItems: SettingsNavItem[] = [
     href: '/settings/integrations',
     icon: Plug,
     description: 'Connect external services',
+  },
+  {
+    label: 'Domains',
+    href: '/settings/domains',
+    icon: Globe,
+    description: 'Custom domain management and SSL',
   },
   {
     label: 'License',

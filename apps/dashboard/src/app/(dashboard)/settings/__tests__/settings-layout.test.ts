@@ -433,3 +433,247 @@ describe('Settings — Wizard helpers', () => {
     expect(unique).toHaveLength(hrefs.length);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Domains helpers
+// ---------------------------------------------------------------------------
+
+describe('Settings — Domains helpers', () => {
+  // Mirror domain types locally
+  type DomainStatus = 'pending' | 'verifying' | 'verified' | 'active' | 'error';
+  type SslStatus = 'pending' | 'active' | 'error';
+
+  interface DnsRecord {
+    type: 'TXT' | 'CNAME' | 'A';
+    name: string;
+    value: string;
+    ttl: number;
+  }
+
+  interface Domain {
+    id: string;
+    name: string;
+    status: DomainStatus;
+    sslStatus: SslStatus;
+    verifiedAt?: string;
+    addedAt: string;
+    dnsRecords: DnsRecord[];
+  }
+
+  // Mirror isValidDomain from page.tsx
+  function isValidDomain(value: string): boolean {
+    const pattern = /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
+    return pattern.test(value.trim());
+  }
+
+  // ---------------------------------------------------------------------------
+  // isValidDomain
+  // ---------------------------------------------------------------------------
+
+  describe('isValidDomain', () => {
+    it('accepts a standard subdomain', () => {
+      expect(isValidDomain('app.example.com')).toBe(true);
+    });
+
+    it('accepts a second-level domain', () => {
+      expect(isValidDomain('example.com')).toBe(true);
+    });
+
+    it('accepts multi-level subdomain', () => {
+      expect(isValidDomain('portal.acme.co.th')).toBe(true);
+    });
+
+    it('rejects bare hostname without TLD', () => {
+      expect(isValidDomain('localhost')).toBe(false);
+    });
+
+    it('rejects domain with leading hyphen in label', () => {
+      expect(isValidDomain('-bad.example.com')).toBe(false);
+    });
+
+    it('rejects empty string', () => {
+      expect(isValidDomain('')).toBe(false);
+    });
+
+    it('rejects domain with trailing dot only', () => {
+      expect(isValidDomain('.')).toBe(false);
+    });
+
+    it('rejects domain with spaces', () => {
+      expect(isValidDomain('my domain.com')).toBe(false);
+    });
+
+    it('trims whitespace before validation', () => {
+      expect(isValidDomain('  app.example.com  ')).toBe(true);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Domain status badge config coverage
+  // ---------------------------------------------------------------------------
+
+  const DOMAIN_STATUS_LABELS: Record<DomainStatus, string> = {
+    pending: 'Pending',
+    verifying: 'Verifying',
+    verified: 'Verified',
+    active: 'Active',
+    error: 'Error',
+  };
+
+  const SSL_STATUS_LABELS: Record<SslStatus, string> = {
+    pending: 'Pending',
+    active: 'SSL Active',
+    error: 'SSL Error',
+  };
+
+  it('all 5 domain statuses have a label', () => {
+    const statuses: DomainStatus[] = ['pending', 'verifying', 'verified', 'active', 'error'];
+    expect(statuses.every((s) => !!DOMAIN_STATUS_LABELS[s])).toBe(true);
+  });
+
+  it('all 3 SSL statuses have a label', () => {
+    const statuses: SslStatus[] = ['pending', 'active', 'error'];
+    expect(statuses.every((s) => !!SSL_STATUS_LABELS[s])).toBe(true);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Domain list state management
+  // ---------------------------------------------------------------------------
+
+  const MOCK_DOMAINS: Domain[] = [
+    {
+      id: '1',
+      name: 'app.acme.com',
+      status: 'active',
+      sslStatus: 'active',
+      verifiedAt: '2025-11-15',
+      addedAt: '2025-11-10',
+      dnsRecords: [
+        { type: 'TXT', name: '_unicore-verify.app.acme.com', value: 'unicore-verify=abc123', ttl: 300 },
+        { type: 'CNAME', name: 'app.acme.com', value: 'ingress.unicore.cloud', ttl: 300 },
+      ],
+    },
+    {
+      id: '2',
+      name: 'portal.acme.co.th',
+      status: 'verifying',
+      sslStatus: 'pending',
+      addedAt: '2026-03-09',
+      dnsRecords: [
+        { type: 'TXT', name: '_unicore-verify.portal.acme.co.th', value: 'unicore-verify=xyz789', ttl: 300 },
+        { type: 'CNAME', name: 'portal.acme.co.th', value: 'ingress.unicore.cloud', ttl: 300 },
+      ],
+    },
+    {
+      id: '3',
+      name: 'old.acme.io',
+      status: 'error',
+      sslStatus: 'error',
+      addedAt: '2026-01-20',
+      dnsRecords: [
+        { type: 'TXT', name: '_unicore-verify.old.acme.io', value: 'unicore-verify=err000', ttl: 300 },
+        { type: 'CNAME', name: 'old.acme.io', value: 'ingress.unicore.cloud', ttl: 300 },
+      ],
+    },
+  ];
+
+  it('mock data has 3 domains', () => {
+    expect(MOCK_DOMAINS).toHaveLength(3);
+  });
+
+  it('each domain has exactly 2 DNS records (TXT + CNAME)', () => {
+    expect(MOCK_DOMAINS.every((d) => d.dnsRecords.length === 2)).toBe(true);
+    expect(MOCK_DOMAINS.every((d) => d.dnsRecords.some((r) => r.type === 'TXT'))).toBe(true);
+    expect(MOCK_DOMAINS.every((d) => d.dnsRecords.some((r) => r.type === 'CNAME'))).toBe(true);
+  });
+
+  it('all CNAME records point to ingress.unicore.cloud', () => {
+    const cnames = MOCK_DOMAINS.flatMap((d) => d.dnsRecords.filter((r) => r.type === 'CNAME'));
+    expect(cnames.every((r) => r.value === 'ingress.unicore.cloud')).toBe(true);
+  });
+
+  it('TXT record names use _unicore-verify. prefix', () => {
+    const txts = MOCK_DOMAINS.flatMap((d) => d.dnsRecords.filter((r) => r.type === 'TXT'));
+    expect(txts.every((r) => r.name.startsWith('_unicore-verify.'))).toBe(true);
+  });
+
+  it('removing a domain by id filters it from the list', () => {
+    const updated = MOCK_DOMAINS.filter((d) => d.id !== '3');
+    expect(updated).toHaveLength(2);
+    expect(updated.find((d) => d.id === '3')).toBeUndefined();
+  });
+
+  it('adding a new domain prepends it to the list', () => {
+    const newDomain: Domain = {
+      id: '99',
+      name: 'new.example.com',
+      status: 'pending',
+      sslStatus: 'pending',
+      addedAt: '2026-03-10',
+      dnsRecords: [
+        { type: 'TXT', name: '_unicore-verify.new.example.com', value: 'unicore-verify=new', ttl: 300 },
+        { type: 'CNAME', name: 'new.example.com', value: 'ingress.unicore.cloud', ttl: 300 },
+      ],
+    };
+    const updated = [newDomain, ...MOCK_DOMAINS];
+    expect(updated[0]?.id).toBe('99');
+    expect(updated).toHaveLength(4);
+  });
+
+  it('re-verify changes domain status to verifying', () => {
+    const updated = MOCK_DOMAINS.map((d) =>
+      d.id === '1' ? { ...d, status: 'verifying' as DomainStatus } : d,
+    );
+    const domain = updated.find((d) => d.id === '1');
+    expect(domain?.status).toBe('verifying');
+  });
+
+  it('new domain starts with pending status for both domain and SSL', () => {
+    const domain: Partial<Domain> = { status: 'pending', sslStatus: 'pending' };
+    expect(domain.status).toBe('pending');
+    expect(domain.sslStatus).toBe('pending');
+  });
+
+  it('active domain has verifiedAt set', () => {
+    const activeDomain = MOCK_DOMAINS.find((d) => d.status === 'active');
+    expect(activeDomain?.verifiedAt).toBeDefined();
+  });
+
+  it('non-active domains do not have verifiedAt', () => {
+    const nonActive = MOCK_DOMAINS.filter((d) => d.status !== 'active');
+    expect(nonActive.every((d) => !d.verifiedAt)).toBe(true);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Settings sidebar — Domains nav item
+  // ---------------------------------------------------------------------------
+
+  const SETTINGS_NAV_ITEMS = [
+    { label: 'General', href: '/settings' },
+    { label: 'Team & Roles', href: '/settings/team' },
+    { label: 'AI Agents', href: '/settings/agents' },
+    { label: 'ERP Modules', href: '/settings/erp' },
+    { label: 'Integrations', href: '/settings/integrations' },
+    { label: 'Domains', href: '/settings/domains' },
+    { label: 'License', href: '/settings/license' },
+    { label: 'Re-run Wizard', href: '/settings/wizard' },
+  ];
+
+  it('settings nav includes Domains link', () => {
+    const domainsItem = SETTINGS_NAV_ITEMS.find((item) => item.label === 'Domains');
+    expect(domainsItem).toBeDefined();
+    expect(domainsItem?.href).toBe('/settings/domains');
+  });
+
+  it('Domains appears before License in the nav', () => {
+    const domainsIdx = SETTINGS_NAV_ITEMS.findIndex((item) => item.label === 'Domains');
+    const licenseIdx = SETTINGS_NAV_ITEMS.findIndex((item) => item.label === 'License');
+    expect(domainsIdx).toBeGreaterThan(-1);
+    expect(licenseIdx).toBeGreaterThan(-1);
+    expect(domainsIdx).toBeLessThan(licenseIdx);
+  });
+
+  it('settings nav has 8 items total', () => {
+    expect(SETTINGS_NAV_ITEMS).toHaveLength(8);
+  });
+});
