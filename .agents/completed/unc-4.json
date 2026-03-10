@@ -1,0 +1,16 @@
+{
+  "id": "UNC-4",
+  "title": "Implement @unicore/config shared configuration package",
+  "status": "completed",
+  "branch": "feature/unc-4-config",
+  "package": "@unicore/config",
+  "path": "packages/config/",
+  "deliverables": {
+    "eslint": ["src/eslint/base.js", "src/eslint/next.js", "src/eslint/nest.js", "src/eslint/react.js"],
+    "typescript": ["src/typescript/base.json", "src/typescript/next.json", "src/typescript/nest.json", "src/typescript/library.json"],
+    "tailwind": ["src/tailwind/base.ts"],
+    "prettier": ["src/prettier/base.js"],
+    "entry": ["src/index.ts"]
+  },
+  "completedAt": "2026-03-10T00:00:00Z"
+}
