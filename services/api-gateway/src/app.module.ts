@@ -1,15 +1,4 @@
 import { Module } from '@nestjs/common';
-<<<<<<< HEAD
-import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
-import { AppController } from './app.controller';
-import { PrismaModule } from './prisma/prisma.module';
-import { HealthModule } from './health/health.module';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter';
-import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
-
-@Module({
-  imports: [PrismaModule, HealthModule],
-=======
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { PrismaModule } from './prisma/prisma.module';
@@ -22,7 +11,6 @@ import { RolesGuard } from './auth/guards/roles.guard';
 
 @Module({
   imports: [PrismaModule, HealthModule, AuthModule],
->>>>>>> feature/unc-13-bootstrap-api
   controllers: [AppController],
   providers: [
     {
@@ -33,8 +21,6 @@ import { RolesGuard } from './auth/guards/roles.guard';
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
     },
-<<<<<<< HEAD
-=======
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
@@ -43,7 +29,6 @@ import { RolesGuard } from './auth/guards/roles.guard';
       provide: APP_GUARD,
       useClass: RolesGuard,
     },
->>>>>>> feature/unc-13-bootstrap-api
   ],
 })
 export class AppModule {}
