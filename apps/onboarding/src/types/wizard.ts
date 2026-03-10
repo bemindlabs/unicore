@@ -14,9 +14,17 @@ export interface TeamMember {
   role: UserRole;
 }
 
+export interface AdminInfo {
+  name: string;
+  email: string;
+  password: string;
+}
+
 export interface WizardState {
   currentStep: number;
+  bootstrapSecret: string;
   business: BusinessConfig;
+  admin: AdminInfo;
   team: TeamMember[];
   agents: AgentConfig[];
   erp: ErpModulesConfig;
@@ -25,7 +33,9 @@ export interface WizardState {
 
 export type WizardAction =
   | { type: 'SET_STEP'; step: number }
+  | { type: 'SET_BOOTSTRAP_SECRET'; secret: string }
   | { type: 'UPDATE_BUSINESS'; data: Partial<BusinessConfig> }
+  | { type: 'UPDATE_ADMIN'; data: Partial<AdminInfo> }
   | { type: 'SET_TEAM'; team: TeamMember[] }
   | { type: 'ADD_TEAM_MEMBER'; member: TeamMember }
   | { type: 'REMOVE_TEAM_MEMBER'; index: number }

@@ -1,6 +1,5 @@
 'use client';
 
-import type { UniCoreConfig } from '@unicore/shared-types';
 import {
   Badge,
   Button,
@@ -15,12 +14,13 @@ import { useState } from 'react';
 
 import { useWizardState } from '@/hooks/use-wizard-state';
 import { provisionWorkspace } from '@/lib/api';
+import type { ProvisionRequest, ProvisionResult } from '@/lib/api';
 import { AGENT_DEFINITIONS, ERP_MODULES, STEP_LABELS } from '@/types/wizard';
 
 export function StepReview() {
   const { state, prevStep, goToStep } = useWizardState();
   const [provisioning, setProvisioning] = useState(false);
-  const [result, setResult] = useState<{ success: boolean; message?: string } | null>(null);
+  const [result, setResult] = useState<ProvisionResult | null>(null);
 
   const enabledAgents = state.agents.filter((a) => a.enabled);
   const enabledModules = ERP_MODULES.filter((m) => state.erp[m.key]);
@@ -30,21 +30,27 @@ export function StepReview() {
     setProvisioning(true);
     setResult(null);
 
-    const config: UniCoreConfig = {
-      business: state.business,
-      roles: state.team.map((m) => ({ role: m.role, enabled: true })),
-      agents: state.agents,
-      erp: {
-        modules: state.erp,
-        currency: state.business.currency,
-        timezone: state.business.timezone,
-      },
-      integrations: state.integrations.filter((i) => i.enabled),
+    const request: ProvisionRequest = {
+      bootstrapSecret: state.bootstrapSecret ?? '',
+      businessName: state.business.name,
+      template: state.business.template,
+      industry: state.business.industry,
+      locale: state.business.locale,
+      currency: state.business.currency,
+      timezone: state.business.timezone,
+      adminName: state.admin?.name ?? '',
+      adminEmail: state.admin?.email ?? '',
+      adminPassword: state.admin?.password ?? '',
     };
 
-    const res = await provisionWorkspace(config);
-    setResult(res);
-    setProvisioning(false);
+    try {
+      const res = await provisionWorkspace(request);
+      setResult(res);
+    } catch (err) {
+      setResult({ success: false, message: err instanceof Error ? err.message : 'Provisioning failed' } as ProvisionResult);
+    } finally {
+      setProvisioning(false);
+    }
   }
 
   if (result?.success) {

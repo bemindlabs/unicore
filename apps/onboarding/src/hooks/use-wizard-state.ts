@@ -16,12 +16,18 @@ import type { WizardAction, WizardState } from '@/types/wizard';
 
 const initialState: WizardState = {
   currentStep: 0,
+  bootstrapSecret: '',
   business: {
     name: '',
     template: 'custom',
     locale: 'en',
     currency: 'USD',
     timezone: 'America/New_York',
+  },
+  admin: {
+    name: '',
+    email: '',
+    password: '',
   },
   team: [],
   agents: Object.values(AgentType).map((type) => ({
@@ -45,8 +51,12 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
   switch (action.type) {
     case 'SET_STEP':
       return { ...state, currentStep: action.step };
+    case 'SET_BOOTSTRAP_SECRET':
+      return { ...state, bootstrapSecret: action.secret };
     case 'UPDATE_BUSINESS':
       return { ...state, business: { ...state.business, ...action.data } };
+    case 'UPDATE_ADMIN':
+      return { ...state, admin: { ...state.admin, ...action.data } };
     case 'SET_TEAM':
       return { ...state, team: action.team };
     case 'ADD_TEAM_MEMBER':
