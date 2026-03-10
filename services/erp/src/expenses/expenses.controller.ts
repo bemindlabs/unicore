@@ -1,6 +1,18 @@
 import {
-  Controller, Get, Post, Patch, Delete, Body, Param, Query,
-  ParseUUIDPipe, HttpCode, HttpStatus, UseInterceptors, UploadedFile,
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  HttpCode,
+  HttpStatus,
+  ParseUUIDPipe,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ExpensesService } from './expenses.service';
@@ -14,6 +26,11 @@ import { RejectExpenseDto } from './dto/reject-expense.dto';
 export class ExpensesController {
   constructor(private readonly expensesService: ExpensesService) {}
 
+  @Post()
+  create(@Body() dto: CreateExpenseDto) {
+    return this.expensesService.create(dto);
+  }
+
   @Get()
   findAll(@Query() query: QueryExpensesDto) {
     return this.expensesService.findAll(query);
@@ -24,13 +41,11 @@ export class ExpensesController {
     return this.expensesService.findOne(id);
   }
 
-  @Post()
-  create(@Body() dto: CreateExpenseDto) {
-    return this.expensesService.create(dto);
-  }
-
   @Patch(':id')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateExpenseDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateExpenseDto,
+  ) {
     return this.expensesService.update(id, dto);
   }
 
@@ -41,26 +56,41 @@ export class ExpensesController {
   }
 
   @Post(':id/approve')
-  approve(@Param('id', ParseUUIDPipe) id: string, @Body() dto: ApproveExpenseDto) {
+  @HttpCode(HttpStatus.OK)
+  approve(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ApproveExpenseDto,
+  ) {
     return this.expensesService.approve(id, dto);
   }
 
   @Post(':id/reject')
-  reject(@Param('id', ParseUUIDPipe) id: string, @Body() dto: RejectExpenseDto) {
+  @HttpCode(HttpStatus.OK)
+  reject(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: RejectExpenseDto,
+  ) {
     return this.expensesService.reject(id, dto);
   }
 
   @Post(':id/reimburse')
+  @HttpCode(HttpStatus.OK)
   reimburse(@Param('id', ParseUUIDPipe) id: string) {
     return this.expensesService.reimburse(id);
   }
 
   @Post(':id/receipt')
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } }))
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('file'))
   uploadReceipt(
     @Param('id', ParseUUIDPipe) id: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.expensesService.uploadReceipt(id, file);
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+    // In production: upload to S3/GCS and return the URL.
+    const receiptUrl = `/uploads/receipts/${id}/${file.originalname}`;
+    return this.expensesService.uploadReceipt(id, receiptUrl);
   }
 }

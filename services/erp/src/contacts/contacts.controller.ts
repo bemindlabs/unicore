@@ -9,19 +9,35 @@ import { QueryContactsDto } from './dto/query-contacts.dto';
 
 @Controller('erp/contacts')
 export class ContactsController {
-  constructor(private readonly svc: ContactsService) {}
+  constructor(private readonly contactsService: ContactsService) {}
 
-  @Post() create(@Body() dto: CreateContactDto) { return this.svc.create(dto); }
-  @Get() findAll(@Query() q: QueryContactsDto) { return this.svc.findAll(q); }
-  @Get('leads/top') getTopLeads(
-    @Query('minScore', new ParseIntPipe({ optional: true })) s = 50,
-    @Query('limit', new ParseIntPipe({ optional: true })) l = 20,
-  ) { return this.svc.getTopLeads(s, l); }
-  @Get(':id') findOne(@Param('id', ParseUUIDPipe) id: string) { return this.svc.findOne(id); }
-  @Patch(':id') update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateContactDto) { return this.svc.update(id, dto); }
-  @Patch(':id/lead-score') updateLeadScore(
+  @Post()
+  create(@Body() dto: CreateContactDto) { return this.contactsService.create(dto); }
+
+  @Get()
+  findAll(@Query() query: QueryContactsDto) { return this.contactsService.findAll(query); }
+
+  @Get('leads/top')
+  getTopLeads(
+    @Query('minScore', new ParseIntPipe({ optional: true })) minScore = 50,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit = 20,
+  ) { return this.contactsService.getTopLeads(minScore, limit); }
+
+  @Get(':id')
+  findOne(@Param('id', ParseUUIDPipe) id: string) { return this.contactsService.findOne(id); }
+
+  @Patch(':id')
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateContactDto) {
+    return this.contactsService.update(id, dto);
+  }
+
+  @Patch(':id/lead-score')
+  updateLeadScore(
     @Param('id', ParseUUIDPipe) id: string,
     @Body('score', ParseIntPipe) score: number,
-  ) { return this.svc.updateLeadScore(id, score); }
-  @Delete(':id') @HttpCode(HttpStatus.NO_CONTENT) remove(@Param('id', ParseUUIDPipe) id: string) { return this.svc.remove(id); }
+  ) { return this.contactsService.updateLeadScore(id, score); }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id', ParseUUIDPipe) id: string) { return this.contactsService.remove(id); }
 }

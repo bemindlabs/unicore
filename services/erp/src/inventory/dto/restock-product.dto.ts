@@ -1,9 +1,20 @@
-import { IsInt, IsString, IsOptional, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsInt, IsString, IsOptional, Min, IsNotEmpty } from 'class-validator';
 
 export class RestockProductDto {
-  @IsInt() @Min(1) @Type(() => Number) quantity: number;
-  @IsOptional() @IsString() referenceId?: string;
-  @IsOptional() @IsString() performedBy?: string;
-  @IsOptional() @IsString() notes?: string;
+  @IsInt()
+  @Min(1)
+  quantity!: number;
+
+  @IsString()
+  @IsOptional()
+  purchaseOrderId?: string;
+
+  @IsString()
+  @IsOptional()
+  @IsNotEmpty()
+  performedBy?: string;
+
+  @IsString()
+  @IsOptional()
+  notes?: string;
 }

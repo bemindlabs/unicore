@@ -1,31 +1,30 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { getKafkaBrokers } from './kafka.config';
 import { EventPublisherService } from './event-publisher.service';
 
-export const KAFKA_CLIENT = 'KAFKA_ERP_CLIENT';
+const brokers = (process.env['KAFKA_BROKERS'] ?? 'localhost:9092').split(',');
 
+/**
+ * Registers a named Kafka producer (ERP_KAFKA_PRODUCER) and exports
+ * EventPublisherService for use across ERP feature modules.
+ */
 @Module({
   imports: [
-    ClientsModule.register([{
-      name: KAFKA_CLIENT,
-      transport: Transport.KAFKA,
-      options: {
-        client: {
-          clientId: process.env.KAFKA_CLIENT_ID ?? 'erp-service',
-          brokers: getKafkaBrokers(),
-          ssl: process.env.KAFKA_SSL === 'true',
-          sasl: process.env.KAFKA_SASL_USERNAME && process.env.KAFKA_SASL_PASSWORD ? {
-            mechanism: 'plain' as const,
-            username: process.env.KAFKA_SASL_USERNAME!,
-            password: process.env.KAFKA_SASL_PASSWORD!,
-          } : undefined,
-          retry: { initialRetryTime: 300, retries: 8 },
+    ClientsModule.register([
+      {
+        name: 'ERP_KAFKA_PRODUCER',
+        transport: Transport.KAFKA,
+        options: {
+          client: {
+            clientId: 'erp-producer',
+            brokers,
+          },
+          producer: {
+            allowAutoTopicCreation: false,
+          },
         },
-        producer: { allowAutoTopicCreation: false, idempotent: true },
-        producerOnlyMode: true,
       },
-    }]),
+    ]),
   ],
   providers: [EventPublisherService],
   exports: [EventPublisherService],

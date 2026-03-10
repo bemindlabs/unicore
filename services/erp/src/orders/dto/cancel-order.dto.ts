@@ -1,2 +1,7 @@
 import { IsString, IsOptional } from 'class-validator';
-export class CancelOrderDto { @IsString() @IsOptional() reason?: string; }
+
+export class CancelOrderDto {
+  @IsString()
+  @IsOptional()
+  reason?: string;
+}

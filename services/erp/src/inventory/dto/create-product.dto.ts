@@ -1,16 +1,60 @@
-import { IsString, IsOptional, IsNumber, IsArray, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import {
+  IsString, IsOptional, IsNumber, IsInt, Min, IsArray, MinLength, MaxLength,
+} from 'class-validator';
 
 export class CreateProductDto {
-  @IsString() sku: string;
-  @IsString() name: string;
-  @IsOptional() @IsString() description?: string;
-  @IsOptional() @IsString() category?: string;
-  @IsNumber() @Min(0) @Type(() => Number) unitPrice: number;
-  @IsOptional() @IsNumber() @Min(0) @Type(() => Number) costPrice?: number;
-  @IsOptional() @IsNumber() @Min(0) @Type(() => Number) quantity?: number;
-  @IsOptional() @IsNumber() @Min(0) @Type(() => Number) lowStockThreshold?: number;
-  @IsOptional() @IsString() warehouseId?: string;
-  @IsOptional() @IsString() supplierId?: string;
-  @IsOptional() @IsArray() @IsString({ each: true }) tags?: string[];
+  @IsString()
+  @MinLength(1)
+  @MaxLength(100)
+  sku!: string;
+
+  @IsString()
+  @MinLength(1)
+  @MaxLength(300)
+  name!: string;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @IsString()
+  @IsOptional()
+  category?: string;
+
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  unitPrice!: number;
+
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  @IsOptional()
+  costPrice?: number = 0;
+
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  quantity?: number = 0;
+
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  reservedQuantity?: number = 0;
+
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  lowStockThreshold?: number = 10;
+
+  @IsString()
+  @IsOptional()
+  warehouseId?: string;
+
+  @IsString()
+  @IsOptional()
+  supplierId?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  tags?: string[] = [];
 }

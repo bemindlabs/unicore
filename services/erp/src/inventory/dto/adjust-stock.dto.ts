@@ -1,9 +1,18 @@
-import { IsInt, IsString, IsOptional } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsInt, IsString, IsOptional, IsNotEmpty } from 'class-validator';
 
 export class AdjustStockDto {
-  @IsInt() @Type(() => Number) delta: number;
-  @IsString() reason: string;
-  @IsOptional() @IsString() referenceId?: string;
-  @IsOptional() @IsString() performedBy?: string;
+  @IsInt()
+  delta!: number;
+
+  @IsString()
+  @IsNotEmpty()
+  reason!: string;
+
+  @IsString()
+  @IsOptional()
+  referenceId?: string;
+
+  @IsString()
+  @IsOptional()
+  performedBy?: string;
 }

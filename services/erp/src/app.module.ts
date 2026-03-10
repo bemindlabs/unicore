@@ -1,30 +1,19 @@
 import { Module } from '@nestjs/common';
-import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
-import { PrismaModule } from './prisma/prisma.module';
+import { HealthModule } from './health/health.module';
 import { KafkaModule } from './kafka/kafka.module';
-import { ContactsModule } from './contacts/contacts.module';
-import { OrdersModule } from './orders/orders.module';
-import { InventoryModule } from './inventory/inventory.module';
-import { InvoicesModule } from './invoices/invoices.module';
-import { ExpensesModule } from './expenses/expenses.module';
-import { ReportsModule } from './reports/reports.module';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter';
-import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { PrismaModule } from './prisma/prisma.module';
 
+/**
+ * Root module for the UniCore ERP microservice (port 4100).
+ *
+ * Feature modules for Contacts, Orders, Inventory, Invoices, Expenses,
+ * and Reports will be imported here once implemented in subsequent tickets.
+ */
 @Module({
   imports: [
     PrismaModule,
     KafkaModule,
-    ContactsModule,
-    OrdersModule,
-    InventoryModule,
-    InvoicesModule,
-    ExpensesModule,
-    ReportsModule,
-  ],
-  providers: [
-    { provide: APP_FILTER, useClass: HttpExceptionFilter },
-    { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
+    HealthModule,
   ],
 })
 export class AppModule {}

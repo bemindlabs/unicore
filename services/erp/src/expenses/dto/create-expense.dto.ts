@@ -1,15 +1,55 @@
-import { IsString, IsOptional, IsNumber, IsArray, IsDateString, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import {
+  IsString,
+  IsOptional,
+  IsNumber,
+  IsArray,
+  Min,
+  IsDateString,
+  MaxLength,
+  IsNotEmpty,
+} from 'class-validator';
 
 export class CreateExpenseDto {
-  @IsString() title: string;
-  @IsOptional() @IsString() description?: string;
-  @IsString() category: string;
-  @IsNumber() @Min(0.01) @Type(() => Number) amount: number;
-  @IsOptional() @IsString() currency?: string;
-  @IsOptional() @IsString() vendor?: string;
-  @IsOptional() @IsDateString() paidAt?: string;
-  @IsOptional() @IsString() submittedBy?: string;
-  @IsOptional() @IsString() notes?: string;
-  @IsOptional() @IsArray() @IsString({ each: true }) tags?: string[];
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(300)
+  title!: string;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  category!: string;
+
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0.01)
+  amount!: number;
+
+  @IsString()
+  @IsOptional()
+  currency?: string = 'USD';
+
+  @IsString()
+  @IsOptional()
+  vendor?: string;
+
+  @IsDateString()
+  @IsOptional()
+  paidAt?: string;
+
+  @IsString()
+  @IsOptional()
+  submittedBy?: string;
+
+  @IsString()
+  @IsOptional()
+  notes?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  tags?: string[] = [];
 }

@@ -1,31 +1,31 @@
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
-import helmet from 'helmet';
+import { getKafkaConfig } from './kafka/kafka.config';
 
-async function bootstrap() {
+async function bootstrap(): Promise<void> {
   const logger = new Logger('ERP Bootstrap');
   const app = await NestFactory.create(AppModule);
 
-  app.use(helmet());
-  app.enableCors({
-    origin: process.env.CORS_ORIGINS?.split(',') ?? '*',
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    credentials: true,
-  });
+  // Connect Kafka microservice consumer
+  app.connectMicroservice(getKafkaConfig());
 
+  // Global validation pipe — strip unknown properties, whitelist known ones
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
-      transformOptions: { enableImplicitConversion: true },
     }),
   );
 
-  const port = parseInt(process.env.PORT ?? '3002', 10);
+  app.setGlobalPrefix('api');
+
+  await app.startAllMicroservices();
+
+  const port = process.env['PORT'] ?? 4100;
   await app.listen(port);
-  logger.log(`ERP service running on port ${port}`);
+  logger.log(`ERP service listening on port ${port}`);
 }
 
-bootstrap();
+void bootstrap();

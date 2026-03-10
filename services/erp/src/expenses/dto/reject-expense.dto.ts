@@ -1,6 +1,11 @@
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsNotEmpty } from 'class-validator';
 
 export class RejectExpenseDto {
-  @IsString() rejectedBy: string;
-  @IsOptional() @IsString() reason?: string;
+  @IsString()
+  @IsNotEmpty()
+  approvedBy!: string;
+
+  @IsString()
+  @IsOptional()
+  reason?: string;
 }
