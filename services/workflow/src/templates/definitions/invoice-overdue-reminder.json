@@ -1,0 +1,45 @@
+{
+  "name": "Invoice Overdue Reminder",
+  "description": "Sends a payment reminder email when an invoice becomes overdue. Flags the invoice for manual finance review when it is 3 or more days past due.",
+  "enabled": true,
+  "schemaVersion": 1,
+  "trigger": {
+    "type": "erp.invoice.overdue",
+    "conditions": []
+  },
+  "actions": [
+    {
+      "id": "send-overdue-reminder",
+      "type": "send_notification",
+      "label": "Send Overdue Payment Reminder",
+      "dependsOn": [],
+      "continueOnError": false,
+      "timeoutMs": 10000,
+      "config": {
+        "channel": "email",
+        "recipient": "{{payload.customerId}}",
+        "subject": "Payment Reminder — Invoice {{payload.invoiceNumber}} is overdue",
+        "bodyTemplate": "Dear Customer,\n\nThis is a reminder that invoice *{{payload.invoiceNumber}}* is now {{payload.daysOverdue}} day(s) overdue.\n\nOutstanding amount: {{payload.total}} {{payload.currency}}\nDue date: {{payload.dueAt}}\n\nPlease arrange payment at your earliest convenience.\n\nIf you have already made payment, please disregard this notice.\n\nThank you."
+      }
+    },
+    {
+      "id": "flag-for-review",
+      "type": "call_agent",
+      "label": "Flag Invoice for Finance Review",
+      "dependsOn": ["send-overdue-reminder"],
+      "continueOnError": true,
+      "timeoutMs": 8000,
+      "config": {
+        "agentName": "finance-agent",
+        "promptTemplate": "Flag invoice {{payload.invoiceNumber}} (ID: {{payload.invoiceId}}) for manual review. It is {{payload.daysOverdue}} day(s) overdue with an outstanding balance of {{payload.total}} {{payload.currency}} from customer {{payload.customerId}}. Due date was {{payload.dueAt}}. Add this to the overdue AR report and escalate if over 14 days.",
+        "model": null
+      }
+    }
+  ],
+  "meta": {
+    "category": "finance",
+    "agents": ["comms-agent", "finance-agent"],
+    "requiredModules": ["invoicing"],
+    "estimatedDurationSec": 25
+  }
+}
