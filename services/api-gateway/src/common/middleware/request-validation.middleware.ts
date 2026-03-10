@@ -8,7 +8,7 @@ import {
 import { Request, Response, NextFunction } from 'express';
 
 const MAX_CONTENT_LENGTH =
-  parseInt(process.env.MAX_REQUEST_BODY_BYTES ?? '1048576', 10); // 1 MB default
+  parseInt(process.env.MAX_REQUEST_BODY_BYTES ?? '1048576', 10);
 
 const ALLOWED_CONTENT_TYPES = new Set([
   'application/json',
@@ -17,42 +17,22 @@ const ALLOWED_CONTENT_TYPES = new Set([
   'text/plain',
 ]);
 
-/**
- * Validates inbound requests before they are forwarded to downstream services.
- *
- * Checks:
- *  1. Content-Length guard — rejects payloads over the configured maximum.
- *  2. Content-Type guard — rejects unsupported media types on mutation methods.
- *  3. Method guard — rejects non-standard HTTP methods.
- */
 @Injectable()
 export class RequestValidationMiddleware implements NestMiddleware {
   private readonly logger = new Logger(RequestValidationMiddleware.name);
 
   private static readonly ALLOWED_METHODS = new Set([
-    'GET',
-    'POST',
-    'PUT',
-    'PATCH',
-    'DELETE',
-    'HEAD',
-    'OPTIONS',
+    'GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS',
   ]);
 
-  private static readonly BODY_METHODS = new Set([
-    'POST',
-    'PUT',
-    'PATCH',
-  ]);
+  private static readonly BODY_METHODS = new Set(['POST', 'PUT', 'PATCH']);
 
   use(req: Request, _res: Response, next: NextFunction): void {
-    // 1. Method validation
     if (!RequestValidationMiddleware.ALLOWED_METHODS.has(req.method)) {
       this.logger.warn(`Rejected disallowed method: ${req.method} ${req.url}`);
       throw new BadRequestException(`HTTP method '${req.method}' is not allowed`);
     }
 
-    // 2. Content-Length check
     const contentLengthHeader = req.headers['content-length'];
     if (contentLengthHeader !== undefined) {
       const contentLength = parseInt(contentLengthHeader, 10);
@@ -66,7 +46,6 @@ export class RequestValidationMiddleware implements NestMiddleware {
       }
     }
 
-    // 3. Content-Type check (only for methods that carry a body)
     if (RequestValidationMiddleware.BODY_METHODS.has(req.method)) {
       const contentType = req.headers['content-type'];
       if (contentType) {
@@ -75,9 +54,7 @@ export class RequestValidationMiddleware implements NestMiddleware {
           this.logger.warn(
             `Rejected unsupported content-type: ${contentType} on ${req.method} ${req.url}`,
           );
-          throw new BadRequestException(
-            `Unsupported Content-Type: '${mediaType}'`,
-          );
+          throw new BadRequestException(`Unsupported Content-Type: '${mediaType}'`);
         }
       }
     }

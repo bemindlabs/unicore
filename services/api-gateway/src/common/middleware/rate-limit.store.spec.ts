@@ -25,7 +25,7 @@ describe('RateLimitStore', () => {
     });
 
     it('resets the counter after the window expires', () => {
-      store.increment('user:abc', 1); // 1ms window
+      store.increment('user:abc', 1);
       return new Promise<void>((resolve) => {
         setTimeout(() => {
           const result = store.increment('user:abc', 1);
@@ -39,10 +39,8 @@ describe('RateLimitStore', () => {
       store.increment('user:a', 60_000);
       store.increment('user:a', 60_000);
       store.increment('user:b', 60_000);
-
       const resultA = store.increment('user:a', 60_000);
       const resultB = store.increment('user:b', 60_000);
-
       expect(resultA.count).toBe(3);
       expect(resultB.count).toBe(2);
     });
@@ -63,8 +61,6 @@ describe('RateLimitStore', () => {
   describe('cleanup', () => {
     it('removes entries older than maxAgeMs', () => {
       store.increment('old-key', 60_000);
-      // Use a negative maxAgeMs so cutoff = now - (-1) = now + 1,
-      // which is strictly after windowStart (now), triggering removal.
       const removed = store.cleanup(-1);
       expect(removed).toBeGreaterThanOrEqual(1);
       expect(store.size).toBe(0);

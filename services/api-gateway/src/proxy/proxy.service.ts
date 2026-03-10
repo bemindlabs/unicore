@@ -58,12 +58,10 @@ export class ProxyService {
         ...(originalHost ? { 'x-forwarded-host': originalHost } : {}),
       };
 
-      // Inject authenticated user identity for downstream services
       if (options.userId) {
         forwardHeaders['x-user-id'] = options.userId;
       }
 
-      // Remove hop-by-hop headers
       delete forwardHeaders['connection'];
       delete forwardHeaders['transfer-encoding'];
       delete forwardHeaders['keep-alive'];

@@ -27,10 +27,7 @@ describe('RequestValidationMiddleware', () => {
   it('calls next() for a valid POST with application/json', () => {
     const next = jest.fn();
     middleware.use(
-      buildReq({
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-      }),
+      buildReq({ method: 'POST', headers: { 'content-type': 'application/json' } }),
       {} as Response,
       next,
     );
@@ -67,10 +64,7 @@ describe('RequestValidationMiddleware', () => {
     const next = jest.fn();
     expect(() =>
       middleware.use(
-        buildReq({
-          method: 'POST',
-          headers: { 'content-type': 'application/xml' },
-        }),
+        buildReq({ method: 'POST', headers: { 'content-type': 'application/xml' } }),
         {} as Response,
         next,
       ),
@@ -80,10 +74,7 @@ describe('RequestValidationMiddleware', () => {
   it('does not check content-type for GET requests', () => {
     const next = jest.fn();
     middleware.use(
-      buildReq({
-        method: 'GET',
-        headers: { 'content-type': 'application/xml' },
-      }),
+      buildReq({ method: 'GET', headers: { 'content-type': 'application/xml' } }),
       {} as Response,
       next,
     );

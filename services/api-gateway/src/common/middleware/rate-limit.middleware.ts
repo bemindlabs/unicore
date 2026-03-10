@@ -8,20 +8,18 @@ import { Request, Response, NextFunction } from 'express';
 import { RateLimitStore } from './rate-limit.store';
 
 export interface RateLimitConfig {
-  /** Maximum requests per window per key */
   maxRequests: number;
-  /** Window duration in milliseconds */
   windowMs: number;
 }
 
 const USER_LIMIT: RateLimitConfig = {
   maxRequests: parseInt(process.env.RATE_LIMIT_USER_MAX ?? '200', 10),
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS ?? '60000', 10), // 1 minute
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS ?? '60000', 10),
 };
 
 const IP_LIMIT: RateLimitConfig = {
   maxRequests: parseInt(process.env.RATE_LIMIT_IP_MAX ?? '100', 10),
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS ?? '60000', 10), // 1 minute
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS ?? '60000', 10),
 };
 
 function getClientIp(req: Request): string {
@@ -53,10 +51,7 @@ export class RateLimitMiddleware implements NestMiddleware {
         .setHeader('Retry-After', String(Math.ceil(ipResult.resetInMs / 1000)))
         .setHeader('X-RateLimit-Limit', String(IP_LIMIT.maxRequests))
         .setHeader('X-RateLimit-Remaining', '0')
-        .setHeader(
-          'X-RateLimit-Reset',
-          String(Math.ceil(ipResult.resetAt / 1000)),
-        )
+        .setHeader('X-RateLimit-Reset', String(Math.ceil(ipResult.resetAt / 1000)))
         .json({
           statusCode: HttpStatus.TOO_MANY_REQUESTS,
           message: 'Too many requests from this IP. Please retry later.',
@@ -70,16 +65,10 @@ export class RateLimitMiddleware implements NestMiddleware {
       'X-RateLimit-Remaining',
       String(Math.max(0, IP_LIMIT.maxRequests - ipResult.count)),
     );
-    res.setHeader(
-      'X-RateLimit-Reset',
-      String(Math.ceil(ipResult.resetAt / 1000)),
-    );
+    res.setHeader('X-RateLimit-Reset', String(Math.ceil(ipResult.resetAt / 1000)));
 
-    // Per-user rate limiting (only applies when JWT is present in request headers)
     const authHeader = req.headers['authorization'];
     if (authHeader?.startsWith('Bearer ')) {
-      // We extract the user sub from the JWT payload (without verifying — the
-      // JwtAuthGuard already guards the route; here we just need the key).
       const token = authHeader.slice(7);
       const userId = extractUserIdFromToken(token);
 
@@ -93,10 +82,7 @@ export class RateLimitMiddleware implements NestMiddleware {
           );
           res
             .status(HttpStatus.TOO_MANY_REQUESTS)
-            .setHeader(
-              'Retry-After',
-              String(Math.ceil(userResult.resetInMs / 1000)),
-            )
+            .setHeader('Retry-After', String(Math.ceil(userResult.resetInMs / 1000)))
             .setHeader('X-RateLimit-User-Limit', String(USER_LIMIT.maxRequests))
             .setHeader('X-RateLimit-User-Remaining', '0')
             .json({
@@ -123,10 +109,6 @@ export class RateLimitMiddleware implements NestMiddleware {
   }
 }
 
-/**
- * Decode the JWT payload to extract `sub` (user id) without verification.
- * The guard already validates the signature — here we only need the key.
- */
 function extractUserIdFromToken(token: string): string | null {
   try {
     const parts = token.split('.');

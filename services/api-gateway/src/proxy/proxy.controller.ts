@@ -12,16 +12,6 @@ import { Request, Response } from 'express';
 import { ProxyService } from './proxy.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
-/**
- * Wildcard proxy controller — all authenticated requests to /:service/**
- * are forwarded to the appropriate downstream microservice.
- *
- * Routes:
- *   /erp/**       -> ERP service       :4100
- *   /ai/**        -> AI Engine service :4200
- *   /rag/**       -> RAG service       :4300
- *   /bootstrap/** -> Bootstrap service :4500
- */
 @Controller()
 export class ProxyController {
   private readonly logger = new Logger(ProxyController.name);
@@ -88,11 +78,7 @@ export class ProxyController {
       res.status(proxyResponse.statusCode);
 
       for (const [key, value] of Object.entries(proxyResponse.headers)) {
-        if (Array.isArray(value)) {
-          res.setHeader(key, value);
-        } else {
-          res.setHeader(key, value);
-        }
+        res.setHeader(key, value as string | string[]);
       }
 
       res.end(proxyResponse.body);
@@ -101,21 +87,16 @@ export class ProxyController {
         throw err;
       }
       this.logger.error(`Unhandled proxy error for ${path}:`, err);
-      throw new HttpException(
-        'Internal gateway error',
-        HttpStatus.BAD_GATEWAY,
-      );
+      throw new HttpException('Internal gateway error', HttpStatus.BAD_GATEWAY);
     }
   }
 
   private readBody(req: Request): Promise<Buffer | null> {
     return new Promise((resolve, reject) => {
-      // Express may already have parsed the body
       if ((req as Request & { rawBody?: Buffer }).rawBody) {
         return resolve((req as Request & { rawBody?: Buffer }).rawBody!);
       }
 
-      // If body-parser already ran and populated req.body as an object, re-serialise
       if (req.body !== undefined && !Buffer.isBuffer(req.body)) {
         const serialised = JSON.stringify(req.body);
         return resolve(Buffer.from(serialised, 'utf8'));
@@ -127,9 +108,7 @@ export class ProxyController {
 
       const chunks: Buffer[] = [];
       req.on('data', (chunk: Buffer) => chunks.push(chunk));
-      req.on('end', () =>
-        resolve(chunks.length ? Buffer.concat(chunks) : null),
-      );
+      req.on('end', () => resolve(chunks.length ? Buffer.concat(chunks) : null));
       req.on('error', reject);
     });
   }

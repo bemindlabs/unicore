@@ -11,18 +11,8 @@ export interface IncrementResult {
   resetInMs: number;
 }
 
-const CLEANUP_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
 
-/**
- * In-memory sliding-window rate limit store.
- *
- * Each key tracks a fixed window starting from the first request within that
- * window. When the window expires the counter resets automatically.
- *
- * Production deployments should replace this with a Redis-backed store
- * (e.g. using @nestjs/throttler with a Redis storage adapter) so counters
- * are shared across horizontally-scaled gateway instances.
- */
 @Injectable()
 export class RateLimitStore {
   private readonly logger = new Logger(RateLimitStore.name);
@@ -38,7 +28,6 @@ export class RateLimitStore {
     const entry = this.store.get(key);
 
     if (!entry || now - entry.windowStart >= windowMs) {
-      // New window
       const newEntry: RateLimitEntry = { count: 1, windowStart: now };
       this.store.set(key, newEntry);
       const resetAt = now + windowMs;
@@ -50,7 +39,6 @@ export class RateLimitStore {
     return { count: entry.count, resetAt, resetInMs: resetAt - now };
   }
 
-  /** Remove stale entries. Called periodically to avoid unbounded growth. */
   cleanup(maxAgeMs = CLEANUP_INTERVAL_MS): number {
     const cutoff = Date.now() - maxAgeMs;
     let removed = 0;
@@ -74,11 +62,7 @@ export class RateLimitStore {
   }
 
   private startCleanup(): void {
-    this.cleanupTimer = setInterval(
-      () => this.cleanup(),
-      CLEANUP_INTERVAL_MS,
-    );
-    // Don't keep the Node process alive just for cleanup
+    this.cleanupTimer = setInterval(() => this.cleanup(), CLEANUP_INTERVAL_MS);
     this.cleanupTimer.unref();
   }
 
