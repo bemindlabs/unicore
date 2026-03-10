@@ -1,0 +1,195 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum ContactType { LEAD CUSTOMER VENDOR PARTNER }
+enum OrderStatus { PENDING CONFIRMED PROCESSING SHIPPED FULFILLED CANCELLED REFUNDED }
+enum InvoiceStatus { DRAFT SENT PAID OVERDUE CANCELLED }
+enum ExpenseStatus { PENDING APPROVED REJECTED REIMBURSED }
+enum PaymentMethod { CASH BANK_TRANSFER CREDIT_CARD DEBIT_CARD CRYPTO OTHER }
+
+model Contact {
+  id        String      @id @default(uuid())
+  type      ContactType @default(LEAD)
+  firstName String
+  lastName  String
+  email     String?     @unique
+  phone     String?
+  company   String?
+  website   String?
+  address   String?
+  city      String?
+  country   String?
+  currency  String      @default("USD")
+  leadScore Int         @default(0)
+  tags      String[]
+  notes     String?
+  orders    Order[]
+  invoices  Invoice[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  @@index([type])
+  @@index([email])
+  @@index([leadScore])
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  orderNumber     String      @unique
+  contactId       String
+  contact         Contact     @relation(fields: [contactId], references: [id], onDelete: Restrict)
+  status          OrderStatus @default(PENDING)
+  lineItems       OrderItem[]
+  subtotal        Decimal     @db.Decimal(15, 2)
+  taxRate         Decimal     @db.Decimal(5, 4) @default(0)
+  taxAmount       Decimal     @db.Decimal(15, 2) @default(0)
+  discount        Decimal     @db.Decimal(15, 2) @default(0)
+  total           Decimal     @db.Decimal(15, 2)
+  currency        String      @default("USD")
+  notes           String?
+  shippingAddress String?
+  trackingNumber  String?
+  carrier         String?
+  fulfilledAt     DateTime?
+  cancelledAt     DateTime?
+  invoices        Invoice[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  @@index([contactId])
+  @@index([status])
+  @@index([orderNumber])
+}
+
+model OrderItem {
+  id          String   @id @default(uuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  sku         String
+  productName String
+  quantity    Int
+  unitPrice   Decimal  @db.Decimal(15, 2)
+  totalPrice  Decimal  @db.Decimal(15, 2)
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Product {
+  id                String          @id @default(uuid())
+  sku               String          @unique
+  name              String
+  description       String?
+  category          String?
+  unitPrice         Decimal         @db.Decimal(15, 2)
+  costPrice         Decimal         @db.Decimal(15, 2) @default(0)
+  quantity          Int             @default(0)
+  reservedQuantity  Int             @default(0)
+  lowStockThreshold Int             @default(10)
+  warehouseId       String?
+  supplierId        String?
+  tags              String[]
+  orderItems        OrderItem[]
+  stockMovements    StockMovement[]
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  @@index([sku])
+  @@index([category])
+  @@index([quantity])
+}
+
+model StockMovement {
+  id             String   @id @default(uuid())
+  productId      String
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  delta          Int
+  reason         String
+  referenceId    String?
+  quantityBefore Int
+  quantityAfter  Int
+  performedBy    String?
+  createdAt      DateTime @default(now())
+  @@index([productId])
+  @@index([referenceId])
+}
+
+model Invoice {
+  id            String        @id @default(uuid())
+  invoiceNumber String        @unique
+  contactId     String
+  contact       Contact       @relation(fields: [contactId], references: [id], onDelete: Restrict)
+  orderId       String?
+  order         Order?        @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  status        InvoiceStatus @default(DRAFT)
+  lineItems     InvoiceItem[]
+  subtotal      Decimal       @db.Decimal(15, 2)
+  taxRate       Decimal       @db.Decimal(5, 4) @default(0)
+  taxAmount     Decimal       @db.Decimal(15, 2) @default(0)
+  discount      Decimal       @db.Decimal(15, 2) @default(0)
+  total         Decimal       @db.Decimal(15, 2)
+  amountPaid    Decimal       @db.Decimal(15, 2) @default(0)
+  currency      String        @default("USD")
+  dueDate       DateTime?
+  issuedAt      DateTime?
+  paidAt        DateTime?
+  notes         String?
+  payments      Payment[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  @@index([contactId])
+  @@index([orderId])
+  @@index([status])
+  @@index([invoiceNumber])
+}
+
+model InvoiceItem {
+  id          String   @id @default(uuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Int
+  unitPrice   Decimal  @db.Decimal(15, 2)
+  totalPrice  Decimal  @db.Decimal(15, 2)
+  @@index([invoiceId])
+}
+
+model Payment {
+  id        String        @id @default(uuid())
+  invoiceId String
+  invoice   Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amount    Decimal       @db.Decimal(15, 2)
+  currency  String        @default("USD")
+  method    PaymentMethod @default(BANK_TRANSFER)
+  reference String?
+  notes     String?
+  paidAt    DateTime      @default(now())
+  createdAt DateTime      @default(now())
+  @@index([invoiceId])
+}
+
+model Expense {
+  id          String        @id @default(uuid())
+  title       String
+  description String?
+  category    String
+  amount      Decimal       @db.Decimal(15, 2)
+  currency    String        @default("USD")
+  status      ExpenseStatus @default(PENDING)
+  receiptUrl  String?
+  vendor      String?
+  paidAt      DateTime?
+  submittedBy String?
+  approvedBy  String?
+  notes       String?
+  tags        String[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  @@index([status])
+  @@index([category])
+  @@index([paidAt])
+}
