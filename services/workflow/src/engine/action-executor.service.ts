@@ -1,5 +1,7 @@
 /**
  * ActionExecutorService — registry that routes actions to their executor.
+ *
+ * Executors are auto-registered on module init by scanning the injected list.
  */
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import type { WorkflowAction } from '../schema/workflow-definition.schema';
@@ -48,6 +50,7 @@ export class ActionExecutorService implements OnModuleInit {
       return { success: false, error };
     }
 
+    // Cast is safe: executor is keyed by action.type discriminant
     return executor.execute(action as never, context);
   }
 

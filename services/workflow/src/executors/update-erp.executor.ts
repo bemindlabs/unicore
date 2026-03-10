@@ -1,8 +1,8 @@
 /**
- * UpdateErpExecutor — applies field-level mutations to an ERP entity.
+ * UpdateErpExecutor — applies field mutations to an ERP entity.
  *
- * Trigger payload is spread at the root of the interpolation context so
- * template authors write {{payload.orderId}} directly.
+ * In production this publishes an ERP command event to Kafka (or calls the
+ * ERP service REST API). The stub validates input and logs the mutation.
  */
 import { Injectable, Logger } from '@nestjs/common';
 import type { UpdateErpAction } from '../schema/workflow-definition.schema';
@@ -25,22 +25,21 @@ export class UpdateErpExecutor implements IActionExecutor<UpdateErpAction> {
     const { entity, entityId: entityIdTemplate, fields } = action.config;
 
     const interpolationCtx: Record<string, unknown> = {
-      ...(typeof context.triggerPayload === 'object' && context.triggerPayload !== null
-        ? (context.triggerPayload as Record<string, unknown>)
-        : {}),
+      payload: context.triggerPayload,
       outputs: context.previousOutputs,
     };
 
     const entityId = interpolate(entityIdTemplate, interpolationCtx);
 
-    if (!entityId) {
-      return { success: false, error: `Could not resolve entityId for ${entity}` };
-    }
-
+    // Interpolate each field value that is a string template
     const resolvedFields: Record<string, string | number | boolean> = {};
     for (const [key, value] of Object.entries(fields)) {
       resolvedFields[key] =
         typeof value === 'string' ? interpolate(value, interpolationCtx) : value;
+    }
+
+    if (!entityId) {
+      return { success: false, error: `Could not resolve entityId for ${entity}` };
     }
 
     this.logger.log(
@@ -49,8 +48,16 @@ export class UpdateErpExecutor implements IActionExecutor<UpdateErpAction> {
 
     try {
       // TODO: publish Kafka command event or call ERP REST API.
-      this.logger.log(`[${context.instanceId}] ERP ${entity}:${entityId} updated successfully`);
-      return { success: true, output: { entity, entityId, updatedFields: resolvedFields } };
+      // await this.erpClient.update({ entity, entityId, fields: resolvedFields });
+
+      this.logger.log(
+        `[${context.instanceId}] ERP ${entity}:${entityId} updated successfully`,
+      );
+
+      return {
+        success: true,
+        output: { entity, entityId, updatedFields: resolvedFields },
+      };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       this.logger.error(

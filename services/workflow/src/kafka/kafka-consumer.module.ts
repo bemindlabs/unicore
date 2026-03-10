@@ -9,8 +9,8 @@ import { WorkflowEngineModule } from '../workflow/workflow-engine.module';
  * KafkaConsumerModule wires together all topic-specific consumer services
  * and the central EventHandlerService.
  *
- * Imports WorkflowEngineModule to inject WorkflowEngineService into each
- * consumer so events can trigger matching pre-built workflow templates.
+ * Imports WorkflowEngineModule so consumer services can inject WorkflowService
+ * and forward deserialized events into the workflow engine.
  *
  * The Kafka microservice transport is registered in main.ts via
  * app.connectMicroservice(buildKafkaOptions()).

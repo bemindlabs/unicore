@@ -1,3 +1,10 @@
+/**
+ * @deprecated Use the specific widget components from @/components/widgets/
+ * (RevenueWidget, OrdersWidget, etc.) with the DynamicWidgetGrid instead.
+ *
+ * This file is kept for any existing direct usages.
+ */
+
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, cn } from '@unicore/ui';
 
@@ -18,7 +25,7 @@ export function StatsWidget({ title, value, description, icon: Icon, trend }: St
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
-        {(description || trend) && (
+        {(description ?? trend) && (
           <p className="text-xs text-muted-foreground">
             {trend && (
               <span

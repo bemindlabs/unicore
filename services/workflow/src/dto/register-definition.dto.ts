@@ -1,6 +1,18 @@
-import { IsString, IsNotEmpty, IsBoolean, IsArray, IsObject, IsOptional, IsNumber } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsBoolean,
+  IsArray,
+  IsObject,
+  IsOptional,
+  ValidateNested,
+  IsNumber,
+  IsIn,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 import type { WorkflowDefinition } from '../schema/workflow-definition.schema';
 
+/** DTO for registering a new workflow definition at runtime. */
 export class RegisterDefinitionDto implements WorkflowDefinition {
   @IsString()
   @IsNotEmpty()

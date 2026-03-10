@@ -91,7 +91,7 @@ export interface CallAgentAction extends BaseAction {
     /** Registered agent name (e.g. "ops-agent", "growth-agent"). */
     agentName: string;
     /**
-     * Prompt template — supports {{field}} interpolation against the
+     * Prompt template — supports `{{field}}` interpolation against the
      * trigger event payload and previous action outputs.
      */
     promptTemplate: string;
@@ -106,9 +106,9 @@ export interface UpdateErpAction extends BaseAction {
   config: {
     /** ERP entity type to mutate. */
     entity: 'order' | 'invoice' | 'inventory' | 'contact';
-    /** Entity ID — supports {{field}} interpolation. */
+    /** Entity ID — supports `{{field}}` interpolation. */
     entityId: string;
-    /** Key-value pairs to update. Values support {{field}} interpolation. */
+    /** Key-value pairs to update. Values support `{{field}}` interpolation. */
     fields: Record<string, string | number | boolean>;
   };
 }
@@ -118,11 +118,11 @@ export interface SendNotificationAction extends BaseAction {
   type: 'send_notification';
   config: {
     channel: 'email' | 'slack' | 'line' | 'webhook';
-    /** Recipient address/ID — supports {{field}} interpolation. */
+    /** Recipient address/ID — supports `{{field}}` interpolation. */
     recipient: string;
-    /** Subject or title — supports {{field}} interpolation. */
+    /** Subject or title — supports `{{field}}` interpolation. */
     subject: string;
-    /** Body template — supports {{field}} interpolation. */
+    /** Body template — supports `{{field}}` interpolation. */
     bodyTemplate: string;
   };
 }

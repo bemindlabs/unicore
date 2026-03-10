@@ -1,18 +1,14 @@
 import { Module } from '@nestjs/common';
 import { WorkflowEngineModule } from './workflow/workflow-engine.module';
-import { WorkflowTemplatesModule } from './module/workflow-templates.module';
 import { KafkaConsumerModule } from './kafka/kafka-consumer.module';
 
 /**
- * Root application module for the Workflow Engine service (port 4400).
+ * Root application module for the workflow service.
  *
- * WorkflowEngineModule    — core engine, REST controller for /workflows, state store.
- * WorkflowTemplatesModule — pre-built templates loader, registry, HTTP API at
- *                           /workflow/templates, bootstraps definitions into engine.
- * KafkaConsumerModule     — Kafka topic consumers that forward ERP events into
- *                           the engine for automated workflow execution.
+ * WorkflowEngineModule — core engine, REST controller, state store.
+ * KafkaConsumerModule  — Kafka topic consumers that forward events into the engine.
  */
 @Module({
-  imports: [WorkflowEngineModule, WorkflowTemplatesModule, KafkaConsumerModule],
+  imports: [WorkflowEngineModule, KafkaConsumerModule],
 })
 export class AppModule {}

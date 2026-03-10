@@ -3,29 +3,40 @@ import { TemplateLoaderService } from '../loader/template-loader.service';
 import { TemplateRegistryService } from '../registry/template-registry.service';
 import { WorkflowTemplatesController } from './workflow-templates.controller';
 import { WorkflowTemplateBootstrapService } from './workflow-template-bootstrap.service';
-import { WorkflowEngineModule } from '../workflow/workflow-engine.module';
+import { WorkflowEngineService } from '../engine/workflow-engine.service';
+import { ActionExecutorService } from '../engine/action-executor.service';
+import { CallAgentExecutor } from '../executors/call-agent.executor';
+import { UpdateErpExecutor } from '../executors/update-erp.executor';
+import { SendNotificationExecutor } from '../executors/send-notification.executor';
+import { WorkflowStateStore } from '../state/workflow-state.store';
 
 /**
- * WorkflowTemplatesModule provides the pre-built workflow template system.
+ * WorkflowTemplatesModule wires together the pre-built template system:
  *
- * Flow on startup:
- *   1. TemplateLoaderService reads JSON files from templates/definitions/.
- *   2. TemplateRegistryService validates and indexes them by trigger type.
- *   3. WorkflowTemplateBootstrapService loads enabled definitions into
- *      WorkflowEngineService (from WorkflowEngineModule) so the engine
- *      can match and execute them when Kafka events arrive.
+ *   TemplateLoaderService   — reads JSON files from disk
+ *   TemplateRegistryService — validates and indexes definitions by trigger
+ *   WorkflowEngineService   — executes definitions when events fire
+ *   WorkflowTemplateBootstrapService — loads registry → engine on startup
  *
- * WorkflowEngineModule is imported (not re-declared) to reuse the engine
- * instance shared with KafkaConsumerModule.
+ * Exported services allow other modules (e.g. KafkaConsumerModule) to
+ * inject WorkflowEngineService for event-driven workflow execution.
  */
 @Module({
-  imports: [WorkflowEngineModule],
   controllers: [WorkflowTemplatesController],
   providers: [
+    // Template layer
     TemplateLoaderService,
     TemplateRegistryService,
     WorkflowTemplateBootstrapService,
+    // Engine layer
+    WorkflowEngineService,
+    ActionExecutorService,
+    WorkflowStateStore,
+    // Action executors
+    CallAgentExecutor,
+    UpdateErpExecutor,
+    SendNotificationExecutor,
   ],
-  exports: [TemplateRegistryService],
+  exports: [TemplateRegistryService, WorkflowEngineService],
 })
 export class WorkflowTemplatesModule {}

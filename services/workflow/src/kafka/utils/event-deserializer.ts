@@ -1,50 +1,91 @@
 import { Logger } from '@nestjs/common';
-import type { EventEnvelopeDto } from '../dto/event-envelope.dto';
+import { plainToInstance, ClassConstructor } from 'class-transformer';
+import { validate, ValidationError } from 'class-validator';
+import { EventEnvelopeDto } from '../dto/event-envelope.dto';
 
 const logger = new Logger('EventDeserializer');
 
 /**
- * Safely deserializes a raw Kafka message value into an EventEnvelopeDto.
- * Returns null on parse failure so consumers can skip the message gracefully.
+ * Formats class-validator errors into a human-readable string.
  */
-export async function deserializeEnvelope<T = unknown>(
+function formatValidationErrors(errors: ValidationError[], prefix = ''): string {
+  return errors
+    .map((err) => {
+      const property = prefix ? `${prefix}.${err.property}` : err.property;
+      const constraints = err.constraints ? Object.values(err.constraints).join(', ') : '';
+      const children =
+        err.children && err.children.length > 0
+          ? formatValidationErrors(err.children, property)
+          : '';
+      return [constraints && `${property}: ${constraints}`, children].filter(Boolean).join('\n');
+    })
+    .join('\n');
+}
+
+/**
+ * Deserializes a raw Kafka message value (Buffer | string | null) into
+ * a typed EventEnvelopeDto and validates the envelope-level fields.
+ *
+ * Returns `null` on parse or validation failure after logging the error.
+ */
+export async function deserializeEnvelope(
   raw: Buffer | string | null | undefined,
-): Promise<EventEnvelopeDto<T> | null> {
+): Promise<EventEnvelopeDto | null> {
   if (raw == null) {
     logger.warn('Received null/undefined Kafka message value — skipping');
     return null;
   }
 
-  const text = typeof raw === 'string' ? raw : raw.toString('utf-8');
-
+  let parsed: unknown;
   try {
-    const parsed = JSON.parse(text) as EventEnvelopeDto<T>;
-    if (!parsed.eventId || !parsed.type || !parsed.payload) {
-      logger.warn(`Invalid envelope structure: ${text.slice(0, 200)}`);
-      return null;
-    }
-    return parsed;
+    const text = Buffer.isBuffer(raw) ? raw.toString('utf-8') : raw;
+    parsed = JSON.parse(text) as unknown;
   } catch (err) {
-    logger.error(`Failed to parse Kafka message: ${String(err)}`);
+    logger.error(`Failed to JSON-parse Kafka message: ${String(err)}`);
     return null;
   }
+
+  const envelope = plainToInstance(EventEnvelopeDto, parsed);
+  const errors = await validate(envelope, {
+    whitelist: true,
+    forbidNonWhitelisted: false, // payload is typed per-topic
+    skipMissingProperties: false,
+  });
+
+  if (errors.length > 0) {
+    logger.error(`Envelope validation failed:\n${formatValidationErrors(errors)}`);
+    return null;
+  }
+
+  return envelope;
 }
 
 /**
- * Validates and returns the typed payload from a parsed envelope.
- * The constructor parameter is used only for TypeScript type inference.
- * Returns null on validation failure.
+ * Validates and transforms a raw payload object into a typed DTO class.
+ *
+ * Returns `null` on validation failure after logging.
  */
-export async function deserializePayload<T>(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _dtoClass: new () => T,
-  payload: unknown,
+export async function deserializePayload<T extends object>(
+  DtoClass: ClassConstructor<T>,
+  raw: unknown,
 ): Promise<T | null> {
-  if (payload == null || typeof payload !== 'object') {
-    logger.warn('Payload is not an object — skipping');
+  const instance = plainToInstance(DtoClass, raw, {
+    enableImplicitConversion: false,
+    excludeExtraneousValues: false,
+  });
+
+  const errors = await validate(instance as object, {
+    whitelist: true,
+    forbidNonWhitelisted: false,
+    skipMissingProperties: false,
+  });
+
+  if (errors.length > 0) {
+    logger.error(
+      `Payload validation failed for ${DtoClass.name}:\n${formatValidationErrors(errors)}`,
+    );
     return null;
   }
-  // Runtime validation via class-validator/class-transformer would go here.
-  // For now we trust the envelope schema and cast.
-  return payload as T;
+
+  return instance;
 }

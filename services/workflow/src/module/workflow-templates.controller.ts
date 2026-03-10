@@ -43,7 +43,7 @@ export class WorkflowTemplatesController {
   /**
    * GET /workflow/templates
    * Lists all registered workflow template definitions.
-   * Pass ?enabledOnly=false to include disabled templates.
+   * Pass `?enabledOnly=false` to include disabled templates.
    */
   @Get()
   findAll(@Query('enabledOnly') enabledOnly?: string): DefinitionListResponse {
@@ -54,10 +54,10 @@ export class WorkflowTemplatesController {
 
   /**
    * GET /workflow/templates/trigger/:type
-   * Returns all enabled templates for the given trigger type,
-   * e.g. erp.order.created.
+   * Returns all enabled templates for the given Kafka-style trigger type,
+   * e.g. `erp.order.created`.
    *
-   * Note: this route must appear BEFORE /:id to avoid capture by the
+   * Note: this route must appear BEFORE `/:id` to avoid capture by the
    * generic param route.
    */
   @Get('trigger/:type')
@@ -69,7 +69,8 @@ export class WorkflowTemplatesController {
   /**
    * POST /workflow/templates/validate
    * Validates a workflow definition without registering it.
-   * Always returns HTTP 200 — check data.valid for the result.
+   * Useful for UI template editors and CI checks.
+   * Always returns HTTP 200 — check `data.valid` for the result.
    */
   @Post('validate')
   @HttpCode(HttpStatus.OK)
