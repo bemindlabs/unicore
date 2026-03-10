@@ -35,3 +35,25 @@ enum Role {
   FINANCE
   VIEWER
 }
+
+// ---------------------------------------------------------------------------
+// Custom Domain Routing (UNC-55)
+// ---------------------------------------------------------------------------
+
+/// A custom domain owned by a tenant, used to route incoming requests.
+model CustomDomain {
+  id             String   @id @default(uuid())
+  /// Normalized hostname without port (e.g. "app.acme.com")
+  hostname       String   @unique
+  /// UUID of the owning tenant
+  tenantId       String
+  /// DNS-verified flag — unverified domains are stored but not routed
+  isVerified     Boolean  @default(false)
+  /// Allowed CORS origins for this domain (JSON array stored as Text[])
+  allowedOrigins String[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("custom_domains")
+}
