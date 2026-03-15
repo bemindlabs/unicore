@@ -1,31 +1,17 @@
 import Link from 'next/link';
 import {
-  Bot,
   BookOpen,
   ChevronRight,
   Crown,
   Globe,
   Settings,
-  Users,
-  Wand2,
   Puzzle,
+  Wand2,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@unicore/ui';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 
 const SETTINGS_LINKS = [
-  {
-    href: '/settings/team',
-    icon: Users,
-    title: 'Team',
-    description: 'Manage team members, roles, and permissions',
-  },
-  {
-    href: '/settings/agents',
-    icon: Bot,
-    title: 'AI Agents',
-    description: 'Configure agent types, autonomy levels, and active channels',
-  },
   {
     href: '/settings/erp',
     icon: BookOpen,
