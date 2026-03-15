@@ -11,6 +11,8 @@ COPY apps/onboarding/package.json ./apps/onboarding/
 RUN pnpm install --frozen-lockfile --filter @unicore/onboarding...
 
 FROM base AS build
+ARG NEXT_PUBLIC_BOOTSTRAP_SECRET
+ENV NEXT_PUBLIC_BOOTSTRAP_SECRET=$NEXT_PUBLIC_BOOTSTRAP_SECRET
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/packages/config/node_modules ./packages/config/node_modules
 COPY --from=deps /app/packages/shared-types/node_modules ./packages/shared-types/node_modules

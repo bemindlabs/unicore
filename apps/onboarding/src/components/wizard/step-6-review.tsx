@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Badge,
@@ -9,13 +9,13 @@ import {
   CardHeader,
   CardTitle,
   Separator,
-} from '@unicore/ui';
-import { useState } from 'react';
+} from "@unicore/ui";
+import { useState } from "react";
 
-import { useWizardState } from '@/hooks/use-wizard-state';
-import { provisionWorkspace } from '@/lib/api';
-import type { ProvisionRequest, ProvisionResult } from '@/lib/api';
-import { AGENT_DEFINITIONS, ERP_MODULES, STEP_LABELS } from '@/types/wizard';
+import { useWizardState } from "@/hooks/use-wizard-state";
+import { provisionWorkspace } from "@/lib/api";
+import type { ProvisionRequest, ProvisionResult } from "@/lib/api";
+import { AGENT_DEFINITIONS, ERP_MODULES, STEP_LABELS } from "@/types/wizard";
 
 export function StepReview() {
   const { state, prevStep, goToStep } = useWizardState();
@@ -27,27 +27,57 @@ export function StepReview() {
   const enabledIntegrations = state.integrations.filter((i) => i.enabled);
 
   async function handleProvision() {
+    // Client-side validation
+    const adminName = state.admin?.name?.trim() ?? "";
+    const adminEmail = state.admin?.email?.trim() ?? "";
+    const adminPassword = state.admin?.password ?? "";
+    if (!adminName) {
+      setResult({
+        success: false,
+        message: "Admin name is required",
+      } as ProvisionResult);
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(adminEmail)) {
+      setResult({
+        success: false,
+        message: "A valid admin email is required",
+      } as ProvisionResult);
+      return;
+    }
+    if (adminPassword.length < 8) {
+      setResult({
+        success: false,
+        message: "Admin password must be at least 8 characters",
+      } as ProvisionResult);
+      return;
+    }
+
     setProvisioning(true);
     setResult(null);
 
     const request: ProvisionRequest = {
-      bootstrapSecret: state.bootstrapSecret ?? '',
+      bootstrapSecret:
+        process.env.NEXT_PUBLIC_BOOTSTRAP_SECRET ?? state.bootstrapSecret ?? "",
       businessName: state.business.name,
       template: state.business.template,
       industry: state.business.industry,
       locale: state.business.locale,
       currency: state.business.currency,
       timezone: state.business.timezone,
-      adminName: state.admin?.name ?? '',
-      adminEmail: state.admin?.email ?? '',
-      adminPassword: state.admin?.password ?? '',
+      adminName,
+      adminEmail,
+      adminPassword,
     };
 
     try {
       const res = await provisionWorkspace(request);
       setResult(res);
     } catch (err) {
-      setResult({ success: false, message: err instanceof Error ? err.message : 'Provisioning failed' } as ProvisionResult);
+      setResult({
+        success: false,
+        message: err instanceof Error ? err.message : "Provisioning failed",
+      } as ProvisionResult);
     } finally {
       setProvisioning(false);
     }
@@ -59,7 +89,8 @@ export function StepReview() {
         <div className="text-5xl">🚀</div>
         <h2 className="text-2xl font-bold">Workspace Provisioned!</h2>
         <p className="text-muted-foreground max-w-md">
-          Your UniCore workspace is being set up. You'll be redirected to the dashboard shortly.
+          Your UniCore workspace is being set up. You'll be redirected to the
+          dashboard shortly.
         </p>
       </div>
     );
@@ -74,13 +105,31 @@ export function StepReview() {
         </p>
       </div>
 
+      {/* Admin Account Summary */}
+      <SectionCard title="Admin Account" step={1} onEdit={goToStep}>
+        <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="text-muted-foreground">Name</div>
+          <div className="font-medium">{state.admin?.name || "—"}</div>
+          <div className="text-muted-foreground">Email</div>
+          <div className="font-medium">{state.admin?.email || "—"}</div>
+          <div className="text-muted-foreground">Password</div>
+          <div className="font-medium">
+            {state.admin?.password
+              ? "•".repeat(Math.min(state.admin.password.length, 12))
+              : "—"}
+          </div>
+        </div>
+      </SectionCard>
+
       {/* Business Summary */}
       <SectionCard title="Business Profile" step={0} onEdit={goToStep}>
         <div className="grid grid-cols-2 gap-2 text-sm">
           <div className="text-muted-foreground">Name</div>
-          <div className="font-medium">{state.business.name || '—'}</div>
+          <div className="font-medium">{state.business.name || "—"}</div>
           <div className="text-muted-foreground">Type</div>
-          <div className="font-medium capitalize">{state.business.template}</div>
+          <div className="font-medium capitalize">
+            {state.business.template}
+          </div>
           <div className="text-muted-foreground">Currency</div>
           <div className="font-medium">{state.business.currency}</div>
           <div className="text-muted-foreground">Language</div>
@@ -95,9 +144,14 @@ export function StepReview() {
         {state.team.length > 0 ? (
           <div className="space-y-1">
             {state.team.map((m) => (
-              <div key={m.email} className="flex items-center justify-between text-sm">
+              <div
+                key={m.email}
+                className="flex items-center justify-between text-sm"
+              >
                 <span>{m.email}</span>
-                <Badge variant="secondary" className="text-xs">{m.role}</Badge>
+                <Badge variant="secondary" className="text-xs">
+                  {m.role}
+                </Badge>
               </div>
             ))}
           </div>
@@ -128,7 +182,9 @@ export function StepReview() {
       <SectionCard title="ERP Modules" step={3} onEdit={goToStep}>
         <div className="flex flex-wrap gap-2">
           {enabledModules.map((m) => (
-            <Badge key={m.key} variant="secondary">{m.label}</Badge>
+            <Badge key={m.key} variant="secondary">
+              {m.label}
+            </Badge>
           ))}
         </div>
       </SectionCard>
@@ -138,11 +194,15 @@ export function StepReview() {
         {enabledIntegrations.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {enabledIntegrations.map((i) => (
-              <Badge key={i.provider} variant="secondary">{i.name}</Badge>
+              <Badge key={i.provider} variant="secondary">
+                {i.name}
+              </Badge>
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">No integrations enabled</p>
+          <p className="text-sm text-muted-foreground">
+            No integrations enabled
+          </p>
         )}
       </SectionCard>
 
@@ -150,7 +210,7 @@ export function StepReview() {
 
       {result && !result.success && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {result.message ?? 'Provisioning failed. Please try again.'}
+          {result.message ?? "Provisioning failed. Please try again."}
         </div>
       )}
 
@@ -160,7 +220,7 @@ export function StepReview() {
           Back
         </Button>
         <Button onClick={handleProvision} disabled={provisioning}>
-          {provisioning ? 'Provisioning...' : 'Launch Workspace'}
+          {provisioning ? "Provisioning..." : "Launch Workspace"}
         </Button>
       </div>
     </div>
@@ -182,13 +242,16 @@ function SectionCard({
     <Card>
       <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
         <CardTitle className="text-sm">{title}</CardTitle>
-        <Button variant="ghost" size="sm" onClick={() => onEdit(step)} className="text-xs h-7">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onEdit(step)}
+          className="text-xs h-7"
+        >
           Edit
         </Button>
       </CardHeader>
-      <CardContent className="p-4 pt-2">
-        {children}
-      </CardContent>
+      <CardContent className="p-4 pt-2">{children}</CardContent>
     </Card>
   );
 }
