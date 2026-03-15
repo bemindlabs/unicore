@@ -1,6 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import type { EmbeddingProvider, EmbeddingRequest, EmbeddingResponse } from '../common/interfaces/embedding.interface';
+import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import type {
+  EmbeddingProvider,
+  EmbeddingRequest,
+  EmbeddingResponse,
+} from "../common/interfaces/embedding.interface";
 
 /**
  * EmbeddingService integrates with the unicore AI Engine service to produce
@@ -17,27 +21,35 @@ export class EmbeddingService implements EmbeddingProvider {
   private readonly dimensions: number;
 
   constructor(private readonly config: ConfigService) {
-    this.aiEngineUrl = this.config.get<string>('AI_ENGINE_URL', 'http://localhost:4001');
-    this.apiKey = this.config.get<string>('AI_ENGINE_API_KEY');
-    this.model = this.config.get<string>('EMBEDDING_MODEL', 'text-embedding-3-small');
-    this.dimensions = this.config.get<number>('EMBEDDING_DIMENSIONS', 1536);
+    this.aiEngineUrl = this.config.get<string>(
+      "AI_ENGINE_URL",
+      "http://localhost:4001",
+    );
+    this.apiKey = this.config.get<string>("AI_ENGINE_API_KEY");
+    this.model = this.config.get<string>(
+      "EMBEDDING_MODEL",
+      "text-embedding-3-small",
+    );
+    this.dimensions = this.config.get<number>("EMBEDDING_DIMENSIONS", 1536);
   }
 
   async embed(request: EmbeddingRequest): Promise<EmbeddingResponse> {
     const model = request.model ?? this.model;
 
     try {
-      const response = await fetch(`${this.aiEngineUrl}/embeddings`, {
-        method: 'POST',
+      const response = await fetch(`${this.aiEngineUrl}/llm/embed`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           ...(this.apiKey ? { Authorization: `Bearer ${this.apiKey}` } : {}),
         },
         body: JSON.stringify({ text: request.text, model }),
       });
 
       if (!response.ok) {
-        throw new Error(`AI Engine returned ${response.status}: ${await response.text()}`);
+        throw new Error(
+          `AI Engine returned ${response.status}: ${await response.text()}`,
+        );
       }
 
       return (await response.json()) as EmbeddingResponse;
@@ -51,20 +63,29 @@ export class EmbeddingService implements EmbeddingProvider {
 
   async embedBatch(texts: string[]): Promise<EmbeddingResponse[]> {
     try {
-      const response = await fetch(`${this.aiEngineUrl}/embeddings/batch`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(this.apiKey ? { Authorization: `Bearer ${this.apiKey}` } : {}),
-        },
-        body: JSON.stringify({ texts, model: this.model }),
-      });
+      const results = await Promise.all(
+        texts.map(async (text) => {
+          const response = await fetch(`${this.aiEngineUrl}/llm/embed`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(this.apiKey
+                ? { Authorization: `Bearer ${this.apiKey}` }
+                : {}),
+            },
+            body: JSON.stringify({ text, model: this.model }),
+          });
 
-      if (!response.ok) {
-        throw new Error(`AI Engine returned ${response.status}: ${await response.text()}`);
-      }
+          if (!response.ok) {
+            throw new Error(
+              `AI Engine returned ${response.status}: ${await response.text()}`,
+            );
+          }
 
-      return (await response.json()) as EmbeddingResponse[];
+          return (await response.json()) as EmbeddingResponse;
+        }),
+      );
+      return results;
     } catch (err) {
       this.logger.warn(
         `AI Engine batch unavailable, using stub embeddings: ${String(err)}`,
