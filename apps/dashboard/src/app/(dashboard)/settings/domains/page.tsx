@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -15,7 +15,7 @@ import {
   ShieldCheck,
   Trash2,
   XCircle,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   Badge,
   Button,
@@ -30,7 +30,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   Input,
   Label,
   Table,
@@ -40,18 +39,24 @@ import {
   TableHeader,
   TableRow,
   toast,
-} from '@unicore/ui';
-import { Breadcrumb } from '@/components/layout/breadcrumb';
+} from "@unicore/ui";
+import { Breadcrumb } from "@/components/layout/breadcrumb";
+import { api } from "@/lib/api";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-export type DomainStatus = 'pending' | 'verifying' | 'verified' | 'active' | 'error';
-export type SslStatus = 'pending' | 'active' | 'error';
+export type DomainStatus =
+  | "pending"
+  | "verifying"
+  | "verified"
+  | "active"
+  | "error";
+export type SslStatus = "pending" | "active" | "error";
 
 export interface DnsRecord {
-  type: 'TXT' | 'CNAME' | 'A';
+  type: "TXT" | "CNAME" | "A";
   name: string;
   value: string;
   ttl: number;
@@ -83,103 +88,67 @@ export interface Domain {
 }
 
 // ---------------------------------------------------------------------------
-// Mock data
-// ---------------------------------------------------------------------------
-
-const MOCK_DOMAINS: Domain[] = [
-  {
-    id: '1',
-    name: 'app.acme.com',
-    status: 'active',
-    sslStatus: 'active',
-    verifiedAt: '2025-11-15',
-    addedAt: '2025-11-10',
-    dnsRecords: [
-      {
-        type: 'TXT',
-        name: '_unicore-verify.app.acme.com',
-        value: 'unicore-verify=abc123def456',
-        ttl: 300,
-      },
-      { type: 'CNAME', name: 'app.acme.com', value: 'ingress.unicore.cloud', ttl: 300 },
-    ],
-    sslCertificate: {
-      issuer: "Let's Encrypt Authority X3",
-      issuedAt: '2025-11-15',
-      expiresAt: '2026-02-13',
-      subject: 'app.acme.com',
-    },
-    verificationHistory: [
-      { timestamp: '2025-11-15T08:12:00Z', message: 'DNS TXT record verified successfully', success: true },
-      { timestamp: '2025-11-14T18:00:00Z', message: 'Verification attempt — DNS not propagated yet', success: false },
-      { timestamp: '2025-11-10T10:00:00Z', message: 'Domain added', success: true },
-    ],
-  },
-  {
-    id: '2',
-    name: 'portal.acme.co.th',
-    status: 'verifying',
-    sslStatus: 'pending',
-    addedAt: '2026-03-09',
-    dnsRecords: [
-      {
-        type: 'TXT',
-        name: '_unicore-verify.portal.acme.co.th',
-        value: 'unicore-verify=xyz789ghi012',
-        ttl: 300,
-      },
-      { type: 'CNAME', name: 'portal.acme.co.th', value: 'ingress.unicore.cloud', ttl: 300 },
-    ],
-    verificationHistory: [
-      { timestamp: '2026-03-09T14:30:00Z', message: 'Verification started — checking DNS', success: true },
-      { timestamp: '2026-03-09T14:00:00Z', message: 'Domain added', success: true },
-    ],
-  },
-  {
-    id: '3',
-    name: 'old.acme.io',
-    status: 'error',
-    sslStatus: 'error',
-    addedAt: '2026-01-20',
-    dnsRecords: [
-      {
-        type: 'TXT',
-        name: '_unicore-verify.old.acme.io',
-        value: 'unicore-verify=err000lmn999',
-        ttl: 300,
-      },
-      { type: 'CNAME', name: 'old.acme.io', value: 'ingress.unicore.cloud', ttl: 300 },
-    ],
-    verificationHistory: [
-      { timestamp: '2026-03-01T09:00:00Z', message: 'Verification failed — TXT record not found', success: false },
-      { timestamp: '2026-02-15T11:00:00Z', message: 'Verification failed — TXT record not found', success: false },
-      { timestamp: '2026-01-20T10:00:00Z', message: 'Domain added', success: true },
-    ],
-  },
-];
-
-// ---------------------------------------------------------------------------
 // Badge helpers
 // ---------------------------------------------------------------------------
 
 const DOMAIN_STATUS_CONFIG: Record<
   DomainStatus,
-  { label: string; className: string; icon: React.ComponentType<{ className?: string }> }
+  {
+    label: string;
+    className: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }
 > = {
-  pending: { label: 'Pending', className: 'bg-yellow-100 text-yellow-800 border-yellow-300', icon: Clock },
-  verifying: { label: 'Verifying', className: 'bg-blue-100 text-blue-800 border-blue-300', icon: RefreshCw },
-  verified: { label: 'Verified', className: 'bg-emerald-100 text-emerald-800 border-emerald-300', icon: CheckCircle2 },
-  active: { label: 'Active', className: 'bg-emerald-100 text-emerald-800 border-emerald-300', icon: CheckCircle2 },
-  error: { label: 'Error', className: 'bg-red-100 text-red-800 border-red-300', icon: XCircle },
+  pending: {
+    label: "Pending",
+    className: "bg-yellow-100 text-yellow-800 border-yellow-300",
+    icon: Clock,
+  },
+  verifying: {
+    label: "Verifying",
+    className: "bg-blue-100 text-blue-800 border-blue-300",
+    icon: RefreshCw,
+  },
+  verified: {
+    label: "Verified",
+    className: "bg-emerald-100 text-emerald-800 border-emerald-300",
+    icon: CheckCircle2,
+  },
+  active: {
+    label: "Active",
+    className: "bg-emerald-100 text-emerald-800 border-emerald-300",
+    icon: CheckCircle2,
+  },
+  error: {
+    label: "Error",
+    className: "bg-red-100 text-red-800 border-red-300",
+    icon: XCircle,
+  },
 };
 
 const SSL_STATUS_CONFIG: Record<
   SslStatus,
-  { label: string; className: string; icon: React.ComponentType<{ className?: string }> }
+  {
+    label: string;
+    className: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }
 > = {
-  pending: { label: 'Pending', className: 'bg-yellow-100 text-yellow-800 border-yellow-300', icon: Clock },
-  active: { label: 'SSL Active', className: 'bg-emerald-100 text-emerald-800 border-emerald-300', icon: Lock },
-  error: { label: 'SSL Error', className: 'bg-red-100 text-red-800 border-red-300', icon: XCircle },
+  pending: {
+    label: "Pending",
+    className: "bg-yellow-100 text-yellow-800 border-yellow-300",
+    icon: Clock,
+  },
+  active: {
+    label: "SSL Active",
+    className: "bg-emerald-100 text-emerald-800 border-emerald-300",
+    icon: Lock,
+  },
+  error: {
+    label: "SSL Error",
+    className: "bg-red-100 text-red-800 border-red-300",
+    icon: XCircle,
+  },
 };
 
 function DomainStatusBadge({ status }: { status: DomainStatus }) {
@@ -214,7 +183,8 @@ function SslStatusBadge({ status }: { status: SslStatus }) {
 
 export function isValidDomain(value: string): boolean {
   // Basic hostname validation: labels separated by dots, no leading/trailing hyphens
-  const pattern = /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
+  const pattern =
+    /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
   return pattern.test(value.trim());
 }
 
@@ -225,34 +195,41 @@ export function isValidDomain(value: string): boolean {
 interface AddDomainDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (domain: string) => void;
+  onAdd: (domain: Domain) => void;
 }
 
 function AddDomainDialog({ open, onOpenChange, onAdd }: AddDomainDialogProps) {
-  const [domainValue, setDomainValue] = useState('');
+  const [domainValue, setDomainValue] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [touched, setTouched] = useState(false);
 
   const isValid = isValidDomain(domainValue);
-  const showError = touched && !isValid && domainValue.trim() !== '';
+  const showError = touched && !isValid && domainValue.trim() !== "";
 
   const handleAdd = useCallback(async () => {
     if (!isValid) return;
     setIsAdding(true);
     try {
-      // TODO: api.post('/settings/domains', { domain: domainValue.trim() })
-      await new Promise((r) => setTimeout(r, 700));
-      onAdd(domainValue.trim());
-      setDomainValue('');
+      const created = await api.post<Domain>("/settings/domains", {
+        hostname: domainValue.trim(),
+      });
+      onAdd(created);
+      setDomainValue("");
       setTouched(false);
       onOpenChange(false);
+    } catch (err: unknown) {
+      toast({
+        title: "Failed to add domain",
+        description: err instanceof Error ? err.message : "Unknown error",
+        variant: "destructive",
+      });
     } finally {
       setIsAdding(false);
     }
   }, [isValid, domainValue, onAdd, onOpenChange]);
 
   const handleClose = useCallback(() => {
-    setDomainValue('');
+    setDomainValue("");
     setTouched(false);
     onOpenChange(false);
   }, [onOpenChange]);
@@ -263,7 +240,8 @@ function AddDomainDialog({ open, onOpenChange, onAdd }: AddDomainDialogProps) {
         <DialogHeader>
           <DialogTitle>Add Custom Domain</DialogTitle>
           <DialogDescription>
-            Connect a custom domain to your UniCore dashboard. You will need to add DNS records to your domain registrar.
+            Connect a custom domain to your UniCore dashboard. You will need to
+            add DNS records to your domain registrar.
           </DialogDescription>
         </DialogHeader>
 
@@ -278,10 +256,14 @@ function AddDomainDialog({ open, onOpenChange, onAdd }: AddDomainDialogProps) {
               value={domainValue}
               onChange={(e) => setDomainValue(e.target.value)}
               onBlur={() => setTouched(true)}
-              className={showError ? 'border-red-400 focus-visible:ring-red-400' : ''}
+              className={
+                showError ? "border-red-400 focus-visible:ring-red-400" : ""
+              }
             />
             {showError && (
-              <p className="text-xs text-red-600">Please enter a valid domain name (e.g. app.yourdomain.com)</p>
+              <p className="text-xs text-red-600">
+                Please enter a valid domain name (e.g. app.yourdomain.com)
+              </p>
             )}
           </div>
 
@@ -292,7 +274,8 @@ function AddDomainDialog({ open, onOpenChange, onAdd }: AddDomainDialogProps) {
               DNS Setup Instructions
             </div>
             <p className="text-xs text-muted-foreground">
-              After adding your domain, set the following DNS records with your registrar:
+              After adding your domain, set the following DNS records with your
+              registrar:
             </p>
 
             {/* TXT record */}
@@ -302,19 +285,31 @@ function AddDomainDialog({ open, onOpenChange, onAdd }: AddDomainDialogProps) {
               </p>
               <div className="rounded border bg-background font-mono text-xs p-2 space-y-0.5">
                 <div className="flex gap-2">
-                  <span className="text-muted-foreground w-12 shrink-0">Type</span>
+                  <span className="text-muted-foreground w-12 shrink-0">
+                    Type
+                  </span>
                   <span>TXT</span>
                 </div>
                 <div className="flex gap-2">
-                  <span className="text-muted-foreground w-12 shrink-0">Name</span>
-                  <span className="break-all">_unicore-verify.{domainValue.trim() || '<your-domain>'}</span>
+                  <span className="text-muted-foreground w-12 shrink-0">
+                    Name
+                  </span>
+                  <span className="break-all">
+                    _unicore-verify.{domainValue.trim() || "<your-domain>"}
+                  </span>
                 </div>
                 <div className="flex gap-2">
-                  <span className="text-muted-foreground w-12 shrink-0">Value</span>
-                  <span className="break-all">unicore-verify=&lt;token-provided-after-save&gt;</span>
+                  <span className="text-muted-foreground w-12 shrink-0">
+                    Value
+                  </span>
+                  <span className="break-all">
+                    unicore-verify=&lt;token-provided-after-save&gt;
+                  </span>
                 </div>
                 <div className="flex gap-2">
-                  <span className="text-muted-foreground w-12 shrink-0">TTL</span>
+                  <span className="text-muted-foreground w-12 shrink-0">
+                    TTL
+                  </span>
                   <span>300</span>
                 </div>
               </div>
@@ -327,26 +322,37 @@ function AddDomainDialog({ open, onOpenChange, onAdd }: AddDomainDialogProps) {
               </p>
               <div className="rounded border bg-background font-mono text-xs p-2 space-y-0.5">
                 <div className="flex gap-2">
-                  <span className="text-muted-foreground w-12 shrink-0">Type</span>
+                  <span className="text-muted-foreground w-12 shrink-0">
+                    Type
+                  </span>
                   <span>CNAME</span>
                 </div>
                 <div className="flex gap-2">
-                  <span className="text-muted-foreground w-12 shrink-0">Name</span>
-                  <span className="break-all">{domainValue.trim() || '<your-domain>'}</span>
+                  <span className="text-muted-foreground w-12 shrink-0">
+                    Name
+                  </span>
+                  <span className="break-all">
+                    {domainValue.trim() || "<your-domain>"}
+                  </span>
                 </div>
                 <div className="flex gap-2">
-                  <span className="text-muted-foreground w-12 shrink-0">Value</span>
+                  <span className="text-muted-foreground w-12 shrink-0">
+                    Value
+                  </span>
                   <span>ingress.unicore.cloud</span>
                 </div>
                 <div className="flex gap-2">
-                  <span className="text-muted-foreground w-12 shrink-0">TTL</span>
+                  <span className="text-muted-foreground w-12 shrink-0">
+                    TTL
+                  </span>
                   <span>300</span>
                 </div>
               </div>
             </div>
 
             <p className="text-xs text-muted-foreground">
-              DNS propagation may take up to 48 hours. SSL will be provisioned automatically once verified.
+              DNS propagation may take up to 48 hours. SSL will be provisioned
+              automatically once verified.
             </p>
           </div>
         </div>
@@ -356,7 +362,7 @@ function AddDomainDialog({ open, onOpenChange, onAdd }: AddDomainDialogProps) {
             Cancel
           </Button>
           <Button onClick={handleAdd} disabled={!isValid || isAdding}>
-            {isAdding ? 'Adding…' : 'Add Domain'}
+            {isAdding ? "Adding…" : "Add Domain"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -374,17 +380,26 @@ interface RemoveDomainDialogProps {
   onConfirm: (id: string) => void;
 }
 
-function RemoveDomainDialog({ domain, onClose, onConfirm }: RemoveDomainDialogProps) {
+function RemoveDomainDialog({
+  domain,
+  onClose,
+  onConfirm,
+}: RemoveDomainDialogProps) {
   const [isRemoving, setIsRemoving] = useState(false);
 
   const handleConfirm = useCallback(async () => {
     if (!domain) return;
     setIsRemoving(true);
     try {
-      // TODO: api.delete(`/settings/domains/${domain.id}`)
-      await new Promise((r) => setTimeout(r, 500));
+      await api.delete(`/settings/domains/${domain.id}`);
       onConfirm(domain.id);
       onClose();
+    } catch (err: unknown) {
+      toast({
+        title: "Failed to remove domain",
+        description: err instanceof Error ? err.message : "Unknown error",
+        variant: "destructive",
+      });
     } finally {
       setIsRemoving(false);
     }
@@ -399,16 +414,21 @@ function RemoveDomainDialog({ domain, onClose, onConfirm }: RemoveDomainDialogPr
             Remove Domain
           </DialogTitle>
           <DialogDescription>
-            Are you sure you want to remove <strong>{domain?.name}</strong>? This will revoke the SSL
-            certificate and stop routing traffic through UniCore. This action cannot be undone.
+            Are you sure you want to remove <strong>{domain?.name}</strong>?
+            This will revoke the SSL certificate and stop routing traffic
+            through UniCore. This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="destructive" onClick={handleConfirm} disabled={isRemoving}>
-            {isRemoving ? 'Removing…' : 'Remove Domain'}
+          <Button
+            variant="destructive"
+            onClick={handleConfirm}
+            disabled={isRemoving}
+          >
+            {isRemoving ? "Removing…" : "Remove Domain"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -449,9 +469,15 @@ function DomainDetailPanel({ domain }: DomainDetailPanelProps) {
                     {record.type}
                   </Badge>
                 </TableCell>
-                <TableCell className="font-mono text-xs break-all">{record.name}</TableCell>
-                <TableCell className="font-mono text-xs break-all">{record.value}</TableCell>
-                <TableCell className="text-xs text-muted-foreground">{record.ttl}s</TableCell>
+                <TableCell className="font-mono text-xs break-all">
+                  {record.name}
+                </TableCell>
+                <TableCell className="font-mono text-xs break-all">
+                  {record.value}
+                </TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  {record.ttl}s
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -471,7 +497,9 @@ function DomainDetailPanel({ domain }: DomainDetailPanelProps) {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Subject</p>
-              <p className="font-medium font-mono">{domain.sslCertificate.subject}</p>
+              <p className="font-medium font-mono">
+                {domain.sslCertificate.subject}
+              </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Issued</p>
@@ -484,7 +512,8 @@ function DomainDetailPanel({ domain }: DomainDetailPanelProps) {
           </div>
         ) : (
           <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
-            SSL certificate will be provisioned after domain verification completes.
+            SSL certificate will be provisioned after domain verification
+            completes.
           </div>
         )}
       </div>
@@ -503,7 +532,11 @@ function DomainDetailPanel({ domain }: DomainDetailPanelProps) {
                 <XCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-500" />
               )}
               <div>
-                <p className={event.success ? 'text-foreground' : 'text-muted-foreground'}>
+                <p
+                  className={
+                    event.success ? "text-foreground" : "text-muted-foreground"
+                  }
+                >
                   {event.message}
                 </p>
                 <p className="text-muted-foreground/70">
@@ -523,68 +556,63 @@ function DomainDetailPanel({ domain }: DomainDetailPanelProps) {
 // ---------------------------------------------------------------------------
 
 export default function SettingsDomainsPage() {
-  const [domains, setDomains] = useState<Domain[]>(MOCK_DOMAINS);
+  const [domains, setDomains] = useState<Domain[]>([]);
+  const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<Domain | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [verifyingIds, setVerifyingIds] = useState<Set<string>>(new Set());
-  const [sslRefreshingIds, setSslRefreshingIds] = useState<Set<string>>(new Set());
+  const [sslRefreshingIds, setSslRefreshingIds] = useState<Set<string>>(
+    new Set(),
+  );
 
-  const handleAddDomain = useCallback((domainName: string) => {
-    const newDomain: Domain = {
-      id: String(Date.now()),
-      name: domainName,
-      status: 'pending',
-      sslStatus: 'pending',
-      addedAt: new Date().toISOString().slice(0, 10),
-      dnsRecords: [
-        {
-          type: 'TXT',
-          name: `_unicore-verify.${domainName}`,
-          value: `unicore-verify=pending${Date.now()}`,
-          ttl: 300,
-        },
-        { type: 'CNAME', name: domainName, value: 'ingress.unicore.cloud', ttl: 300 },
-      ],
-      verificationHistory: [
-        {
-          timestamp: new Date().toISOString(),
-          message: 'Domain added',
-          success: true,
-        },
-      ],
-    };
-    setDomains((prev) => [newDomain, ...prev]);
-    toast({ title: 'Domain added', description: `${domainName} is pending DNS verification.` });
+  useEffect(() => {
+    api
+      .get<Domain[]>("/settings/domains")
+      .then(setDomains)
+      .catch((err: unknown) => {
+        toast({
+          title: "Failed to load domains",
+          description: err instanceof Error ? err.message : "Unknown error",
+          variant: "destructive",
+        });
+      })
+      .finally(() => setLoading(false));
   }, []);
 
-  const handleRemoveDomain = useCallback((id: string) => {
-    const domain = domains.find((d) => d.id === id);
-    setDomains((prev) => prev.filter((d) => d.id !== id));
-    if (expandedId === id) setExpandedId(null);
-    toast({ title: 'Domain removed', description: domain?.name });
-  }, [domains, expandedId]);
+  const handleAddDomain = useCallback((domain: Domain) => {
+    setDomains((prev) => [domain, ...prev]);
+    toast({
+      title: "Domain added",
+      description: `${domain.name} is pending DNS verification.`,
+    });
+  }, []);
+
+  const handleRemoveDomain = useCallback(
+    (id: string) => {
+      const domain = domains.find((d) => d.id === id);
+      setDomains((prev) => prev.filter((d) => d.id !== id));
+      if (expandedId === id) setExpandedId(null);
+      toast({ title: "Domain removed", description: domain?.name });
+    },
+    [domains, expandedId],
+  );
 
   const handleReverify = useCallback(async (id: string) => {
     setVerifyingIds((prev) => new Set(prev).add(id));
     try {
-      // TODO: api.post(`/settings/domains/${id}/verify`)
-      await new Promise((r) => setTimeout(r, 1200));
-      setDomains((prev) =>
-        prev.map((d) => {
-          if (d.id !== id) return d;
-          const now = new Date().toISOString();
-          return {
-            ...d,
-            status: 'verifying' as DomainStatus,
-            verificationHistory: [
-              { timestamp: now, message: 'Manual verification triggered', success: true },
-              ...d.verificationHistory,
-            ],
-          };
-        }),
-      );
-      toast({ title: 'Verification started', description: 'DNS check is running in the background.' });
+      const updated = await api.post<Domain>(`/settings/domains/${id}/verify`);
+      setDomains((prev) => prev.map((d) => (d.id === id ? updated : d)));
+      toast({
+        title: "Verification started",
+        description: "DNS check is running in the background.",
+      });
+    } catch (err: unknown) {
+      toast({
+        title: "Verification failed",
+        description: err instanceof Error ? err.message : "Unknown error",
+        variant: "destructive",
+      });
     } finally {
       setVerifyingIds((prev) => {
         const next = new Set(prev);
@@ -597,9 +625,17 @@ export default function SettingsDomainsPage() {
   const handleForceSslRefresh = useCallback(async (id: string) => {
     setSslRefreshingIds((prev) => new Set(prev).add(id));
     try {
-      // TODO: api.post(`/settings/domains/${id}/ssl-refresh`)
-      await new Promise((r) => setTimeout(r, 1000));
-      toast({ title: 'SSL refresh queued', description: 'Certificate renewal has been requested.' });
+      await api.post(`/settings/domains/${id}/ssl-refresh`);
+      toast({
+        title: "SSL refresh queued",
+        description: "Certificate renewal has been requested.",
+      });
+    } catch (err: unknown) {
+      toast({
+        title: "SSL refresh failed",
+        description: err instanceof Error ? err.message : "Unknown error",
+        variant: "destructive",
+      });
     } finally {
       setSslRefreshingIds((prev) => {
         const next = new Set(prev);
@@ -626,7 +662,8 @@ export default function SettingsDomainsPage() {
               <CardTitle>Custom Domains</CardTitle>
             </div>
             <CardDescription>
-              {domains.length} domain{domains.length !== 1 ? 's' : ''} configured
+              {domains.length} domain{domains.length !== 1 ? "s" : ""}{" "}
+              configured
             </CardDescription>
           </div>
           <Button size="sm" onClick={() => setAddOpen(true)}>
@@ -636,7 +673,11 @@ export default function SettingsDomainsPage() {
         </CardHeader>
 
         <CardContent>
-          {domains.length === 0 ? (
+          {loading ? (
+            <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
+              Loading domains…
+            </div>
+          ) : domains.length === 0 ? (
             <div className="flex h-32 items-center justify-center rounded-lg border border-dashed text-muted-foreground text-sm">
               No domains configured. Click "Add Domain" to get started.
             </div>
@@ -655,7 +696,9 @@ export default function SettingsDomainsPage() {
                       <button
                         onClick={() => toggleExpanded(domain.id)}
                         className="text-muted-foreground hover:text-foreground"
-                        aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
+                        aria-label={
+                          isExpanded ? "Collapse details" : "Expand details"
+                        }
                       >
                         {isExpanded ? (
                           <ChevronDown className="h-4 w-4" />
@@ -666,8 +709,12 @@ export default function SettingsDomainsPage() {
 
                       {/* Domain name */}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium font-mono truncate">{domain.name}</p>
-                        <p className="text-xs text-muted-foreground">Added {domain.addedAt}</p>
+                        <p className="text-sm font-medium font-mono truncate">
+                          {domain.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Added {domain.addedAt}
+                        </p>
                       </div>
 
                       {/* Status badges */}
@@ -692,7 +739,9 @@ export default function SettingsDomainsPage() {
                           disabled={isVerifying}
                           title="Re-verify domain"
                         >
-                          <ShieldCheck className={`h-4 w-4 ${isVerifying ? 'animate-pulse' : ''}`} />
+                          <ShieldCheck
+                            className={`h-4 w-4 ${isVerifying ? "animate-pulse" : ""}`}
+                          />
                           <span className="sr-only">Re-verify</span>
                         </Button>
                         <Button
@@ -702,7 +751,9 @@ export default function SettingsDomainsPage() {
                           disabled={isSslRefreshing}
                           title="Force SSL refresh"
                         >
-                          <Lock className={`h-4 w-4 ${isSslRefreshing ? 'animate-pulse' : ''}`} />
+                          <Lock
+                            className={`h-4 w-4 ${isSslRefreshing ? "animate-pulse" : ""}`}
+                          />
                           <span className="sr-only">Force SSL refresh</span>
                         </Button>
                         <Button
