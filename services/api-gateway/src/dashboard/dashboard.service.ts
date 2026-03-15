@@ -60,8 +60,29 @@ function trendValue(current: number, previous: number): { value: number; positiv
 @Injectable()
 export class DashboardService {
   private readonly logger = new Logger(DashboardService.name);
+  private readonly erpBaseUrl: string;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {
+    const host = process.env.ERP_SERVICE_HOST ?? 'localhost';
+    const port = process.env.ERP_SERVICE_PORT ?? '4100';
+    this.erpBaseUrl = `http://${host}:${port}`;
+  }
+
+  // ---- ERP fetch helper ---------------------------------------------------
+
+  private async erpFetch<T>(path: string): Promise<T> {
+    const url = `${this.erpBaseUrl}${path}`;
+    this.logger.debug(`ERP request: GET ${url}`);
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) {
+      throw new Error(`ERP ${path} returned ${res.status}`);
+    }
+    return res.json() as Promise<T>;
+  }
 
   // ---- Config -------------------------------------------------------------
 
@@ -85,6 +106,38 @@ export class DashboardService {
   // ---- Revenue ------------------------------------------------------------
 
   async getRevenueWidget() {
+    try {
+      const revenueData = await this.erpFetch<{
+        totalRevenue?: number;
+        currentMonth?: number;
+        previousMonth?: number;
+        chartData?: Array<{ date: string; value: number }>;
+      }>('/reports/revenue');
+
+      const currentRevenue = revenueData.currentMonth ?? revenueData.totalRevenue ?? 0;
+      const previousRevenue = revenueData.previousMonth ?? 0;
+      const chartData = revenueData.chartData ?? this.emptyDateSeries(30);
+      const trend = trendValue(currentRevenue, previousRevenue);
+
+      return {
+        metric: {
+          current: currentRevenue,
+          previous: previousRevenue,
+          currency: 'USD',
+          formatted: formatCurrency(currentRevenue),
+        },
+        trend,
+        description: 'from last month',
+        breakdown: [],
+        chartData,
+      };
+    } catch (error) {
+      this.logger.warn(`ERP revenue call failed, falling back to DB: ${(error as Error).message}`);
+      return this.getRevenueWidgetFallback();
+    }
+  }
+
+  private async getRevenueWidgetFallback() {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -114,6 +167,43 @@ export class DashboardService {
   // ---- Orders -------------------------------------------------------------
 
   async getOrdersWidget() {
+    try {
+      const ordersData = await this.erpFetch<{
+        data: Array<{ id: string; status: string; created_at: string }>;
+        meta: { total: number };
+      }>('/orders');
+
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+      const orders = ordersData.data;
+      const currentCount = orders.filter(o => new Date(o.created_at) >= startOfMonth).length;
+      const previousCount = orders.filter(o => {
+        const d = new Date(o.created_at);
+        return d >= startOfLastMonth && d < startOfMonth;
+      }).length;
+      const pendingCount = orders.filter(o => o.status === 'pending').length;
+      const processingCount = orders.filter(o => o.status === 'processing').length;
+      const completedCount = orders.filter(o => o.status === 'completed').length;
+
+      const trend = trendValue(currentCount, previousCount);
+
+      return {
+        metric: { current: currentCount, previous: previousCount, formatted: formatNumber(currentCount) },
+        trend,
+        description: 'from last month',
+        pendingCount,
+        processingCount,
+        completedCount,
+      };
+    } catch (error) {
+      this.logger.warn(`ERP orders call failed, falling back to DB: ${(error as Error).message}`);
+      return this.getOrdersWidgetFallback();
+    }
+  }
+
+  private async getOrdersWidgetFallback() {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -141,6 +231,39 @@ export class DashboardService {
   // ---- Inventory ----------------------------------------------------------
 
   async getInventoryWidget() {
+    try {
+      const inventoryData = await this.erpFetch<{
+        data: Array<{ id: string; quantity: number; reorder_level?: number; reorderLevel?: number }>;
+        meta: { total: number };
+      }>('/inventory');
+
+      const items = inventoryData.data;
+      const totalSkus = inventoryData.meta.total;
+      const lowStockCount = items.filter(i => {
+        const reorder = i.reorder_level ?? i.reorderLevel ?? 0;
+        return i.quantity > 0 && i.quantity <= reorder;
+      }).length;
+      const outOfStockCount = items.filter(i => i.quantity === 0).length;
+
+      return {
+        metric: {
+          current: totalSkus,
+          previous: 0,
+          formatted: `${formatNumber(totalSkus)} SKUs`,
+        },
+        trend: { value: 0, positive: true, label: 'vs last month' },
+        description: 'total SKUs tracked',
+        lowStockCount,
+        outOfStockCount,
+        totalSkus,
+      };
+    } catch (error) {
+      this.logger.warn(`ERP inventory call failed, falling back to DB: ${(error as Error).message}`);
+      return this.getInventoryWidgetFallback();
+    }
+  }
+
+  private async getInventoryWidgetFallback() {
     const [totalSkus, lowStockCount, outOfStockCount] = await Promise.all([
       this.safeCount('inventory_items'),
       this.safeCount('inventory_items', `"quantity" > 0 AND "quantity" <= "reorder_level"`),
@@ -161,7 +284,7 @@ export class DashboardService {
     };
   }
 
-  // ---- MRR ----------------------------------------------------------------
+  // ---- MRR (mock — no real data source) -----------------------------------
 
   async getMrrWidget() {
     const mrr = await this.safeSum('subscriptions', 'monthly_amount', `"status" = 'active'`);
@@ -182,7 +305,7 @@ export class DashboardService {
     };
   }
 
-  // ---- Churn --------------------------------------------------------------
+  // ---- Churn (mock — no real data source) ---------------------------------
 
   async getChurnWidget() {
     const now = new Date();
@@ -207,7 +330,7 @@ export class DashboardService {
     };
   }
 
-  // ---- Signups ------------------------------------------------------------
+  // ---- Signups (mock — no real signup tracking) ---------------------------
 
   async getSignupsWidget() {
     const now = new Date();
@@ -238,8 +361,45 @@ export class DashboardService {
   // ---- Activity -----------------------------------------------------------
 
   async getActivityWidget() {
-    const items = await this.safeActivityFeed();
-    return { items };
+    try {
+      const contactsData = await this.erpFetch<{
+        data: Array<{ id: string; name: string; created_at?: string; createdAt?: string }>;
+        meta: { total: number };
+      }>('/contacts?limit=5');
+
+      const items = contactsData.data.map(c => ({
+        id: c.id,
+        message: `New contact: ${c.name}`,
+        time: this.timeAgo(new Date(c.created_at ?? c.createdAt ?? Date.now())),
+        type: 'contact' as const,
+      }));
+
+      // Also try to get recent orders for activity
+      try {
+        const ordersData = await this.erpFetch<{
+          data: Array<{ id: string; created_at?: string; createdAt?: string }>;
+          meta: { total: number };
+        }>('/orders?limit=5');
+
+        for (const o of ordersData.data.slice(0, 5)) {
+          items.push({
+            id: o.id,
+            message: `New order #${o.id}`,
+            time: this.timeAgo(new Date(o.created_at ?? o.createdAt ?? Date.now())),
+            type: 'order',
+          });
+        }
+      } catch {
+        // orders endpoint failed — continue with contacts only
+      }
+
+      // Sort by recency (most recent first) and limit to 10
+      return { items: items.slice(0, 10) };
+    } catch (error) {
+      this.logger.warn(`ERP activity call failed, falling back to DB: ${(error as Error).message}`);
+      const items = await this.safeActivityFeed();
+      return { items };
+    }
   }
 
   // ---- Chart --------------------------------------------------------------
@@ -257,7 +417,7 @@ export class DashboardService {
         break;
       case 'revenue':
       default:
-        points = await this.safeRevenueChart(days);
+        points = await this.getChartRevenuePoints(days);
         break;
     }
 
@@ -272,6 +432,23 @@ export class DashboardService {
       yAxisLabel: labelMap[metric] ?? metric,
       points,
     };
+  }
+
+  private async getChartRevenuePoints(days: number): Promise<Array<{ date: string; value: number }>> {
+    try {
+      const revenueData = await this.erpFetch<{
+        chartData?: Array<{ date: string; value: number }>;
+        data?: Array<{ date: string; value: number }>;
+      }>('/reports/revenue');
+
+      const points = revenueData.chartData ?? revenueData.data;
+      if (points && points.length > 0) {
+        return points;
+      }
+      return this.safeRevenueChart(days);
+    } catch {
+      return this.safeRevenueChart(days);
+    }
   }
 
   // =========================================================================
@@ -369,7 +546,6 @@ export class DashboardService {
   }
 
   private async safeActivityFeed(): Promise<Array<{ id: string; message: string; time: string; type: string }>> {
-    // Try to build a UNION across known tables; fall back to empty if tables don't exist.
     const queries: Array<{ sql: string; type: string }> = [
       {
         sql: `SELECT id, CONCAT('New order #', "id") AS message, "created_at", 'order' AS type FROM "orders" ORDER BY "created_at" DESC LIMIT 3`,
@@ -387,7 +563,6 @@ export class DashboardService {
 
     const items: Array<{ id: string; message: string; time: string; type: string }> = [];
 
-    // Also query the User table (known to exist in schema)
     try {
       const users = await this.prisma.$queryRawUnsafe<RawActivity[]>(
         `SELECT id, CONCAT('New user: ', "name") AS message, "createdAt" AS created_at, 'contact' AS type

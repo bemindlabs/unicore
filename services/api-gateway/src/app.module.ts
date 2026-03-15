@@ -8,6 +8,7 @@ import { ProxyModule } from './proxy/proxy.module';
 import { LicenseModule } from './license/license.module';
 import { DomainModule } from './domains/domain.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { AdminModule } from './admin/admin.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
@@ -18,7 +19,7 @@ import { RequestValidationMiddleware } from './common/middleware/request-validat
 import { DomainRoutingMiddleware } from './domains/domain-routing.middleware';
 
 @Module({
-  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule],
+  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule, AdminModule],
   controllers: [AppController],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },

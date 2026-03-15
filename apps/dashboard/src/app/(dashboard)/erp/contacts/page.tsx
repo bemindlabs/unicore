@@ -36,19 +36,34 @@ type ContactType = "LEAD" | "CUSTOMER" | "VENDOR" | "PARTNER";
 interface Contact {
   id: string;
   type: ContactType;
-  firstName: string;
-  lastName: string;
+  name: string;
   email: string;
   phone?: string;
   company?: string;
+  website?: string;
+  avatarUrl?: string;
+  country?: string;
+  region?: string;
+  city?: string;
+  address?: string;
+  postalCode?: string;
+  tags?: string[];
+  leadStage?: string;
   leadScore?: number;
+  dealValue?: number;
+  currency?: string;
+  followUpAt?: string;
+  source?: string;
+  parentId?: string;
+  customFields?: Record<string, unknown>;
   createdAt: string;
+  updatedAt?: string;
+  archivedAt?: string | null;
 }
 
 interface ContactForm {
   type: ContactType;
-  firstName: string;
-  lastName: string;
+  name: string;
   email: string;
   phone: string;
   company: string;
@@ -56,8 +71,7 @@ interface ContactForm {
 
 const EMPTY_FORM: ContactForm = {
   type: "LEAD",
-  firstName: "",
-  lastName: "",
+  name: "",
   email: "",
   phone: "",
   company: "",
@@ -110,8 +124,7 @@ function ContactDialog({
         initial
           ? {
               type: initial.type,
-              firstName: initial.firstName,
-              lastName: initial.lastName,
+              name: initial.name,
               email: initial.email,
               phone: initial.phone ?? "",
               company: initial.company ?? "",
@@ -125,13 +138,12 @@ function ContactDialog({
     setForm((prev) => ({ ...prev, [field]: value }));
 
   const handleSave = useCallback(async () => {
-    if (!form.firstName.trim() || !form.email.trim()) return;
+    if (!form.name.trim() || !form.email.trim()) return;
     setSaving(true);
     try {
       const payload = {
         type: form.type,
-        firstName: form.firstName.trim(),
-        lastName: form.lastName.trim(),
+        name: form.name.trim(),
         email: form.email.trim(),
         ...(form.phone.trim() && { phone: form.phone.trim() }),
         ...(form.company.trim() && { company: form.company.trim() }),
@@ -169,25 +181,14 @@ function ContactDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-2">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label htmlFor="c-first">First Name *</Label>
-              <Input
-                id="c-first"
-                value={form.firstName}
-                onChange={(e) => set("firstName", e.target.value)}
-                placeholder="Jane"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="c-last">Last Name</Label>
-              <Input
-                id="c-last"
-                value={form.lastName}
-                onChange={(e) => set("lastName", e.target.value)}
-                placeholder="Doe"
-              />
-            </div>
+          <div className="space-y-1">
+            <Label htmlFor="c-name">Name *</Label>
+            <Input
+              id="c-name"
+              value={form.name}
+              onChange={(e) => set("name", e.target.value)}
+              placeholder="Jane Doe"
+            />
           </div>
 
           <div className="space-y-1">
@@ -247,7 +248,7 @@ function ContactDialog({
           </Button>
           <Button
             onClick={handleSave}
-            disabled={!form.firstName.trim() || !form.email.trim() || saving}
+            disabled={!form.name.trim() || !form.email.trim() || saving}
           >
             {saving ? "Saving…" : "Save"}
           </Button>
@@ -297,7 +298,7 @@ function DeleteDialog({ contact, onClose, onDeleted }: DeleteDialogProps) {
           <DialogDescription>
             Are you sure you want to delete{" "}
             <strong>
-              {contact?.firstName} {contact?.lastName}
+              {contact?.name}
             </strong>
             ? This action cannot be undone.
           </DialogDescription>
@@ -348,8 +349,7 @@ export default function ContactsPage() {
   const filtered = contacts.filter((c) => {
     const q = search.toLowerCase();
     return (
-      c.firstName.toLowerCase().includes(q) ||
-      c.lastName.toLowerCase().includes(q) ||
+      c.name.toLowerCase().includes(q) ||
       c.email.toLowerCase().includes(q) ||
       (c.company ?? "").toLowerCase().includes(q)
     );
@@ -432,7 +432,7 @@ export default function ContactsPage() {
                 {filtered.map((contact) => (
                   <TableRow key={contact.id}>
                     <TableCell className="font-medium">
-                      {contact.firstName} {contact.lastName}
+                      {contact.name}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {contact.email}
