@@ -25,7 +25,6 @@ import {
   TableRow,
   toast,
 } from "@unicore/ui";
-import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { api } from "@/lib/api";
 
 // ---------------------------------------------------------------------------
@@ -379,8 +378,6 @@ export default function ContactsPage() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb />
-
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>

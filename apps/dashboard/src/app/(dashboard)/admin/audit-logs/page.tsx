@@ -15,7 +15,6 @@ import {
   TableHeader,
   TableRow,
 } from '@unicore/ui';
-import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { api } from '@/lib/api';
 
 interface AuditEntry {
@@ -49,8 +48,6 @@ export default function AdminAuditLogsPage() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb />
-
       <div className="flex items-center gap-3">
         <ScrollText className="h-6 w-6 text-primary" />
         <div>

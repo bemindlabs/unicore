@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Bot, ExternalLink, Settings } from 'lucide-react';
 import { Badge, Card, CardContent, CardHeader, CardTitle } from '@unicore/ui';
-import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { getAgents } from '@/lib/backoffice/store';
 import type { BackofficeAgent } from '@/lib/backoffice/types';
 
@@ -24,7 +23,6 @@ export default function AgentsPage() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb />
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Bot className="h-6 w-6 text-primary" />

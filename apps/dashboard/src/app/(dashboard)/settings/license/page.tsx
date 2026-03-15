@@ -28,7 +28,6 @@ import {
   toast,
 } from '@unicore/ui';
 import type { LicenseInfo, LicenseStatus } from '@unicore/shared-types';
-import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { api } from '@/lib/api';
 
 const MOCK_LICENSE: LicenseInfo = {
@@ -179,8 +178,6 @@ export default function SettingsLicensePage() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb />
-
       {/* Status card */}
       <Card>
         <CardHeader>

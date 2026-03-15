@@ -9,8 +9,6 @@ import {
   Wand2,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@unicore/ui';
-import { Breadcrumb } from '@/components/layout/breadcrumb';
-
 const SETTINGS_LINKS = [
   {
     href: '/settings/erp',
@@ -47,8 +45,6 @@ const SETTINGS_LINKS = [
 export default function SettingsPage() {
   return (
     <div className="space-y-6">
-      <Breadcrumb />
-
       <div className="flex items-center gap-3">
         <Settings className="h-6 w-6 text-primary" />
         <div>

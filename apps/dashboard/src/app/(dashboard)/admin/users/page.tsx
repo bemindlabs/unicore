@@ -18,7 +18,6 @@ import {
   TableHeader,
   TableRow,
 } from '@unicore/ui';
-import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { api } from '@/lib/api';
 
 interface UserRecord {
@@ -51,8 +50,6 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb />
-
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <UsersRound className="h-6 w-6 text-primary" />

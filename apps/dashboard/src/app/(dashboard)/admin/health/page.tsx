@@ -9,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@unicore/ui';
-import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { api } from '@/lib/api';
 
 interface ServiceHealth {
@@ -44,8 +43,6 @@ export default function AdminHealthPage() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb />
-
       <div className="flex items-center gap-3">
         <Activity className="h-6 w-6 text-primary" />
         <div>

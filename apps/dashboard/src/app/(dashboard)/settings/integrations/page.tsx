@@ -23,7 +23,6 @@ import {
   toast,
 } from '@unicore/ui';
 import type { IntegrationConfig } from '@unicore/shared-types';
-import { Breadcrumb } from '@/components/layout/breadcrumb';
 
 interface IntegrationDef {
   provider: string;
@@ -170,8 +169,6 @@ export default function SettingsIntegrationsPage() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb />
-
       {categories.map((category) => {
         const defs = INTEGRATION_DEFS.filter((d) => d.category === category);
         return (
