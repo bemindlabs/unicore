@@ -1,20 +1,37 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import type { BackofficeAgent } from '@/lib/backoffice/types';
-import { getAgents, addAgent, updateAgent, deleteAgent } from '@/lib/backoffice/store';
-import { BackofficeApp } from '@/components/backoffice/BackofficeApp';
+import { useState, useEffect, useCallback } from "react";
+import type { BackofficeAgent } from "@/lib/backoffice/types";
+import {
+  getAgents,
+  addAgent,
+  updateAgent,
+  deleteAgent,
+} from "@/lib/backoffice/store";
+import { BackofficeApp } from "@/components/backoffice/BackofficeApp";
 
 export default function BackofficePage() {
   const [agents, setAgents] = useState<BackofficeAgent[]>([]);
-  const [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [apiError, setApiError] = useState(false);
 
-  useEffect(() => {
-    setAgents(getAgents());
-    setMounted(true);
+  const fetchAgents = useCallback(async () => {
+    const { agents: data, cached } = await getAgents();
+    setAgents(data);
+    setApiError(cached);
   }, []);
 
-  if (!mounted) {
+  useEffect(() => {
+    fetchAgents().finally(() => setLoading(false));
+  }, [fetchAgents]);
+
+  // Poll every 10s for live status updates
+  useEffect(() => {
+    const id = setInterval(fetchAgents, 10_000);
+    return () => clearInterval(id);
+  }, [fetchAgents]);
+
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#060a14]">
         <div className="font-mono text-xs text-cyan-500 animate-pulse">
@@ -27,9 +44,10 @@ export default function BackofficePage() {
   return (
     <BackofficeApp
       agents={agents}
-      onUpdateAgent={(agent) => setAgents(updateAgent(agent))}
-      onAddAgent={(agent) => setAgents(addAgent(agent))}
-      onDeleteAgent={(id) => setAgents(deleteAgent(id))}
+      apiError={apiError}
+      onUpdateAgent={async (agent) => setAgents(await updateAgent(agent))}
+      onAddAgent={async (agent) => setAgents(await addAgent(agent))}
+      onDeleteAgent={async (id) => setAgents(await deleteAgent(id))}
     />
   );
 }
