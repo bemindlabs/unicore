@@ -37,7 +37,7 @@ const SETTINGS_LINKS = [
     description: 'View your edition, usage limits, and upgrade to Pro',
   },
   {
-    href: '/settings/wizard',
+    href: '/wizard',
     icon: Wand2,
     title: 'Setup Wizard',
     description: 'Re-run the initial configuration wizard at any time',
