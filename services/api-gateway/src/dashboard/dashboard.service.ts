@@ -386,7 +386,7 @@ export class DashboardService {
             id: o.id,
             message: `New order #${o.id}`,
             time: this.timeAgo(new Date(o.created_at ?? o.createdAt ?? Date.now())),
-            type: 'order',
+            type: 'order' as const,
           });
         }
       } catch {
