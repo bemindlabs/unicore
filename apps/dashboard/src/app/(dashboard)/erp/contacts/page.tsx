@@ -334,7 +334,7 @@ export default function ContactsPage() {
   useEffect(() => {
     api
       .get<Contact[]>("/api/proxy/erp/contacts")
-      .then(setContacts)
+      .then((res) => setContacts(Array.isArray(res) ? res : (res as any).data ?? []))
       .catch((err) =>
         toast({
           title: "Failed to load contacts",

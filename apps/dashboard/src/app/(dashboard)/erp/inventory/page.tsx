@@ -431,7 +431,7 @@ export default function InventoryPage() {
     const query = lowStockOnly ? "?lowStock=true" : "";
     api
       .get<Product[]>(`/api/proxy/erp/inventory${query}`)
-      .then(setProducts)
+      .then((res) => setProducts(Array.isArray(res) ? res : (res as any).data ?? []))
       .catch((err) =>
         toast({
           title: "Failed to load inventory",

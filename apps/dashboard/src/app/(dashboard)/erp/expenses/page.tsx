@@ -407,7 +407,7 @@ export default function ExpensesPage() {
   useEffect(() => {
     api
       .get<Expense[]>("/api/proxy/erp/expenses")
-      .then(setExpenses)
+      .then((res) => setExpenses(Array.isArray(res) ? res : (res as any).data ?? []))
       .catch((err) =>
         toast({
           title: "Failed to load expenses",

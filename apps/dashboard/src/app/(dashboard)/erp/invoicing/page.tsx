@@ -387,7 +387,7 @@ export default function InvoicingPage() {
     const query = statusFilter !== "ALL" ? `?status=${statusFilter}` : "";
     api
       .get<Invoice[]>(`/api/proxy/erp/invoices${query}`)
-      .then(setInvoices)
+      .then((res) => setInvoices(Array.isArray(res) ? res : (res as any).data ?? []))
       .catch((err) =>
         toast({
           title: "Failed to load invoices",
