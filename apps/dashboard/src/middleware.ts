@@ -30,6 +30,6 @@ export const config = {
      * - Static files (images, fonts, etc.)
      * - favicon.ico
      */
-    '/((?!login|register|_next|api|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|eot)).*)',
+    '/((?!login|register|wizard|_next|api|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|eot)).*)',
   ],
 };
