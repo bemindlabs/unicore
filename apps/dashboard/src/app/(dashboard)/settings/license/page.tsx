@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -27,23 +27,27 @@ import {
   Separator,
   toast,
 } from '@unicore/ui';
-import type { LicenseInfo, LicenseStatus, FeatureFlags } from '@unicore/shared-types';
+import type { LicenseInfo, LicenseStatus } from '@unicore/shared-types';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
+import { api } from '@/lib/api';
 
 const MOCK_LICENSE: LicenseInfo = {
   key: 'COMM-XXXX-XXXX-XXXX',
   edition: 'community',
   status: 'active',
-  issuedTo: 'alice@example.com',
-  issuedAt: '2024-01-01T00:00:00Z',
+  maxAgents: 2,
+  maxRoles: 3,
   expiresAt: '2099-12-31T23:59:59Z',
   features: {
-    maxAgents: 2,
-    maxUsers: 5,
-    customWorkflows: false,
-    advancedReporting: false,
-    apiAccess: false,
-    whiteLabel: false,
+    allAgents: false,
+    customAgentBuilder: false,
+    fullRbac: false,
+    advancedWorkflows: false,
+    allChannels: false,
+    unlimitedRag: false,
+    whiteLabelBranding: false,
+    sso: false,
+    auditLogs: false,
     prioritySupport: false,
   },
 };
@@ -52,16 +56,19 @@ const PRO_FEATURES: LicenseInfo = {
   key: '',
   edition: 'pro',
   status: 'active',
-  issuedTo: '',
-  issuedAt: '',
+  maxAgents: 50,
+  maxRoles: 20,
   expiresAt: '',
   features: {
-    maxAgents: 8,
-    maxUsers: 15,
-    customWorkflows: true,
-    advancedReporting: true,
-    apiAccess: true,
-    whiteLabel: true,
+    allAgents: true,
+    customAgentBuilder: true,
+    fullRbac: true,
+    advancedWorkflows: true,
+    allChannels: true,
+    unlimitedRag: true,
+    whiteLabelBranding: true,
+    sso: true,
+    auditLogs: true,
     prioritySupport: true,
   },
 };
@@ -104,10 +111,31 @@ function FeatureRow({
 }
 
 export default function SettingsLicensePage() {
-  const [license] = useState<LicenseInfo>(MOCK_LICENSE);
+  const [license, setLicense] = useState<LicenseInfo>(MOCK_LICENSE);
+  const [isLoading, setIsLoading] = useState(true);
   const [upgradeKey, setUpgradeKey] = useState('');
   const [isActivating, setIsActivating] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [usersUsed, setUsersUsed] = useState(0);
+
+  useEffect(() => {
+    let mounted = true;
+    Promise.all([
+      api.get<LicenseInfo>('/license/status'),
+      api.get<{ count: number }>('/settings/team/count').catch(() => ({ count: 0 })),
+    ])
+      .then(([licenseData, teamData]) => {
+        if (mounted) {
+          setLicense(licenseData);
+          setUsersUsed(teamData.count);
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        if (mounted) setIsLoading(false);
+      });
+    return () => { mounted = false; };
+  }, []);
 
   const statusCfg = STATUS_CONFIG[license.status];
   const StatusIcon = statusCfg.icon;
@@ -116,8 +144,7 @@ export default function SettingsLicensePage() {
     if (!upgradeKey.trim()) return;
     setIsActivating(true);
     try {
-      // TODO: api.post('/license/activate', { key: upgradeKey })
-      await new Promise((r) => setTimeout(r, 800));
+      await api.post('/license/activate', { key: upgradeKey });
       toast({
         title: 'License activation',
         description: 'Key validated. Reload required to apply Pro features.',
@@ -131,8 +158,7 @@ export default function SettingsLicensePage() {
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      // TODO: api.post('/license/refresh')
-      await new Promise((r) => setTimeout(r, 600));
+      await api.post('/license/refresh');
       toast({ title: 'License refreshed', description: 'Status is up to date.' });
     } finally {
       setIsRefreshing(false);
@@ -145,8 +171,11 @@ export default function SettingsLicensePage() {
     return Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
   })();
 
-  const usersUsed = 2; // TODO: fetch from API
   const agentsUsed = 2;
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-muted-foreground animate-pulse">Loading license...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -190,18 +219,12 @@ export default function SettingsLicensePage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <p className="text-xs text-muted-foreground">Licensed to</p>
-              <p className="text-sm font-medium">{license.issuedTo}</p>
-            </div>
-            <div>
               <p className="text-xs text-muted-foreground">License Key</p>
               <p className="text-sm font-mono">{license.key}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Issued</p>
-              <p className="text-sm font-medium">
-                {new Date(license.issuedAt).toLocaleDateString()}
-              </p>
+              <p className="text-xs text-muted-foreground">Max Agents</p>
+              <p className="text-sm font-medium">{license.maxAgents}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Expires</p>
@@ -223,20 +246,20 @@ export default function SettingsLicensePage() {
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>Team Members</span>
                   <span>
-                    {usersUsed} / {license.features.maxUsers}
+                    {usersUsed} / {license.maxRoles}
                   </span>
                 </div>
-                <Progress value={(usersUsed / license.features.maxUsers) * 100} className="h-2" />
+                <Progress value={(usersUsed / license.maxRoles) * 100} className="h-2" />
               </div>
               <div className="space-y-1">
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>Active Agents</span>
                   <span>
-                    {agentsUsed} / {license.features.maxAgents}
+                    {agentsUsed} / {license.maxAgents}
                   </span>
                 </div>
                 <Progress
-                  value={(agentsUsed / license.features.maxAgents) * 100}
+                  value={(agentsUsed / license.maxAgents) * 100}
                   className="h-2"
                 />
               </div>
@@ -261,13 +284,13 @@ export default function SettingsLicensePage() {
           </div>
           {(
             [
-              ['Max Agents', MOCK_LICENSE.features.maxAgents, PRO_FEATURES.features.maxAgents],
-              ['Max Users', MOCK_LICENSE.features.maxUsers, PRO_FEATURES.features.maxUsers],
-              ['Custom Workflows', false, true],
-              ['Advanced Reporting', false, true],
-              ['API Access', false, true],
-              ['White Label', false, true],
-              ['Priority Support', false, true],
+              ['Max Agents', MOCK_LICENSE.maxAgents, PRO_FEATURES.maxAgents],
+              ['Max Roles', MOCK_LICENSE.maxRoles, PRO_FEATURES.maxRoles],
+              ['All Agents', MOCK_LICENSE.features.allAgents, PRO_FEATURES.features.allAgents],
+              ['Advanced Workflows', MOCK_LICENSE.features.advancedWorkflows, PRO_FEATURES.features.advancedWorkflows],
+              ['White Label', MOCK_LICENSE.features.whiteLabelBranding, PRO_FEATURES.features.whiteLabelBranding],
+              ['SSO', MOCK_LICENSE.features.sso, PRO_FEATURES.features.sso],
+              ['Priority Support', MOCK_LICENSE.features.prioritySupport, PRO_FEATURES.features.prioritySupport],
             ] as [string, boolean | number, boolean | number][]
           ).map(([label, community, pro]) => (
             <FeatureRow key={label} label={label} community={community} pro={pro} />
