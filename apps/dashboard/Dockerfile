@@ -8,7 +8,7 @@ COPY packages/config/package.json ./packages/config/
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY packages/ui/package.json ./packages/ui/
 COPY apps/dashboard/package.json ./apps/dashboard/
-RUN pnpm install --frozen-lockfile --filter @unicore/dashboard...
+RUN pnpm install --frozen-lockfile --filter @unicore/dashboard... && mkdir -p packages/shared-types/node_modules packages/config/node_modules
 
 FROM base AS build
 COPY --from=deps /app/node_modules ./node_modules

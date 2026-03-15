@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
-import { v4 as uuidv4 } from 'uuid';
+
 import type { WorkflowDefinition } from '../schema/workflow-definition.schema';
 import type { WorkflowTemplateFile } from '../templates/workflow-template.interface';
 

@@ -183,8 +183,8 @@ services:
       ERP_SERVICE_URL: http://unicore-erp:4100
       OPENCLAW_GATEWAY_URL: ws://unicore-openclaw-gateway:18789
     depends_on:
-      unicore-erp:
-        condition: service_started
+      unicore-kafka:
+        condition: service_healthy
     profiles: [workflows]
 
   # ─── Frontend Apps ────────────────────────────────────────────────

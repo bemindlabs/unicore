@@ -29,7 +29,7 @@ export class InvoiceConsumerService {
 
   @MessagePattern(WORKFLOW_TOPICS.INVOICE_CREATED)
   async handleInvoiceCreated(
-    @Payload() message: unknown,
+    @Payload() _message: unknown,
     @Ctx() context: KafkaContext,
   ): Promise<void> {
     const raw = context.getMessage().value;
@@ -53,7 +53,7 @@ export class InvoiceConsumerService {
 
   @MessagePattern(WORKFLOW_TOPICS.INVOICE_OVERDUE)
   async handleInvoiceOverdue(
-    @Payload() message: unknown,
+    @Payload() _message: unknown,
     @Ctx() context: KafkaContext,
   ): Promise<void> {
     const raw = context.getMessage().value;
@@ -77,7 +77,7 @@ export class InvoiceConsumerService {
 
   @MessagePattern(WORKFLOW_TOPICS.INVOICE_PAID)
   async handleInvoicePaid(
-    @Payload() message: unknown,
+    @Payload() _message: unknown,
     @Ctx() context: KafkaContext,
   ): Promise<void> {
     const raw = context.getMessage().value;

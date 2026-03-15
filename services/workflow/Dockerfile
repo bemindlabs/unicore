@@ -7,7 +7,7 @@ COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
 COPY packages/config/package.json ./packages/config/
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY services/workflow/package.json ./services/workflow/
-RUN pnpm install --frozen-lockfile --filter @unicore/workflow...
+RUN pnpm install --frozen-lockfile --filter @unicore/workflow... && mkdir -p packages/shared-types/node_modules packages/config/node_modules
 
 FROM base AS build
 COPY --from=deps /app/node_modules ./node_modules

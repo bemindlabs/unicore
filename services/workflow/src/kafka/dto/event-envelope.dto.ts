@@ -1,5 +1,4 @@
-import { IsString, IsNotEmpty, IsNumber, IsDateString, ValidateNested, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsString, IsNotEmpty, IsNumber, IsDateString, Min } from 'class-validator';
 import { WorkflowTopic } from '../constants/kafka.constants';
 
 /**

@@ -25,7 +25,7 @@ export class InventoryConsumerService {
 
   @MessagePattern(WORKFLOW_TOPICS.INVENTORY_LOW)
   async handleInventoryLow(
-    @Payload() message: unknown,
+    @Payload() _message: unknown,
     @Ctx() context: KafkaContext,
   ): Promise<void> {
     const raw = context.getMessage().value;
@@ -49,7 +49,7 @@ export class InventoryConsumerService {
 
   @MessagePattern(WORKFLOW_TOPICS.INVENTORY_RESTOCKED)
   async handleInventoryRestocked(
-    @Payload() message: unknown,
+    @Payload() _message: unknown,
     @Ctx() context: KafkaContext,
   ): Promise<void> {
     const raw = context.getMessage().value;

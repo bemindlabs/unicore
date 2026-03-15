@@ -156,10 +156,6 @@ export class WorkflowEngineService {
     this.updateInstance(instance, { status: 'running' });
 
     const previousOutputs: Record<string, unknown> = {};
-    const actionMap = new Map<string, WorkflowAction>(
-      definition.actions.map((a) => [a.id, a]),
-    );
-
     // Execute actions in topological order (serial walk respecting dependsOn)
     const orderedActions = this.topologicalSort(definition.actions);
 

@@ -8,7 +8,7 @@ COPY packages/config/package.json ./packages/config/
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY packages/ui/package.json ./packages/ui/
 COPY apps/onboarding/package.json ./apps/onboarding/
-RUN pnpm install --frozen-lockfile --filter @unicore/onboarding...
+RUN pnpm install --frozen-lockfile --filter @unicore/onboarding... && mkdir -p packages/shared-types/node_modules packages/config/node_modules
 
 FROM base AS build
 ARG NEXT_PUBLIC_BOOTSTRAP_SECRET

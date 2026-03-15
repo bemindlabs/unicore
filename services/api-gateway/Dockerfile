@@ -8,7 +8,7 @@ COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
 COPY packages/config/package.json ./packages/config/
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY services/api-gateway/package.json ./services/api-gateway/
-RUN pnpm install --frozen-lockfile --filter @unicore/api-gateway...
+RUN pnpm install --frozen-lockfile --filter @unicore/api-gateway... && mkdir -p packages/shared-types/node_modules packages/config/node_modules
 
 # Build
 FROM base AS build

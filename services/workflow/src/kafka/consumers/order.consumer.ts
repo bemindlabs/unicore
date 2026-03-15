@@ -32,7 +32,7 @@ export class OrderConsumerService {
 
   @MessagePattern(WORKFLOW_TOPICS.ORDER_CREATED)
   async handleOrderCreated(
-    @Payload() message: unknown,
+    @Payload() _message: unknown,
     @Ctx() context: KafkaContext,
   ): Promise<void> {
     const raw = context.getMessage().value;
@@ -56,7 +56,7 @@ export class OrderConsumerService {
 
   @MessagePattern(WORKFLOW_TOPICS.ORDER_UPDATED)
   async handleOrderUpdated(
-    @Payload() message: unknown,
+    @Payload() _message: unknown,
     @Ctx() context: KafkaContext,
   ): Promise<void> {
     const raw = context.getMessage().value;
@@ -80,7 +80,7 @@ export class OrderConsumerService {
 
   @MessagePattern(WORKFLOW_TOPICS.ORDER_FULFILLED)
   async handleOrderFulfilled(
-    @Payload() message: unknown,
+    @Payload() _message: unknown,
     @Ctx() context: KafkaContext,
   ): Promise<void> {
     const raw = context.getMessage().value;

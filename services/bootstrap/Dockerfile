@@ -7,7 +7,7 @@ COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
 COPY packages/config/package.json ./packages/config/
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY services/bootstrap/package.json ./services/bootstrap/
-RUN pnpm install --frozen-lockfile --filter @unicore/bootstrap...
+RUN pnpm install --frozen-lockfile --filter @unicore/bootstrap... && mkdir -p packages/shared-types/node_modules packages/config/node_modules
 
 FROM base AS build
 COPY --from=deps /app/node_modules ./node_modules
