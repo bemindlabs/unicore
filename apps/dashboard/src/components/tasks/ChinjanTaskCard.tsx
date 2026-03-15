@@ -52,7 +52,7 @@ export function ChinjanTaskCard({ task, onClick, onDragStart }: Props) {
         <span className="chinjan-mono text-xs" style={{ color: priorityCfg.color }}>
           {priorityCfg.label}
         </span>
-        {task.labels.slice(0, 2).map((label) => (
+        {task.labels.slice(0, 2).map((label: string) => (
           <span key={label} className="chinjan-mono text-[10px] px-1 border" style={{ borderColor: 'var(--chinjan-border)', color: 'var(--chinjan-muted)' }}>
             {label}
           </span>
