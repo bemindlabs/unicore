@@ -13,6 +13,11 @@ export interface AuthUser {
   avatarUrl?: string;
 }
 
+/** Normalize role from backend (OWNER) to frontend enum (owner) */
+function normalizeUser(u: AuthUser): AuthUser {
+  return { ...u, role: u.role.toLowerCase() as User['role'] };
+}
+
 export interface AuthState {
   user: AuthUser | null;
   isLoading: boolean;
@@ -95,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       api
         .get<AuthUser>('/auth/me')
         .then((res) => {
-          setUser(res);
+          setUser(normalizeUser(res));
           scheduleRefresh(token);
         })
         .catch(async () => {
@@ -103,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (refreshed) {
             try {
               const me = await api.get<AuthUser>('/auth/me');
-              setUser(me);
+              setUser(normalizeUser(me));
               scheduleRefresh(refreshed.accessToken);
               return;
             } catch {
@@ -132,7 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('auth_token', res.accessToken);
       localStorage.setItem('refresh_token', res.refreshToken);
       syncCookie(res.accessToken);
-      setUser(res.user);
+      setUser(normalizeUser(res.user));
       scheduleRefresh(res.accessToken);
     },
     [scheduleRefresh],
