@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Patch, Delete, Body, Param, Query,
+  Controller, Get, Post, Put, Delete, Body, Param, Query,
   HttpCode, HttpStatus, ParseUUIDPipe,
 } from '@nestjs/common';
 import { InventoryService } from './inventory.service';
@@ -9,7 +9,7 @@ import { QueryProductsDto } from './dto/query-products.dto';
 import { AdjustStockDto } from './dto/adjust-stock.dto';
 import { RestockProductDto } from './dto/restock-product.dto';
 
-@Controller('erp/inventory')
+@Controller('inventory')
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
@@ -25,7 +25,7 @@ export class InventoryController {
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) { return this.inventoryService.findOne(id); }
 
-  @Patch(':id')
+  @Put(':id')
   update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateProductDto) {
     return this.inventoryService.update(id, dto);
   }
@@ -34,7 +34,7 @@ export class InventoryController {
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ParseUUIDPipe) id: string) { return this.inventoryService.remove(id); }
 
-  @Post(':id/adjust')
+  @Post(':id/adjust-stock')
   @HttpCode(HttpStatus.OK)
   adjustStock(@Param('id', ParseUUIDPipe) id: string, @Body() dto: AdjustStockDto) {
     return this.inventoryService.adjustStock(id, dto);

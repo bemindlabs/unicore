@@ -2,7 +2,7 @@ import {
   Controller,
   Get,
   Post,
-  Patch,
+  Put,
   Delete,
   Body,
   Param,
@@ -22,7 +22,7 @@ import { QueryExpensesDto } from './dto/query-expenses.dto';
 import { ApproveExpenseDto } from './dto/approve-expense.dto';
 import { RejectExpenseDto } from './dto/reject-expense.dto';
 
-@Controller('erp/expenses')
+@Controller('expenses')
 export class ExpensesController {
   constructor(private readonly expensesService: ExpensesService) {}
 
@@ -41,7 +41,7 @@ export class ExpensesController {
     return this.expensesService.findOne(id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateExpenseDto,

@@ -1,11 +1,11 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, ParseUUIDPipe, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, ParseUUIDPipe, HttpCode, HttpStatus } from '@nestjs/common';
 import { InvoicesService } from './invoices.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { QueryInvoicesDto } from './dto/query-invoices.dto';
 import { RecordPaymentDto } from './dto/record-payment.dto';
 
-@Controller('erp/invoices')
+@Controller('invoices')
 export class InvoicesController {
   constructor(private readonly invoicesService: InvoicesService) {}
 
@@ -24,7 +24,7 @@ export class InvoicesController {
     return this.invoicesService.create(dto);
   }
 
-  @Patch(':id')
+  @Put(':id')
   update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateInvoiceDto) {
     return this.invoicesService.update(id, dto);
   }
@@ -34,7 +34,7 @@ export class InvoicesController {
     return this.invoicesService.send(id);
   }
 
-  @Post(':id/payments')
+  @Post(':id/record-payment')
   recordPayment(@Param('id', ParseUUIDPipe) id: string, @Body() dto: RecordPaymentDto) {
     return this.invoicesService.recordPayment(id, dto);
   }

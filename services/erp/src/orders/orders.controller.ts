@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Patch, Delete, Body, Param, Query,
+  Controller, Get, Post, Put, Delete, Body, Param, Query,
   HttpCode, HttpStatus, ParseUUIDPipe,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
@@ -10,7 +10,7 @@ import { FulfillOrderDto } from './dto/fulfill-order.dto';
 import { ShipOrderDto } from './dto/ship-order.dto';
 import { CancelOrderDto } from './dto/cancel-order.dto';
 
-@Controller('erp/orders')
+@Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
@@ -23,7 +23,7 @@ export class OrdersController {
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) { return this.ordersService.findOne(id); }
 
-  @Patch(':id')
+  @Put(':id')
   update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateOrderDto) {
     return this.ordersService.update(id, dto);
   }

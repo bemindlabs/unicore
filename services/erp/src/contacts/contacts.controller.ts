@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Patch, Delete, Body, Param, Query,
+  Controller, Get, Post, Put, Delete, Body, Param, Query,
   HttpCode, HttpStatus, ParseUUIDPipe, ParseIntPipe,
 } from '@nestjs/common';
 import { ContactsService } from './contacts.service';
@@ -7,7 +7,7 @@ import { CreateContactDto } from './dto/create-contact.dto';
 import { UpdateContactDto } from './dto/update-contact.dto';
 import { QueryContactsDto } from './dto/query-contacts.dto';
 
-@Controller('erp/contacts')
+@Controller('contacts')
 export class ContactsController {
   constructor(private readonly contactsService: ContactsService) {}
 
@@ -26,12 +26,12 @@ export class ContactsController {
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) { return this.contactsService.findOne(id); }
 
-  @Patch(':id')
+  @Put(':id')
   update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateContactDto) {
     return this.contactsService.update(id, dto);
   }
 
-  @Patch(':id/lead-score')
+  @Put(':id/lead-score')
   updateLeadScore(
     @Param('id', ParseUUIDPipe) id: string,
     @Body('score', ParseIntPipe) score: number,

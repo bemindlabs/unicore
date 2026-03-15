@@ -19,7 +19,6 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
-  app.setGlobalPrefix('api');
 
   await app.startAllMicroservices();
 
