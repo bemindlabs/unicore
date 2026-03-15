@@ -1,0 +1,21 @@
+{
+  "task": "correct-dashboard-misc",
+  "status": "completed",
+  "completedAt": "2026-03-15T00:00:00Z",
+  "branch": "fix/dashboard-settings-workflows",
+  "commit": "3e9b408",
+  "changes": [
+    {
+      "file": "apps/dashboard/src/app/(dashboard)/settings/page.tsx",
+      "description": "Replaced coming-soon stub with a card-grid hub linking to team, agents, erp, integrations, domains, license, and wizard sub-settings"
+    },
+    {
+      "file": "apps/dashboard/src/app/(dashboard)/workflows/page.tsx",
+      "description": "Replaced coming-soon stub with a workflow management page that fetches GET /api/proxy/workflow/templates and shows status badge, trigger type icon, and enable/disable toggle per template"
+    },
+    {
+      "file": "apps/dashboard/src/app/(dashboard)/settings/license/page.tsx",
+      "description": "Replaced hardcoded usersUsed=2 with an API call to /settings/team/count fetched in parallel with the existing license status call"
+    }
+  ]
+}

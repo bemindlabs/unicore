@@ -1,0 +1,21 @@
+{
+  "task": "correct-agent-builder",
+  "status": "completed",
+  "completedAt": "2026-03-15T00:00:00.000Z",
+  "branch": "fix/agent-builder-base",
+  "commit": "b978ca2",
+  "changes": [
+    {
+      "file": "services/openclaw-gateway/src/agents/base/specialist-agent.base.ts",
+      "change": "Replaced buildStubResponse stub with callLlm() helper. executeInternal now POSTs to AI_ENGINE_URL/llm/complete with system+user messages and returns LLM content."
+    },
+    {
+      "file": "services/openclaw-gateway/src/agents/builder/builder.agent.ts",
+      "change": "Implemented all 7 tool stubs. LLM tools (generate_code, create_workflow, scaffold_api, write_tests, review_code) call callLlm() with tool-specific prompts. Service tools (create_webhook, deploy_function) POST to WORKFLOW_SERVICE_URL when set, with local UUID fallback."
+    },
+    {
+      "file": "services/openclaw-gateway/src/agents/stub-specialists.ts",
+      "change": "Replaced stub class definitions with re-exports of real agent implementations (CommsAgent, FinanceAgent, GrowthAgent, OpsAgent, ResearchAgent, ErpAgent, BuilderAgent)."
+    }
+  ]
+}

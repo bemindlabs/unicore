@@ -1,0 +1,734 @@
+// =============================================================================
+// UniCore ERP — Prisma Schema
+// PostgreSQL 16  |  Prisma 6  |  ES2022 / TypeScript 5.5+
+//
+// Modules:
+//   Contact/CRM    — lead scoring, pipeline stages, interaction notes
+//   Product        — SKUs, cost price, tax rate, active flag
+//   Warehouse      — multi-warehouse stock locations
+//   InventoryItem  — per-warehouse stock levels, reorder thresholds
+//   StockMovement  — full audit trail for stock changes
+//   Order          — sales lifecycle from Draft to Delivered
+//   OrderItem      — line items with fulfilled/returned quantity tracking
+//   Fulfillment    — per-shipment fulfillment events
+//   Invoice        — billing with recurring billing support
+//   InvoiceLine    — invoice line items (product-linked or free-text)
+//   Payment        — partial and full payment records
+//   Expense        — expense tracking with receipt capture + OCR data
+//   Report         — saved report definitions + scheduled generation
+//   ReportSnapshot — immutable historical report snapshots
+//
+// Views (previewFeature "views"):
+//   v_pnl_monthly     — monthly P&L (revenue minus expenses)
+//   v_ar_aging        — accounts-receivable aging buckets
+//   v_low_stock_alert — inventory items at or below reorder point
+// =============================================================================
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../generated/prisma"
+  previewFeatures = ["views"]
+}
+
+// =============================================================================
+// Enums
+// =============================================================================
+
+enum ContactType {
+  LEAD
+  PROSPECT
+  CUSTOMER
+  PARTNER
+  VENDOR
+  ARCHIVED
+}
+
+/// CRM pipeline stage used for lead scoring and deal forecasting
+enum LeadStage {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL
+  NEGOTIATION
+  CLOSED_WON
+  CLOSED_LOST
+}
+
+enum OrderStatus {
+  DRAFT
+  QUOTED
+  CONFIRMED
+  PROCESSING
+  PARTIALLY_FULFILLED
+  FULFILLED
+  SHIPPED
+  DELIVERED
+  RETURNED
+  CANCELLED
+  REFUNDED
+}
+
+enum FulfillmentStatus {
+  PENDING
+  PICKING
+  PACKED
+  DISPATCHED
+  IN_TRANSIT
+  DELIVERED
+  FAILED
+  RETURNED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  VIEWED
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  VOID
+  WRITTEN_OFF
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CREDIT_CARD
+  DEBIT_CARD
+  STRIPE
+  PAYPAL
+  PROMPTPAY
+  QR_CODE
+  CRYPTO
+  OTHER
+}
+
+/// Interval for recurring invoice auto-generation
+enum RecurrenceInterval {
+  DAILY
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  QUARTERLY
+  SEMIANNUAL
+  ANNUAL
+}
+
+enum ExpenseStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  REIMBURSED
+}
+
+enum ExpenseCategory {
+  ADVERTISING
+  BANK_FEES
+  CONSULTING
+  DEPRECIATION
+  EDUCATION
+  EQUIPMENT
+  INSURANCE
+  LEGAL
+  MEALS_ENTERTAINMENT
+  OFFICE_SUPPLIES
+  PAYROLL
+  RENT
+  RESEARCH
+  SHIPPING
+  SOFTWARE
+  TAXES
+  TRAVEL
+  UTILITIES
+  OTHER
+}
+
+enum ReportType {
+  PROFIT_AND_LOSS
+  CASH_FLOW
+  BALANCE_SHEET
+  SALES_SUMMARY
+  INVENTORY_SUMMARY
+  EXPENSE_SUMMARY
+  ACCOUNTS_RECEIVABLE
+  ACCOUNTS_PAYABLE
+  CUSTOM
+}
+
+enum ReportPeriod {
+  DAILY
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+  CUSTOM
+}
+
+enum WarehouseStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum StockMovementType {
+  PURCHASE
+  SALE
+  RETURN_IN
+  RETURN_OUT
+  ADJUSTMENT_ADD
+  ADJUSTMENT_REMOVE
+  TRANSFER_IN
+  TRANSFER_OUT
+  WRITE_OFF
+}
+
+// =============================================================================
+// Contact / CRM
+// =============================================================================
+
+/// A person or organisation in the CRM.
+/// Supports full lead-to-customer lifecycle with AI-assisted lead scoring.
+model Contact {
+  id           String        @id @default(uuid()) @db.Uuid
+  type         ContactType   @default(LEAD)
+  /// Display name — person full name or company trading name
+  name         String
+  email        String?       @unique
+  phone        String?
+  company      String?
+  website      String?
+  avatarUrl    String?
+  /// ISO-3166-1 alpha-2, e.g. "TH" or "US"
+  country      String?       @db.Char(2)
+  region       String?
+  city         String?
+  address      String?
+  postalCode   String?
+  /// Segmentation labels e.g. ["vip", "newsletter"]
+  tags         String[]
+  /// CRM pipeline stage
+  leadStage    LeadStage     @default(NEW)
+  /// Rule-based or ML score 0-100; higher means warmer lead
+  leadScore    Int           @default(0) @db.SmallInt
+  /// Estimated deal value for pipeline forecasting
+  dealValue    Decimal?      @db.Decimal(18, 4)
+  currency     String        @default("USD") @db.Char(3)
+  /// Next scheduled touch-point (follow-up reminder)
+  followUpAt   DateTime?
+  /// Acquisition channel e.g. "organic", "paid_ads", "referral"
+  source       String?
+  /// Optional parent — models company <-> employee hierarchy
+  parentId     String?       @db.Uuid
+  parent       Contact?      @relation("ContactHierarchy", fields: [parentId], references: [id])
+  children     Contact[]     @relation("ContactHierarchy")
+  notes        ContactNote[]
+  orders       Order[]
+  invoices     Invoice[]
+  expenses     Expense[]     @relation("ExpenseVendor")
+  /// Arbitrary key/value pairs set by the Bootstrap Wizard per business template
+  customFields Json?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  archivedAt   DateTime?
+
+  @@index([type])
+  @@index([leadStage])
+  @@index([email])
+  @@index([leadScore])
+}
+
+/// Interaction log entry for a Contact.
+/// Types: "call" | "email" | "meeting" | "task" | "note"
+model ContactNote {
+  id        String   @id @default(uuid()) @db.Uuid
+  contactId String   @db.Uuid
+  contact   Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  type      String   @default("note")
+  body      String
+  /// Auth-service User.id — not a FK to keep services decoupled
+  authorId  String   @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([contactId])
+  @@index([createdAt])
+}
+
+// =============================================================================
+// Product / Inventory
+// =============================================================================
+
+/// A physical product, digital good, or billable service.
+model Product {
+  id             String          @id @default(uuid()) @db.Uuid
+  sku            String          @unique
+  name           String
+  description    String?
+  /// "physical" | "digital" | "service"
+  type           String          @default("physical")
+  unitPrice      Decimal         @db.Decimal(18, 4)
+  costPrice      Decimal         @default(0) @db.Decimal(18, 4)
+  currency       String          @default("USD") @db.Char(3)
+  /// VAT/GST rate as decimal, e.g. 0.07 = 7%
+  taxRate        Decimal         @default(0) @db.Decimal(5, 4)
+  /// Unit of measure: "pcs", "kg", "hr", "licence", etc.
+  unit           String          @default("pcs")
+  imageUrl       String?
+  barcode        String?
+  brand          String?
+  /// Slash-delimited category path e.g. "Electronics/Phones"
+  category       String?
+  tags           String[]
+  isActive       Boolean         @default(true)
+  inventoryItems InventoryItem[]
+  orderItems     OrderItem[]
+  invoiceLines   InvoiceLine[]
+  stockMovements StockMovement[]
+  customFields   Json?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([sku])
+  @@index([isActive])
+  @@index([category])
+}
+
+/// A physical storage location — warehouse, store room, or virtual dropship.
+model Warehouse {
+  id             String          @id @default(uuid()) @db.Uuid
+  name           String
+  /// Short unique code used in stock-transfer references
+  code           String          @unique
+  address        String?
+  country        String?         @db.Char(2)
+  status         WarehouseStatus @default(ACTIVE)
+  isDefault      Boolean         @default(false)
+  inventoryItems InventoryItem[]
+  stockMovements StockMovement[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+/// Current stock position for a Product at a Warehouse.
+/// quantityAvailable = quantityOnHand - quantityReserved
+model InventoryItem {
+  id                String    @id @default(uuid()) @db.Uuid
+  productId         String    @db.Uuid
+  product           Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  warehouseId       String    @db.Uuid
+  warehouse         Warehouse @relation(fields: [warehouseId], references: [id])
+  /// Units physically present in the warehouse
+  quantityOnHand    Int       @default(0)
+  /// Units allocated to unshipped orders
+  quantityReserved  Int       @default(0)
+  /// Sellable units = onHand minus reserved
+  quantityAvailable Int       @default(0)
+  /// Triggers a low-stock Kafka event (inventory.low) at this level
+  reorderPoint      Int       @default(0)
+  /// Suggested purchase quantity on reorder
+  reorderQty        Int       @default(0)
+  /// Hard capacity cap for this location (optional)
+  maxStock          Int?
+  /// Bin / shelf reference within the warehouse
+  binLocation       String?
+  lastStockCheck    DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@unique([productId, warehouseId])
+  @@index([productId])
+  @@index([warehouseId])
+  @@index([quantityAvailable])
+}
+
+/// Immutable audit log for every stock quantity change.
+model StockMovement {
+  id            String            @id @default(uuid()) @db.Uuid
+  productId     String            @db.Uuid
+  product       Product           @relation(fields: [productId], references: [id])
+  warehouseId   String            @db.Uuid
+  warehouse     Warehouse         @relation(fields: [warehouseId], references: [id])
+  type          StockMovementType
+  /// Absolute quantity delta — positive for in-flow, negative for out-flow
+  quantity      Int
+  /// quantityOnHand after applying this movement
+  balanceAfter  Int
+  /// "Order" | "Invoice" | "ManualAdjustment" | "Transfer"
+  referenceType String?
+  /// UUID of the linked document (orderId, invoiceId, etc.)
+  referenceId   String?           @db.Uuid
+  note          String?
+  /// Auth-service User.id
+  createdById   String            @db.Uuid
+  createdAt     DateTime          @default(now())
+
+  @@index([productId, createdAt])
+  @@index([warehouseId])
+  @@index([referenceId])
+}
+
+// =============================================================================
+// Orders
+// =============================================================================
+
+/// A sales order — from Draft quote through final Delivery.
+/// Status transitions emit order.created / order.fulfilled Kafka events.
+model Order {
+  id                 String            @id @default(uuid()) @db.Uuid
+  /// Human-readable reference e.g. "ORD-2025-00042"
+  orderNumber        String            @unique
+  contactId          String?           @db.Uuid
+  contact            Contact?          @relation(fields: [contactId], references: [id])
+  status             OrderStatus       @default(DRAFT)
+  fulfillmentStatus  FulfillmentStatus @default(PENDING)
+  subtotal           Decimal           @default(0) @db.Decimal(18, 4)
+  discountAmount     Decimal           @default(0) @db.Decimal(18, 4)
+  taxAmount          Decimal           @default(0) @db.Decimal(18, 4)
+  shippingAmount     Decimal           @default(0) @db.Decimal(18, 4)
+  total              Decimal           @default(0) @db.Decimal(18, 4)
+  currency           String            @default("USD") @db.Char(3)
+  shippingName       String?
+  shippingAddress    String?
+  shippingCity       String?
+  shippingPostalCode String?
+  shippingCountry    String?           @db.Char(2)
+  shippingCarrier    String?
+  trackingNumber     String?
+  trackingUrl        String?
+  estimatedDelivery  DateTime?
+  shippedAt          DateTime?
+  deliveredAt        DateTime?
+  notes              String?
+  internalNotes      String?
+  /// Origin channel: "web" | "pos" | "api" | "manual"
+  channel            String            @default("manual")
+  /// Reference from an upstream platform (e.g. Shopify order ID)
+  externalRef        String?
+  items              OrderItem[]
+  invoices           Invoice[]
+  fulfillments       Fulfillment[]
+  customFields       Json?
+  /// Auth-service User.id
+  createdById        String            @db.Uuid
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  confirmedAt        DateTime?
+  cancelledAt        DateTime?
+
+  @@index([status])
+  @@index([fulfillmentStatus])
+  @@index([contactId])
+  @@index([createdAt])
+  @@index([orderNumber])
+}
+
+/// A single line on an Order.
+/// Tracks snapshot pricing and per-item fulfillment / return quantities.
+model OrderItem {
+  id           String   @id @default(uuid()) @db.Uuid
+  orderId      String   @db.Uuid
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId    String   @db.Uuid
+  product      Product  @relation(fields: [productId], references: [id])
+  /// Snapshot of sku/name at order time — denormalized intentionally
+  sku          String
+  name         String
+  description  String?
+  quantity     Int
+  unitPrice    Decimal  @db.Decimal(18, 4)
+  taxRate      Decimal  @default(0) @db.Decimal(5, 4)
+  discount     Decimal  @default(0) @db.Decimal(18, 4)
+  lineTotal    Decimal  @db.Decimal(18, 4)
+  /// Units actually picked/packed/shipped so far
+  qtyFulfilled Int      @default(0)
+  /// Units returned by the customer
+  qtyReturned  Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+/// A physical shipment event.
+/// Multiple fulfillments per order support split-shipment scenarios.
+model Fulfillment {
+  id             String            @id @default(uuid()) @db.Uuid
+  orderId        String            @db.Uuid
+  order          Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status         FulfillmentStatus @default(PENDING)
+  carrier        String?
+  trackingNumber String?
+  trackingUrl    String?
+  shippedAt      DateTime?
+  deliveredAt    DateTime?
+  failureReason  String?
+  note           String?
+  /// Auth-service User.id
+  createdById    String            @db.Uuid
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([orderId])
+  @@index([status])
+}
+
+// =============================================================================
+// Invoicing
+// =============================================================================
+
+/// An invoice — standalone or linked to an Order.
+/// Supports recurring billing via recurringTemplateId self-relation.
+/// nextGenerationAt is polled by the scheduler to auto-generate instances.
+model Invoice {
+  id                  String              @id @default(uuid()) @db.Uuid
+  /// Human-readable reference e.g. "INV-2025-00017"
+  invoiceNumber       String              @unique
+  contactId           String?             @db.Uuid
+  contact             Contact?            @relation(fields: [contactId], references: [id])
+  orderId             String?             @db.Uuid
+  order               Order?              @relation(fields: [orderId], references: [id])
+  status              InvoiceStatus       @default(DRAFT)
+  issueDate           DateTime            @default(now())
+  dueDate             DateTime
+  paidAt              DateTime?
+  subtotal            Decimal             @default(0) @db.Decimal(18, 4)
+  discountAmount      Decimal             @default(0) @db.Decimal(18, 4)
+  taxAmount           Decimal             @default(0) @db.Decimal(18, 4)
+  total               Decimal             @default(0) @db.Decimal(18, 4)
+  amountPaid          Decimal             @default(0) @db.Decimal(18, 4)
+  /// total minus amountPaid; used by the v_ar_aging view
+  amountDue           Decimal             @default(0) @db.Decimal(18, 4)
+  currency            String              @default("USD") @db.Char(3)
+  /// When true this record acts as a template; instances are auto-generated
+  isRecurring         Boolean             @default(false)
+  recurrenceInterval  RecurrenceInterval?
+  recurrenceStartDate DateTime?
+  /// null = recurring indefinitely
+  recurrenceEndDate   DateTime?
+  lastGeneratedAt     DateTime?
+  /// Scheduler field — checked to determine when to generate the next instance
+  nextGenerationAt    DateTime?
+  /// Links recurring instances back to the series template
+  recurringTemplateId String?             @db.Uuid
+  recurringTemplate   Invoice?            @relation("RecurringInvoiceSeries", fields: [recurringTemplateId], references: [id])
+  recurringInstances  Invoice[]           @relation("RecurringInvoiceSeries")
+  notes               String?
+  terms               String?
+  footer              String?
+  lines               InvoiceLine[]
+  payments            Payment[]
+  customFields        Json?
+  /// Auth-service User.id
+  createdById         String              @db.Uuid
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  sentAt              DateTime?
+  voidedAt            DateTime?
+
+  @@index([status])
+  @@index([contactId])
+  @@index([orderId])
+  @@index([dueDate])
+  @@index([isRecurring])
+  @@index([nextGenerationAt])
+}
+
+/// A line item on an Invoice — optionally linked to a Product.
+model InvoiceLine {
+  id          String   @id @default(uuid()) @db.Uuid
+  invoiceId   String   @db.Uuid
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  productId   String?  @db.Uuid
+  product     Product? @relation(fields: [productId], references: [id])
+  description String
+  quantity    Decimal  @db.Decimal(18, 4)
+  unitPrice   Decimal  @db.Decimal(18, 4)
+  taxRate     Decimal  @default(0) @db.Decimal(5, 4)
+  discount    Decimal  @default(0) @db.Decimal(18, 4)
+  lineTotal   Decimal  @db.Decimal(18, 4)
+  /// Display sort order in the invoice PDF
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([invoiceId])
+}
+
+/// A payment applied against an Invoice.
+/// Multiple records support partial-payment workflows.
+model Payment {
+  id            String        @id @default(uuid()) @db.Uuid
+  invoiceId     String        @db.Uuid
+  invoice       Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amount        Decimal       @db.Decimal(18, 4)
+  currency      String        @default("USD") @db.Char(3)
+  method        PaymentMethod @default(BANK_TRANSFER)
+  /// Gateway transaction / receipt ID
+  transactionId String?
+  /// "stripe" | "paypal" | "promptpay" | "manual"
+  gateway       String?
+  note          String?
+  paidAt        DateTime      @default(now())
+  /// Auth-service User.id
+  createdById   String        @db.Uuid
+  createdAt     DateTime      @default(now())
+
+  @@index([invoiceId])
+  @@index([paidAt])
+}
+
+// =============================================================================
+// Expenses
+// =============================================================================
+
+/// An expense record with optional receipt image capture and OCR extraction.
+/// Feeds into v_pnl_monthly and the Finance Agent cost analysis.
+model Expense {
+  id              String          @id @default(uuid()) @db.Uuid
+  title           String
+  description     String?
+  category        ExpenseCategory @default(OTHER)
+  status          ExpenseStatus   @default(DRAFT)
+  amount          Decimal         @db.Decimal(18, 4)
+  taxAmount       Decimal         @default(0) @db.Decimal(18, 4)
+  currency        String          @default("USD") @db.Char(3)
+  /// Exchange rate at time of expense (1.0 if same as base currency)
+  exchangeRate    Decimal         @default(1) @db.Decimal(12, 6)
+  /// Amount converted to workspace base currency for P&L aggregation
+  baseAmount      Decimal?        @db.Decimal(18, 4)
+  expenseDate     DateTime
+  /// Contact representing the payee / vendor
+  vendorId        String?         @db.Uuid
+  vendor          Contact?        @relation("ExpenseVendor", fields: [vendorId], references: [id])
+  /// URL to the stored receipt file (S3, GCS, or local storage)
+  receiptUrl      String?
+  receiptFilename String?
+  receiptMimeType String?
+  /// Full text extracted by OCR from the receipt image
+  receiptOcrText  String?
+  /// OCR engine confidence score 0.00-1.00
+  ocrConfidence   Decimal?        @db.Decimal(3, 2)
+  isTaxDeductible Boolean         @default(false)
+  /// Vendor own invoice/receipt reference number
+  reference       String?
+  notes           String?
+  tags            String[]
+  /// Auth-service User.id (person who submitted the expense)
+  submittedById   String          @db.Uuid
+  /// Auth-service User.id (manager who approved or rejected)
+  approvedById    String?         @db.Uuid
+  approvedAt      DateTime?
+  rejectedReason  String?
+  customFields    Json?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([status])
+  @@index([category])
+  @@index([expenseDate])
+  @@index([vendorId])
+}
+
+// =============================================================================
+// Reports
+// =============================================================================
+
+/// A saved report definition — parameters for on-demand or scheduled execution.
+/// Computed output is cached in data and versioned via ReportSnapshot.
+model Report {
+  id          String           @id @default(uuid()) @db.Uuid
+  name        String
+  type        ReportType
+  period      ReportPeriod     @default(MONTHLY)
+  startDate   DateTime?
+  endDate     DateTime?
+  currency    String           @default("USD") @db.Char(3)
+  /// Serialised filter object (date ranges, contactIds, categories, etc.)
+  filters     Json?
+  /// Last computed output — refreshed on demand or on schedule
+  data        Json?
+  /// Incremented each time data is refreshed
+  dataVersion Int              @default(0)
+  generatedAt DateTime?
+  isScheduled Boolean          @default(false)
+  /// Standard cron expression e.g. "0 0 1 * *" = monthly
+  scheduleAt  String?
+  lastRunAt   DateTime?
+  nextRunAt   DateTime?
+  /// Auth-service User.id
+  createdById String           @db.Uuid
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  snapshots   ReportSnapshot[]
+
+  @@index([type])
+  @@index([createdById])
+  @@index([nextRunAt])
+}
+
+/// Immutable historical snapshot of a Report computed output.
+model ReportSnapshot {
+  id        String   @id @default(uuid()) @db.Uuid
+  reportId  String   @db.Uuid
+  report    Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  /// Matches Report.dataVersion at the time of capture
+  version   Int
+  data      Json
+  createdAt DateTime @default(now())
+
+  @@unique([reportId, version])
+  @@index([reportId])
+}
+
+// =============================================================================
+// PostgreSQL views  (Prisma previewFeature "views")
+// DDL is in prisma/migrations/0001_erp_views/migration.sql
+// =============================================================================
+
+/// Monthly P&L aggregation.
+/// Revenue = paid Invoice totals. Expenses = approved Expense amounts.
+view PnlMonthly {
+  /// "YYYY-MM" bucket e.g. "2025-03"
+  month         String  @unique
+  currency      String  @db.Char(3)
+  totalRevenue  Decimal @db.Decimal(18, 4)
+  totalExpenses Decimal @db.Decimal(18, 4)
+  grossProfit   Decimal @db.Decimal(18, 4)
+
+  @@map("v_pnl_monthly")
+}
+
+/// Accounts-receivable aging view.
+/// Classifies outstanding Invoice.amountDue into standard aging buckets.
+view ArAging {
+  id            String  @unique @db.Uuid
+  invoiceNumber String
+  contactName   String
+  total         Decimal @db.Decimal(18, 4)
+  amountDue     Decimal @db.Decimal(18, 4)
+  daysOverdue   Int
+  /// "current" | "1-30" | "31-60" | "61-90" | "90+"
+  agingBucket   String
+
+  @@map("v_ar_aging")
+}
+
+/// Inventory items at or below their reorderPoint.
+/// Polled by the Kafka inventory.low event publisher service.
+view LowStockAlert {
+  id                String @unique @db.Uuid
+  sku               String
+  productName       String
+  warehouseName     String
+  quantityAvailable Int
+  reorderPoint      Int
+  reorderQty        Int
+
+  @@map("v_low_stock_alert")
+}

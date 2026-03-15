@@ -1,0 +1,15 @@
+{
+  "task": "fix-backoffice-real-data",
+  "status": "completed",
+  "completedAt": "2026-03-15T00:00:00Z",
+  "branch": "fix/backoffice-real-data",
+  "commit": "546f1f8",
+  "changes": [
+    "apps/dashboard/src/lib/backoffice/store.ts",
+    "apps/dashboard/src/lib/backoffice/agents.ts",
+    "apps/dashboard/src/app/(backoffice)/backoffice/page.tsx",
+    "apps/dashboard/src/components/backoffice/BackofficeApp.tsx",
+    "apps/dashboard/src/components/backoffice/AgentModal.tsx"
+  ],
+  "summary": "Replaced localStorage-only backoffice with real API integration. getAgents() fetches from /api/proxy/openclaw/health/agents with localStorage cache fallback. CRUD operations call /api/proxy/openclaw/agents endpoints. Added polling every 10s, loading/error states, and cached-data warning banner."
+}

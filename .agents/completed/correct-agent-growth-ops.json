@@ -1,0 +1,33 @@
+{
+  "task": "correct-agent-growth-ops",
+  "branch": "fix/agents-growth-ops",
+  "commit": "3751c58",
+  "completedAt": "2026-03-15T00:00:00.000Z",
+  "files": [
+    "services/openclaw-gateway/src/agents/growth/growth.agent.ts",
+    "services/openclaw-gateway/src/agents/ops/ops.agent.ts"
+  ],
+  "summary": {
+    "growthAgent": {
+      "erpCalls": ["analyse_funnel", "identify_drop_offs", "segment_audience"],
+      "aiEngineCalls": [
+        "get_ad_performance",
+        "adjust_ad_budget",
+        "create_campaign"
+      ],
+      "local": ["generate_utm"]
+    },
+    "opsAgent": {
+      "erpCalls": ["list_tasks (context)", "generate_standup (context)"],
+      "aiEngineCalls": [
+        "create_task",
+        "update_task",
+        "list_tasks",
+        "schedule_event",
+        "check_availability",
+        "set_reminder",
+        "generate_standup"
+      ]
+    }
+  }
+}

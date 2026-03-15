@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   LlmCompletionOptions,
   LlmCompletionResult,
@@ -20,8 +20,6 @@ export interface LlmRequestContext {
 
 @Injectable()
 export class LlmService {
-  private readonly logger = new Logger(LlmService.name);
-
   constructor(
     private readonly factory: ProviderFactoryService,
     private readonly tokenTracking: TokenTrackingService,

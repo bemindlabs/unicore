@@ -1,0 +1,20 @@
+{
+  "task": "correct-rag-minor",
+  "completedAt": "2026-03-15T00:00:00.000Z",
+  "branch": "fix/rag-and-minor-todos",
+  "commit": "6939b7d",
+  "changes": [
+    {
+      "file": "services/rag/src/ingestion/embedding.service.ts",
+      "description": "Fixed embedding endpoint from /embeddings -> /llm/embed and /embeddings/batch -> parallel /llm/embed calls"
+    },
+    {
+      "file": "services/openclaw-gateway/src/agents/agent-registry.service.ts",
+      "description": "Implemented OnModuleInit to register all 7 real specialist agents on startup"
+    },
+    {
+      "file": "services/openclaw-gateway/src/agents/agents.module.ts",
+      "description": "Added AgentRegistryService to providers and exports"
+    }
+  ]
+}
