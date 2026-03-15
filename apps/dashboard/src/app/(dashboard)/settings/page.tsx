@@ -1,10 +1,68 @@
-import { Settings } from 'lucide-react';
+import Link from 'next/link';
+import {
+  Bot,
+  BookOpen,
+  ChevronRight,
+  Crown,
+  Globe,
+  Settings,
+  Users,
+  Wand2,
+  Puzzle,
+} from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@unicore/ui';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
+
+const SETTINGS_LINKS = [
+  {
+    href: '/settings/team',
+    icon: Users,
+    title: 'Team',
+    description: 'Manage team members, roles, and permissions',
+  },
+  {
+    href: '/settings/agents',
+    icon: Bot,
+    title: 'AI Agents',
+    description: 'Configure agent types, autonomy levels, and active channels',
+  },
+  {
+    href: '/settings/erp',
+    icon: BookOpen,
+    title: 'ERP Modules',
+    description: 'Enable or disable ERP modules for your organisation',
+  },
+  {
+    href: '/settings/integrations',
+    icon: Puzzle,
+    title: 'Integrations',
+    description: 'Connect third-party services and external platforms',
+  },
+  {
+    href: '/settings/domains',
+    icon: Globe,
+    title: 'Custom Domains',
+    description: 'Add and verify custom domains with SSL certificate management',
+  },
+  {
+    href: '/settings/license',
+    icon: Crown,
+    title: 'License',
+    description: 'View your edition, usage limits, and upgrade to Pro',
+  },
+  {
+    href: '/settings/wizard',
+    icon: Wand2,
+    title: 'Setup Wizard',
+    description: 'Re-run the initial configuration wizard at any time',
+  },
+] as const;
 
 export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <Breadcrumb />
+
       <div className="flex items-center gap-3">
         <Settings className="h-6 w-6 text-primary" />
         <div>
@@ -12,8 +70,26 @@ export default function SettingsPage() {
           <p className="text-muted-foreground">Configure your UniCore platform</p>
         </div>
       </div>
-      <div className="flex h-64 items-center justify-center rounded-lg border border-dashed text-muted-foreground">
-        Settings interface coming soon
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {SETTINGS_LINKS.map(({ href, icon: Icon, title, description }) => (
+          <Link key={href} href={href}>
+            <Card className="h-full cursor-pointer transition-colors hover:bg-muted/40">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                    <Icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <CardTitle className="text-base">{title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription>{description}</CardDescription>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
       </div>
     </div>
   );
