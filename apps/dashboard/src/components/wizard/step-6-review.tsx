@@ -71,6 +71,9 @@ export function StepReview() {
 
     try {
       const res = await provisionWorkspace(request);
+      if (res.success) {
+        localStorage.setItem('wizard_completed', 'true');
+      }
       setResult(res);
     } catch (err) {
       setResult({
