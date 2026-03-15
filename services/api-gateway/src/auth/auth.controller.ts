@@ -3,9 +3,11 @@ import {
   Post,
   Get,
   Body,
+  Headers,
   UseGuards,
   HttpCode,
   HttpStatus,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
@@ -41,7 +43,7 @@ export class AuthController {
     return this.authService.refresh(dto.refreshToken);
   }
 
-  @Public()
+  @UseGuards(JwtAuthGuard)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   logout(@Body() dto: RefreshTokenDto) {
@@ -52,5 +54,24 @@ export class AuthController {
   @Get('me')
   getMe(@CurrentUser('id') userId: string) {
     return this.authService.getMe(userId);
+  }
+
+  @Public()
+  @Post('provision-admin')
+  @HttpCode(HttpStatus.CREATED)
+  provisionAdmin(
+    @Headers('x-bootstrap-secret') secret: string,
+    @Body() body: { email: string; name: string; password: string; role?: 'OWNER' | 'OPERATOR' },
+  ) {
+    const expectedSecret = process.env.BOOTSTRAP_SECRET;
+    if (!expectedSecret || secret !== expectedSecret) {
+      throw new UnauthorizedException('Invalid bootstrap secret');
+    }
+    return this.authService.provisionAdmin(
+      body.email,
+      body.name,
+      body.password,
+      body.role ?? 'OWNER',
+    );
   }
 }

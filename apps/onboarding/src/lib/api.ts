@@ -28,6 +28,7 @@ export interface ProvisionResult {
     agentsEnabled: string[];
     rolesEnabled: string[];
   };
+  licenseKey?: string;
   message?: string;
 }
 

@@ -7,3 +7,4 @@ export * from './agents.js';
 export * from './api.js';
 export * from './license.js';
 export * from './workflow.js';
+export * from './tasks.js';

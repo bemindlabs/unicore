@@ -51,7 +51,7 @@ describe('ContactsService', () => {
     it('clamps score between 0 and 100', async () => {
       mockPrisma.contact.findUnique.mockResolvedValue({ id: '1' });
       mockPrisma.contact.update.mockResolvedValue({ id: '1', leadScore: 100 });
-      await service.updateLeadScore('1', { score: 150 });
+      await service.updateLeadScore('1', 150);
       expect(mockPrisma.contact.update).toHaveBeenCalledWith(
         expect.objectContaining({ data: expect.objectContaining({ leadScore: 100 }) })
       );

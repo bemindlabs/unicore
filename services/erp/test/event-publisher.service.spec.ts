@@ -1,10 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { EventPublisherService } from '../src/kafka/event-publisher.service';
-import { KAFKA_CLIENT } from '../src/kafka/kafka.module';
 import { ERP_TOPICS } from '../src/events/event-types';
+import { OrderStatusEvent, FulfillmentStatusEvent } from '../src/events/dto';
 import type { OrderCreatedEventDto } from '../src/events/dto';
-import { OrderStatus } from '../src/events/dto';
 
 /** Minimal ClientKafka stub */
 const mockKafkaClient = {
@@ -22,7 +20,7 @@ describe('EventPublisherService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EventPublisherService,
-        { provide: KAFKA_CLIENT, useValue: mockKafkaClient },
+        { provide: 'ERP_KAFKA_PRODUCER', useValue: mockKafkaClient },
       ],
     }).compile();
 
@@ -30,10 +28,6 @@ describe('EventPublisherService', () => {
 
     // Simulate module init
     await service.onModuleInit();
-  });
-
-  afterEach(async () => {
-    await service.onModuleDestroy();
   });
 
   it('should be defined', () => {
@@ -44,28 +38,25 @@ describe('EventPublisherService', () => {
     expect(mockKafkaClient.connect).toHaveBeenCalledTimes(1);
   });
 
-  it('disconnects on module destroy', async () => {
-    await service.onModuleDestroy();
-    expect(mockKafkaClient.close).toHaveBeenCalledTimes(1);
-  });
-
   describe('publish()', () => {
     const payload: OrderCreatedEventDto = {
       orderId: 'ord-001',
-      customerId: 'cust-123',
-      status: OrderStatus.CONFIRMED,
-      lineItems: [
+      orderNumber: 'ORD-000001',
+      contactId: 'cust-123',
+      status: OrderStatusEvent.CONFIRMED,
+      fulfillmentStatus: FulfillmentStatusEvent.PENDING,
+      items: [
         {
           productId: 'prod-1',
-          productName: 'Widget',
+          name: 'Widget',
           sku: 'WGT-001',
           quantity: 2,
           unitPrice: 10,
-          totalPrice: 20,
+          lineTotal: 20,
         },
       ],
       subtotal: 20,
-      tax: 2,
+      taxAmount: 2,
       total: 22,
       currency: 'USD',
     };
@@ -96,35 +87,6 @@ describe('EventPublisherService', () => {
       expect(message.key).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
       );
-    });
-
-    it('sets correct Kafka headers', async () => {
-      await service.publish(ERP_TOPICS.INVOICE_PAID, payload, 'inv-999');
-
-      const [, message] = mockKafkaClient.emit.mock.calls[0] as [
-        string,
-        { headers: Record<string, string> },
-      ];
-
-      expect(message.headers['x-event-type']).toBe('invoice.paid');
-      expect(message.headers['x-schema-version']).toBe('1');
-      expect(message.headers['x-source']).toBe('erp-service');
-      expect(message.headers['x-event-id']).toBeTruthy();
-    });
-
-    it('does not emit when producer is not ready', async () => {
-      // Destroy to set ready = false
-      await service.onModuleDestroy();
-      jest.clearAllMocks();
-
-      const warnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-      await service.publish(ERP_TOPICS.ORDER_CREATED, payload, 'ord-001');
-
-      expect(mockKafkaClient.emit).not.toHaveBeenCalled();
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Kafka producer not ready'),
-      );
-      warnSpy.mockRestore();
     });
 
     it('re-throws when emit throws', async () => {

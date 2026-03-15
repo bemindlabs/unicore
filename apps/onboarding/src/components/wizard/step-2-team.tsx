@@ -18,7 +18,6 @@ import {
 import { useState } from "react";
 
 import { useWizardState } from "@/hooks/use-wizard-state";
-import type { TeamMember } from "@/types/wizard";
 
 const ROLE_OPTIONS = [
   { value: UserRole.Owner, label: "Owner" },

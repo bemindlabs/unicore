@@ -74,6 +74,7 @@ services:
       JWT_SECRET: unicore-local-dev-secret-key-minimum-32-chars
       NODE_ENV: development
       PORT: "4000"
+      BOOTSTRAP_SECRET: unicore-bootstrap-secret-local
       ERP_SERVICE_HOST: unicore-erp
       ERP_SERVICE_PORT: "4100"
       AI_ENGINE_SERVICE_HOST: unicore-ai-engine
@@ -148,10 +149,16 @@ services:
       DATABASE_URL: postgresql://unicore:password@unicore-postgres:5432/unicore?schema=public
       PORT: "4500"
       BOOTSTRAP_SECRET: unicore-bootstrap-secret-local
-      LICENSE_API_URL: http://localhost:4600
+      API_GATEWAY_URL: http://unicore-api-gateway:4000
+      LICENSE_API_URL: http://unicore-license-api:4600
+      LICENSE_ADMIN_SECRET: unicore-license-admin-secret-local
     depends_on:
       unicore-postgres:
         condition: service_healthy
+      unicore-api-gateway:
+        condition: service_started
+      unicore-license-api:
+        condition: service_started
     profiles: [apps]
 
   unicore-openclaw-gateway:
@@ -182,15 +189,59 @@ services:
         condition: service_healthy
     profiles: [workflows]
 
+  # ─── License Server ──────────────────────────────────────────────
+  unicore-license-api:
+    build:
+      context: ../unicore-license
+      dockerfile: services/license-api/Dockerfile
+    ports:
+      - "4600:4600"
+    environment:
+      DATABASE_URL: postgresql://unicore:password@unicore-license-db:5432/unicore_license?schema=public
+      REDIS_URL: redis://unicore-license-redis:6379
+      ADMIN_SECRET: unicore-license-admin-secret-local
+      PORT: "4600"
+    profiles: [apps]
+
+  unicore-license-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: unicore
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: unicore_license
+    volumes:
+      - license_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U unicore -d unicore_license"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    profiles: [apps]
+
+  unicore-license-redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - license_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    profiles: [apps]
+
   # ─── Frontend Apps ────────────────────────────────────────────────
   unicore-dashboard:
     build:
       context: .
       dockerfile: apps/dashboard/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://76.13.188.164:4000
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:4000
+      NEXT_PUBLIC_API_URL: http://76.13.188.164:4000
     depends_on:
       - unicore-api-gateway
     profiles: [apps]
@@ -200,11 +251,14 @@ services:
       context: .
       dockerfile: apps/onboarding/Dockerfile
       args:
+        NEXT_PUBLIC_API_URL: http://76.13.188.164:4000
+        NEXT_PUBLIC_BOOTSTRAP_URL: http://76.13.188.164:4500
         NEXT_PUBLIC_BOOTSTRAP_SECRET: unicore-bootstrap-secret-local
     ports:
       - "3100:3100"
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:4000
+      NEXT_PUBLIC_API_URL: http://76.13.188.164:4000
+      NEXT_PUBLIC_BOOTSTRAP_URL: http://76.13.188.164:4500
       NEXT_PUBLIC_BOOTSTRAP_SECRET: unicore-bootstrap-secret-local
     depends_on:
       - unicore-api-gateway
@@ -214,3 +268,5 @@ volumes:
   postgres_data:
   redis_data:
   vectordb_data:
+  license_postgres_data:
+  license_redis_data:

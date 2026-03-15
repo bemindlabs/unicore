@@ -2,6 +2,7 @@
   "extends": "../../packages/config/src/typescript/nest.json",
   "compilerOptions": {
     "outDir": "./dist",
+    "strictPropertyInitialization": false,
     "baseUrl": "./",
     "paths": {
       "@/*": ["src/*"]

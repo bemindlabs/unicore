@@ -1,7 +1,7 @@
 import {
   Injectable, NotFoundException, BadRequestException, Logger,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { OrderStatus as PrismaOrderStatus } from '../generated/prisma';
 import { PrismaService } from '../prisma/prisma.service';
 import { EventPublisherService } from '../kafka/event-publisher.service';
 import { ERP_TOPICS } from '../events/event-types';
@@ -15,11 +15,11 @@ import { paginate, PaginatedResult } from '../common/dto/pagination.dto';
 import { OrderStatus, canTransition, getAllowedTransitions } from './order-state-machine';
 
 const ORDER_INCLUDE = {
-  contact: { select: { id: true, firstName: true, lastName: true, email: true } },
-  lineItems: { include: { product: { select: { id: true, sku: true, name: true } } } },
-} satisfies Prisma.OrderInclude;
+  contact: { select: { id: true, name: true, email: true } },
+  items: { include: { product: { select: { id: true, sku: true, name: true } } } },
+};
 
-type OrderWithRelations = Prisma.OrderGetPayload<{ include: typeof ORDER_INCLUDE }>;
+type OrderWithRelations = any;
 
 @Injectable()
 export class OrdersService {
@@ -42,21 +42,21 @@ export class OrdersService {
       if (!productMap.has(li.productId)) throw new NotFoundException(`Product ${li.productId} not found`);
     }
 
-    const lineItemsData: Prisma.OrderItemCreateWithoutOrderInput[] = dto.lineItems.map((li) => {
+    const lineItemsData = dto.lineItems.map((li) => {
       const product = productMap.get(li.productId)!;
       const unitPrice = li.unitPrice ?? Number(product.unitPrice);
-      const totalPrice = unitPrice * li.quantity;
+      const lineTotal = unitPrice * li.quantity;
       return {
         product: { connect: { id: li.productId } },
         sku: product.sku,
-        productName: product.name,
+        name: product.name,
         quantity: li.quantity,
         unitPrice,
-        totalPrice,
+        lineTotal,
       };
     });
 
-    const subtotal = lineItemsData.reduce((sum, li) => sum + Number(li.totalPrice), 0);
+    const subtotal = lineItemsData.reduce((sum, li) => sum + Number(li.lineTotal), 0);
     const taxRate = dto.taxRate ?? 0;
     const taxAmount = subtotal * taxRate;
     const discount = dto.discount ?? 0;
@@ -67,12 +67,13 @@ export class OrdersService {
       data: {
         orderNumber,
         contact: { connect: { id: dto.contactId } },
-        status: OrderStatus.PENDING,
-        lineItems: { create: lineItemsData },
-        subtotal, taxRate, taxAmount, discount, total,
+        status: 'DRAFT' as PrismaOrderStatus,
+        items: { create: lineItemsData },
+        subtotal, taxAmount, discountAmount: discount, total,
         currency: dto.currency ?? 'USD',
         notes: dto.notes,
         shippingAddress: dto.shippingAddress,
+        createdById: '00000000-0000-0000-0000-000000000000',
       },
       include: ORDER_INCLUDE,
     });
@@ -81,10 +82,10 @@ export class OrdersService {
       orderId: order.id,
       customerId: dto.contactId,
       customerEmail: contact.email ?? undefined,
-      status: 'pending',
-      lineItems: order.lineItems.map((li) => ({
-        productId: li.productId, productName: li.productName, sku: li.sku,
-        quantity: li.quantity, unitPrice: Number(li.unitPrice), totalPrice: Number(li.totalPrice),
+      status: 'draft',
+      lineItems: order.items.map((li: any) => ({
+        productId: li.productId, productName: li.name, sku: li.sku,
+        quantity: li.quantity, unitPrice: Number(li.unitPrice), lineTotal: Number(li.lineTotal),
       })),
       subtotal, tax: taxAmount, total, currency: order.currency,
     }, order.id).catch((err: unknown) => this.logger.error('Failed to publish order.created', err));
@@ -96,14 +97,13 @@ export class OrdersService {
   async findAll(query: QueryOrdersDto): Promise<PaginatedResult<OrderWithRelations>> {
     const { page = 1, limit = 20, status, contactId, search } = query;
     const skip = (page - 1) * limit;
-    const where: Prisma.OrderWhereInput = {
-      ...(status && { status }),
+    const where: Record<string, unknown> = {
+      ...(status && { status: status as unknown as PrismaOrderStatus }),
       ...(contactId && { contactId }),
       ...(search && {
         OR: [
-          { orderNumber: { contains: search, mode: 'insensitive' } },
-          { contact: { firstName: { contains: search, mode: 'insensitive' } } },
-          { contact: { lastName: { contains: search, mode: 'insensitive' } } },
+          { orderNumber: { contains: search, mode: 'insensitive' as const } },
+          { contact: { name: { contains: search, mode: 'insensitive' as const } } },
         ],
       }),
     };
@@ -138,7 +138,7 @@ export class OrdersService {
         `Cannot transition from ${fromStatus} to ${toStatus}. Allowed: ${allowed.join(', ') || 'none'}`,
       );
     }
-    const updated = await this.prisma.order.update({ where: { id }, data: { status: toStatus }, include: ORDER_INCLUDE });
+    const updated = await this.prisma.order.update({ where: { id }, data: { status: toStatus as unknown as PrismaOrderStatus }, include: ORDER_INCLUDE });
     this.eventPublisher.publish(ERP_TOPICS.ORDER_UPDATED, {
       orderId: id, customerId: order.contact.id, previousStatus: fromStatus, newStatus: toStatus,
     }, id).catch((err: unknown) => this.logger.error('Failed to publish order.updated', err));
@@ -157,9 +157,9 @@ export class OrdersService {
     return this.prisma.order.update({
       where: { id },
       data: {
-        status: OrderStatus.SHIPPED,
+        status: OrderStatus.SHIPPED as unknown as PrismaOrderStatus,
         ...(dto.trackingNumber && { trackingNumber: dto.trackingNumber }),
-        ...(dto.carrier && { carrier: dto.carrier }),
+        ...(dto.carrier && { shippingCarrier: dto.carrier }),
       },
       include: ORDER_INCLUDE,
     });
@@ -173,20 +173,25 @@ export class OrdersService {
     }
 
     await this.prisma.$transaction(async (tx) => {
-      for (const item of order.lineItems) {
-        const product = await tx.product.findUnique({ where: { id: item.productId } });
-        if (!product) continue;
-        const newQty = product.quantity - item.quantity;
-        if (newQty < 0) throw new BadRequestException(`Insufficient stock for product ${product.sku}`);
-        await tx.product.update({ where: { id: item.productId }, data: { quantity: newQty } });
+      for (const item of order.items) {
+        const inventoryItem = await tx.inventoryItem.findFirst({ where: { productId: item.productId } });
+        if (!inventoryItem) continue;
+        const newQty = inventoryItem.quantityOnHand - item.quantity;
+        if (newQty < 0) throw new BadRequestException(`Insufficient stock for product ${item.sku}`);
+        await tx.inventoryItem.update({
+          where: { id: inventoryItem.id },
+          data: { quantityOnHand: newQty, quantityAvailable: newQty - inventoryItem.quantityReserved },
+        });
         await tx.stockMovement.create({
           data: {
             productId: item.productId,
-            delta: -item.quantity,
-            reason: 'order_fulfillment',
+            warehouseId: inventoryItem.warehouseId,
+            type: 'SALE',
+            quantity: -item.quantity,
+            balanceAfter: newQty,
+            note: 'order_fulfillment',
             referenceId: id,
-            quantityBefore: product.quantity,
-            quantityAfter: newQty,
+            createdById: '00000000-0000-0000-0000-000000000000',
           },
         });
       }
@@ -196,17 +201,17 @@ export class OrdersService {
     const fulfilled = await this.prisma.order.update({
       where: { id },
       data: {
-        status: OrderStatus.FULFILLED,
-        fulfilledAt: now,
+        status: OrderStatus.FULFILLED as unknown as PrismaOrderStatus,
+        deliveredAt: now,
         ...(dto.trackingNumber && { trackingNumber: dto.trackingNumber }),
-        ...(dto.carrier && { carrier: dto.carrier }),
+        ...(dto.carrier && { shippingCarrier: dto.carrier }),
         ...(dto.notes && { notes: dto.notes }),
       },
       include: ORDER_INCLUDE,
     });
 
     this.eventPublisher.publish(ERP_TOPICS.ORDER_FULFILLED, {
-      orderId: id, customerId: order.contact.id,
+      orderId: id, customerId: order.contact?.id,
       trackingNumber: dto.trackingNumber, carrier: dto.carrier,
       fulfilledAt: now.toISOString(),
     }, id).catch((err: unknown) => this.logger.error('Failed to publish order.fulfilled', err));
@@ -224,7 +229,7 @@ export class OrdersService {
     return this.prisma.order.update({
       where: { id },
       data: {
-        status: OrderStatus.CANCELLED,
+        status: OrderStatus.CANCELLED as unknown as PrismaOrderStatus,
         cancelledAt: new Date(),
         ...(dto.reason && { notes: dto.reason }),
       },

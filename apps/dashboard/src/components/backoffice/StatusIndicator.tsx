@@ -1,4 +1,5 @@
 import type { AgentStatus } from '@/lib/backoffice/types';
+import { useChinjanTheme } from './chinjan/ChinjanThemeProvider';
 
 const config: Record<AgentStatus, { color: string; glow: string; label: string }> = {
   working: { color: 'bg-green-400', glow: 'shadow-[0_0_6px_rgba(74,222,128,0.6)]', label: 'WORKING' },
@@ -6,7 +7,29 @@ const config: Record<AgentStatus, { color: string; glow: string; label: string }
   offline: { color: 'bg-red-500', glow: '', label: 'OFFLINE' },
 };
 
+const chinjanConfig: Record<AgentStatus, { color: string; label: string; icon: string }> = {
+  working: { color: '#a8e6cf', label: 'WORKING', icon: '♥' },
+  idle: { color: '#ffd93d', label: 'IDLE', icon: '★' },
+  offline: { color: '#e5e1dc', label: 'OFFLINE', icon: '☁' },
+};
+
 export function StatusIndicator({ status, showLabel = false }: { status: AgentStatus; showLabel?: boolean }) {
+  const { isActive: isChinjan } = useChinjanTheme();
+
+  if (isChinjan) {
+    const cc = chinjanConfig[status];
+    return (
+      <span className="inline-flex items-center gap-1.5">
+        <span className="chinjan-mono text-sm" style={{ color: cc.color }}>{cc.icon}</span>
+        {showLabel && (
+          <span className="chinjan-mono text-sm tracking-wider uppercase" style={{ color: cc.color }}>
+            {cc.label}
+          </span>
+        )}
+      </span>
+    );
+  }
+
   const c = config[status];
   return (
     <span className="inline-flex items-center gap-1.5">

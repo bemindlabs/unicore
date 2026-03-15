@@ -47,13 +47,51 @@ export class ProvisioningService {
     // Generate config
     const config = this.configGeneratorService.generate(request, template);
 
-    // Create admin user record
-    const adminUser = {
-      id: uuidv4(),
-      email: request.adminEmail,
-      name: request.adminName,
-      role: "owner",
-    };
+    // Create admin user in API gateway database
+    const apiGatewayUrl =
+      process.env.API_GATEWAY_URL ?? "http://localhost:4000";
+    let adminUser: { id: string; email: string; name: string; role: string };
+
+    try {
+      const registerRes = await fetch(
+        `${apiGatewayUrl}/auth/provision-admin`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Bootstrap-Secret": request.bootstrapSecret,
+          },
+          body: JSON.stringify({
+            email: request.adminEmail,
+            name: request.adminName,
+            password: request.adminPassword,
+            role: "OWNER",
+          }),
+        },
+      );
+
+      if (!registerRes.ok) {
+        const errBody = await registerRes.text();
+        throw new Error(`API gateway responded ${registerRes.status}: ${errBody}`);
+      }
+
+      adminUser = (await registerRes.json()) as typeof adminUser;
+      this.logger.log(`Admin user created in database: ${adminUser.email}`);
+    } catch (err) {
+      this.logger.error(
+        `Failed to create admin user: ${err instanceof Error ? err.message : err}`,
+      );
+      // Fallback to in-memory record so provisioning still returns data
+      adminUser = {
+        id: uuidv4(),
+        email: request.adminEmail,
+        name: request.adminName,
+        role: "OWNER",
+      };
+      this.logger.warn(
+        "Admin user was NOT persisted — login will not work until the user is manually registered",
+      );
+    }
 
     // Build summary
     const erpModulesEnabled = Object.entries(template.erp)

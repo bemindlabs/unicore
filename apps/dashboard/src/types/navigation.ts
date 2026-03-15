@@ -9,6 +9,6 @@ export interface NavItem {
 }
 
 export interface NavSection {
-  title?: string;
+  label: string;
   items: NavItem[];
 }

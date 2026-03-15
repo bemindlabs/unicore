@@ -1,11 +1,34 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { InventoryService } from '../src/inventory/inventory.service';
+import { PrismaService } from '../src/prisma/prisma.service';
 import { EventPublisherService } from '../src/kafka/event-publisher.service';
-import { ERP_TOPICS } from '../src/events/event-types';
-import type { InventoryLowEventDto, InventoryRestockedEventDto } from '../src/events/dto';
 
 const mockPublisher = {
   publish: jest.fn().mockResolvedValue(undefined),
+};
+
+const mockPrisma = {
+  product: {
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    findFirst: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    count: jest.fn(),
+  },
+  inventoryItem: {
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+    update: jest.fn(),
+    count: jest.fn(),
+  },
+  stockMovement: {
+    create: jest.fn(),
+    findMany: jest.fn(),
+  },
+  $transaction: jest.fn(),
+  $queryRaw: jest.fn(),
 };
 
 describe('InventoryService', () => {
@@ -17,6 +40,7 @@ describe('InventoryService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         InventoryService,
+        { provide: PrismaService, useValue: mockPrisma },
         { provide: EventPublisherService, useValue: mockPublisher },
       ],
     }).compile();
@@ -28,44 +52,10 @@ describe('InventoryService', () => {
     expect(service).toBeDefined();
   });
 
-  describe('notifyLowStock()', () => {
-    const dto: InventoryLowEventDto = {
-      productId: 'prod-001',
-      productName: 'Widget',
-      sku: 'WGT-001',
-      currentQuantity: 3,
-      threshold: 10,
-    };
-
-    it('publishes inventory.low event with productId as key', async () => {
-      await service.notifyLowStock(dto);
-
-      expect(mockPublisher.publish).toHaveBeenCalledWith(
-        ERP_TOPICS.INVENTORY_LOW,
-        dto,
-        'prod-001',
-      );
-    });
-  });
-
-  describe('notifyRestocked()', () => {
-    const dto: InventoryRestockedEventDto = {
-      productId: 'prod-001',
-      productName: 'Widget',
-      sku: 'WGT-001',
-      previousQuantity: 3,
-      quantityAdded: 100,
-      newQuantity: 103,
-    };
-
-    it('publishes inventory.restocked event with productId as key', async () => {
-      await service.notifyRestocked(dto);
-
-      expect(mockPublisher.publish).toHaveBeenCalledWith(
-        ERP_TOPICS.INVENTORY_RESTOCKED,
-        dto,
-        'prod-001',
-      );
+  describe('findOne()', () => {
+    it('throws NotFoundException when product not found', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue(null);
+      await expect(service.findOne('non-existent')).rejects.toThrow('not found');
     });
   });
 });

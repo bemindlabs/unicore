@@ -7,7 +7,7 @@ export enum PaymentMethodDto {
 }
 
 export class RecordPaymentDto {
-  @IsNumber() @Min(0.01) @Type(() => Number) amount: number;
+  @IsNumber() @Min(0.01) @Type(() => Number) amount!: number;
   @IsOptional() @IsString() currency?: string;
   @IsOptional() @IsEnum(PaymentMethodDto) method?: PaymentMethodDto;
   @IsOptional() @IsString() reference?: string;

@@ -5,7 +5,6 @@ import {
   Button,
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
   Separator,
@@ -15,7 +14,7 @@ import { useState } from "react";
 import { useWizardState } from "@/hooks/use-wizard-state";
 import { provisionWorkspace } from "@/lib/api";
 import type { ProvisionRequest, ProvisionResult } from "@/lib/api";
-import { AGENT_DEFINITIONS, ERP_MODULES, STEP_LABELS } from "@/types/wizard";
+import { AGENT_DEFINITIONS, ERP_MODULES } from "@/types/wizard";
 
 export function StepReview() {
   const { state, prevStep, goToStep } = useWizardState();
@@ -84,14 +83,34 @@ export function StepReview() {
   }
 
   if (result?.success) {
+    const dashboardUrl =
+      process.env.NEXT_PUBLIC_DASHBOARD_URL ?? "http://76.13.188.164:3000";
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
+      <div className="flex flex-col items-center justify-center py-16 text-center space-y-6">
         <div className="text-5xl">🚀</div>
         <h2 className="text-2xl font-bold">Workspace Provisioned!</h2>
         <p className="text-muted-foreground max-w-md">
-          Your UniCore workspace is being set up. You'll be redirected to the
-          dashboard shortly.
+          Your UniCore workspace is ready. Sign in with{" "}
+          <strong>{result.admin?.email}</strong> to get started.
         </p>
+        {result.licenseKey ? (
+          <Card className="w-full max-w-sm text-left">
+            <CardContent className="p-4 space-y-1">
+              <p className="text-xs text-muted-foreground">Community License Key</p>
+              <p className="font-mono text-sm font-medium select-all break-all">
+                {result.licenseKey}
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-700 max-w-sm">
+            License could not be generated automatically. You can create one
+            later from the admin dashboard.
+          </div>
+        )}
+        <Button asChild size="lg">
+          <a href={`${dashboardUrl}/login`}>Go to Dashboard</a>
+        </Button>
       </div>
     );
   }

@@ -25,7 +25,7 @@ export class EventPublisherService implements OnModuleInit {
    * Publish a domain event to the given Kafka topic.
    * Wraps the payload in a typed ErpEventEnvelope with a new UUID and timestamp.
    */
-  async publish<T>(topic: ErpTopic, payload: T): Promise<void> {
+  async publish<T>(topic: ErpTopic, payload: T, partitionKey?: string): Promise<void> {
     const envelope: ErpEventEnvelope<T> = {
       eventId: randomUUID(),
       occurredAt: new Date().toISOString(),
@@ -36,7 +36,7 @@ export class EventPublisherService implements OnModuleInit {
     };
 
     this.kafkaClient.emit(topic, {
-      key: envelope.eventId,
+      key: partitionKey ?? envelope.eventId,
       value: JSON.stringify(envelope),
     });
 

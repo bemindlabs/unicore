@@ -2,15 +2,15 @@ import { IsString, IsOptional, IsNumber, IsArray, IsDateString, Min, ValidateNes
 import { Type } from 'class-transformer';
 
 export class CreateInvoiceItemDto {
-  @IsString() description: string;
-  @IsNumber() @Min(1) @Type(() => Number) quantity: number;
-  @IsNumber() @Min(0) @Type(() => Number) unitPrice: number;
+  @IsString() description!: string;
+  @IsNumber() @Min(1) @Type(() => Number) quantity!: number;
+  @IsNumber() @Min(0) @Type(() => Number) unitPrice!: number;
 }
 
 export class CreateInvoiceDto {
-  @IsString() contactId: string;
+  @IsString() contactId!: string;
   @IsOptional() @IsString() orderId?: string;
-  @IsArray() @ValidateNested({ each: true }) @Type(() => CreateInvoiceItemDto) lineItems: CreateInvoiceItemDto[];
+  @IsArray() @ValidateNested({ each: true }) @Type(() => CreateInvoiceItemDto) lineItems!: CreateInvoiceItemDto[];
   @IsOptional() @IsNumber() @Min(0) @Type(() => Number) taxRate?: number;
   @IsOptional() @IsNumber() @Min(0) @Type(() => Number) discount?: number;
   @IsOptional() @IsString() currency?: string;

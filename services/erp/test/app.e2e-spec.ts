@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { AppModule } from '../src/app.module';
 
 describe('ERP Service (e2e)', () => {
@@ -32,7 +32,7 @@ describe('ERP Service (e2e)', () => {
     return request(app.getHttpServer())
       .get('/erp/contacts')
       .expect(200)
-      .expect((res) => {
+      .expect((res: any) => {
         expect(res.body).toHaveProperty('data');
         expect(res.body).toHaveProperty('meta');
       });

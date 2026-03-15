@@ -4,8 +4,17 @@ interface RequestOptions extends Omit<RequestInit, 'body'> {
   body?: unknown;
 }
 
+interface QueuedRequest {
+  resolve: (value: unknown) => void;
+  reject: (reason: unknown) => void;
+  path: string;
+  options: RequestOptions;
+}
+
 class ApiClient {
   private baseUrl: string;
+  private isRefreshing = false;
+  private requestQueue: QueuedRequest[] = [];
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
@@ -14,6 +23,47 @@ class ApiClient {
   private getToken(): string | null {
     if (typeof window === 'undefined') return null;
     return localStorage.getItem('auth_token');
+  }
+
+  private async refreshToken(): Promise<boolean> {
+    const rt = typeof window !== 'undefined' ? localStorage.getItem('refresh_token') : null;
+    if (!rt) return false;
+
+    try {
+      const res = await fetch(`${this.baseUrl}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken: rt }),
+      });
+      if (!res.ok) return false;
+
+      const data = (await res.json()) as { accessToken: string; refreshToken: string };
+      localStorage.setItem('auth_token', data.accessToken);
+      localStorage.setItem('refresh_token', data.refreshToken);
+      document.cookie = `auth_token=${data.accessToken}; path=/; SameSite=Lax`;
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private handleRefreshFailure(): void {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('refresh_token');
+    document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    window.location.href = '/login';
+  }
+
+  private flushQueue(success: boolean): void {
+    const queue = [...this.requestQueue];
+    this.requestQueue = [];
+    for (const entry of queue) {
+      if (success) {
+        this.request(entry.path, entry.options).then(entry.resolve, entry.reject);
+      } else {
+        entry.reject(new Error('Token refresh failed'));
+      }
+    }
   }
 
   private async request<T>(path: string, options: RequestOptions = {}): Promise<T> {
@@ -34,6 +84,32 @@ class ApiClient {
       headers,
       body: body ? JSON.stringify(body) : undefined,
     });
+
+    if (response.status === 401 && !path.startsWith('/auth/refresh')) {
+      if (this.isRefreshing) {
+        return new Promise<T>((resolve, reject) => {
+          this.requestQueue.push({
+            resolve: resolve as (v: unknown) => void,
+            reject,
+            path,
+            options,
+          });
+        });
+      }
+
+      this.isRefreshing = true;
+      const success = await this.refreshToken();
+      this.isRefreshing = false;
+
+      if (success) {
+        this.flushQueue(true);
+        return this.request<T>(path, options);
+      }
+
+      this.flushQueue(false);
+      this.handleRefreshFailure();
+      throw new Error('Authentication expired');
+    }
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: response.statusText }));

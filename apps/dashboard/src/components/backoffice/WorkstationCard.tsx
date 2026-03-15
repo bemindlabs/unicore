@@ -3,6 +3,7 @@
 import type { BackofficeAgent } from '@/lib/backoffice/types';
 import { PixelAvatar } from './PixelAvatar';
 import { StatusIndicator } from './StatusIndicator';
+import { useChinjanTheme } from './chinjan/ChinjanThemeProvider';
 
 function DeskScene({ agent }: { agent: BackofficeAgent }) {
   const items = agent.deskItems || [];
@@ -77,28 +78,58 @@ function DeskScene({ agent }: { agent: BackofficeAgent }) {
 }
 
 export function WorkstationCard({ agent, onClick }: { agent: BackofficeAgent; onClick: () => void }) {
+  const { isActive: isChinjan } = useChinjanTheme();
+
   return (
     <button
       onClick={onClick}
-      className="border border-cyan-900/30 bg-[#0b1120]/60 overflow-hidden hover:border-cyan-500/30 hover:shadow-[0_0_20px_rgba(0,229,255,0.08)] transition-all group text-left w-full"
+      className={isChinjan
+        ? 'border-2 overflow-hidden hover:shadow-md transition-all group text-left w-full'
+        : 'border border-cyan-900/30 bg-[#0b1120]/60 overflow-hidden hover:border-cyan-500/30 hover:shadow-[0_0_20px_rgba(0,229,255,0.08)] transition-all group text-left w-full'}
+      style={isChinjan ? { borderColor: 'var(--chinjan-border)', background: 'var(--chinjan-surface)' } : undefined}
     >
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-cyan-900/20">
-        <span className="font-mono text-[10px] text-cyan-400/80 tracking-wider uppercase">{agent.name}</span>
+      <div
+        className={`flex items-center justify-between px-3 py-1.5 border-b ${
+          isChinjan ? 'border-[var(--chinjan-border)]' : 'border-cyan-900/20'
+        }`}
+      >
+        <span
+          className={isChinjan
+            ? 'chinjan-mono text-sm tracking-wider uppercase'
+            : 'font-mono text-[10px] text-cyan-400/80 tracking-wider uppercase'}
+          style={isChinjan ? { color: 'var(--chinjan-text)' } : undefined}
+        >
+          {agent.name}
+        </span>
         <StatusIndicator status={agent.status} />
       </div>
       <div className="px-3 py-3">
         <DeskScene agent={agent} />
         <div className="flex flex-col items-center mt-1">
-          <div className="w-full h-1.5 bg-gradient-to-r from-[#3a2a1a] via-[#4a3a2a] to-[#3a2a1a] rounded-t-sm" />
+          <div
+            className="w-full h-1.5 rounded-t-sm"
+            style={{
+              background: isChinjan
+                ? 'linear-gradient(to right, #d4a76a, #e8c89a, #d4a76a)'
+                : 'linear-gradient(to right, #3a2a1a, #4a3a2a, #3a2a1a)',
+            }}
+          />
           <div className="flex justify-between w-3/4">
-            <div className="w-1.5 h-3 bg-[#3a2a1a]" />
-            <div className="w-1.5 h-3 bg-[#3a2a1a]" />
+            <div className="w-1.5 h-3" style={{ background: isChinjan ? '#d4a76a' : '#3a2a1a' }} />
+            <div className="w-1.5 h-3" style={{ background: isChinjan ? '#d4a76a' : '#3a2a1a' }} />
           </div>
         </div>
       </div>
       {agent.activity && (
         <div className="px-3 pb-2">
-          <p className="text-[10px] font-mono text-cyan-600/40 truncate">{'> '}{agent.activity}</p>
+          <p
+            className={isChinjan
+              ? 'chinjan-mono text-xs truncate'
+              : 'text-[10px] font-mono text-cyan-600/40 truncate'}
+            style={isChinjan ? { color: 'var(--chinjan-muted)' } : undefined}
+          >
+            {'> '}{agent.activity}
+          </p>
         </div>
       )}
     </button>

@@ -4,7 +4,7 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, Expense, ExpenseCategory } from '../generated/prisma';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
@@ -13,7 +13,7 @@ import { ApproveExpenseDto } from './dto/approve-expense.dto';
 import { RejectExpenseDto } from './dto/reject-expense.dto';
 import { paginate, PaginatedResult } from '../common/dto/pagination.dto';
 
-type ExpenseRecord = Prisma.ExpenseGetPayload<Record<string, never>>;
+type ExpenseRecord = Expense;
 
 @Injectable()
 export class ExpensesService {
@@ -26,13 +26,13 @@ export class ExpensesService {
       data: {
         title: dto.title,
         description: dto.description,
-        category: dto.category,
+        category: dto.category as ExpenseCategory,
         amount: dto.amount,
         currency: dto.currency ?? 'USD',
-        status: 'PENDING',
-        vendor: dto.vendor,
-        paidAt: dto.paidAt ? new Date(dto.paidAt) : undefined,
-        submittedBy: dto.submittedBy,
+        status: 'DRAFT',
+        expenseDate: dto.paidAt ? new Date(dto.paidAt) : new Date(),
+        submittedById: dto.submittedBy ?? '00000000-0000-0000-0000-000000000000',
+        ...(dto.vendor && { vendor: { connect: { id: dto.vendor } } }),
         notes: dto.notes,
         tags: dto.tags ?? [],
       },
@@ -48,13 +48,12 @@ export class ExpensesService {
     const skip = (page - 1) * limit;
 
     const where: Prisma.ExpenseWhereInput = {
-      ...(status && { status }),
-      ...(category && { category }),
+      ...(status && { status: status as any }),
+      ...(category && { category: category as ExpenseCategory }),
       ...(search && {
         OR: [
-          { title: { contains: search, mode: 'insensitive' } },
-          { vendor: { contains: search, mode: 'insensitive' } },
-          { category: { contains: search, mode: 'insensitive' } },
+          { title: { contains: search, mode: 'insensitive' as const } },
+          { description: { contains: search, mode: 'insensitive' as const } },
         ],
       }),
     };
@@ -81,7 +80,7 @@ export class ExpensesService {
   async update(id: string, dto: UpdateExpenseDto): Promise<ExpenseRecord> {
     const expense = await this.findOne(id);
 
-    if (expense.status !== 'PENDING') {
+    if (expense.status !== 'DRAFT') {
       throw new BadRequestException(
         `Cannot edit expense in ${expense.status} status`,
       );
@@ -92,14 +91,13 @@ export class ExpensesService {
       data: {
         ...(dto.title !== undefined && { title: dto.title }),
         ...(dto.description !== undefined && { description: dto.description }),
-        ...(dto.category !== undefined && { category: dto.category }),
+        ...(dto.category !== undefined && { category: dto.category as ExpenseCategory }),
         ...(dto.amount !== undefined && { amount: dto.amount }),
         ...(dto.currency !== undefined && { currency: dto.currency }),
-        ...(dto.vendor !== undefined && { vendor: dto.vendor }),
         ...(dto.paidAt !== undefined && {
-          paidAt: dto.paidAt ? new Date(dto.paidAt) : null,
+          expenseDate: dto.paidAt ? new Date(dto.paidAt) : new Date(),
         }),
-        ...(dto.submittedBy !== undefined && { submittedBy: dto.submittedBy }),
+        ...(dto.submittedBy !== undefined && { submittedById: dto.submittedBy }),
         ...(dto.notes !== undefined && { notes: dto.notes }),
         ...(dto.tags !== undefined && { tags: dto.tags }),
       },
@@ -108,7 +106,7 @@ export class ExpensesService {
 
   async remove(id: string): Promise<void> {
     const expense = await this.findOne(id);
-    if (expense.status !== 'PENDING') {
+    if (expense.status !== 'DRAFT') {
       throw new BadRequestException(
         `Cannot delete expense in ${expense.status} status`,
       );
@@ -119,7 +117,7 @@ export class ExpensesService {
 
   async approve(id: string, dto: ApproveExpenseDto): Promise<ExpenseRecord> {
     const expense = await this.findOne(id);
-    if (expense.status !== 'PENDING') {
+    if (expense.status !== 'SUBMITTED') {
       throw new BadRequestException(
         `Cannot approve expense in ${expense.status} status`,
       );
@@ -128,7 +126,8 @@ export class ExpensesService {
       where: { id },
       data: {
         status: 'APPROVED',
-        approvedBy: dto.approvedBy,
+        approvedById: dto.approvedBy,
+        approvedAt: new Date(),
         ...(dto.notes && { notes: dto.notes }),
       },
     });
@@ -136,7 +135,7 @@ export class ExpensesService {
 
   async reject(id: string, dto: RejectExpenseDto): Promise<ExpenseRecord> {
     const expense = await this.findOne(id);
-    if (expense.status !== 'PENDING') {
+    if (expense.status !== 'SUBMITTED') {
       throw new BadRequestException(
         `Cannot reject expense in ${expense.status} status`,
       );
@@ -145,8 +144,8 @@ export class ExpensesService {
       where: { id },
       data: {
         status: 'REJECTED',
-        approvedBy: dto.approvedBy,
-        ...(dto.reason && { notes: dto.reason }),
+        approvedById: dto.approvedBy,
+        ...(dto.reason && { rejectedReason: dto.reason }),
       },
     });
   }

@@ -10,6 +10,7 @@ interface OpenClawAgent {
   type: string;
   state: string;
   capabilities?: string[];
+  [key: string]: unknown;
 }
 
 interface AgentsResponse {

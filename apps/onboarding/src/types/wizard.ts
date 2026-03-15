@@ -1,7 +1,9 @@
+import {
+  AgentType,
+} from '@unicore/shared-types';
 import type {
   AgentChannel,
   AgentConfig,
-  AutonomyLevel,
   BusinessConfig,
   BusinessTemplate,
   ErpModulesConfig,
@@ -91,14 +93,14 @@ export const AVAILABLE_LANGUAGES = [
 ];
 
 export const AGENT_DEFINITIONS: { type: AgentConfig['type']; name: string; description: string; defaultChannels: AgentChannel[] }[] = [
-  { type: 'router', name: 'Router Agent', description: 'Intent classification and task delegation across agents', defaultChannels: ['web'] },
-  { type: 'comms', name: 'Comms Agent', description: 'Email drafts, social media posts, and customer outreach', defaultChannels: ['email', 'web'] },
-  { type: 'finance', name: 'Finance Agent', description: 'Transaction categorization, forecasting, and invoice generation', defaultChannels: ['web'] },
-  { type: 'growth', name: 'Growth Agent', description: 'Funnel optimization, ad copy, and A/B test analysis', defaultChannels: ['web'] },
-  { type: 'ops', name: 'Ops Agent', description: 'Task management, scheduling, and project tracking', defaultChannels: ['web', 'slack'] },
-  { type: 'research', name: 'Research Agent', description: 'Market intelligence, competitor analysis, and trend reports', defaultChannels: ['web'] },
-  { type: 'erp', name: 'ERP Agent', description: 'Natural language queries over your ERP data', defaultChannels: ['web'] },
-  { type: 'builder', name: 'Builder Agent', description: 'Code generation, deployments, and technical scaffolding', defaultChannels: ['web'] },
+  { type: AgentType.Router, name: 'Router Agent', description: 'Intent classification and task delegation across agents', defaultChannels: ['web'] },
+  { type: AgentType.Comms, name: 'Comms Agent', description: 'Email drafts, social media posts, and customer outreach', defaultChannels: ['email', 'web'] },
+  { type: AgentType.Finance, name: 'Finance Agent', description: 'Transaction categorization, forecasting, and invoice generation', defaultChannels: ['web'] },
+  { type: AgentType.Growth, name: 'Growth Agent', description: 'Funnel optimization, ad copy, and A/B test analysis', defaultChannels: ['web'] },
+  { type: AgentType.Ops, name: 'Ops Agent', description: 'Task management, scheduling, and project tracking', defaultChannels: ['web', 'slack'] },
+  { type: AgentType.Research, name: 'Research Agent', description: 'Market intelligence, competitor analysis, and trend reports', defaultChannels: ['web'] },
+  { type: AgentType.Erp, name: 'ERP Agent', description: 'Natural language queries over your ERP data', defaultChannels: ['web'] },
+  { type: AgentType.Builder, name: 'Builder Agent', description: 'Code generation, deployments, and technical scaffolding', defaultChannels: ['web'] },
 ];
 
 export const ERP_MODULES: { key: keyof ErpModulesConfig; label: string; description: string }[] = [

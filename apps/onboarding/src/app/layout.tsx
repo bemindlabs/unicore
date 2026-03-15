@@ -6,8 +6,9 @@ import type { ReactNode } from 'react';
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
-  title: 'UniCore — Setup Wizard',
-  description: 'Configure your UniCore workspace in minutes.',
+  title: 'UniCore — AI-First Ecosystem for Solopreneurs',
+  description:
+    'Replace dozens of SaaS tools with a single AI-driven platform. Automate workflows, manage operations, and deploy AI agents so your small team operates like a full company.',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

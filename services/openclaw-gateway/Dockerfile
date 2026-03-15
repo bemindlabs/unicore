@@ -9,19 +9,20 @@ COPY services/openclaw-gateway/package.json ./services/openclaw-gateway/
 RUN pnpm install --frozen-lockfile --filter @unicore/openclaw-gateway...
 
 FROM base AS build
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages/config/node_modules ./packages/config/node_modules
-COPY --from=deps /app/services/openclaw-gateway/node_modules ./services/openclaw-gateway/node_modules
 COPY packages/config ./packages/config
 COPY services/openclaw-gateway ./services/openclaw-gateway
 COPY tsconfig.json ./
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/services/openclaw-gateway/node_modules ./services/openclaw-gateway/node_modules
 RUN cd services/openclaw-gateway && pnpm run build
 
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=build /app/services/openclaw-gateway/dist ./dist
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/services/openclaw-gateway/package.json ./
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/services/openclaw-gateway/node_modules ./services/openclaw-gateway/node_modules
+COPY --from=build /app/services/openclaw-gateway/dist ./services/openclaw-gateway/dist
+COPY --from=build /app/services/openclaw-gateway/package.json ./services/openclaw-gateway/
+WORKDIR /app/services/openclaw-gateway
 EXPOSE 18789
 CMD ["node", "dist/main"]

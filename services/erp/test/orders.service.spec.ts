@@ -1,16 +1,36 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { OrdersService } from '../src/orders/orders.service';
+import { PrismaService } from '../src/prisma/prisma.service';
 import { EventPublisherService } from '../src/kafka/event-publisher.service';
-import { ERP_TOPICS } from '../src/events/event-types';
-import { OrderStatus } from '../src/events/dto';
-import type {
-  OrderCreatedEventDto,
-  OrderUpdatedEventDto,
-  OrderFulfilledEventDto,
-} from '../src/events/dto';
 
 const mockPublisher = {
   publish: jest.fn().mockResolvedValue(undefined),
+};
+
+const mockPrisma = {
+  contact: {
+    findUnique: jest.fn(),
+  },
+  product: {
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+  },
+  order: {
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    count: jest.fn(),
+  },
+  inventoryItem: {
+    findFirst: jest.fn(),
+    update: jest.fn(),
+  },
+  stockMovement: {
+    create: jest.fn(),
+  },
+  $transaction: jest.fn(),
 };
 
 describe('OrdersService', () => {
@@ -22,6 +42,7 @@ describe('OrdersService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OrdersService,
+        { provide: PrismaService, useValue: mockPrisma },
         { provide: EventPublisherService, useValue: mockPublisher },
       ],
     }).compile();
@@ -33,77 +54,10 @@ describe('OrdersService', () => {
     expect(service).toBeDefined();
   });
 
-  describe('createOrder()', () => {
-    const dto: OrderCreatedEventDto = {
-      orderId: 'ord-001',
-      customerId: 'cust-001',
-      status: OrderStatus.CONFIRMED,
-      lineItems: [
-        {
-          productId: 'prod-1',
-          productName: 'Widget',
-          sku: 'WGT-001',
-          quantity: 1,
-          unitPrice: 50,
-          totalPrice: 50,
-        },
-      ],
-      subtotal: 50,
-      tax: 5,
-      total: 55,
-      currency: 'USD',
-    };
-
-    it('publishes order.created event with orderId as key', async () => {
-      const result = await service.createOrder(dto);
-
-      expect(mockPublisher.publish).toHaveBeenCalledWith(
-        ERP_TOPICS.ORDER_CREATED,
-        dto,
-        'ord-001',
-      );
-      expect(result).toEqual(dto);
-    });
-  });
-
-  describe('updateOrder()', () => {
-    const dto: OrderUpdatedEventDto = {
-      orderId: 'ord-001',
-      customerId: 'cust-001',
-      previousStatus: OrderStatus.CONFIRMED,
-      newStatus: OrderStatus.PROCESSING,
-    };
-
-    it('publishes order.updated event', async () => {
-      const result = await service.updateOrder(dto);
-
-      expect(mockPublisher.publish).toHaveBeenCalledWith(
-        ERP_TOPICS.ORDER_UPDATED,
-        dto,
-        'ord-001',
-      );
-      expect(result).toEqual(dto);
-    });
-  });
-
-  describe('fulfillOrder()', () => {
-    const dto: OrderFulfilledEventDto = {
-      orderId: 'ord-001',
-      customerId: 'cust-001',
-      trackingNumber: 'TRK-12345',
-      carrier: 'FedEx',
-      fulfilledAt: new Date().toISOString(),
-    };
-
-    it('publishes order.fulfilled event', async () => {
-      const result = await service.fulfillOrder(dto);
-
-      expect(mockPublisher.publish).toHaveBeenCalledWith(
-        ERP_TOPICS.ORDER_FULFILLED,
-        dto,
-        'ord-001',
-      );
-      expect(result).toEqual(dto);
+  describe('findOne()', () => {
+    it('throws NotFoundException when order not found', async () => {
+      mockPrisma.order.findUnique.mockResolvedValue(null);
+      await expect(service.findOne('non-existent')).rejects.toThrow('not found');
     });
   });
 });

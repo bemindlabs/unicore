@@ -2,6 +2,7 @@
 
 import type { BackofficeAgent } from '@/lib/backoffice/types';
 import { WorkstationCard } from './WorkstationCard';
+import { useChinjanTheme } from './chinjan/ChinjanThemeProvider';
 
 interface Props {
   agents: BackofficeAgent[];
@@ -9,11 +10,18 @@ interface Props {
 }
 
 export function WorkstationGrid({ agents, onSelectAgent }: Props) {
+  const { isActive: isChinjan } = useChinjanTheme();
+
   if (agents.length === 0) return null;
 
   return (
     <div>
-      <h3 className="font-mono text-[10px] text-cyan-600/50 tracking-widest mb-3 px-1 uppercase">
+      <h3
+        className={isChinjan
+          ? 'chinjan-heading text-[8px] tracking-widest mb-3 px-1 uppercase'
+          : 'font-mono text-[10px] text-cyan-600/50 tracking-widest mb-3 px-1 uppercase'}
+        style={isChinjan ? { color: 'var(--chinjan-blue)' } : undefined}
+      >
         Workstations
       </h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">

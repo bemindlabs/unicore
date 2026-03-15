@@ -1,17 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Reflector } from '@nestjs/core';
 import { ExecutionContext, CallHandler } from '@nestjs/common';
-import { of, throwError } from 'rxjs';
+import { of } from 'rxjs';
 import { ErpEventInterceptor } from '../src/kafka/erp-event.interceptor';
 import { EventPublisherService } from '../src/kafka/event-publisher.service';
-import { PUBLISH_EVENT_METADATA } from '../src/kafka/publish-event.decorator';
 import { ERP_TOPICS } from '../src/events/event-types';
 
 const mockPublisher = {
   publish: jest.fn().mockResolvedValue(undefined),
 };
 
-function buildContext(metadata?: unknown): ExecutionContext {
+function buildContext(_metadata?: unknown): ExecutionContext {
   return {
     getHandler: () => ({}),
     getClass: () => ({}),

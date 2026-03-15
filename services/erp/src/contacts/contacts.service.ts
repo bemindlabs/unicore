@@ -1,14 +1,14 @@
 import {
   Injectable, NotFoundException, ConflictException, Logger,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, Contact } from '../generated/prisma';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateContactDto } from './dto/create-contact.dto';
 import { UpdateContactDto } from './dto/update-contact.dto';
 import { QueryContactsDto } from './dto/query-contacts.dto';
 import { paginate, PaginatedResult } from '../common/dto/pagination.dto';
 
-type ContactRecord = Prisma.ContactGetPayload<Record<string, never>>;
+type ContactRecord = Contact;
 
 @Injectable()
 export class ContactsService {
@@ -24,8 +24,7 @@ export class ContactsService {
     const contact = await this.prisma.contact.create({
       data: {
         type: dto.type ?? 'LEAD',
-        firstName: dto.firstName,
-        lastName: dto.lastName,
+        name: `${dto.firstName} ${dto.lastName}`.trim(),
         email: dto.email,
         phone: dto.phone,
         company: dto.company,
@@ -36,7 +35,7 @@ export class ContactsService {
         currency: dto.currency ?? 'USD',
         leadScore: dto.leadScore ?? 0,
         tags: dto.tags ?? [],
-        notes: dto.notes,
+        ...(dto.notes && { notes: { create: { body: dto.notes, authorId: '00000000-0000-0000-0000-000000000000' } } }),
       },
     });
     this.logger.log(`Contact created: ${contact.id}`);
@@ -46,18 +45,17 @@ export class ContactsService {
   async findAll(query: QueryContactsDto): Promise<PaginatedResult<ContactRecord>> {
     const { page = 1, limit = 20, search, type, minLeadScore } = query;
     const skip = (page - 1) * limit;
-    const where: Prisma.ContactWhereInput = {
+    const where = {
       ...(type && { type }),
       ...(minLeadScore !== undefined && { leadScore: { gte: minLeadScore } }),
       ...(search && {
         OR: [
-          { firstName: { contains: search, mode: 'insensitive' } },
-          { lastName: { contains: search, mode: 'insensitive' } },
-          { email: { contains: search, mode: 'insensitive' } },
-          { company: { contains: search, mode: 'insensitive' } },
+          { name: { contains: search, mode: 'insensitive' as const } },
+          { email: { contains: search, mode: 'insensitive' as const } },
+          { company: { contains: search, mode: 'insensitive' as const } },
         ],
       }),
-    };
+    } satisfies Prisma.ContactWhereInput;
     const [data, total] = await this.prisma.$transaction([
       this.prisma.contact.findMany({ where, skip, take: limit, orderBy: { createdAt: 'desc' } }),
       this.prisma.contact.count({ where }),
@@ -77,12 +75,14 @@ export class ContactsService {
       const existing = await this.prisma.contact.findFirst({ where: { email: dto.email, NOT: { id } } });
       if (existing) throw new ConflictException(`A contact with email ${dto.email} already exists`);
     }
+    const nameUpdate = (dto.firstName !== undefined || dto.lastName !== undefined)
+      ? { name: `${dto.firstName ?? ''} ${dto.lastName ?? ''}`.trim() }
+      : {};
     return this.prisma.contact.update({
       where: { id },
       data: {
         ...(dto.type !== undefined && { type: dto.type }),
-        ...(dto.firstName !== undefined && { firstName: dto.firstName }),
-        ...(dto.lastName !== undefined && { lastName: dto.lastName }),
+        ...nameUpdate,
         ...(dto.email !== undefined && { email: dto.email }),
         ...(dto.phone !== undefined && { phone: dto.phone }),
         ...(dto.company !== undefined && { company: dto.company }),
@@ -93,7 +93,7 @@ export class ContactsService {
         ...(dto.currency !== undefined && { currency: dto.currency }),
         ...(dto.leadScore !== undefined && { leadScore: dto.leadScore }),
         ...(dto.tags !== undefined && { tags: dto.tags }),
-        ...(dto.notes !== undefined && { notes: dto.notes }),
+        ...(dto.notes !== undefined && { notes: { create: { body: dto.notes, authorId: '00000000-0000-0000-0000-000000000000' } } }),
       },
     });
   }

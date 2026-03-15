@@ -1,10 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { OrderStatus, InvoiceStatus, ExpenseStatus } from '@prisma/client';
+import { OrderStatus, InvoiceStatus, ExpenseStatus } from '../generated/prisma';
 
 @Injectable()
 export class ReportsService {
-  private readonly logger = new Logger(ReportsService.name);
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -15,13 +14,13 @@ export class ReportsService {
     ] = await Promise.all([
       this.prisma.contact.count(),
       this.prisma.order.count(),
-      this.prisma.order.count({ where: { status: { in: [OrderStatus.PENDING, OrderStatus.CONFIRMED, OrderStatus.PROCESSING] } } }),
+      this.prisma.order.count({ where: { status: { in: [OrderStatus.DRAFT, OrderStatus.CONFIRMED, OrderStatus.PROCESSING] } } }),
       this.prisma.product.count(),
-      this.prisma.product.count({ where: { quantity: { lte: 10 } } }),
+      this.prisma.inventoryItem.count({ where: { quantityAvailable: { lte: 0 } } }),
       this.prisma.invoice.count(),
       this.prisma.invoice.count({ where: { status: { in: [InvoiceStatus.SENT, InvoiceStatus.OVERDUE] } } }),
       this.prisma.expense.count(),
-      this.prisma.expense.count({ where: { status: ExpenseStatus.PENDING } }),
+      this.prisma.expense.count({ where: { status: ExpenseStatus.SUBMITTED } }),
     ]);
 
     const [revenueAgg, expenseAgg] = await Promise.all([
@@ -79,32 +78,36 @@ export class ReportsService {
   }
 
   async getInventoryReport() {
-    const [products, totalValue] = await Promise.all([
-      this.prisma.product.findMany({
-        select: { id: true, sku: true, name: true, category: true, quantity: true, reservedQuantity: true, lowStockThreshold: true, unitPrice: true, costPrice: true },
-        orderBy: { quantity: 'asc' },
-      }),
-      this.prisma.product.aggregate({ _sum: { quantity: true } }),
-    ]);
+    const products = await this.prisma.product.findMany({
+      select: { id: true, sku: true, name: true, category: true, unitPrice: true, costPrice: true },
+      orderBy: { name: 'asc' },
+    });
 
-    const lowStock = products.filter(p => p.quantity <= p.lowStockThreshold);
-    const totalInventoryValue = products.reduce((sum, p) => sum + p.quantity * Number(p.costPrice), 0);
+    const inventoryItems = await this.prisma.inventoryItem.findMany({
+      include: { product: { select: { costPrice: true } } },
+    });
+
+    const totalUnits = inventoryItems.reduce((sum, item) => sum + item.quantityOnHand, 0);
+    const lowStock = inventoryItems.filter(item => item.quantityAvailable <= item.reorderPoint);
+    const totalInventoryValue = inventoryItems.reduce(
+      (sum, item) => sum + item.quantityOnHand * Number(item.product.costPrice), 0,
+    );
 
     return {
       totalProducts: products.length,
-      totalUnits: totalValue._sum.quantity ?? 0,
+      totalUnits,
       totalInventoryValue,
       lowStockCount: lowStock.length,
-      lowStockProducts: lowStock,
+      lowStockItems: lowStock,
     };
   }
 
   async getTopProducts(limit = 10) {
     const items = await this.prisma.orderItem.groupBy({
-      by: ['productId', 'productName', 'sku'],
-      _sum: { quantity: true, totalPrice: true },
+      by: ['productId', 'sku', 'name'],
+      _sum: { quantity: true, lineTotal: true },
       _count: true,
-      orderBy: { _sum: { totalPrice: 'desc' } },
+      orderBy: { _sum: { lineTotal: 'desc' } },
       take: limit,
     });
     return items;
@@ -115,7 +118,7 @@ export class ReportsService {
       take: limit,
       orderBy: { leadScore: 'desc' },
       select: {
-        id: true, firstName: true, lastName: true, email: true, company: true,
+        id: true, name: true, email: true, company: true,
         leadScore: true, type: true,
         _count: { select: { orders: true, invoices: true } },
       },

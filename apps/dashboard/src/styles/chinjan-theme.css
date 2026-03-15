@@ -1,0 +1,65 @@
+/* Chinjan 2D Pixel Art Theme — scoped under data-character-theme="chinjan" */
+
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Nunito:wght@400;500;700&display=swap');
+
+[data-character-theme="chinjan"] {
+  --pixel-size: 3px;
+  --pixel-border-width: 2px;
+  --chinjan-pink: #ff6b9d;
+  --chinjan-blue: #7ec8e3;
+  --chinjan-yellow: #ffd93d;
+  --chinjan-green: #a8e6cf;
+  --chinjan-orange: #ffb347;
+  --chinjan-bg: #faf8f5;
+  --chinjan-surface: #ffffff;
+  --chinjan-text: #2d2d2d;
+  --chinjan-muted: #9ca3af;
+  --chinjan-border: #e5e1dc;
+  --radius: 0px;
+}
+
+[data-character-theme="chinjan"].dark {
+  --chinjan-bg: #1a1525;
+  --chinjan-surface: #251f35;
+  --chinjan-text: #f0e8ff;
+  --chinjan-muted: #8b7faa;
+  --chinjan-border: #3d3555;
+}
+
+/* Pixel grid background pattern */
+[data-character-theme="chinjan"] .chinjan-grid-bg {
+  background:
+    linear-gradient(90deg, transparent 49.5%, var(--chinjan-border) 49.5%, var(--chinjan-border) 50.5%, transparent 50.5%) 0 0 / 24px 24px,
+    linear-gradient(0deg, transparent 49.5%, var(--chinjan-border) 49.5%, var(--chinjan-border) 50.5%, transparent 50.5%) 0 0 / 24px 24px,
+    var(--chinjan-bg) !important;
+}
+
+/* Force square corners for pixel aesthetic */
+[data-character-theme="chinjan"] .chinjan-pixel-border {
+  border-radius: 0 !important;
+  border: var(--pixel-border-width) solid var(--chinjan-border) !important;
+}
+
+/* Pixel heading font */
+[data-character-theme="chinjan"] .chinjan-heading {
+  font-family: 'Press Start 2P', monospace !important;
+}
+
+/* Pixel mono font */
+[data-character-theme="chinjan"] .chinjan-mono {
+  font-family: 'VT323', monospace !important;
+  font-size: 1.1em;
+}
+
+/* Pixel body font */
+[data-character-theme="chinjan"] .chinjan-body {
+  font-family: 'Nunito', sans-serif !important;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  [data-character-theme="chinjan"] * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

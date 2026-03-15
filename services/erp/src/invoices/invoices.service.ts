@@ -7,16 +7,16 @@ import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { QueryInvoicesDto } from './dto/query-invoices.dto';
 import { RecordPaymentDto } from './dto/record-payment.dto';
-import { Prisma, InvoiceStatus } from '@prisma/client';
+import { InvoiceStatus } from '../generated/prisma';
 
 let invoiceCounter = 1000;
 
 const INVOICE_INCLUDE = {
-  contact: { select: { id: true, firstName: true, lastName: true, email: true, company: true } },
+  contact: { select: { id: true, name: true, email: true, company: true } },
   order: { select: { id: true, orderNumber: true } },
-  lineItems: true,
+  lines: true,
   payments: { orderBy: { paidAt: 'desc' as const } },
-} satisfies Prisma.InvoiceInclude;
+};
 
 @Injectable()
 export class InvoicesService {
@@ -36,7 +36,7 @@ export class InvoicesService {
   async findAll(query: QueryInvoicesDto) {
     const { page = 1, limit = 20, search, contactId, orderId, status } = query;
     const skip = (page - 1) * limit;
-    const where: Prisma.InvoiceWhereInput = {};
+    const where: Record<string, unknown> = {};
     if (contactId) where.contactId = contactId;
     if (orderId) where.orderId = orderId;
     if (status) where.status = status as InvoiceStatus;
@@ -68,19 +68,20 @@ export class InvoicesService {
         contactId: dto.contactId,
         orderId: dto.orderId,
         subtotal,
-        taxRate,
         taxAmount,
-        discount,
+        discountAmount: discount,
         total,
+        amountDue: total,
         currency: dto.currency ?? 'USD',
-        dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
+        dueDate: dto.dueDate ? new Date(dto.dueDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         notes: dto.notes,
-        lineItems: {
+        createdById: '00000000-0000-0000-0000-000000000000',
+        lines: {
           create: dto.lineItems.map(item => ({
             description: item.description,
             quantity: item.quantity,
             unitPrice: item.unitPrice,
-            totalPrice: item.quantity * item.unitPrice,
+            lineTotal: item.quantity * item.unitPrice,
           })),
         },
       },
@@ -104,7 +105,7 @@ export class InvoicesService {
     if (invoice.status !== InvoiceStatus.DRAFT) {
       throw new BadRequestException('Only DRAFT invoices can be updated');
     }
-    return this.prisma.invoice.update({ where: { id }, data: dto as Prisma.InvoiceUpdateInput, include: INVOICE_INCLUDE });
+    return this.prisma.invoice.update({ where: { id }, data: dto as any, include: INVOICE_INCLUDE });
   }
 
   async send(id: string) {
@@ -114,14 +115,14 @@ export class InvoicesService {
     }
     return this.prisma.invoice.update({
       where: { id },
-      data: { status: InvoiceStatus.SENT, issuedAt: new Date() },
+      data: { status: InvoiceStatus.SENT, sentAt: new Date() },
       include: INVOICE_INCLUDE,
     });
   }
 
   async recordPayment(id: string, dto: RecordPaymentDto) {
     const invoice = await this.findOne(id);
-    if ([InvoiceStatus.PAID, InvoiceStatus.CANCELLED].includes(invoice.status)) {
+    if ([InvoiceStatus.PAID, InvoiceStatus.VOID].includes(invoice.status as any)) {
       throw new BadRequestException(`Cannot record payment on ${invoice.status} invoice`);
     }
 
@@ -133,7 +134,8 @@ export class InvoicesService {
         where: { id },
         data: {
           amountPaid: newAmountPaid,
-          status: isPaid ? InvoiceStatus.PAID : InvoiceStatus.SENT,
+          amountDue: Number(invoice.total) - newAmountPaid,
+          status: isPaid ? InvoiceStatus.PAID : InvoiceStatus.PARTIALLY_PAID,
           paidAt: isPaid ? new Date() : undefined,
         },
         include: INVOICE_INCLUDE,
@@ -144,8 +146,9 @@ export class InvoicesService {
           amount: dto.amount,
           currency: dto.currency ?? invoice.currency,
           method: dto.method as any ?? 'BANK_TRANSFER',
-          reference: dto.reference,
-          notes: dto.notes,
+          transactionId: dto.reference,
+          note: dto.notes,
+          createdById: '00000000-0000-0000-0000-000000000000',
         },
       }),
     ]);
@@ -171,7 +174,7 @@ export class InvoicesService {
     }
     return this.prisma.invoice.update({
       where: { id },
-      data: { status: InvoiceStatus.CANCELLED },
+      data: { status: InvoiceStatus.VOID, voidedAt: new Date() },
       include: INVOICE_INCLUDE,
     });
   }
