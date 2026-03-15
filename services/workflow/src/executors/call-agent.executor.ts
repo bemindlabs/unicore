@@ -5,18 +5,18 @@
  * The stub here logs the request and returns a simulated reply so the
  * rest of the engine can be tested end-to-end without a live agent runtime.
  */
-import { Injectable, Logger } from '@nestjs/common';
-import type { CallAgentAction } from '../schema/workflow-definition.schema';
-import { interpolate } from '../common/template-interpolator';
+import { Injectable, Logger } from "@nestjs/common";
+import type { CallAgentAction } from "../schema/workflow-definition.schema";
+import { interpolate } from "../common/template-interpolator";
 import type {
   IActionExecutor,
   ActionExecutionContext,
   ActionExecutionResult,
-} from './action-executor.interface';
+} from "./action-executor.interface";
 
 @Injectable()
 export class CallAgentExecutor implements IActionExecutor<CallAgentAction> {
-  readonly actionType = 'call_agent' as const;
+  readonly actionType = "call_agent" as const;
   private readonly logger = new Logger(CallAgentExecutor.name);
 
   async execute(
@@ -34,20 +34,43 @@ export class CallAgentExecutor implements IActionExecutor<CallAgentAction> {
     const prompt = interpolate(promptTemplate, interpolationCtx);
 
     this.logger.log(
-      `[${context.instanceId}] Calling agent "${agentName}"${model ? ` (model: ${model})` : ''}`,
+      `[${context.instanceId}] Calling agent "${agentName}"${model ? ` (model: ${model})` : ""}`,
     );
     this.logger.debug(`[${context.instanceId}] Prompt: ${prompt}`);
 
     try {
-      // TODO: replace stub with actual OpenClaw Gateway HTTP call.
-      // const response = await this.openClawClient.invoke({ agentName, prompt, model });
-      const stubReply = `[STUB] Agent "${agentName}" processed: ${prompt.slice(0, 80)}`;
+      const gatewayUrl = process.env.OPENCLAW_GATEWAY_URL;
+      if (!gatewayUrl) {
+        throw new Error("OPENCLAW_GATEWAY_URL environment variable is not set");
+      }
+
+      const response = await fetch(
+        `${gatewayUrl}/api/agents/${encodeURIComponent(agentName)}/execute`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt, ...(model ? { model } : {}) }),
+        },
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `OpenClaw Gateway returned ${response.status}: ${errorText}`,
+        );
+      }
+
+      const data = (await response.json()) as {
+        reply?: string;
+        [key: string]: unknown;
+      };
+      const reply = data.reply ?? JSON.stringify(data);
 
       this.logger.log(`[${context.instanceId}] Agent "${agentName}" completed`);
 
       return {
         success: true,
-        output: { agentName, prompt, reply: stubReply },
+        output: { agentName, prompt, reply },
       };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
