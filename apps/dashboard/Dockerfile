@@ -28,7 +28,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build /app/apps/dashboard/.next ./.next
 COPY --from=build /app/apps/dashboard/public ./public
-COPY --from=build /app/apps/dashboard/node_modules ./node_modules
+COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/apps/dashboard/package.json ./
 COPY --from=build /app/apps/dashboard/next.config.js ./
 EXPOSE 3000

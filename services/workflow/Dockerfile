@@ -24,6 +24,6 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build /app/services/workflow/dist ./dist
-COPY --from=build /app/services/workflow/node_modules ./node_modules
+COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/services/workflow/package.json ./
 CMD ["node", "dist/main"]

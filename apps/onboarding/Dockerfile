@@ -30,7 +30,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build /app/apps/onboarding/.next ./.next
 COPY --from=build /app/apps/onboarding/public ./public
-COPY --from=build /app/apps/onboarding/node_modules ./node_modules
+COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/apps/onboarding/package.json ./
 COPY --from=build /app/apps/onboarding/next.config.js ./
 EXPOSE 3100

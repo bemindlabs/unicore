@@ -24,7 +24,7 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build /app/services/erp/dist ./dist
-COPY --from=build /app/services/erp/node_modules ./node_modules
+COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/services/erp/package.json ./
 COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
 EXPOSE 4100

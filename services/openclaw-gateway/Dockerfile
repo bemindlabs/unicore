@@ -21,7 +21,7 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build /app/services/openclaw-gateway/dist ./dist
-COPY --from=build /app/services/openclaw-gateway/node_modules ./node_modules
+COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/services/openclaw-gateway/package.json ./
 EXPOSE 18789
 CMD ["node", "dist/main"]
