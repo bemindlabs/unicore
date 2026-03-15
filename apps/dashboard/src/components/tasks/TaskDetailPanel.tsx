@@ -139,7 +139,7 @@ export function TaskDetailPanel({ task, agents, onUpdate, onAddComment, onDelete
             <div>
               <label className="text-xs font-medium text-muted-foreground block mb-1">Labels</label>
               <div className="flex flex-wrap gap-1">
-                {task.labels.map((l) => (
+                {task.labels.map((l: string) => (
                   <span key={l} className="text-[10px] px-1.5 py-0.5 rounded bg-secondary/20">{l}</span>
                 ))}
                 {task.labels.length === 0 && <span className="text-[10px] text-muted-foreground italic">No labels</span>}

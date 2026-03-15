@@ -93,7 +93,7 @@ export function TaskListView({ tasks, onTaskClick }: Props) {
                   <span className="font-medium line-clamp-1">{task.title}</span>
                   {task.labels.length > 0 && (
                     <div className="flex gap-1 mt-0.5">
-                      {task.labels.slice(0, 3).map((l) => (
+                      {task.labels.slice(0, 3).map((l: string) => (
                         <span key={l} className="text-[10px] px-1 py-0.5 rounded bg-secondary/20">{l}</span>
                       ))}
                     </div>

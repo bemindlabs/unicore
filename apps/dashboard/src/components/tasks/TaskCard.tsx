@@ -44,7 +44,7 @@ export function TaskCard({ task, onClick, onDragStart }: Props) {
         >
           {priorityCfg.label}
         </span>
-        {task.labels.slice(0, 2).map((label) => (
+        {task.labels.slice(0, 2).map((label: string) => (
           <span key={label} className="text-[10px] px-1.5 py-0.5 rounded bg-secondary/20 text-secondary-foreground">
             {label}
           </span>
