@@ -50,6 +50,8 @@ export function useTaskWebSocket(onTaskUpdate: (task: BoardTask) => void): { con
   const [connected, setConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const backoffRef = useRef(2000);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const unmountedRef = useRef(false);
   const callbackRef = useRef(onTaskUpdate);
   callbackRef.current = onTaskUpdate;
 
@@ -87,10 +89,12 @@ export function useTaskWebSocket(onTaskUpdate: (task: BoardTask) => void): { con
       ws.onclose = () => {
         setConnected(false);
         wsRef.current = null;
-        // Reconnect with exponential backoff
-        const delay = backoffRef.current;
-        backoffRef.current = Math.min(delay * 2, MAX_BACKOFF);
-        setTimeout(connect, delay);
+        // Reconnect with exponential backoff, unless unmounted
+        if (!unmountedRef.current) {
+          const delay = backoffRef.current;
+          backoffRef.current = Math.min(delay * 2, MAX_BACKOFF);
+          reconnectTimerRef.current = setTimeout(connect, delay);
+        }
       };
 
       ws.onerror = () => {
@@ -102,8 +106,14 @@ export function useTaskWebSocket(onTaskUpdate: (task: BoardTask) => void): { con
   }, []);
 
   useEffect(() => {
+    unmountedRef.current = false;
     connect();
     return () => {
+      unmountedRef.current = true;
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+      }
       wsRef.current?.close();
       wsRef.current = null;
     };

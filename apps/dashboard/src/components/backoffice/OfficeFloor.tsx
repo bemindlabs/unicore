@@ -90,7 +90,7 @@ function PixelDesk({ variant = 'standard' }: { variant?: 'standard' | 'command' 
                     key={line}
                     className="h-[2px] mb-[2px] rounded-full"
                     style={{
-                      width: `${40 + Math.random() * 50}%`,
+                      width: `${40 + ((line * 37 + i * 13) % 50)}%`,
                       background: isChinjan
                         ? (i === 0 ? 'var(--chinjan-pink)' : i === 1 ? 'var(--chinjan-blue)' : 'var(--chinjan-yellow)')
                         : (i === 0 ? '#00ff88' : i === 1 ? '#00e5ff' : '#4fc3f7'),

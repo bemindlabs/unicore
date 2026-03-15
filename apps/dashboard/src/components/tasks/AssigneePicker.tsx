@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { TaskAssignee } from '@/lib/tasks/types';
 
 interface Props {
@@ -11,6 +11,19 @@ interface Props {
 
 export function AssigneePicker({ value, agents, onChange }: Props) {
   const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!open) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [open]);
 
   const humanUser: TaskAssignee = { id: 'user-1', type: 'human', name: 'You' };
 
@@ -25,7 +38,7 @@ export function AssigneePicker({ value, agents, onChange }: Props) {
   ];
 
   return (
-    <div className="relative">
+    <div className="relative" ref={containerRef}>
       <button
         type="button"
         onClick={() => setOpen(!open)}

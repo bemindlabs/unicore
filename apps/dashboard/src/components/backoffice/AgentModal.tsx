@@ -191,9 +191,7 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
                   key={s.value}
                   onClick={() => update("status", s.value)}
                   className={isChinjan
-                    ? `chinjan-mono text-sm px-3 py-1.5 border-2 transition-all tracking-wider ${
-                        form.status === s.value ? 'bg-current/10' : ''
-                      }`
+                    ? `chinjan-mono text-sm px-3 py-1.5 border-2 transition-all tracking-wider`
                     : `font-mono text-[9px] px-3 py-1.5 border transition-all tracking-wider ${
                         form.status === s.value
                           ? `${s.cls} border-current bg-current/10`
@@ -203,6 +201,7 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
                     ? {
                         color: form.status === s.value ? s.chinjanColor : 'var(--chinjan-muted)',
                         borderColor: form.status === s.value ? s.chinjanColor : 'var(--chinjan-border)',
+                        background: form.status === s.value ? `color-mix(in srgb, ${s.chinjanColor} 10%, transparent)` : undefined,
                       }
                     : undefined}
                 >
@@ -266,7 +265,7 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
               className={isChinjan
                 ? 'flex-1 chinjan-mono text-sm border-2 py-2.5 transition-all disabled:opacity-40 uppercase tracking-wider'
                 : 'flex-1 font-mono text-[10px] bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 py-2.5 hover:bg-cyan-500/25 transition-all disabled:opacity-40 uppercase tracking-wider'}
-              style={isChinjan ? { borderColor: 'var(--chinjan-pink)', color: 'var(--chinjan-pink)', background: 'var(--chinjan-pink)10' } : undefined}
+              style={isChinjan ? { borderColor: 'var(--chinjan-pink)', color: 'var(--chinjan-pink)', background: 'color-mix(in srgb, var(--chinjan-pink) 10%, transparent)' } : undefined}
             >
               {isSaving
                 ? "SAVING..."

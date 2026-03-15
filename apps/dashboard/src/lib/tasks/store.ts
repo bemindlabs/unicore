@@ -87,23 +87,25 @@ export async function updateTask(
     if (t.id !== id) return t;
 
     const newActivity: TaskActivityEntry[] = [...t.activity];
+    // Clone patch to avoid mutating the caller's object
+    const appliedPatch: Partial<BoardTask> = { ...patch };
 
-    if (patch.status && patch.status !== t.status) {
-      newActivity.push(makeActivity(id, actor.id, actor.type, actor.name, 'status_changed', `${t.status} → ${patch.status}`));
-      if (patch.status === 'done') {
-        patch.completedAt = now;
-        patch.progress = 100;
+    if (appliedPatch.status && appliedPatch.status !== t.status) {
+      newActivity.push(makeActivity(id, actor.id, actor.type, actor.name, 'status_changed', `${t.status} → ${appliedPatch.status}`));
+      if (appliedPatch.status === 'done') {
+        appliedPatch.completedAt = now;
+        appliedPatch.progress = 100;
         newActivity.push(makeActivity(id, actor.id, actor.type, actor.name, 'completed'));
       }
     }
-    if (patch.assignee && patch.assignee.id !== t.assignee?.id) {
-      newActivity.push(makeActivity(id, actor.id, actor.type, actor.name, 'assigned', `Assigned to ${patch.assignee.name}`));
+    if (appliedPatch.assignee && appliedPatch.assignee.id !== t.assignee?.id) {
+      newActivity.push(makeActivity(id, actor.id, actor.type, actor.name, 'assigned', `Assigned to ${appliedPatch.assignee.name}`));
     }
-    if (patch.progress !== undefined && patch.progress !== t.progress) {
-      newActivity.push(makeActivity(id, actor.id, actor.type, actor.name, 'progress_updated', `${t.progress}% → ${patch.progress}%`));
+    if (appliedPatch.progress !== undefined && appliedPatch.progress !== t.progress) {
+      newActivity.push(makeActivity(id, actor.id, actor.type, actor.name, 'progress_updated', `${t.progress}% → ${appliedPatch.progress}%`));
     }
 
-    return { ...t, ...patch, activity: newActivity, updatedAt: now };
+    return { ...t, ...appliedPatch, activity: newActivity, updatedAt: now };
   });
 
   try {

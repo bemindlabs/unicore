@@ -70,7 +70,7 @@ export function Header({ agentCount, workingCount, onAddAgent }: Props) {
             style={{
               borderColor: 'var(--chinjan-pink)',
               color: 'var(--chinjan-pink)',
-              background: 'var(--chinjan-pink)10',
+              background: 'color-mix(in srgb, var(--chinjan-pink) 10%, transparent)',
             }}
           >
             + Add Agent

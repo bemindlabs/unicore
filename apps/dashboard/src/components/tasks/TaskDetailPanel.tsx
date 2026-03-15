@@ -19,6 +19,19 @@ export function TaskDetailPanel({ task, agents, onUpdate, onAddComment, onDelete
   const [commentInput, setCommentInput] = useState('');
   const [activeTab, setActiveTab] = useState<'details' | 'activity'>('details');
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [localTitle, setLocalTitle] = useState(task.title);
+  const [localDescription, setLocalDescription] = useState(task.description ?? '');
+
+  // Reset local state when the task changes (e.g. opening a different task)
+  const [prevTaskId, setPrevTaskId] = useState(task.id);
+  if (task.id !== prevTaskId) {
+    setPrevTaskId(task.id);
+    setLocalTitle(task.title);
+    setLocalDescription(task.description ?? '');
+    setConfirmDelete(false);
+    setCommentInput('');
+    setActiveTab('details');
+  }
 
   function handleCommentSubmit() {
     if (!commentInput.trim()) return;
@@ -47,15 +60,18 @@ export function TaskDetailPanel({ task, agents, onUpdate, onAddComment, onDelete
           <div className="p-5 space-y-4">
             {/* Title */}
             <input
-              value={task.title}
-              onChange={(e) => onUpdate(task.id, { title: e.target.value })}
+              value={localTitle}
+              onChange={(e) => setLocalTitle(e.target.value)}
+              onBlur={() => { if (localTitle !== task.title) onUpdate(task.id, { title: localTitle }); }}
+              onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
               className="w-full text-lg font-semibold bg-transparent focus:outline-none border-b border-transparent focus:border-border pb-1"
             />
 
             {/* Description */}
             <textarea
-              value={task.description ?? ''}
-              onChange={(e) => onUpdate(task.id, { description: e.target.value })}
+              value={localDescription}
+              onChange={(e) => setLocalDescription(e.target.value)}
+              onBlur={() => { if (localDescription !== (task.description ?? '')) onUpdate(task.id, { description: localDescription }); }}
               placeholder="Add description..."
               rows={3}
               className="w-full text-sm text-muted-foreground bg-transparent focus:outline-none border border-transparent focus:border-border rounded-md px-2 py-1 resize-none"

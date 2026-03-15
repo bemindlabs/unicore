@@ -1,3 +1,5 @@
+'use client';
+
 import type { AgentStatus } from '@/lib/backoffice/types';
 import { useChinjanTheme } from './chinjan/ChinjanThemeProvider';
 

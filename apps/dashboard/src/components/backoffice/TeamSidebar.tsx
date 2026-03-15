@@ -53,7 +53,7 @@ export function TeamSidebar({ agents, filter, onFilterChange, onSelectAgent }: P
             className={isChinjan
               ? `chinjan-mono text-sm px-2 py-1 transition-all tracking-wider border-2 ${
                   filter === f.key
-                    ? 'border-[var(--chinjan-pink)] text-[var(--chinjan-pink)] bg-[var(--chinjan-pink)]/10'
+                    ? 'border-[var(--chinjan-pink)] text-[var(--chinjan-pink)]'
                     : 'border-transparent text-[var(--chinjan-muted)] hover:text-[var(--chinjan-text)]'
                 }`
               : `font-mono text-[9px] px-2 py-1 transition-all tracking-wider ${
@@ -62,6 +62,7 @@ export function TeamSidebar({ agents, filter, onFilterChange, onSelectAgent }: P
                     : 'text-cyan-600/40 hover:text-cyan-400/60 border border-transparent'
                 }`
             }
+            style={isChinjan && filter === f.key ? { background: 'color-mix(in srgb, var(--chinjan-pink) 10%, transparent)' } : undefined}
           >
             {isChinjan ? f.label : `[${f.label}]`}
           </button>

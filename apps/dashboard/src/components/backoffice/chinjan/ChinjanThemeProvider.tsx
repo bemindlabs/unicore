@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { useTheme } from '@/hooks/use-theme';
 
 interface ChinjanThemeContext {
@@ -13,9 +13,15 @@ const ChinjanCtx = createContext<ChinjanThemeContext>({ isActive: false, animati
 export function ChinjanThemeProvider({ children }: { children: ReactNode }) {
   const { characterTheme } = useTheme();
   const isActive = characterTheme === 'chinjan';
+  const [reducedMotion, setReducedMotion] = useState(false);
 
-  const reducedMotion =
-    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setReducedMotion(mq.matches);
+    function onChange(e: MediaQueryListEvent) { setReducedMotion(e.matches); }
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
 
   return (
     <ChinjanCtx.Provider value={{ isActive, animationLevel: reducedMotion ? 'none' : 'full' }}>
