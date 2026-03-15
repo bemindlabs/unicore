@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
 import { ChinjanThemeProvider } from '@/components/backoffice/chinjan/ChinjanThemeProvider';
+import { ChatBox } from '@/components/backoffice/chat/ChatBox';
 import '@unicore/ui/globals.css';
 import '@/styles/chinjan-theme.css';
 
@@ -37,6 +38,7 @@ export default function BackofficeLayout({ children }: { children: ReactNode }) 
     <ChinjanThemeProvider>
       <div className={`min-h-screen ${isChinjan ? 'chinjan-body' : 'bg-[#060a14] text-white'}`} style={isChinjan ? { background: 'var(--chinjan-bg, #faf8f5)', color: 'var(--chinjan-text, #2d2d2d)' } : undefined}>
         {children}
+        <ChatBox />
       </div>
     </ChinjanThemeProvider>
   );
