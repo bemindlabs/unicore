@@ -1,4 +1,4 @@
-import type { BoardTask, TaskComment, TaskStatus, TaskActivityEntry } from './types';
+import type { BoardTask, TaskComment, TaskActivityEntry } from './types';
 import { defaultTasks } from './defaults';
 import { api } from '@/lib/api';
 

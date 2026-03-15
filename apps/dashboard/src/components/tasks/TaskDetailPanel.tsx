@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import type { BoardTask, TaskStatus, TaskPriority, TaskAssignee } from '@/lib/tasks/types';
+import type { BoardTask, TaskStatus, TaskPriority, TaskComment } from '@/lib/tasks/types';
 import { KANBAN_COLUMNS, PRIORITY_CONFIG } from '@/lib/tasks/types';
 import { ActivityFeed } from './ActivityFeed';
 import { AssigneePicker } from './AssigneePicker';
@@ -168,7 +168,7 @@ export function TaskDetailPanel({ task, agents, onUpdate, onAddComment, onDelete
             <div className="p-4">
               {activeTab === 'details' ? (
                 <div className="space-y-3">
-                  {task.comments.map((c) => (
+                  {task.comments.map((c: TaskComment) => (
                     <div key={c.id} className="flex gap-2">
                       <span
                         className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-[8px] font-bold text-white"

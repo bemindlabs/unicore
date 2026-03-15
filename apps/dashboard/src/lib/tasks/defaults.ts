@@ -1,6 +1,5 @@
 import type { BoardTask } from './types';
 
-const now = new Date().toISOString();
 const hourAgo = new Date(Date.now() - 3600_000).toISOString();
 const dayAgo = new Date(Date.now() - 86400_000).toISOString();
 
