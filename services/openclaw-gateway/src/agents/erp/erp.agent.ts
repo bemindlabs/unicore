@@ -11,34 +11,34 @@
  *  - generate_summary : Produce a natural language summary of ERP data for a module
  */
 
-import { Injectable } from '@nestjs/common';
-import { AgentContext, AgentType } from '../../interfaces/agent-base.interface';
+import { Injectable } from "@nestjs/common";
+import { AgentContext, AgentType } from "../../interfaces/agent-base.interface";
 import {
   SpecialistAgentBase,
   SpecialistAgentConfig,
   ToolDefinition,
   ToolCall,
   ToolResult,
-} from '../base/specialist-agent.base';
+} from "../base/specialist-agent.base";
 
 export type ErpModule =
-  | 'contacts'
-  | 'orders'
-  | 'products'
-  | 'inventory'
-  | 'invoices'
-  | 'expenses'
-  | 'suppliers';
+  | "contacts"
+  | "orders"
+  | "products"
+  | "inventory"
+  | "invoices"
+  | "expenses"
+  | "suppliers";
 
 @Injectable()
 export class ErpAgent extends SpecialistAgentBase {
-  readonly agentType: AgentType = 'erp';
+  readonly agentType: AgentType = "erp";
 
   readonly config: SpecialistAgentConfig = {
-    displayName: 'ERP Agent',
+    displayName: "ERP Agent",
     description:
-      'Provides natural-language access to ERP data — read, create, update, and export records conversationally.',
-    version: '0.1.0',
+      "Provides natural-language access to ERP data — read, create, update, and export records conversationally.",
+    version: "0.1.0",
   };
 
   // -------------------------------------------------------------------------
@@ -47,14 +47,21 @@ export class ErpAgent extends SpecialistAgentBase {
 
   protected buildSystemPrompt(context: AgentContext): string {
     const businessName =
-      (context.businessContext?.['businessName'] as string | undefined) ??
-      'the business';
-    const enabledModules =
-      (context.businessContext?.['erpModules'] as string[] | undefined) ??
-      ['contacts', 'orders', 'products', 'inventory', 'invoices', 'expenses'];
+      (context.businessContext?.["businessName"] as string | undefined) ??
+      "the business";
+    const enabledModules = (context.businessContext?.["erpModules"] as
+      | string[]
+      | undefined) ?? [
+      "contacts",
+      "orders",
+      "products",
+      "inventory",
+      "invoices",
+      "expenses",
+    ];
 
     return `You are the ERP Agent for ${businessName}.
-You provide natural-language access to the following ERP modules: ${enabledModules.join(', ')}.
+You provide natural-language access to the following ERP modules: ${enabledModules.join(", ")}.
 
 Your role is to:
   - Interpret natural language requests and translate them into precise ERP operations
@@ -69,7 +76,7 @@ Never expose system IDs unnecessarily — use human-readable labels in responses
 
 Available tools: ${this.getToolDefinitions()
       .map((t) => t.name)
-      .join(', ')}.`;
+      .join(", ")}.`;
   }
 
   // -------------------------------------------------------------------------
@@ -79,208 +86,298 @@ Available tools: ${this.getToolDefinitions()
   getToolDefinitions(): ToolDefinition[] {
     return [
       {
-        name: 'nl_query',
-        description: 'Translate a natural language question into an ERP query and return matching records.',
+        name: "nl_query",
+        description:
+          "Translate a natural language question into an ERP query and return matching records.",
         parameters: {
-          type: 'object',
+          type: "object",
           properties: {
             module: {
-              type: 'string',
-              description: 'ERP module to query',
-              enum: ['contacts', 'orders', 'products', 'inventory', 'invoices', 'expenses', 'suppliers'],
+              type: "string",
+              description: "ERP module to query",
+              enum: [
+                "contacts",
+                "orders",
+                "products",
+                "inventory",
+                "invoices",
+                "expenses",
+                "suppliers",
+              ],
             },
             naturalLanguageQuery: {
-              type: 'string',
-              description: 'The user\'s natural language request (e.g. "show me all unpaid invoices from last month")',
+              type: "string",
+              description:
+                'The user\'s natural language request (e.g. "show me all unpaid invoices from last month")',
             },
             limit: {
-              type: 'number',
-              description: 'Max records to return',
+              type: "number",
+              description: "Max records to return",
             },
             format: {
-              type: 'string',
-              description: 'Response format',
-              enum: ['table', 'list', 'summary'],
+              type: "string",
+              description: "Response format",
+              enum: ["table", "list", "summary"],
             },
           },
-          required: ['module', 'naturalLanguageQuery'],
+          required: ["module", "naturalLanguageQuery"],
         },
       },
       {
-        name: 'create_record',
-        description: 'Create a new ERP record in the specified module.',
+        name: "create_record",
+        description: "Create a new ERP record in the specified module.",
         parameters: {
-          type: 'object',
+          type: "object",
           properties: {
             module: {
-              type: 'string',
-              description: 'Target ERP module',
-              enum: ['contacts', 'orders', 'products', 'inventory', 'invoices', 'expenses', 'suppliers'],
+              type: "string",
+              description: "Target ERP module",
+              enum: [
+                "contacts",
+                "orders",
+                "products",
+                "inventory",
+                "invoices",
+                "expenses",
+                "suppliers",
+              ],
             },
             fields: {
-              type: 'object',
-              description: 'Record field values (schema varies by module)',
+              type: "object",
+              description: "Record field values (schema varies by module)",
               properties: {
-                name: { type: 'string', description: 'Record name or title' },
-                email: { type: 'string', description: 'Email address (contacts)' },
-                phone: { type: 'string', description: 'Phone number (contacts)' },
-                amount: { type: 'number', description: 'Monetary amount (orders, invoices, expenses)' },
-                status: { type: 'string', description: 'Record status' },
-                notes: { type: 'string', description: 'Additional notes' },
+                name: { type: "string", description: "Record name or title" },
+                email: {
+                  type: "string",
+                  description: "Email address (contacts)",
+                },
+                phone: {
+                  type: "string",
+                  description: "Phone number (contacts)",
+                },
+                amount: {
+                  type: "number",
+                  description: "Monetary amount (orders, invoices, expenses)",
+                },
+                status: { type: "string", description: "Record status" },
+                notes: { type: "string", description: "Additional notes" },
               },
             },
           },
-          required: ['module', 'fields'],
+          required: ["module", "fields"],
         },
       },
       {
-        name: 'update_record',
-        description: 'Update fields on an existing ERP record using natural language instructions.',
+        name: "update_record",
+        description:
+          "Update fields on an existing ERP record using natural language instructions.",
         parameters: {
-          type: 'object',
+          type: "object",
           properties: {
             module: {
-              type: 'string',
-              description: 'ERP module containing the record',
-              enum: ['contacts', 'orders', 'products', 'inventory', 'invoices', 'expenses', 'suppliers'],
+              type: "string",
+              description: "ERP module containing the record",
+              enum: [
+                "contacts",
+                "orders",
+                "products",
+                "inventory",
+                "invoices",
+                "expenses",
+                "suppliers",
+              ],
             },
             recordId: {
-              type: 'string',
-              description: 'ERP record identifier',
+              type: "string",
+              description: "ERP record identifier",
             },
             changes: {
-              type: 'object',
-              description: 'Field-value pairs to update',
+              type: "object",
+              description: "Field-value pairs to update",
               properties: {
-                status: { type: 'string', description: 'New status value' },
-                amount: { type: 'number', description: 'Updated amount' },
-                notes: { type: 'string', description: 'Updated notes' },
-                assigneeId: { type: 'string', description: 'New assignee user ID' },
+                status: { type: "string", description: "New status value" },
+                amount: { type: "number", description: "Updated amount" },
+                notes: { type: "string", description: "Updated notes" },
+                assigneeId: {
+                  type: "string",
+                  description: "New assignee user ID",
+                },
               },
             },
             reason: {
-              type: 'string',
-              description: 'Reason for the update (for audit log)',
+              type: "string",
+              description: "Reason for the update (for audit log)",
             },
           },
-          required: ['module', 'recordId', 'changes'],
+          required: ["module", "recordId", "changes"],
         },
       },
       {
-        name: 'delete_record',
-        description: 'Soft-delete an ERP record. Always requires user confirmation.',
+        name: "delete_record",
+        description:
+          "Soft-delete an ERP record. Always requires user confirmation.",
         parameters: {
-          type: 'object',
+          type: "object",
           properties: {
             module: {
-              type: 'string',
-              description: 'ERP module',
-              enum: ['contacts', 'orders', 'products', 'inventory', 'invoices', 'expenses', 'suppliers'],
+              type: "string",
+              description: "ERP module",
+              enum: [
+                "contacts",
+                "orders",
+                "products",
+                "inventory",
+                "invoices",
+                "expenses",
+                "suppliers",
+              ],
             },
             recordId: {
-              type: 'string',
-              description: 'Record to delete',
+              type: "string",
+              description: "Record to delete",
             },
             reason: {
-              type: 'string',
-              description: 'Deletion reason (required for audit trail)',
+              type: "string",
+              description: "Deletion reason (required for audit trail)",
             },
           },
-          required: ['module', 'recordId', 'reason'],
+          required: ["module", "recordId", "reason"],
         },
       },
       {
-        name: 'bulk_update',
-        description: 'Apply the same field changes to all records matching a filter in a module.',
+        name: "bulk_update",
+        description:
+          "Apply the same field changes to all records matching a filter in a module.",
         parameters: {
-          type: 'object',
+          type: "object",
           properties: {
             module: {
-              type: 'string',
-              description: 'ERP module',
-              enum: ['contacts', 'orders', 'products', 'inventory', 'invoices', 'expenses'],
+              type: "string",
+              description: "ERP module",
+              enum: [
+                "contacts",
+                "orders",
+                "products",
+                "inventory",
+                "invoices",
+                "expenses",
+              ],
             },
             filter: {
-              type: 'object',
-              description: 'Criteria that records must match to be updated',
+              type: "object",
+              description: "Criteria that records must match to be updated",
               properties: {
-                status: { type: 'string', description: 'Current status to filter on' },
-                tag: { type: 'string', description: 'Tag to filter on' },
-                assigneeId: { type: 'string', description: 'Assignee to filter on' },
+                status: {
+                  type: "string",
+                  description: "Current status to filter on",
+                },
+                tag: { type: "string", description: "Tag to filter on" },
+                assigneeId: {
+                  type: "string",
+                  description: "Assignee to filter on",
+                },
               },
             },
             changes: {
-              type: 'object',
-              description: 'Changes to apply to all matching records',
+              type: "object",
+              description: "Changes to apply to all matching records",
               properties: {
-                status: { type: 'string', description: 'New status' },
-                assigneeId: { type: 'string', description: 'New assignee' },
-                tag: { type: 'string', description: 'Tag to add' },
+                status: { type: "string", description: "New status" },
+                assigneeId: { type: "string", description: "New assignee" },
+                tag: { type: "string", description: "Tag to add" },
               },
             },
           },
-          required: ['module', 'filter', 'changes'],
+          required: ["module", "filter", "changes"],
         },
       },
       {
-        name: 'export_data',
-        description: 'Export a filtered ERP data set as CSV, JSON, or PDF.',
+        name: "export_data",
+        description: "Export a filtered ERP data set as CSV, JSON, or PDF.",
         parameters: {
-          type: 'object',
+          type: "object",
           properties: {
             module: {
-              type: 'string',
-              description: 'ERP module to export from',
-              enum: ['contacts', 'orders', 'products', 'inventory', 'invoices', 'expenses', 'suppliers'],
+              type: "string",
+              description: "ERP module to export from",
+              enum: [
+                "contacts",
+                "orders",
+                "products",
+                "inventory",
+                "invoices",
+                "expenses",
+                "suppliers",
+              ],
             },
             filter: {
-              type: 'object',
-              description: 'Filter criteria for the export',
+              type: "object",
+              description: "Filter criteria for the export",
               properties: {
-                status: { type: 'string', description: 'Status filter' },
-                from: { type: 'string', description: 'Start date (ISO-8601)' },
-                to: { type: 'string', description: 'End date (ISO-8601)' },
+                status: { type: "string", description: "Status filter" },
+                from: { type: "string", description: "Start date (ISO-8601)" },
+                to: { type: "string", description: "End date (ISO-8601)" },
               },
             },
             format: {
-              type: 'string',
-              description: 'Export file format',
-              enum: ['csv', 'json', 'pdf'],
+              type: "string",
+              description: "Export file format",
+              enum: ["csv", "json", "pdf"],
             },
             columns: {
-              type: 'array',
-              description: 'Specific columns to include (default: all)',
-              items: { type: 'string', description: 'Column/field name' },
+              type: "array",
+              description: "Specific columns to include (default: all)",
+              items: { type: "string", description: "Column/field name" },
             },
           },
-          required: ['module', 'format'],
+          required: ["module", "format"],
         },
       },
       {
-        name: 'generate_summary',
-        description: 'Produce a natural-language summary of a given ERP module\'s current state.',
+        name: "generate_summary",
+        description:
+          "Produce a natural-language summary of a given ERP module's current state.",
         parameters: {
-          type: 'object',
+          type: "object",
           properties: {
             module: {
-              type: 'string',
-              description: 'ERP module to summarise',
-              enum: ['contacts', 'orders', 'products', 'inventory', 'invoices', 'expenses'],
+              type: "string",
+              description: "ERP module to summarise",
+              enum: [
+                "contacts",
+                "orders",
+                "products",
+                "inventory",
+                "invoices",
+                "expenses",
+              ],
             },
             perspective: {
-              type: 'string',
-              description: 'Summary lens',
-              enum: ['health', 'activity', 'financial', 'operational'],
+              type: "string",
+              description: "Summary lens",
+              enum: ["health", "activity", "financial", "operational"],
             },
           },
-          required: ['module'],
+          required: ["module"],
         },
       },
     ];
   }
 
   // -------------------------------------------------------------------------
-  // Tool execution stubs
+  // Service URL helpers
+  // -------------------------------------------------------------------------
+
+  private get AI_ENGINE_URL(): string {
+    return process.env["AI_ENGINE_URL"] ?? "http://localhost:3011";
+  }
+
+  private get ERP_SERVICE_URL(): string {
+    return process.env["ERP_SERVICE_URL"] ?? "http://localhost:3012";
+  }
+
+  // -------------------------------------------------------------------------
+  // Tool execution
   // -------------------------------------------------------------------------
 
   protected async executeTool(
@@ -290,81 +387,181 @@ Available tools: ${this.getToolDefinitions()
     this.logger.debug(`[erp] executing tool: ${call.toolName}`);
 
     switch (call.toolName) {
-      case 'nl_query':
-        return {
-          toolName: call.toolName,
-          result: {
-            module: call.arguments['module'],
-            records: [],
-            total: 0,
-            query: call.arguments['naturalLanguageQuery'],
-          },
-        };
+      case "nl_query": {
+        try {
+          const args = call.arguments as Record<string, unknown>;
+          const parseRes = await fetch(`${this.AI_ENGINE_URL}/parse`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              query: args["naturalLanguageQuery"],
+              context: "erp",
+            }),
+          });
+          const parsedQuery = (await parseRes.json()) as unknown;
+          const res = await fetch(`${this.ERP_SERVICE_URL}/query`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(parsedQuery),
+          });
+          const data = (await res.json()) as unknown;
+          return { toolName: call.toolName, result: data };
+        } catch (err: unknown) {
+          const error = err instanceof Error ? err : new Error(String(err));
+          return {
+            toolName: call.toolName,
+            result: null,
+            error: error.message,
+          };
+        }
+      }
 
-      case 'create_record':
-        return {
-          toolName: call.toolName,
-          result: {
-            recordId: this.newId(),
-            module: call.arguments['module'],
-            status: 'created',
-            createdAt: new Date().toISOString(),
-          },
-        };
+      case "create_record": {
+        try {
+          const args = call.arguments as Record<string, unknown>;
+          const res = await fetch(
+            `${this.ERP_SERVICE_URL}/records/${args["module"] as string}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ data: args["fields"] }),
+            },
+          );
+          const data = (await res.json()) as unknown;
+          return { toolName: call.toolName, result: data };
+        } catch (err: unknown) {
+          const error = err instanceof Error ? err : new Error(String(err));
+          return {
+            toolName: call.toolName,
+            result: null,
+            error: error.message,
+          };
+        }
+      }
 
-      case 'update_record':
-        return {
-          toolName: call.toolName,
-          result: {
-            recordId: call.arguments['recordId'],
-            module: call.arguments['module'],
-            updated: true,
-            updatedAt: new Date().toISOString(),
-          },
-        };
+      case "update_record": {
+        try {
+          const args = call.arguments as Record<string, unknown>;
+          const res = await fetch(
+            `${this.ERP_SERVICE_URL}/records/${args["module"] as string}/${args["recordId"] as string}`,
+            {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ data: args["changes"] }),
+            },
+          );
+          const data = (await res.json()) as unknown;
+          return { toolName: call.toolName, result: data };
+        } catch (err: unknown) {
+          const error = err instanceof Error ? err : new Error(String(err));
+          return {
+            toolName: call.toolName,
+            result: null,
+            error: error.message,
+          };
+        }
+      }
 
-      case 'delete_record':
-        return {
-          toolName: call.toolName,
-          result: {
-            recordId: call.arguments['recordId'],
-            module: call.arguments['module'],
-            deleted: true,
-            deletedAt: new Date().toISOString(),
-          },
-        };
+      case "delete_record": {
+        try {
+          const args = call.arguments as Record<string, unknown>;
+          const res = await fetch(
+            `${this.ERP_SERVICE_URL}/records/${args["module"] as string}/${args["recordId"] as string}`,
+            { method: "DELETE" },
+          );
+          const data = (await res.json()) as unknown;
+          return { toolName: call.toolName, result: data };
+        } catch (err: unknown) {
+          const error = err instanceof Error ? err : new Error(String(err));
+          return {
+            toolName: call.toolName,
+            result: null,
+            error: error.message,
+          };
+        }
+      }
 
-      case 'bulk_update':
-        return {
-          toolName: call.toolName,
-          result: {
-            module: call.arguments['module'],
-            matchedCount: 0,
-            updatedCount: 0,
-          },
-        };
+      case "bulk_update": {
+        try {
+          const args = call.arguments as Record<string, unknown>;
+          const res = await fetch(
+            `${this.ERP_SERVICE_URL}/records/${args["module"] as string}/bulk`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                filter: args["filter"],
+                updates: args["changes"],
+              }),
+            },
+          );
+          const data = (await res.json()) as unknown;
+          return { toolName: call.toolName, result: data };
+        } catch (err: unknown) {
+          const error = err instanceof Error ? err : new Error(String(err));
+          return {
+            toolName: call.toolName,
+            result: null,
+            error: error.message,
+          };
+        }
+      }
 
-      case 'export_data':
-        return {
-          toolName: call.toolName,
-          result: {
-            exportId: this.newId(),
-            module: call.arguments['module'],
-            format: call.arguments['format'],
-            downloadUrl: null,
-            recordCount: 0,
-          },
-        };
+      case "export_data": {
+        try {
+          const args = call.arguments as Record<string, unknown>;
+          const res = await fetch(`${this.ERP_SERVICE_URL}/export`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              entity: args["module"],
+              format: args["format"],
+              filter: args["filter"],
+            }),
+          });
+          const data = (await res.json()) as unknown;
+          return { toolName: call.toolName, result: data };
+        } catch (err: unknown) {
+          const error = err instanceof Error ? err : new Error(String(err));
+          return {
+            toolName: call.toolName,
+            result: null,
+            error: error.message,
+          };
+        }
+      }
 
-      case 'generate_summary':
-        return {
-          toolName: call.toolName,
-          result: {
-            module: call.arguments['module'],
-            summary: `Summary for ${call.arguments['module']} is not yet available (stub).`,
-            metrics: {},
-          },
-        };
+      case "generate_summary": {
+        try {
+          const args = call.arguments as Record<string, unknown>;
+          const params = new URLSearchParams();
+          if (args["perspective"]) {
+            params.set("perspective", args["perspective"] as string);
+          }
+          const erpRes = await fetch(
+            `${this.ERP_SERVICE_URL}/records/${args["module"] as string}?${params.toString()}`,
+          );
+          const erpData = (await erpRes.json()) as unknown;
+          const res = await fetch(`${this.AI_ENGINE_URL}/generate`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "summary",
+              data: erpData,
+              params: args,
+            }),
+          });
+          const data = (await res.json()) as unknown;
+          return { toolName: call.toolName, result: data };
+        } catch (err: unknown) {
+          const error = err instanceof Error ? err : new Error(String(err));
+          return {
+            toolName: call.toolName,
+            result: null,
+            error: error.message,
+          };
+        }
+      }
 
       default:
         return {
