@@ -168,9 +168,10 @@ services:
       context: .
       dockerfile: services/openclaw-gateway/Dockerfile
     ports:
-      - "18789:18789"
+      - "18790:18790"
     environment:
       PORT: "18789"
+      HTTP_PORT: "18790"
       REDIS_URL: redis://unicore-redis:6379
     depends_on:
       unicore-redis:
