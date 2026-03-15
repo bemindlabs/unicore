@@ -30,6 +30,12 @@ export const DOWNSTREAM_SERVICES: DownstreamService[] = [
     port: parseInt(process.env.BOOTSTRAP_SERVICE_PORT ?? '4500', 10),
     pathPrefix: '/bootstrap',
   },
+  {
+    name: 'openclaw-gateway',
+    host: process.env.OPENCLAW_SERVICE_HOST ?? 'localhost',
+    port: parseInt(process.env.OPENCLAW_SERVICE_PORT ?? '18790', 10),
+    pathPrefix: '/openclaw',
+  },
 ] as const;
 
 export function resolveDownstreamService(

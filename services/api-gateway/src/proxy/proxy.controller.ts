@@ -12,7 +12,7 @@ import { Request, Response } from 'express';
 import { ProxyService } from './proxy.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
-@Controller()
+@Controller('api/proxy')
 export class ProxyController {
   private readonly logger = new Logger(ProxyController.name);
 
@@ -46,6 +46,16 @@ export class ProxyController {
     @CurrentUser('id') userId: string,
   ) {
     return this.handleProxy(req, res, `/rag/${path ?? ''}`, userId);
+  }
+
+  @All('openclaw/*path')
+  async proxyOpenclaw(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Param('path') path: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.handleProxy(req, res, `/openclaw/${path ?? ''}`, userId);
   }
 
   @All('bootstrap/*path')
