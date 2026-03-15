@@ -141,9 +141,13 @@ function ContactDialog({
     if (!form.name.trim() || !form.email.trim()) return;
     setSaving(true);
     try {
+      const nameParts = form.name.trim().split(/\s+/);
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '-';
       const payload = {
         type: form.type,
-        name: form.name.trim(),
+        firstName,
+        lastName,
         email: form.email.trim(),
         ...(form.phone.trim() && { phone: form.phone.trim() }),
         ...(form.company.trim() && { company: form.company.trim() }),
