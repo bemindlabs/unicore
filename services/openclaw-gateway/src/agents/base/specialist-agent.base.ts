@@ -1,12 +1,19 @@
 /**
  * Base abstract class for all OpenClaw specialist agents.
  */
-import { Logger } from '@nestjs/common';
-import { v4 as uuidv4 } from 'uuid';
-import { ISpecialistAgent, AgentMessage, AgentContext, AgentResponse, AgentError, AgentType } from '../../interfaces/agent-base.interface';
+import { Logger } from "@nestjs/common";
+import { v4 as uuidv4 } from "uuid";
+import {
+  ISpecialistAgent,
+  AgentMessage,
+  AgentContext,
+  AgentResponse,
+  AgentError,
+  AgentType,
+} from "../../interfaces/agent-base.interface";
 
 export interface ToolParameter {
-  type: 'string' | 'number' | 'boolean' | 'object' | 'array';
+  type: "string" | "number" | "boolean" | "object" | "array";
   description: string;
   enum?: string[];
   items?: ToolParameter;
@@ -18,7 +25,7 @@ export interface ToolDefinition {
   name: string;
   description: string;
   parameters: {
-    type: 'object';
+    type: "object";
     properties: Record<string, ToolParameter>;
     required?: string[];
   };
@@ -47,65 +54,131 @@ export abstract class SpecialistAgentBase implements ISpecialistAgent {
   protected readonly logger: Logger;
   private _available = true;
 
-  constructor() { this.logger = new Logger(this.constructor.name); }
+  constructor() {
+    this.logger = new Logger(this.constructor.name);
+  }
 
   protected abstract buildSystemPrompt(context: AgentContext): string;
   abstract getToolDefinitions(): ToolDefinition[];
-  protected abstract executeTool(call: ToolCall, context: AgentContext): Promise<ToolResult>;
+  protected abstract executeTool(
+    call: ToolCall,
+    context: AgentContext,
+  ): Promise<ToolResult>;
 
-  async handle(message: AgentMessage, context: AgentContext): Promise<AgentResponse> {
-    this.logger.log(`[${this.agentType}] handling message ${message.id} (session=${context.sessionId})`);
+  async handle(
+    message: AgentMessage,
+    context: AgentContext,
+  ): Promise<AgentResponse> {
+    this.logger.log(
+      `[${this.agentType}] handling message ${message.id} (session=${context.sessionId})`,
+    );
     const startedAt = Date.now();
     try {
       const result = await this.executeInternal(message, context);
-      this.logger.debug(`[${this.agentType}] completed in ${Date.now() - startedAt}ms`);
+      this.logger.debug(
+        `[${this.agentType}] completed in ${Date.now() - startedAt}ms`,
+      );
       return result;
     } catch (err: unknown) {
       const error = err instanceof Error ? err : new Error(String(err));
-      this.logger.error(`[${this.agentType}] unhandled error: ${error.message}`, error.stack);
+      this.logger.error(
+        `[${this.agentType}] unhandled error: ${error.message}`,
+        error.stack,
+      );
       return this.buildErrorResponse(message.id, error);
     }
   }
 
-  isAvailable(): boolean { return this._available; }
+  isAvailable(): boolean {
+    return this._available;
+  }
 
   setAvailable(available: boolean): void {
     this._available = available;
     this.logger.log(`[${this.agentType}] availability set to: ${available}`);
   }
 
-  protected async executeInternal(message: AgentMessage, context: AgentContext): Promise<AgentResponse> {
+  protected async executeInternal(
+    message: AgentMessage,
+    context: AgentContext,
+  ): Promise<AgentResponse> {
     const systemPrompt = this.buildSystemPrompt(context);
     const tools = this.getToolDefinitions();
-    this.logger.debug(`[${this.agentType}] system prompt length=${systemPrompt.length}, tools=${tools.map((t) => t.name).join(', ')}`);
+    this.logger.debug(
+      `[${this.agentType}] system prompt length=${systemPrompt.length}, tools=${tools.map((t) => t.name).join(", ")}`,
+    );
+
+    const content = await this.callLlm(systemPrompt, message.content);
+
     return {
       requestId: message.id,
       agentType: this.agentType,
-      content: this.buildStubResponse(message.content),
+      content,
       done: true,
       timestamp: new Date().toISOString(),
       data: {
         agentType: this.agentType,
         displayName: this.config.displayName,
-        availableTools: tools.map((t) => ({ name: t.name, description: t.description })),
+        availableTools: tools.map((t) => ({
+          name: t.name,
+          description: t.description,
+        })),
         sessionId: context.sessionId,
         historyLength: context.history.length,
       },
     };
   }
 
-  protected buildStubResponse(userContent: string): string {
-    return `[${this.config.displayName}] received: "${userContent}". This is a stub response — LLM integration is pending.`;
+  protected async callLlm(
+    systemPrompt: string,
+    userMessage: string,
+  ): Promise<string> {
+    const aiEngineUrl = process.env["AI_ENGINE_URL"];
+    if (!aiEngineUrl) {
+      this.logger.warn(
+        `[${this.agentType}] AI_ENGINE_URL not configured — returning fallback response`,
+      );
+      return `[${this.config.displayName}] LLM integration requires AI_ENGINE_URL to be set.`;
+    }
+
+    const response = await fetch(`${aiEngineUrl}/llm/complete`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userMessage },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `LLM request failed: ${response.status} ${response.statusText}`,
+      );
+    }
+
+    const result = (await response.json()) as { content: string };
+    return result.content;
   }
 
   protected buildErrorResponse(requestId: string, error: Error): AgentResponse {
-    const agentError: AgentError = { code: 'AGENT_EXECUTION_ERROR', message: error.message, retryable: false };
+    const agentError: AgentError = {
+      code: "AGENT_EXECUTION_ERROR",
+      message: error.message,
+      retryable: false,
+    };
     return {
-      requestId, agentType: this.agentType,
+      requestId,
+      agentType: this.agentType,
       content: `An error occurred in the ${this.config.displayName}.`,
-      done: true, timestamp: new Date().toISOString(), error: agentError,
+      done: true,
+      timestamp: new Date().toISOString(),
+      error: agentError,
     };
   }
 
-  protected newId(): string { return uuidv4(); }
+  protected newId(): string {
+    return uuidv4();
+  }
 }
