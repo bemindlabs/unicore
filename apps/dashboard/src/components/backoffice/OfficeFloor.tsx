@@ -3,7 +3,7 @@
 import type { BackofficeAgent } from '@/lib/backoffice/types';
 import { PixelAvatar } from './PixelAvatar';
 import { StatusIndicator } from './StatusIndicator';
-import { useChinjanTheme, ChinjanOnly, DefaultOnly } from './chinjan/ChinjanThemeProvider';
+import { useChinjanTheme, ChinjanOnly } from './chinjan/ChinjanThemeProvider';
 
 interface Props {
   conferenceAgents: BackofficeAgent[];
