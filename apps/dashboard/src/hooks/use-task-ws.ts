@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { BoardTask, TaskStatus } from '@/lib/tasks/types';
 import type { AgentTask } from '@unicore/shared-types';
+import { uuid } from '@/lib/uuid';
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:18789';
 const MAX_BACKOFF = 30_000;
@@ -31,7 +32,7 @@ function agentTaskToBoardTask(at: AgentTask): BoardTask {
     progress: at.status === 'completed' ? 100 : at.status === 'running' ? 50 : 0,
     comments: [],
     activity: [{
-      id: crypto.randomUUID(),
+      id: uuid(),
       taskId: `agent-${at.id}`,
       actorId: at.agentId,
       actorType: 'agent',
@@ -66,7 +67,7 @@ export function useTaskWebSocket(onTaskUpdate: (task: BoardTask) => void): { con
         // Subscribe to tasks channel
         ws.send(JSON.stringify({
           type: 'message:subscribe',
-          messageId: crypto.randomUUID(),
+          messageId: uuid(),
           timestamp: new Date().toISOString(),
           payload: { agentId: 'dashboard-ui', channel: 'tasks' },
         }));

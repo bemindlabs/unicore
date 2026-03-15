@@ -1,6 +1,7 @@
 import type { BoardTask, TaskComment, TaskActivityEntry } from './types';
 import { defaultTasks } from './defaults';
 import { api } from '@/lib/api';
+import { uuid } from '@/lib/uuid';
 
 const STORAGE_KEY = 'unicore_board_tasks';
 
@@ -28,7 +29,7 @@ function makeActivity(
   detail?: string,
 ): TaskActivityEntry {
   return {
-    id: crypto.randomUUID(),
+    id: uuid(),
     taskId,
     actorId,
     actorType,
@@ -54,7 +55,7 @@ export async function createTask(
   task: Omit<BoardTask, 'id' | 'createdAt' | 'updatedAt' | 'activity' | 'comments'>,
 ): Promise<BoardTask[]> {
   const now = new Date().toISOString();
-  const id = crypto.randomUUID();
+  const id = uuid();
   const newTask: BoardTask = {
     ...task,
     id,
@@ -139,7 +140,7 @@ export async function addComment(
 ): Promise<BoardTask[]> {
   const now = new Date().toISOString();
   const comment: TaskComment = {
-    id: crypto.randomUUID(),
+    id: uuid(),
     taskId,
     authorId,
     authorType,
