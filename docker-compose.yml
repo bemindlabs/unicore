@@ -36,11 +36,6 @@ services:
       - "6333:6333"
     volumes:
       - vectordb_data:/qdrant/storage
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:6333/healthz || exit 1"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
 
   unicore-zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
@@ -138,7 +133,7 @@ services:
       REDIS_URL: redis://unicore-redis:6379
     depends_on:
       unicore-vectordb:
-        condition: service_healthy
+        condition: service_started
       unicore-redis:
         condition: service_healthy
     profiles: [apps]

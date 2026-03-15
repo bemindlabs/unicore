@@ -2,7 +2,11 @@
   "name": "unicore",
   "private": true,
   "packageManager": "pnpm@10.30.3",
-  "workspaces": ["apps/*", "services/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "services/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
@@ -18,8 +22,9 @@
     }
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "prisma": "^6.0.0",
     "turbo": "^2.0.0",
-    "typescript": "^5.5.0",
-    "prisma": "^6.0.0"
+    "typescript": "^5.5.0"
   }
 }

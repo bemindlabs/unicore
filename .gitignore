@@ -43,3 +43,9 @@ prisma/*.db
 
 # Misc
 *.pem
+
+# Playwright
+.auth/
+playwright-report/
+test-results/
+blob-report/
