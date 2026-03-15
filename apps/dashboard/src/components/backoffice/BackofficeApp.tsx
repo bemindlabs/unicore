@@ -1,31 +1,44 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import type { BackofficeAgent } from '@/lib/backoffice/types';
-import { Header } from './Header';
-import { TeamSidebar } from './TeamSidebar';
-import { OfficeFloor } from './OfficeFloor';
-import { WorkstationGrid } from './WorkstationGrid';
-import { AgentModal } from './AgentModal';
+import { useState } from "react";
+import type { BackofficeAgent } from "@/lib/backoffice/types";
+import { Header } from "./Header";
+import { TeamSidebar } from "./TeamSidebar";
+import { OfficeFloor } from "./OfficeFloor";
+import { WorkstationGrid } from "./WorkstationGrid";
+import { AgentModal } from "./AgentModal";
 
 interface Props {
   agents: BackofficeAgent[];
-  onUpdateAgent: (agent: BackofficeAgent) => void;
-  onAddAgent: (agent: BackofficeAgent) => void;
-  onDeleteAgent: (id: string) => void;
+  apiError?: boolean;
+  onUpdateAgent: (agent: BackofficeAgent) => Promise<void>;
+  onAddAgent: (agent: BackofficeAgent) => Promise<void>;
+  onDeleteAgent: (id: string) => Promise<void>;
 }
 
-export function BackofficeApp({ agents, onUpdateAgent, onAddAgent, onDeleteAgent }: Props) {
-  const [selectedAgent, setSelectedAgent] = useState<BackofficeAgent | null>(null);
+export function BackofficeApp({
+  agents,
+  apiError,
+  onUpdateAgent,
+  onAddAgent,
+  onDeleteAgent,
+}: Props) {
+  const [selectedAgent, setSelectedAgent] = useState<BackofficeAgent | null>(
+    null,
+  );
   const [showAddModal, setShowAddModal] = useState(false);
-  const [sidebarFilter, setSidebarFilter] = useState<'all' | 'working' | 'idle'>('all');
+  const [sidebarFilter, setSidebarFilter] = useState<
+    "all" | "working" | "idle"
+  >("all");
 
   const filteredAgents =
-    sidebarFilter === 'all' ? agents : agents.filter(a => a.status === sidebarFilter);
+    sidebarFilter === "all"
+      ? agents
+      : agents.filter((a) => a.status === sidebarFilter);
 
-  const conferenceAgents = agents.filter(a => a.room === 'conference');
-  const mainOfficeAgents = agents.filter(a => a.room === 'main-office');
-  const standaloneAgents = agents.filter(a => a.room === 'standalone');
+  const conferenceAgents = agents.filter((a) => a.room === "conference");
+  const mainOfficeAgents = agents.filter((a) => a.room === "main-office");
+  const standaloneAgents = agents.filter((a) => a.room === "standalone");
 
   return (
     <div className="min-h-screen relative">
@@ -43,9 +56,17 @@ export function BackofficeApp({ agents, onUpdateAgent, onAddAgent, onDeleteAgent
       />
 
       <div className="relative z-10 flex flex-col h-screen">
+        {apiError && (
+          <div className="flex items-center justify-center gap-2 px-4 py-1.5 bg-yellow-500/10 border-b border-yellow-500/20">
+            <span className="font-mono text-[9px] text-yellow-400/80 tracking-wider uppercase">
+              ⚠ API unreachable — showing cached data
+            </span>
+          </div>
+        )}
+
         <Header
           agentCount={agents.length}
-          workingCount={agents.filter(a => a.status === 'working').length}
+          workingCount={agents.filter((a) => a.status === "working").length}
           onAddAgent={() => setShowAddModal(true)}
         />
 
@@ -63,7 +84,10 @@ export function BackofficeApp({ agents, onUpdateAgent, onAddAgent, onDeleteAgent
               mainOfficeAgents={mainOfficeAgents}
               onSelectAgent={setSelectedAgent}
             />
-            <WorkstationGrid agents={standaloneAgents} onSelectAgent={setSelectedAgent} />
+            <WorkstationGrid
+              agents={standaloneAgents}
+              onSelectAgent={setSelectedAgent}
+            />
           </div>
         </div>
       </div>
@@ -72,8 +96,14 @@ export function BackofficeApp({ agents, onUpdateAgent, onAddAgent, onDeleteAgent
         <AgentModal
           agent={selectedAgent}
           mode="edit"
-          onSave={(agent) => { onUpdateAgent(agent); setSelectedAgent(null); }}
-          onDelete={() => { onDeleteAgent(selectedAgent.id); setSelectedAgent(null); }}
+          onSave={async (agent) => {
+            await onUpdateAgent(agent);
+            setSelectedAgent(null);
+          }}
+          onDelete={async () => {
+            await onDeleteAgent(selectedAgent.id);
+            setSelectedAgent(null);
+          }}
           onClose={() => setSelectedAgent(null)}
         />
       )}
@@ -81,7 +111,10 @@ export function BackofficeApp({ agents, onUpdateAgent, onAddAgent, onDeleteAgent
       {showAddModal && (
         <AgentModal
           mode="add"
-          onSave={(agent) => { onAddAgent(agent); setShowAddModal(false); }}
+          onSave={async (agent) => {
+            await onAddAgent(agent);
+            setShowAddModal(false);
+          }}
           onClose={() => setShowAddModal(false)}
         />
       )}
