@@ -3,7 +3,6 @@ import {
   All,
   Req,
   Res,
-  Param,
   Logger,
   HttpException,
   HttpStatus,
@@ -18,54 +17,19 @@ export class ProxyController {
 
   constructor(private readonly proxyService: ProxyService) {}
 
-  @All('erp/*path')
-  async proxyErp(
+  @All('*')
+  async proxyAll(
     @Req() req: Request,
     @Res() res: Response,
-    @Param('path') path: string,
     @CurrentUser('id') userId: string,
   ) {
-    return this.handleProxy(req, res, `/erp/${path ?? ''}`, userId);
-  }
+    // Strip the controller prefix to get the downstream path
+    const prefix = '/api/proxy';
+    const fullPath = req.originalUrl.startsWith(prefix)
+      ? req.originalUrl.slice(prefix.length) || '/'
+      : req.originalUrl;
 
-  @All('ai/*path')
-  async proxyAiEngine(
-    @Req() req: Request,
-    @Res() res: Response,
-    @Param('path') path: string,
-    @CurrentUser('id') userId: string,
-  ) {
-    return this.handleProxy(req, res, `/ai/${path ?? ''}`, userId);
-  }
-
-  @All('rag/*path')
-  async proxyRag(
-    @Req() req: Request,
-    @Res() res: Response,
-    @Param('path') path: string,
-    @CurrentUser('id') userId: string,
-  ) {
-    return this.handleProxy(req, res, `/rag/${path ?? ''}`, userId);
-  }
-
-  @All('openclaw/*path')
-  async proxyOpenclaw(
-    @Req() req: Request,
-    @Res() res: Response,
-    @Param('path') path: string,
-    @CurrentUser('id') userId: string,
-  ) {
-    return this.handleProxy(req, res, `/openclaw/${path ?? ''}`, userId);
-  }
-
-  @All('bootstrap/*path')
-  async proxyBootstrap(
-    @Req() req: Request,
-    @Res() res: Response,
-    @Param('path') path: string,
-    @CurrentUser('id') userId: string,
-  ) {
-    return this.handleProxy(req, res, `/bootstrap/${path ?? ''}`, userId);
+    return this.handleProxy(req, res, fullPath, userId);
   }
 
   private async handleProxy(
