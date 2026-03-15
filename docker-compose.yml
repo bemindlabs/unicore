@@ -99,7 +99,7 @@ services:
     ports:
       - "4100:4100"
     environment:
-      DATABASE_URL: postgresql://unicore:password@unicore-postgres:5432/unicore?schema=public
+      DATABASE_URL: postgresql://unicore:password@unicore-postgres:5432/unicore_erp?schema=public
       REDIS_URL: redis://unicore-redis:6379
       PORT: "4100"
       KAFKA_BROKERS: unicore-kafka:9092
