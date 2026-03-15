@@ -34,11 +34,11 @@ export default function AgentsPage() {
           </div>
         </div>
         <Link
-          href="/settings/agents"
+          href="/backoffice"
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <Settings className="h-4 w-4" />
-          Agent Settings
+          Open Backoffice
         </Link>
       </div>
 

@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import {
-  Bot,
   Building2,
   Globe,
   KeyRound,
@@ -12,7 +11,6 @@ import {
   Plug,
   RefreshCcw,
   Settings,
-  Users,
 } from 'lucide-react';
 import { cn } from '@unicore/ui';
 
@@ -29,18 +27,6 @@ const settingsNavItems: SettingsNavItem[] = [
     href: '/settings',
     icon: Building2,
     description: 'Business profile and preferences',
-  },
-  {
-    label: 'Team & Roles',
-    href: '/settings/team',
-    icon: Users,
-    description: 'Manage users and permissions',
-  },
-  {
-    label: 'AI Agents',
-    href: '/settings/agents',
-    icon: Bot,
-    description: 'Configure agent behavior and channels',
   },
   {
     label: 'ERP Modules',

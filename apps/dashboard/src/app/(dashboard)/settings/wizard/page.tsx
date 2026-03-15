@@ -53,14 +53,14 @@ const WIZARD_STEPS: WizardStep[] = [
     step: 2,
     title: 'Team & Roles',
     description: 'Define who is on the team and what they can access',
-    href: '/settings/team',
+    href: '/admin/users',
     icon: Users,
   },
   {
     step: 3,
     title: 'AI Agents',
     description: 'Choose which agents to activate and set their autonomy',
-    href: '/settings/agents',
+    href: '/agents',
     icon: Bot,
   },
   {

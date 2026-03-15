@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Activity,
-  Crown,
   ScrollText,
   Shield,
   UsersRound,
@@ -16,7 +15,6 @@ const ADMIN_NAV = [
   { href: '/admin/users', label: 'Users', icon: UsersRound },
   { href: '/admin/roles', label: 'Roles & Access', icon: Shield },
   { href: '/admin/audit-logs', label: 'Audit Logs', icon: ScrollText },
-  { href: '/admin/license', label: 'License', icon: Crown },
   { href: '/admin/health', label: 'System Health', icon: Activity },
 ] as const;
 
