@@ -249,23 +249,6 @@ services:
       - unicore-api-gateway
     profiles: [apps]
 
-  unicore-onboarding:
-    build:
-      context: .
-      dockerfile: apps/onboarding/Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: http://76.13.188.164:4000
-        NEXT_PUBLIC_BOOTSTRAP_URL: http://76.13.188.164:4500
-        NEXT_PUBLIC_BOOTSTRAP_SECRET: unicore-bootstrap-secret-local
-    ports:
-      - "3100:3100"
-    environment:
-      NEXT_PUBLIC_API_URL: http://76.13.188.164:4000
-      NEXT_PUBLIC_BOOTSTRAP_URL: http://76.13.188.164:4500
-      NEXT_PUBLIC_BOOTSTRAP_SECRET: unicore-bootstrap-secret-local
-    depends_on:
-      - unicore-api-gateway
-    profiles: [apps]
 
 volumes:
   postgres_data:
