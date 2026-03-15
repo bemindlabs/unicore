@@ -12,6 +12,7 @@ import { TaskListView } from '@/components/tasks/TaskListView';
 import { TaskFilterBar, DEFAULT_FILTERS, type TaskFilters } from '@/components/tasks/TaskFilterBar';
 import { TaskDetailPanel } from '@/components/tasks/TaskDetailPanel';
 import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<BoardTask[]>([]);
@@ -122,7 +123,7 @@ export default function TasksPage() {
   }
 
   return (
-    <>
+    <ErrorBoundary>
       <TaskBoardShell
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
@@ -162,6 +163,6 @@ export default function TasksPage() {
           onClose={() => setShowCreateDialog(false)}
         />
       )}
-    </>
+    </ErrorBoundary>
   );
 }

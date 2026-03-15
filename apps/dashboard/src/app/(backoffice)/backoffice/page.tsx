@@ -11,6 +11,7 @@ import {
 } from "@/lib/backoffice/store";
 import { BackofficeApp } from "@/components/backoffice/BackofficeApp";
 import { useTheme } from "@/hooks/use-theme";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const ChinjanLoadingState = dynamic(
   () => import("@/components/backoffice/chinjan/ChinjanLoadingState").then((m) => m.ChinjanLoadingState),
@@ -53,12 +54,14 @@ export default function BackofficePage() {
   }
 
   return (
-    <BackofficeApp
-      agents={agents}
-      apiError={apiError}
-      onUpdateAgent={async (agent) => setAgents(await updateAgent(agent))}
-      onAddAgent={async (agent) => setAgents(await addAgent(agent))}
-      onDeleteAgent={async (id) => setAgents(await deleteAgent(id))}
-    />
+    <ErrorBoundary>
+      <BackofficeApp
+        agents={agents}
+        apiError={apiError}
+        onUpdateAgent={async (agent) => setAgents(await updateAgent(agent))}
+        onAddAgent={async (agent) => setAgents(await addAgent(agent))}
+        onDeleteAgent={async (id) => setAgents(await deleteAgent(id))}
+      />
+    </ErrorBoundary>
   );
 }

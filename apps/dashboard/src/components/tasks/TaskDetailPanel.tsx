@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { BoardTask, TaskStatus, TaskPriority, TaskAssignee } from '@/lib/tasks/types';
 import { KANBAN_COLUMNS, PRIORITY_CONFIG } from '@/lib/tasks/types';
 import { ActivityFeed } from './ActivityFeed';
@@ -16,6 +16,9 @@ interface Props {
 }
 
 export function TaskDetailPanel({ task, agents, onUpdate, onAddComment, onDelete, onClose }: Props) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { dialogRef.current?.focus(); }, []);
+
   const [commentInput, setCommentInput] = useState('');
   const [activeTab, setActiveTab] = useState<'details' | 'activity'>('details');
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -40,19 +43,24 @@ export function TaskDetailPanel({ task, agents, onUpdate, onAddComment, onDelete
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose} onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}>
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       <div
         className="relative w-full max-w-2xl mx-4 bg-card border border-border rounded-lg shadow-xl overflow-hidden max-h-[85vh] flex flex-col"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="task-detail-dialog-title"
+        tabIndex={-1}
+        ref={dialogRef}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-border flex-shrink-0">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full" style={{ background: KANBAN_COLUMNS.find((c) => c.key === task.status)?.color }} />
-            <span className="text-xs text-muted-foreground">{task.id.slice(0, 8)}</span>
+            <span id="task-detail-dialog-title" className="text-xs text-muted-foreground">{task.id.slice(0, 8)}</span>
           </div>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground text-lg">&times;</button>
+          <button onClick={onClose} aria-label="Close" className="text-muted-foreground hover:text-foreground text-lg">&times;</button>
         </div>
 
         {/* Content */}

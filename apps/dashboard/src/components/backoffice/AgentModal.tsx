@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import type {
   BackofficeAgent,
@@ -50,6 +50,9 @@ const COLORS = [
 ];
 
 export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { dialogRef.current?.focus(); }, []);
+
   const [form, setForm] = useState<BackofficeAgent>(
     agent || {
       id: "",
@@ -111,6 +114,7 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
       onClick={onClose}
+      onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
     >
       <div className={`absolute inset-0 backdrop-blur-sm ${isChinjan ? 'bg-black/30' : 'bg-black/60'}`} />
       <div
@@ -118,6 +122,11 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
         style={isChinjan
           ? { borderColor: 'var(--chinjan-border)', background: 'var(--chinjan-surface)' }
           : { background: '#0a0e1a' }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="agent-modal-title"
+        tabIndex={-1}
+        ref={dialogRef}
         onClick={(e) => e.stopPropagation()}
       >
         <div
@@ -126,6 +135,7 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
           }`}
         >
           <span
+            id="agent-modal-title"
             className={isChinjan
               ? 'chinjan-heading text-[9px] tracking-wider uppercase'
               : 'font-mono text-[11px] text-cyan-400 tracking-wider uppercase'}
@@ -135,6 +145,7 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
           </span>
           <button
             onClick={onClose}
+            aria-label="Close"
             className={`text-lg ${isChinjan ? '' : 'text-cyan-600/50 hover:text-cyan-400'}`}
             style={isChinjan ? { color: 'var(--chinjan-muted)' } : undefined}
           >

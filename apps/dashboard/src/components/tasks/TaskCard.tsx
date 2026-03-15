@@ -26,6 +26,8 @@ export function TaskCard({ task, onClick, onDragStart }: Props) {
   return (
     <div
       draggable
+      role="button"
+      aria-label={task.title}
       onDragStart={(e) => {
         e.dataTransfer.setData('text/plain', task.id);
         e.dataTransfer.effectAllowed = 'move';
@@ -59,7 +61,7 @@ export function TaskCard({ task, onClick, onDragStart }: Props) {
 
       {/* Progress bar */}
       {task.progress > 0 && task.status !== 'done' && (
-        <div className="w-full h-1.5 bg-muted rounded-full mb-2 overflow-hidden">
+        <div role="progressbar" aria-valuenow={task.progress} aria-valuemin={0} aria-valuemax={100} aria-label="Task progress" className="w-full h-1.5 bg-muted rounded-full mb-2 overflow-hidden">
           <div
             className="h-full rounded-full transition-all"
             style={{ width: `${task.progress}%`, background: priorityCfg.color }}

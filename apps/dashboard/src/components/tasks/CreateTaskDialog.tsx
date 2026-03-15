@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { BoardTask, TaskStatus, TaskPriority, TaskAssignee } from '@/lib/tasks/types';
 import { KANBAN_COLUMNS, PRIORITY_CONFIG } from '@/lib/tasks/types';
 import { AssigneePicker } from './AssigneePicker';
@@ -19,6 +19,9 @@ export function CreateTaskDialog({ agents, onSave, onClose }: Props) {
   const [assignee, setAssignee] = useState<TaskAssignee | undefined>();
   const [labelInput, setLabelInput] = useState('');
   const [labels, setLabels] = useState<string[]>([]);
+
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { dialogRef.current?.focus(); }, []);
 
   function handleAddLabel(e: React.KeyboardEvent) {
     if (e.key === 'Enter' && labelInput.trim()) {
@@ -46,15 +49,20 @@ export function CreateTaskDialog({ agents, onSave, onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose} onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}>
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       <div
         className="relative w-full max-w-lg mx-4 bg-card border border-border rounded-lg shadow-xl overflow-hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-task-dialog-title"
+        tabIndex={-1}
+        ref={dialogRef}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-5 py-3 border-b border-border">
-          <h2 className="text-sm font-semibold">New Task</h2>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground text-lg">&times;</button>
+          <h2 id="create-task-dialog-title" className="text-sm font-semibold">New Task</h2>
+          <button onClick={onClose} aria-label="Close" className="text-muted-foreground hover:text-foreground text-lg">&times;</button>
         </div>
 
         <div className="p-5 space-y-4">

@@ -76,7 +76,7 @@ export function TeamSidebar({ agents, filter, onFilterChange, onSelectAgent }: P
             onClick={() => onSelectAgent(agent)}
             className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-left group ${
               isChinjan
-                ? 'hover:bg-[var(--chinjan-pink)]/5'
+                ? 'hover:bg-[color-mix(in_srgb,var(--chinjan-pink)_5%,transparent)]'
                 : 'hover:bg-cyan-500/5'
             }`}
           >

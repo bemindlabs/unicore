@@ -8,7 +8,7 @@ import { TeamSidebar } from "./TeamSidebar";
 import { OfficeFloor } from "./OfficeFloor";
 import { WorkstationGrid } from "./WorkstationGrid";
 import { AgentModal } from "./AgentModal";
-import { useChinjanTheme, ChinjanOnly, DefaultOnly } from "./chinjan/ChinjanThemeProvider";
+import { ChinjanOnly, DefaultOnly } from "./chinjan/ChinjanThemeProvider";
 
 const ChinjanErrorState = dynamic(
   () => import("./chinjan/ChinjanErrorState").then((m) => m.ChinjanErrorState),
@@ -45,8 +45,6 @@ export function BackofficeApp({
   const [sidebarFilter, setSidebarFilter] = useState<
     "all" | "working" | "idle"
   >("all");
-  const { isActive: isChinjan } = useChinjanTheme();
-
   const filteredAgents =
     sidebarFilter === "all"
       ? agents

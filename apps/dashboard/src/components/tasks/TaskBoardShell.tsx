@@ -32,6 +32,7 @@ export function TaskBoardShell({ viewMode, onViewModeChange, onCreateTask, wsCon
                 viewMode === 'kanban' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-accent/50'
               }`}
               title="Kanban view"
+              aria-label="Board view"
             >
               ▦ Board
             </button>
@@ -41,6 +42,7 @@ export function TaskBoardShell({ viewMode, onViewModeChange, onCreateTask, wsCon
                 viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-accent/50'
               }`}
               title="List view"
+              aria-label="List view"
             >
               ☰ List
             </button>
