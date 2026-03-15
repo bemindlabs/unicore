@@ -367,7 +367,7 @@ export class DashboardService {
         meta: { total: number };
       }>('/contacts?limit=5');
 
-      const items = contactsData.data.map(c => ({
+      const items: Array<{ id: string; message: string; time: string; type: string }> = contactsData.data.map(c => ({
         id: c.id,
         message: `New contact: ${c.name}`,
         time: this.timeAgo(new Date(c.created_at ?? c.createdAt ?? Date.now())),
