@@ -28,6 +28,7 @@ COPY --from=deps /app/apps/dashboard/node_modules ./apps/dashboard/node_modules
 COPY packages/config ./packages/config
 COPY packages/shared-types ./packages/shared-types
 COPY packages/ui ./packages/ui
+RUN cd packages/shared-types && pnpm run build
 RUN cd apps/dashboard && pnpm run build
 
 FROM node:20-alpine AS runner
