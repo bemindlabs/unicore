@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   BookOpen,
   DollarSign,
@@ -23,7 +23,6 @@ import {
   toast,
 } from '@unicore/ui';
 import type { ErpModulesConfig } from '@unicore/shared-types';
-import { Breadcrumb } from '@/components/layout/breadcrumb';
 
 interface ErpModuleDefinition {
   key: keyof ErpModulesConfig;
@@ -82,9 +81,26 @@ const DEFAULT_MODULES: ErpModulesConfig = {
   reports: true,
 };
 
+const STORAGE_KEY = 'unicore_erp_modules';
+
+function loadModules(): ErpModulesConfig {
+  if (typeof window === 'undefined') return DEFAULT_MODULES;
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? { ...DEFAULT_MODULES, ...JSON.parse(stored) } : DEFAULT_MODULES;
+  } catch {
+    return DEFAULT_MODULES;
+  }
+}
+
 export default function SettingsErpPage() {
   const [modules, setModules] = useState<ErpModulesConfig>(DEFAULT_MODULES);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Load saved modules on mount
+  useEffect(() => {
+    setModules(loadModules());
+  }, []);
 
   const handleToggle = useCallback((key: keyof ErpModulesConfig, enabled: boolean) => {
     setModules((prev) => ({ ...prev, [key]: enabled }));
@@ -93,9 +109,8 @@ export default function SettingsErpPage() {
   const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
-      // TODO: api.put('/settings/erp/modules', modules)
-      await new Promise((r) => setTimeout(r, 600));
-      toast({ title: 'Saved', description: 'ERP modules updated. Navigation will refresh.' });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(modules));
+      toast({ title: 'Saved', description: 'ERP modules updated.' });
     } finally {
       setIsSaving(false);
     }
@@ -105,8 +120,6 @@ export default function SettingsErpPage() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb />
-
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
