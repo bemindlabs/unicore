@@ -25,6 +25,7 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/services/api-gateway/node_modules ./services/api-gateway/node_modules
 COPY --from=build /app/services/api-gateway/dist ./services/api-gateway/dist
 COPY --from=build /app/services/api-gateway/package.json ./services/api-gateway/
+COPY --from=build /app/services/api-gateway/src/prisma ./services/api-gateway/prisma
 WORKDIR /app/services/api-gateway
 EXPOSE 4000
 CMD ["node", "dist/main"]

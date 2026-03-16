@@ -26,6 +26,7 @@ COPY --from=deps /app/services/erp/node_modules ./services/erp/node_modules
 COPY --from=build /app/services/erp/dist ./services/erp/dist
 COPY --from=build /app/services/erp/src/generated ./services/erp/dist/generated
 COPY --from=build /app/services/erp/package.json ./services/erp/
+COPY --from=build /app/services/erp/src/prisma ./services/erp/prisma
 WORKDIR /app/services/erp
 EXPOSE 4100
 CMD ["node", "dist/main"]
