@@ -33,7 +33,15 @@ async function bootstrap() {
 
   app.use(helmet());
 
-  app.enableCors();
+  app.enableCors({
+    origin: [
+      'https://unicore.bemind.tech',
+      'http://unicore.bemind.tech',
+      'http://76.13.188.164:3000',
+      'http://localhost:3000',
+    ],
+    credentials: true,
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({

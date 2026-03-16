@@ -249,11 +249,11 @@ services:
       context: .
       dockerfile: apps/dashboard/Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://76.13.188.164:4000
+        NEXT_PUBLIC_API_URL: https://unicore.bemind.tech
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: http://76.13.188.164:4000
+      NEXT_PUBLIC_API_URL: https://unicore.bemind.tech
     depends_on:
       - unicore-api-gateway
     profiles: [apps]
