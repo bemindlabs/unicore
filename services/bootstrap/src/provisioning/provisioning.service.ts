@@ -115,7 +115,11 @@ export class ProvisioningService {
     try {
       const licenseApiUrl =
         process.env.LICENSE_API_URL ?? "http://localhost:4600";
-      const licenseAdminSecret = process.env.LICENSE_ADMIN_SECRET ?? "";
+      const licenseAdminSecret = process.env.LICENSE_ADMIN_SECRET;
+      if (!licenseAdminSecret) {
+        this.logger.warn('LICENSE_ADMIN_SECRET not set — skipping license auto-creation');
+        throw new Error('LICENSE_ADMIN_SECRET not configured');
+      }
       const licenseRes = await fetch(`${licenseApiUrl}/api/v1/licenses`, {
         method: "POST",
         headers: {

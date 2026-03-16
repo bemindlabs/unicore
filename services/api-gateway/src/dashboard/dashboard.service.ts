@@ -143,8 +143,8 @@ export class DashboardService {
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
     const [currentRevenue, previousRevenue, chartData] = await Promise.all([
-      this.safeSum('orders', 'total_amount', `"created_at" >= '${startOfMonth.toISOString()}'`),
-      this.safeSum('orders', 'total_amount', `"created_at" >= '${startOfLastMonth.toISOString()}' AND "created_at" < '${startOfMonth.toISOString()}'`),
+      this.safeSum('orders', 'total_amount', '"created_at" >= $1', [startOfMonth]),
+      this.safeSum('orders', 'total_amount', '"created_at" >= $1 AND "created_at" < $2', [startOfLastMonth, startOfMonth]),
       this.safeRevenueChart(30),
     ]);
 
@@ -209,11 +209,11 @@ export class DashboardService {
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
     const [currentCount, previousCount, pendingCount, processingCount, completedCount] = await Promise.all([
-      this.safeCount('orders', `"created_at" >= '${startOfMonth.toISOString()}'`),
-      this.safeCount('orders', `"created_at" >= '${startOfLastMonth.toISOString()}' AND "created_at" < '${startOfMonth.toISOString()}'`),
-      this.safeCount('orders', `"status" = 'pending'`),
-      this.safeCount('orders', `"status" = 'processing'`),
-      this.safeCount('orders', `"status" = 'completed'`),
+      this.safeCount('orders', '"created_at" >= $1', [startOfMonth]),
+      this.safeCount('orders', '"created_at" >= $1 AND "created_at" < $2', [startOfLastMonth, startOfMonth]),
+      this.safeCount('orders', '"status" = $1', ['pending']),
+      this.safeCount('orders', '"status" = $1', ['processing']),
+      this.safeCount('orders', '"status" = $1', ['completed']),
     ]);
 
     const trend = trendValue(currentCount, previousCount);
@@ -266,8 +266,8 @@ export class DashboardService {
   private async getInventoryWidgetFallback() {
     const [totalSkus, lowStockCount, outOfStockCount] = await Promise.all([
       this.safeCount('inventory_items'),
-      this.safeCount('inventory_items', `"quantity" > 0 AND "quantity" <= "reorder_level"`),
-      this.safeCount('inventory_items', `"quantity" = 0`),
+      this.safeCount('inventory_items', '"quantity" > 0 AND "quantity" <= "reorder_level"'),
+      this.safeCount('inventory_items', '"quantity" = $1', [0]),
     ]);
 
     return {
@@ -287,7 +287,7 @@ export class DashboardService {
   // ---- MRR (mock — no real data source) -----------------------------------
 
   async getMrrWidget() {
-    const mrr = await this.safeSum('subscriptions', 'monthly_amount', `"status" = 'active'`);
+    const mrr = await this.safeSum('subscriptions', 'monthly_amount', '"status" = $1', ['active']);
     const arr = mrr * 12;
 
     return {
@@ -312,8 +312,8 @@ export class DashboardService {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
     const [totalActive, churnedThisMonth] = await Promise.all([
-      this.safeCount('subscriptions', `"status" = 'active'`),
-      this.safeCount('subscriptions', `"status" = 'cancelled' AND "cancelled_at" >= '${startOfMonth.toISOString()}'`),
+      this.safeCount('subscriptions', '"status" = $1', ['active']),
+      this.safeCount('subscriptions', '"status" = $1 AND "cancelled_at" >= $2', ['cancelled', startOfMonth]),
     ]);
 
     const totalForRate = totalActive + churnedThisMonth;
@@ -339,9 +339,9 @@ export class DashboardService {
     const oneWeekAgo = dateNDaysAgo(7);
 
     const [currentCount, previousCount, weeklyTotal] = await Promise.all([
-      this.safeUserCount(`"createdAt" >= '${startOfMonth.toISOString()}'`),
-      this.safeUserCount(`"createdAt" >= '${startOfLastMonth.toISOString()}' AND "createdAt" < '${startOfMonth.toISOString()}'`),
-      this.safeUserCount(`"createdAt" >= '${oneWeekAgo.toISOString()}'`),
+      this.safeUserCount('"createdAt" >= $1', [startOfMonth]),
+      this.safeUserCount('"createdAt" >= $1 AND "createdAt" < $2', [startOfLastMonth, startOfMonth]),
+      this.safeUserCount('"createdAt" >= $1', [oneWeekAgo]),
     ]);
 
     const dayOfMonth = now.getDate();
@@ -455,11 +455,24 @@ export class DashboardService {
   // Safe database helpers — return sensible defaults when tables don't exist
   // =========================================================================
 
-  private async safeCount(table: string, where?: string): Promise<number> {
+  private static readonly ALLOWED_TABLES = new Set([
+    'orders', 'invoices', 'contacts', 'inventory_items', 'subscriptions', 'User',
+  ]);
+
+  private static readonly ALLOWED_COLUMNS = new Set([
+    'total_amount', 'monthly_amount',
+  ]);
+
+  private async safeCount(table: string, where?: string, params?: unknown[]): Promise<number> {
+    if (!DashboardService.ALLOWED_TABLES.has(table)) {
+      this.logger.warn(`Blocked query on disallowed table: ${table}`);
+      return 0;
+    }
     try {
       const whereClause = where ? `WHERE ${where}` : '';
       const result = await this.prisma.$queryRawUnsafe<RawCount[]>(
         `SELECT COUNT(*)::bigint AS count FROM "${table}" ${whereClause}`,
+        ...(params ?? []),
       );
       return Number(result[0]?.count ?? 0);
     } catch (error) {
@@ -468,11 +481,12 @@ export class DashboardService {
     }
   }
 
-  private async safeUserCount(where?: string): Promise<number> {
+  private async safeUserCount(where?: string, params?: unknown[]): Promise<number> {
     try {
       const whereClause = where ? `WHERE ${where}` : '';
       const result = await this.prisma.$queryRawUnsafe<RawCount[]>(
         `SELECT COUNT(*)::bigint AS count FROM "User" ${whereClause}`,
+        ...(params ?? []),
       );
       return Number(result[0]?.count ?? 0);
     } catch (error) {
@@ -481,11 +495,20 @@ export class DashboardService {
     }
   }
 
-  private async safeSum(table: string, column: string, where?: string): Promise<number> {
+  private async safeSum(table: string, column: string, where?: string, params?: unknown[]): Promise<number> {
+    if (!DashboardService.ALLOWED_TABLES.has(table)) {
+      this.logger.warn(`Blocked sum query on disallowed table: ${table}`);
+      return 0;
+    }
+    if (!DashboardService.ALLOWED_COLUMNS.has(column)) {
+      this.logger.warn(`Blocked sum query on disallowed column: ${column}`);
+      return 0;
+    }
     try {
       const whereClause = where ? `WHERE ${where}` : '';
       const result = await this.prisma.$queryRawUnsafe<RawSum[]>(
         `SELECT COALESCE(SUM("${column}"), 0)::bigint AS total FROM "${table}" ${whereClause}`,
+        ...(params ?? []),
       );
       return Number(result[0]?.total ?? 0);
     } catch (error) {

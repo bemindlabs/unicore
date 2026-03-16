@@ -56,8 +56,7 @@ export function StepReview() {
     setResult(null);
 
     const request: ProvisionRequest = {
-      bootstrapSecret:
-        process.env.NEXT_PUBLIC_BOOTSTRAP_SECRET ?? state.bootstrapSecret ?? "",
+      bootstrapSecret: state.bootstrapSecret ?? "",
       businessName: state.business.name,
       template: state.business.template,
       industry: state.business.industry,

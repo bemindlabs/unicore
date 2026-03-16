@@ -33,13 +33,16 @@ async function bootstrap() {
 
   app.use(helmet());
 
+  const corsOrigins = [
+    'https://unicore.bemind.tech',
+    'http://unicore.bemind.tech',
+    'http://localhost:3000',
+  ];
+  if (process.env.EXTRA_CORS_ORIGINS) {
+    corsOrigins.push(...process.env.EXTRA_CORS_ORIGINS.split(',').map(s => s.trim()));
+  }
   app.enableCors({
-    origin: [
-      'https://unicore.bemind.tech',
-      'http://unicore.bemind.tech',
-      'http://76.13.188.164:3000',
-      'http://localhost:3000',
-    ],
+    origin: corsOrigins,
     credentials: true,
   });
 
