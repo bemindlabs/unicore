@@ -25,6 +25,8 @@ import {
 import type { IntegrationConfig } from '@unicore/shared-types';
 import { TelegramConfig } from '../../../../components/settings/TelegramConfig';
 import { LineConfig } from '../../../../components/settings/LineConfig';
+import { LineRichMenu } from '../../../../components/settings/LineRichMenu';
+import { LineFlexTemplates } from '../../../../components/settings/LineFlexTemplates';
 
 interface IntegrationDef {
   provider: string;
@@ -176,6 +178,12 @@ export default function SettingsIntegrationsPage() {
 
       {/* LINE Messaging — dedicated config panel */}
       <LineConfig />
+
+      {/* LINE Rich Menu management */}
+      <LineRichMenu />
+
+      {/* LINE Flex Message template builder */}
+      <LineFlexTemplates />
 
       {categories.map((category) => {
         const defs = INTEGRATION_DEFS.filter((d) => d.category === category);
