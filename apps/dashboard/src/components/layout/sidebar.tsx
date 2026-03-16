@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen, LogOut } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage, Button, cn, Separator } from '@unicore/ui';
 import { useAuth } from '@/hooks/use-auth';
 import { filterSectionsByRole } from '@/lib/navigation';
@@ -27,12 +27,12 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   return (
     <aside
       className={cn(
-        'hidden lg:flex flex-col border-r bg-card/50 backdrop-blur-sm transition-all duration-300',
+        'hidden lg:flex flex-col h-screen border-r bg-card/50 backdrop-blur-sm transition-all duration-300 sticky top-0',
         collapsed ? 'w-16' : 'w-60',
       )}
     >
-      {/* Brand */}
-      <div className="flex h-14 items-center gap-2 px-4">
+      {/* Brand + collapse toggle */}
+      <div className="flex h-14 items-center gap-2 px-4 shrink-0">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-bold">
           U
         </div>
@@ -40,15 +40,21 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           <span className="text-base font-semibold tracking-tight">UniCore</span>
         )}
         <div className="flex-1" />
-        <Button variant="ghost" size="icon" onClick={onToggle} className="h-7 w-7 text-muted-foreground">
-          {collapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onToggle}
+          className="h-7 w-7 text-muted-foreground hover:text-foreground"
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
         </Button>
       </div>
 
-      <Separator />
+      <Separator className="shrink-0" />
 
-      {/* Navigation sections */}
-      <nav className="flex-1 overflow-y-auto px-2 py-3">
+      {/* Navigation sections — scrollable */}
+      <nav className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2 py-3 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
         {sections.map((section, idx) => (
           <div key={section.label} className={cn(idx > 0 && 'mt-4')}>
             {!collapsed && (
@@ -80,7 +86,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                     title={collapsed ? item.label : undefined}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
-                    {!collapsed && <span>{item.label}</span>}
+                    {!collapsed && <span className="truncate">{item.label}</span>}
                   </Link>
                 );
               })}
@@ -89,10 +95,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         ))}
       </nav>
 
-      <Separator />
+      <Separator className="shrink-0" />
 
       {/* User profile footer */}
-      <div className={cn('p-2', collapsed ? 'flex flex-col items-center gap-1' : 'px-3 py-3')}>
+      <div className={cn('p-2 shrink-0', collapsed ? 'flex flex-col items-center gap-1' : 'px-3 py-3')}>
         {collapsed ? (
           <>
             <Avatar className="h-8 w-8">
