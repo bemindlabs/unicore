@@ -6,8 +6,6 @@ import {
   HttpCode,
   Logger,
   ForbiddenException,
-  RawBodyRequest,
-  Req,
 } from '@nestjs/common';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { Public } from '../auth/decorators/public.decorator';
