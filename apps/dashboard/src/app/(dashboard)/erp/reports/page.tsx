@@ -304,9 +304,7 @@ export default function ReportsPage() {
                 {topContacts.map((c, i) => (
                   <div key={i} className="flex items-center justify-between">
                     <span className="text-sm">
-                      {c.name ??
-                        `${c.firstName ?? ""} ${c.lastName ?? ""}`.trim() ||
-                        "Unknown"}
+                      {c.name ?? "Unknown"}
                     </span>
                     <div className="text-sm text-right">
                       {c.totalSpent != null && (
