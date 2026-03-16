@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import { CheckCircle2, Copy, Eye, EyeOff, Loader2, MessageSquare, XCircle } from 'lucide-react';
+import { api } from '@/lib/api';
 import {
   Badge,
   Button,
@@ -95,22 +96,12 @@ export function LineConfig() {
 
     setIsSaving(true);
     try {
-      const response = await fetch(`${API_URL}/api/v1/settings/line`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          channelId: config.channelId,
-          channelSecret: config.channelSecret,
-          channelAccessToken: config.channelAccessToken,
-          enabled: config.enabled,
-        }),
+      await api.put('/settings/line', {
+        channelId: config.channelId,
+        channelSecret: config.channelSecret,
+        channelAccessToken: config.channelAccessToken,
+        enabled: config.enabled,
       });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || `Server returned ${response.status}`);
-      }
 
       setConfig((prev) => ({ ...prev, isConfigured: true }));
       toast({

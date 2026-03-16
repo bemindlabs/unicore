@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
+import { api } from '@/lib/api';
 import { Bot, CheckCircle2, Copy, Eye, EyeOff, Loader2, XCircle } from 'lucide-react';
 import {
   Badge,
@@ -88,20 +89,10 @@ export function TelegramConfig() {
 
     setIsSaving(true);
     try {
-      const response = await fetch(`${API_URL}/api/v1/settings/telegram`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          botToken: config.botToken,
-          enabled: config.enabled,
-        }),
+      await api.put('/settings/telegram', {
+        botToken: config.botToken,
+        enabled: config.enabled,
       });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || `Server returned ${response.status}`);
-      }
 
       setConfig((prev) => ({ ...prev, isConfigured: true }));
       toast({
