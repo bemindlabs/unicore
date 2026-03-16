@@ -70,7 +70,7 @@ export default function KnowledgeBasePage() {
   const fetchDocuments = useCallback(async () => {
     try {
       const data = await api.get<unknown>(
-        '/api/proxy/rag/api/v1/ingest/info/default',
+        '/api/proxy/rag/ingest/info/default',
       );
 
       // Normalise: the RAG service may return { documents: [...] } or an array directly
@@ -112,7 +112,7 @@ export default function KnowledgeBasePage() {
 
     setIngesting(true);
     try {
-      await api.post('/api/proxy/rag/api/v1/ingest', {
+      await api.post('/api/proxy/rag/ingest', {
         title: ingestTitle.trim(),
         content: ingestContent.trim(),
         type: ingestType,
@@ -139,7 +139,7 @@ export default function KnowledgeBasePage() {
 
   async function handleDelete(docId: string) {
     try {
-      await api.delete(`/api/proxy/rag/api/v1/ingest/${docId}`);
+      await api.delete(`/api/proxy/rag/ingest/${docId}`);
       toast({ title: 'Document deleted' });
       await fetchDocuments();
     } catch (err: unknown) {
@@ -161,7 +161,7 @@ export default function KnowledgeBasePage() {
     setSearching(true);
     setHasSearched(true);
     try {
-      const data = await api.post<unknown>('/api/proxy/rag/api/v1/query', {
+      const data = await api.post<unknown>('/api/proxy/rag/query', {
         query: searchText.trim(),
         workspaceId: 'default',
         topK: 10,

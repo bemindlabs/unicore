@@ -51,6 +51,20 @@ export class IngestionController {
   }
 
   /**
+   * DELETE /ingest/:documentId
+   * Delete a single document by ID (all its chunks from the default workspace).
+   */
+  @Delete(':documentId')
+  @HttpCode(HttpStatus.OK)
+  async deleteDocument(@Param('documentId') documentId: string) {
+    return this.ingestion.deleteDocuments({
+      scope: 'document',
+      workspaceId: 'default',
+      documentId,
+    });
+  }
+
+  /**
    * GET /ingest/info/:workspaceId
    * Return collection stats for a workspace.
    */

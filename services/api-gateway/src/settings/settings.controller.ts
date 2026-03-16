@@ -94,6 +94,14 @@ export class SettingsController {
     return settings.data;
   }
 
+  // ── Team member count (used by license settings page) ──
+
+  @Get('team/count')
+  async getTeamCount() {
+    const count = await this.prisma.user.count();
+    return { count };
+  }
+
   // ── Generic catch-all routes — MUST be last to avoid shadowing named routes ──
 
   @Get(':key')
