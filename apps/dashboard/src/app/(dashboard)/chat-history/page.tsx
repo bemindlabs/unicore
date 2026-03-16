@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { MessageSquare, Trash2, Search, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';
+import { toast } from '@unicore/ui';
 import { api } from '@/lib/api';
 import { getAgents } from '@/lib/backoffice/store';
 import type { BackofficeAgent } from '@/lib/backoffice/types';
@@ -111,8 +112,8 @@ export default function ChatHistoryPage() {
       await api.delete(`/api/v1/chat-history/${id}`);
       setRecords((prev) => prev.filter((r) => r.id !== id));
       if (expandedId === id) setExpandedId(null);
-    } catch {
-      // silently ignore
+    } catch (err) {
+      toast({ title: 'Failed to delete', description: err instanceof Error ? err.message : 'Unknown error', variant: 'destructive' });
     }
   }
 
@@ -179,10 +180,7 @@ export default function ChatHistoryPage() {
       ) : records.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <MessageSquare className="h-12 w-12 text-muted-foreground/30 mb-4" />
-          <p className="text-muted-foreground text-sm">No conversations found.</p>
-          <p className="text-muted-foreground/60 text-xs mt-1">
-            Chat history will appear here after conversations in Commander are saved.
-          </p>
+          <p className="text-muted-foreground text-sm">No conversations yet. Start chatting with agents in the Commander.</p>
         </div>
       ) : (
         <div className="space-y-2">

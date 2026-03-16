@@ -116,6 +116,12 @@ class ApiClient {
       throw new Error('Authentication expired');
     }
 
+    if (response.status === 403) {
+      const error = await response.json().catch(() => ({ message: 'Access denied' }));
+      const msg = error.message ?? 'This feature requires a Pro license';
+      throw new Error(msg);
+    }
+
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: response.statusText }));
       throw new Error(error.message ?? `API Error: ${response.status}`);

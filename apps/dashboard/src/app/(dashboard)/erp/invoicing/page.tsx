@@ -508,7 +508,7 @@ export default function InvoicingPage() {
             </div>
           ) : invoices.length === 0 ? (
             <div className="flex h-32 items-center justify-center rounded-lg border border-dashed text-muted-foreground text-sm">
-              No invoices found.
+              No invoices yet. Create your first invoice to get started.
             </div>
           ) : (
             <Table>

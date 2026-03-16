@@ -14,6 +14,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  toast,
 } from '@unicore/ui';
 import { api } from '@/lib/api';
 
@@ -45,7 +46,10 @@ export default function AdminAuditLogsPage() {
         const data = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
         setLogs(data);
       })
-      .catch(() => setLogs([]))
+      .catch((err) => {
+        setLogs([]);
+        toast({ title: 'Failed to load audit logs', description: err instanceof Error ? err.message : 'Error loading data', variant: 'destructive' });
+      })
       .finally(() => setLoading(false));
   }, []);
 

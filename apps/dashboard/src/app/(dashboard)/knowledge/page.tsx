@@ -86,9 +86,9 @@ export default function KnowledgeBasePage() {
       }
 
       setDocuments(docs);
-    } catch {
-      // RAG service may be unavailable — silently show empty state
+    } catch (err) {
       setDocuments([]);
+      toast({ title: 'Knowledge Base unavailable', description: 'RAG service may be down. Documents will appear when the service recovers.', variant: 'destructive' });
     } finally {
       setDocsLoading(false);
     }
@@ -184,13 +184,8 @@ export default function KnowledgeBasePage() {
       if (results.length === 0) {
         toast({ title: 'No results', description: 'No matching documents found.' });
       }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      toast({
-        title: 'Search failed',
-        description: message,
-        variant: 'destructive',
-      });
+    } catch (err) {
+      toast({ title: 'Search failed', description: err instanceof Error ? err.message : 'RAG service unavailable', variant: 'destructive' });
       setSearchResults([]);
     } finally {
       setSearching(false);

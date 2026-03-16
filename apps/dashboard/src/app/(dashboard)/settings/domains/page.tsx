@@ -586,11 +586,12 @@ export default function SettingsDomainsPage() {
       .get<any>("/api/v1/settings/domains")
       .then((res: any) => setDomains(Array.isArray(res) ? res : res?.domains ?? []))
       .catch((err: unknown) => {
-        toast({
-          title: "Failed to load domains",
-          description: err instanceof Error ? err.message : "Unknown error",
-          variant: "destructive",
-        });
+        const msg = err instanceof Error ? err.message : '';
+        if (msg.includes('Pro') || msg.includes('403')) {
+          // Pro feature — show empty state, banner already visible
+        } else {
+          toast({ title: 'Failed to load domains', description: msg, variant: 'destructive' });
+        }
       })
       .finally(() => setLoading(false));
   }, []);

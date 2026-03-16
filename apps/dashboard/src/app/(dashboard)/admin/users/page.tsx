@@ -17,6 +17,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  toast,
 } from '@unicore/ui';
 import { api } from '@/lib/api';
 
@@ -47,7 +48,10 @@ export default function AdminUsersPage() {
         const data = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
         setUsers(data);
       })
-      .catch(() => setUsers([]))
+      .catch((err) => {
+        setUsers([]);
+        toast({ title: 'Failed to load users', description: err instanceof Error ? err.message : 'Error loading data', variant: 'destructive' });
+      })
       .finally(() => setLoading(false));
   }, []);
 

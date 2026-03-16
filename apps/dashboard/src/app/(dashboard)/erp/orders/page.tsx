@@ -467,7 +467,7 @@ export default function OrdersPage() {
             </div>
           ) : orders.length === 0 ? (
             <div className="flex h-32 items-center justify-center rounded-lg border border-dashed text-muted-foreground text-sm">
-              No orders found.
+              No orders yet. Create your first order to get started.
             </div>
           ) : (
             <Table>
