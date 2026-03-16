@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send } from 'lucide-react';
+import { Send, Copy, Check, Trash2 } from 'lucide-react';
 import { useChatWebSocket, type ChatMessage } from '@/hooks/use-chat-ws';
 import { getAgents } from '@/lib/backoffice/store';
 import type { BackofficeAgent } from '@/lib/backoffice/types';
@@ -56,6 +56,139 @@ function formatTimestamp(iso: string): string {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Message formatting (simple regex-based markdown)                   */
+/* ------------------------------------------------------------------ */
+
+function formatMessageText(text: string): React.ReactNode[] {
+  // Split by code blocks first
+  const codeBlockRegex = /```(?:\w*\n)?([\s\S]*?)```/g;
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = codeBlockRegex.exec(text)) !== null) {
+    // Text before code block
+    if (match.index > lastIndex) {
+      parts.push(...formatInlineText(text.slice(lastIndex, match.index), parts.length));
+    }
+    // Code block
+    parts.push(
+      <pre
+        key={`cb-${parts.length}`}
+        className="my-2 rounded bg-[#0a0e1a] border border-cyan-900/30 p-3 overflow-x-auto"
+      >
+        <code className="text-xs text-cyan-200/90 font-mono">{match[1].trim()}</code>
+      </pre>
+    );
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Remaining text
+  if (lastIndex < text.length) {
+    parts.push(...formatInlineText(text.slice(lastIndex), parts.length));
+  }
+
+  return parts.length > 0 ? parts : [text];
+}
+
+function formatInlineText(text: string, keyOffset: number): React.ReactNode[] {
+  // Process inline code and bold
+  const inlineRegex = /(`[^`]+`)|(\*\*[^*]+\*\*)/g;
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = inlineRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    if (match[1]) {
+      // Inline code
+      parts.push(
+        <code
+          key={`ic-${keyOffset}-${parts.length}`}
+          className="px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-300 text-[12px] font-mono"
+        >
+          {match[1].slice(1, -1)}
+        </code>
+      );
+    } else if (match[2]) {
+      // Bold
+      parts.push(
+        <strong key={`b-${keyOffset}-${parts.length}`} className="font-bold text-cyan-200">
+          {match[2].slice(2, -2)}
+        </strong>
+      );
+    }
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Copy button component                                              */
+/* ------------------------------------------------------------------ */
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  function handleCopy() {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="opacity-0 group-hover:opacity-100 transition-opacity ml-2 p-1 rounded hover:bg-cyan-500/10 text-cyan-600/40 hover:text-cyan-400"
+      title="Copy message"
+    >
+      {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+    </button>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  LocalStorage helpers                                               */
+/* ------------------------------------------------------------------ */
+
+function storageKey(agentId: string): string {
+  return `command-center-${agentId}`;
+}
+
+function loadMessages(agentId: string): ChatMessage[] {
+  try {
+    const raw = localStorage.getItem(storageKey(agentId));
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveMessages(agentId: string, messages: ChatMessage[]) {
+  try {
+    localStorage.setItem(storageKey(agentId), JSON.stringify(messages));
+  } catch {
+    // localStorage full or unavailable — silently ignore
+  }
+}
+
+function clearStoredMessages(agentId: string) {
+  try {
+    localStorage.removeItem(storageKey(agentId));
+  } catch {
+    // ignore
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
@@ -78,31 +211,50 @@ export function CommandCenter() {
 
   /* --- messages --- */
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isWaiting, setIsWaiting] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const channel = selectedAgent ? commandChannel(selectedAgent.id) : 'command-router';
 
   const handleMessage = useCallback((msg: ChatMessage) => {
-    setMessages((prev) => [...prev.slice(-199), msg]);
-  }, []);
+    setIsWaiting(false);
+    setMessages((prev) => {
+      const next = [...prev.slice(-199), msg];
+      // Persist after receiving a message
+      if (selectedAgent) saveMessages(selectedAgent.id, next);
+      return next;
+    });
+  }, [selectedAgent]);
 
   const { connected, send } = useChatWebSocket(channel, handleMessage);
 
-  // Clear messages when switching agents
+  // Load persisted messages when switching agents; clear on channel change
   const prevChannelRef = useRef(channel);
   useEffect(() => {
     if (prevChannelRef.current !== channel) {
-      setMessages([]);
+      setIsWaiting(false);
+      if (selectedAgent) {
+        setMessages(loadMessages(selectedAgent.id));
+      } else {
+        setMessages([]);
+      }
       prevChannelRef.current = channel;
     }
-  }, [channel]);
+  }, [channel, selectedAgent]);
 
-  // Scroll to bottom on new messages
+  // Load messages on initial agent selection
+  useEffect(() => {
+    if (selectedAgent) {
+      setMessages(loadMessages(selectedAgent.id));
+    }
+  }, [selectedAgent]);
+
+  // Scroll to bottom on new messages or when waiting
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, isWaiting]);
 
   /* --- input --- */
   const [input, setInput] = useState('');
@@ -112,8 +264,15 @@ export function CommandCenter() {
     const value = (text ?? input).trim();
     if (!value || !selectedAgent) return;
     send(value, 'You', 'human-user', 'human');
+    setIsWaiting(true);
     setInput('');
     textareaRef.current?.focus();
+  }
+
+  function handleClearMessages() {
+    setMessages([]);
+    setIsWaiting(false);
+    if (selectedAgent) clearStoredMessages(selectedAgent.id);
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -197,6 +356,16 @@ export function CommandCenter() {
                 </span>
               </div>
               <div className="ml-auto flex items-center gap-2">
+                {messages.length > 0 && (
+                  <button
+                    onClick={handleClearMessages}
+                    className="font-mono text-[9px] text-cyan-600/40 hover:text-red-400 transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-red-500/10"
+                    title="Clear conversation"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    Clear
+                  </button>
+                )}
                 <span
                   className={`w-2 h-2 rounded-full ${
                     connected ? 'bg-green-400 animate-pulse' : 'bg-red-500'
@@ -231,7 +400,7 @@ export function CommandCenter() {
             return (
               <div
                 key={msg.id}
-                className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
+                className={`group flex ${isMe ? 'justify-end' : 'justify-start'}`}
               >
                 <div className={`max-w-[70%] ${isMe ? 'items-end' : 'items-start'} flex flex-col`}>
                   <div className="flex items-center gap-1.5 mb-1">
@@ -247,20 +416,37 @@ export function CommandCenter() {
                     <span className="font-mono text-[9px] text-cyan-600/30">
                       {formatTimestamp(msg.timestamp)}
                     </span>
+                    {!isMe && <CopyButton text={msg.text} />}
                   </div>
                   <div
-                    className={`rounded-lg px-4 py-2.5 text-sm font-mono leading-relaxed whitespace-pre-wrap ${
+                    className={`rounded-lg px-4 py-2.5 text-sm font-mono leading-relaxed ${
                       isMe
-                        ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-500/20'
+                        ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-500/20 whitespace-pre-wrap'
                         : 'bg-[#0d1220] text-cyan-100/80 border border-cyan-900/20'
                     }`}
                   >
-                    {msg.text}
+                    {isMe ? msg.text : formatMessageText(msg.text)}
                   </div>
                 </div>
               </div>
             );
           })}
+          {isWaiting && (
+            <div className="flex justify-start">
+              <div className="max-w-[70%] flex flex-col items-start">
+                <div className="rounded-lg px-4 py-2.5 text-sm font-mono bg-[#0d1220] text-cyan-100/80 border border-cyan-900/20">
+                  <span className="text-cyan-500/60">
+                    Agent is thinking
+                    <span className="inline-flex w-6">
+                      <span className="animate-[bounce_1.4s_ease-in-out_infinite]">.</span>
+                      <span className="animate-[bounce_1.4s_ease-in-out_0.2s_infinite]">.</span>
+                      <span className="animate-[bounce_1.4s_ease-in-out_0.4s_infinite]">.</span>
+                    </span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Quick Prompts */}

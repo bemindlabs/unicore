@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { LayoutGrid, Terminal, Settings } from 'lucide-react';
 import { useChinjanTheme } from './chinjan/ChinjanThemeProvider';
 import { findCharacterByRole } from '@/lib/backoffice/chinjan-characters';
-import { AgentSettings } from './AgentSettings';
 
 const ChinjanThemeToggle = dynamic(
   () => import('./chinjan/ChinjanThemeToggle').then((m) => m.ChinjanThemeToggle),
@@ -16,15 +16,24 @@ const PixelCharacter = dynamic(
   { ssr: false }
 );
 
+export type BackofficeTab = 'overview' | 'commander' | 'settings';
+
 interface Props {
   agentCount: number;
   workingCount: number;
   onAddAgent: () => void;
+  activeTab: BackofficeTab;
+  onTabChange: (tab: BackofficeTab) => void;
 }
 
-export function Header({ agentCount, workingCount, onAddAgent }: Props) {
+const TAB_CONFIG: { key: BackofficeTab; label: string; icon: typeof LayoutGrid }[] = [
+  { key: 'overview', label: 'Team Overview', icon: LayoutGrid },
+  { key: 'commander', label: 'Commander', icon: Terminal },
+  { key: 'settings', label: 'Settings', icon: Settings },
+];
+
+export function Header({ agentCount, workingCount, onAddAgent, activeTab, onTabChange }: Props) {
   const [time, setTime] = useState('');
-  const [showSettings, setShowSettings] = useState(false);
   const { isActive: isChinjan } = useChinjanTheme();
 
   useEffect(() => {
@@ -41,73 +50,47 @@ export function Header({ agentCount, workingCount, onAddAgent }: Props) {
     return () => clearInterval(interval);
   }, []);
 
-  const settingsModal = showSettings && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowSettings(false)} />
-      <div className="relative z-10 w-full max-w-lg max-h-[80vh] overflow-y-auto border border-cyan-900/30 bg-[#0a0e1a] shadow-2xl p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-mono text-sm text-cyan-400 uppercase tracking-wider">Settings</h2>
-          <button
-            onClick={() => setShowSettings(false)}
-            className="text-cyan-600/40 hover:text-cyan-400 transition-colors font-mono text-lg leading-none"
-          >
-            &times;
-          </button>
-        </div>
-        <AgentSettings />
-      </div>
-    </div>
-  );
-
-  const settingsButton = isChinjan ? (
-    <button
-      onClick={() => setShowSettings(true)}
-      className="chinjan-mono text-sm px-2 py-2 border-2 transition-all"
-      style={{
-        borderColor: 'var(--chinjan-border)',
-        color: 'var(--chinjan-muted)',
-      }}
-      title="Settings"
-    >
-      &#9881;
-    </button>
-  ) : (
-    <button
-      onClick={() => setShowSettings(true)}
-      className="font-mono text-[10px] bg-cyan-500/10 border border-cyan-500/30 text-cyan-500/60 hover:text-cyan-400 px-2 py-2 hover:bg-cyan-500/20 hover:border-cyan-400/50 transition-all"
-      title="Settings"
-    >
-      &#9881;
-    </button>
-  );
-
   if (isChinjan) {
     return (
-      <>
-        <header className="flex items-center justify-between px-4 lg:px-6 py-3 border-b-2" style={{ borderColor: 'var(--chinjan-border)', background: 'var(--chinjan-surface)' }}>
-          <div className="flex items-center gap-4">
-            <Link href="/" className="text-[var(--chinjan-muted)] hover:text-[var(--chinjan-pink)] text-xs mr-2 transition-colors" style={{ fontFamily: "'Nunito', sans-serif" }}>
-              &larr; Dashboard
-            </Link>
-            <div className="flex items-center gap-2">
-              <ChinjanMascotMini />
-              <h1 className="chinjan-heading text-[10px] lg:text-xs tracking-wider uppercase" style={{ color: 'var(--chinjan-pink)' }}>
-                Team Overview
-              </h1>
-            </div>
-            <div className="hidden sm:flex items-center gap-2 ml-4 text-[10px] chinjan-mono" style={{ color: 'var(--chinjan-muted)' }}>
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 bg-[#a8e6cf]" />
-                {workingCount} ACTIVE
-              </span>
-              <span>|</span>
-              <span>{agentCount} TOTAL</span>
-            </div>
+      <header className="flex items-center justify-between px-4 lg:px-6 py-3 border-b-2" style={{ borderColor: 'var(--chinjan-border)', background: 'var(--chinjan-surface)' }}>
+        <div className="flex items-center gap-4">
+          <Link href="/" className="text-[var(--chinjan-muted)] hover:text-[var(--chinjan-pink)] text-xs mr-2 transition-colors" style={{ fontFamily: "'Nunito', sans-serif" }}>
+            &larr; Dashboard
+          </Link>
+          <div className="flex items-center gap-2">
+            <ChinjanMascotMini />
           </div>
+          <div className="hidden sm:flex items-center gap-2 ml-2 text-[10px] chinjan-mono" style={{ color: 'var(--chinjan-muted)' }}>
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 bg-[#a8e6cf]" />
+              {workingCount} ACTIVE
+            </span>
+            <span>|</span>
+            <span>{agentCount} TOTAL</span>
+          </div>
+          {/* Tab buttons */}
+          <div className="hidden sm:flex items-center gap-1 ml-4">
+            {TAB_CONFIG.map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                onClick={() => onTabChange(key)}
+                className="chinjan-mono text-[10px] px-3 py-1.5 border-2 transition-all tracking-wider uppercase flex items-center gap-1.5"
+                style={{
+                  borderColor: activeTab === key ? 'var(--chinjan-pink)' : 'var(--chinjan-border)',
+                  color: activeTab === key ? 'var(--chinjan-pink)' : 'var(--chinjan-muted)',
+                  background: activeTab === key ? 'color-mix(in srgb, var(--chinjan-pink) 10%, transparent)' : 'transparent',
+                }}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
 
-          <div className="flex items-center gap-3">
-            <ChinjanThemeToggle />
-            {settingsButton}
+        <div className="flex items-center gap-3">
+          <ChinjanThemeToggle />
+          {activeTab === 'overview' && (
             <button
               onClick={onAddAgent}
               className="chinjan-mono text-sm px-4 py-2 border-2 transition-all tracking-wider uppercase"
@@ -119,55 +102,69 @@ export function Header({ agentCount, workingCount, onAddAgent }: Props) {
             >
               + Add Agent
             </button>
-            <div className="chinjan-mono text-sm">
-              <span className="text-[10px] mr-2 hidden sm:inline uppercase" style={{ color: 'var(--chinjan-muted)' }}>Time:</span>
-              <span style={{ color: 'var(--chinjan-text)' }}>{time}</span>
-            </div>
+          )}
+          <div className="chinjan-mono text-sm">
+            <span className="text-[10px] mr-2 hidden sm:inline uppercase" style={{ color: 'var(--chinjan-muted)' }}>Time:</span>
+            <span style={{ color: 'var(--chinjan-text)' }}>{time}</span>
           </div>
-        </header>
-        {settingsModal}
-      </>
+        </div>
+      </header>
     );
   }
 
   return (
-    <>
-      <header className="flex items-center justify-between px-4 lg:px-6 py-3 border-b border-cyan-900/30 bg-[#0a0e1a]/80 backdrop-blur-sm">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="text-cyan-600/40 hover:text-cyan-400 text-xs mr-2 transition-colors">
-            &larr; Dashboard
-          </Link>
-          <h1 className="font-mono text-sm lg:text-base text-cyan-400 font-bold tracking-wider uppercase">
-            Team Overview{' '}
-            <span className="text-cyan-600/60 text-[10px]">v3.2</span>
-          </h1>
-          <div className="hidden sm:flex items-center gap-2 ml-4 text-[10px] font-mono text-cyan-600/50">
-            <span className="flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-              {workingCount} ACTIVE
-            </span>
-            <span className="text-cyan-900">|</span>
-            <span>{agentCount} TOTAL</span>
-          </div>
+    <header className="flex items-center justify-between px-4 lg:px-6 py-3 border-b border-cyan-900/30 bg-[#0a0e1a]/80 backdrop-blur-sm">
+      <div className="flex items-center gap-4">
+        <Link href="/" className="text-cyan-600/40 hover:text-cyan-400 text-xs mr-2 transition-colors">
+          &larr; Dashboard
+        </Link>
+        <h1 className="font-mono text-sm lg:text-base text-cyan-400 font-bold tracking-wider uppercase">
+          Backoffice{' '}
+          <span className="text-cyan-600/60 text-[10px]">v3.2</span>
+        </h1>
+        <div className="hidden sm:flex items-center gap-2 ml-2 text-[10px] font-mono text-cyan-600/50">
+          <span className="flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+            {workingCount} ACTIVE
+          </span>
+          <span className="text-cyan-900">|</span>
+          <span>{agentCount} TOTAL</span>
         </div>
+        {/* Tab buttons */}
+        <div className="hidden sm:flex items-center gap-1 ml-4">
+          {TAB_CONFIG.map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              onClick={() => onTabChange(key)}
+              className={`font-mono text-[10px] px-3 py-1.5 border transition-all tracking-wider uppercase flex items-center gap-1.5 ${
+                activeTab === key
+                  ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-300'
+                  : 'bg-cyan-500/5 border-cyan-500/20 text-cyan-500/50 hover:bg-cyan-500/10 hover:text-cyan-400 hover:border-cyan-500/40'
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
 
-        <div className="flex items-center gap-3">
-          <ChinjanThemeToggle />
-          {settingsButton}
+      <div className="flex items-center gap-3">
+        <ChinjanThemeToggle />
+        {activeTab === 'overview' && (
           <button
             onClick={onAddAgent}
             className="font-mono text-[10px] bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 px-4 py-2 hover:bg-cyan-500/20 hover:border-cyan-400/50 hover:shadow-[0_0_15px_rgba(0,229,255,0.1)] transition-all tracking-wider uppercase"
           >
             + Add Agent
           </button>
-          <div className="font-mono text-xs lg:text-sm">
-            <span className="text-cyan-600/40 text-[10px] mr-2 hidden sm:inline uppercase">Time:</span>
-            <span className="text-cyan-300 tabular-nums">{time}</span>
-          </div>
+        )}
+        <div className="font-mono text-xs lg:text-sm">
+          <span className="text-cyan-600/40 text-[10px] mr-2 hidden sm:inline uppercase">Time:</span>
+          <span className="text-cyan-300 tabular-nums">{time}</span>
         </div>
-      </header>
-      {settingsModal}
-    </>
+      </div>
+    </header>
   );
 }
 

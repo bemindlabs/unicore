@@ -3,11 +3,13 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import type { BackofficeAgent } from "@/lib/backoffice/types";
-import { Header } from "./Header";
+import { Header, type BackofficeTab } from "./Header";
 import { TeamSidebar } from "./TeamSidebar";
 import { OfficeFloor } from "./OfficeFloor";
 import { WorkstationGrid } from "./WorkstationGrid";
 import { AgentModal } from "./AgentModal";
+import { CommandCenter } from "./CommandCenter";
+import { AgentSettings } from "./AgentSettings";
 import { ChinjanOnly, DefaultOnly } from "./chinjan/ChinjanThemeProvider";
 
 const ChinjanErrorState = dynamic(
@@ -42,6 +44,7 @@ export function BackofficeApp({
   onAddAgent,
   onDeleteAgent,
 }: Props) {
+  const [activeTab, setActiveTab] = useState<BackofficeTab>("overview");
   const [selectedAgent, setSelectedAgent] = useState<BackofficeAgent | null>(
     null,
   );
@@ -109,29 +112,47 @@ export function BackofficeApp({
           agentCount={agents.length}
           workingCount={agents.filter((a) => a.status === "working").length}
           onAddAgent={() => setShowAddModal(true)}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
         />
 
-        <div className="flex-1 flex overflow-hidden">
-          <TeamSidebar
-            agents={filteredAgents}
-            filter={sidebarFilter}
-            onFilterChange={setSidebarFilter}
-            onSelectAgent={setSelectedAgent}
-            onOpenTerminal={setTerminalAgent}
-          />
+        {activeTab === "overview" && (
+          <div className="flex-1 flex overflow-hidden">
+            <TeamSidebar
+              agents={filteredAgents}
+              filter={sidebarFilter}
+              onFilterChange={setSidebarFilter}
+              onSelectAgent={setSelectedAgent}
+              onOpenTerminal={setTerminalAgent}
+            />
 
-          <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6">
-            <OfficeFloor
-              conferenceAgents={conferenceAgents}
-              mainOfficeAgents={mainOfficeAgents}
-              onSelectAgent={setSelectedAgent}
-            />
-            <WorkstationGrid
-              agents={standaloneAgents}
-              onSelectAgent={setSelectedAgent}
-            />
+            <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6">
+              <OfficeFloor
+                conferenceAgents={conferenceAgents}
+                mainOfficeAgents={mainOfficeAgents}
+                onSelectAgent={setSelectedAgent}
+              />
+              <WorkstationGrid
+                agents={standaloneAgents}
+                onSelectAgent={setSelectedAgent}
+              />
+            </div>
           </div>
-        </div>
+        )}
+
+        {activeTab === "commander" && (
+          <div className="flex-1 overflow-hidden p-4 lg:p-6">
+            <CommandCenter />
+          </div>
+        )}
+
+        {activeTab === "settings" && (
+          <div className="flex-1 overflow-y-auto p-4 lg:p-6">
+            <div className="max-w-lg mx-auto">
+              <AgentSettings />
+            </div>
+          </div>
+        )}
       </div>
 
       {selectedAgent && (
