@@ -72,7 +72,7 @@ export class SendTelegramExecutor implements IActionExecutor<SendTelegramAction>
         },
       );
 
-      const data = await response.json();
+      const data: any = await response.json();
 
       if (!data.ok) {
         throw new Error(
