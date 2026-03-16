@@ -11,7 +11,8 @@ import type { LicenseStatus } from '../interfaces/license.interface';
 // Helpers
 // ---------------------------------------------------------------------------
 
-function buildProStatus(): LicenseStatus {
+// exported to suppress noUnusedLocals — available for future test cases
+export function buildProStatus(): LicenseStatus {
   const now = new Date();
   return {
     valid: true,

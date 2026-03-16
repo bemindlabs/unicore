@@ -1,3 +1,4 @@
+import type { IntentCategory } from '../interfaces/agent-base.interface';
 import {
   buildClassificationSystemPrompt,
   buildClassificationUserPrompt,
@@ -7,7 +8,7 @@ import {
 
 describe('Router prompts', () => {
   describe('INTENT_DESCRIPTIONS', () => {
-    const expectedIntents = ['comms', 'finance', 'growth', 'ops', 'research', 'erp', 'builder', 'unknown'];
+    const expectedIntents: IntentCategory[] = ['comms', 'finance', 'growth', 'ops', 'research', 'erp', 'builder', 'unknown'];
 
     it('defines descriptions for all 8 intent categories', () => {
       expectedIntents.forEach(function(intent) {
@@ -25,7 +26,7 @@ describe('Router prompts', () => {
   });
 
   describe('buildClassificationSystemPrompt', () => {
-    let prompt;
+    let prompt: string;
 
     beforeEach(function() {
       prompt = buildClassificationSystemPrompt();

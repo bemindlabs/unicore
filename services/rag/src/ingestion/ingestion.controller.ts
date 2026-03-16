@@ -10,7 +10,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { IngestionService } from './ingestion.service';
-import { IngestDocumentDto, IngestBatchDto, DeleteDocumentsDto } from '../common/dto/ingest.dto';
+import { IngestDocumentDto, IngestBatchDto, DeleteDocumentsDto, DeleteScopeType } from '../common/dto/ingest.dto';
 
 @Controller('ingest')
 export class IngestionController {
@@ -58,7 +58,7 @@ export class IngestionController {
   @HttpCode(HttpStatus.OK)
   async deleteDocument(@Param('documentId') documentId: string) {
     return this.ingestion.deleteDocuments({
-      scope: 'document',
+      scope: DeleteScopeType.DOCUMENT,
       workspaceId: 'default',
       documentId,
     });

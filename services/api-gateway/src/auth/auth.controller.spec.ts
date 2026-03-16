@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { AuditService } from '../audit/audit.service';
 
 const mockAuthService = {
   register: jest.fn(),
@@ -10,13 +11,20 @@ const mockAuthService = {
   getMe: jest.fn(),
 };
 
+const mockAuditService = {
+  log: jest.fn().mockResolvedValue(undefined),
+};
+
 describe('AuthController', () => {
   let controller: AuthController;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
-      providers: [{ provide: AuthService, useValue: mockAuthService }],
+      providers: [
+        { provide: AuthService, useValue: mockAuthService },
+        { provide: AuditService, useValue: mockAuditService },
+      ],
     }).compile();
 
     controller = module.get<AuthController>(AuthController);
@@ -50,7 +58,8 @@ describe('AuthController', () => {
       const response = { accessToken: 'token', refreshToken: 'refresh', expiresIn: 900, user };
       mockAuthService.login.mockResolvedValue(response);
 
-      const result = await controller.login(user, { email: 'test@example.com', password: 'pw' });
+      const req = { ip: '127.0.0.1' } as any;
+      const result = await controller.login(user, { email: 'test@example.com', password: 'pw' }, req);
       expect(result).toEqual(response);
       expect(mockAuthService.login).toHaveBeenCalledWith(user);
     });
@@ -70,7 +79,9 @@ describe('AuthController', () => {
     it('should call authService.logout', async () => {
       mockAuthService.logout.mockResolvedValue(undefined);
 
-      await controller.logout({ refreshToken: 'token' });
+      const user = { id: '1', email: 'test@example.com' };
+      const req = { ip: '127.0.0.1' } as any;
+      await controller.logout(user, { refreshToken: 'token' }, req);
       expect(mockAuthService.logout).toHaveBeenCalledWith('token');
     });
   });

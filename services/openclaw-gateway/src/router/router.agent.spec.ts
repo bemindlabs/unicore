@@ -127,7 +127,7 @@ describe('RouterAgent', () => {
     });
 
     it('includes provided conversation history in the context', async () => {
-      const history = [{ role: 'user', content: 'previous message' }];
+      const history: Array<{ role: 'user' | 'assistant'; content: string }> = [{ role: 'user', content: 'previous message' }];
       await router.process('follow-up', 'session-1', 'user-1', { history });
       expect(mockDelegation.delegate).toHaveBeenCalledWith(
         expect.any(Object),
@@ -147,7 +147,7 @@ describe('RouterAgent', () => {
       mockClassifier.classify.mockRejectedValue(new Error('LLM unavailable'));
       const result = await router.process('any message', 'session-1', 'user-1');
       expect(result.response.error).toBeDefined();
-      expect(result.response.error.code).toBe('ROUTER_ERROR');
+      expect(result.response.error!.code).toBe('ROUTER_ERROR');
       expect(result.decision.isFallback).toBe(true);
       expect(result.decision.targetAgent).toBe('error');
     });
