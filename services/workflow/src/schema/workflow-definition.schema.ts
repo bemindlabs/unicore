@@ -61,7 +61,7 @@ export interface WorkflowTrigger {
 // ---------------------------------------------------------------------------
 
 /** Discriminated union tag for action executors. */
-export type ActionType = 'call_agent' | 'update_erp' | 'send_notification' | 'send_telegram';
+export type ActionType = 'call_agent' | 'update_erp' | 'send_notification' | 'send_telegram' | 'send_line';
 
 /** Base fields shared by every action step. */
 export interface BaseAction {
@@ -142,11 +142,25 @@ export interface SendTelegramAction extends BaseAction {
   };
 }
 
+/** Sends a push message to a LINE user/group via the Messaging API. */
+export interface SendLineAction extends BaseAction {
+  type: 'send_line';
+  config: {
+    /** LINE user or group ID — supports `{{field}}` interpolation. */
+    to: string;
+    /** Direct message text — supports `{{field}}` interpolation. */
+    message?: string;
+    /** Message template (alternative to message) — supports `{{field}}` interpolation. */
+    template?: string;
+  };
+}
+
 export type WorkflowAction =
   | CallAgentAction
   | UpdateErpAction
   | SendNotificationAction
-  | SendTelegramAction;
+  | SendTelegramAction
+  | SendLineAction;
 
 // ---------------------------------------------------------------------------
 // Top-level Workflow Definition

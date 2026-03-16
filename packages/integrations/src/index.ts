@@ -73,6 +73,19 @@ export type {
   TelegramApiResponse,
 } from './channels/telegram.js';
 
+// LINE channel adapter
+export { LineAdapter } from './channels/line.js';
+export type {
+  LineAdapterConfig,
+  LineTextMessage,
+  LineImageMessage,
+  LineFlexMessage,
+  LineStickerMessage,
+  LineMessage,
+  LineProfile,
+  LineApiResponse,
+} from './channels/line.js';
+
 // Registry
 export { AdapterRegistry } from './registry.js';
 

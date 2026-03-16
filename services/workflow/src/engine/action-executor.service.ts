@@ -14,6 +14,7 @@ import { CallAgentExecutor } from '../executors/call-agent.executor';
 import { UpdateErpExecutor } from '../executors/update-erp.executor';
 import { SendNotificationExecutor } from '../executors/send-notification.executor';
 import { SendTelegramExecutor } from '../executors/send-telegram.executor';
+import { SendLineExecutor } from '../executors/send-line.executor';
 
 @Injectable()
 export class ActionExecutorService implements OnModuleInit {
@@ -25,6 +26,7 @@ export class ActionExecutorService implements OnModuleInit {
     private readonly updateErpExecutor: UpdateErpExecutor,
     private readonly sendNotificationExecutor: SendNotificationExecutor,
     private readonly sendTelegramExecutor: SendTelegramExecutor,
+    private readonly sendLineExecutor: SendLineExecutor,
   ) {}
 
   onModuleInit(): void {
@@ -33,6 +35,7 @@ export class ActionExecutorService implements OnModuleInit {
       this.updateErpExecutor,
       this.sendNotificationExecutor,
       this.sendTelegramExecutor,
+      this.sendLineExecutor,
     ];
 
     for (const executor of executors) {

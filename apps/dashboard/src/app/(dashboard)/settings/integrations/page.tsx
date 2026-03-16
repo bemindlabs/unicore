@@ -24,6 +24,7 @@ import {
 } from '@unicore/ui';
 import type { IntegrationConfig } from '@unicore/shared-types';
 import { TelegramConfig } from '../../../../components/settings/TelegramConfig';
+import { LineConfig } from '../../../../components/settings/LineConfig';
 
 interface IntegrationDef {
   provider: string;
@@ -172,6 +173,9 @@ export default function SettingsIntegrationsPage() {
     <div className="space-y-6">
       {/* Telegram Bot — dedicated config panel */}
       <TelegramConfig />
+
+      {/* LINE Messaging — dedicated config panel */}
+      <LineConfig />
 
       {categories.map((category) => {
         const defs = INTEGRATION_DEFS.filter((d) => d.category === category);
