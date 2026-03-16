@@ -33,13 +33,3 @@ export interface JwtPayload {
   iat: number;
   exp: number;
 }
-
-export interface Permission {
-  resource: string;
-  action: 'create' | 'read' | 'update' | 'delete';
-}
-
-export interface RolePermission {
-  role: UserRole;
-  permissions: Permission[];
-}

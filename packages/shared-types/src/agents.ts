@@ -28,18 +28,6 @@ export type AgentChannel =
   | 'whatsapp'
   | 'telegram';
 
-export interface AgentInstance {
-  id: string;
-  type: AgentType;
-  name: string;
-  status: 'idle' | 'running' | 'error' | 'disabled';
-  autonomy: AutonomyLevel;
-  channels: AgentChannel[];
-  lastActiveAt?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface AgentMessage {
   id: string;
   agentId: string;
