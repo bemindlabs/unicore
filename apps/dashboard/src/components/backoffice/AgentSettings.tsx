@@ -149,7 +149,7 @@ export function AgentSettings() {
     setSaving((prev) => ({ ...prev, [index]: true }));
     setSaveSuccess((prev) => ({ ...prev, [index]: false }));
     try {
-      await api.put(`/settings/agent-config-${agent.name}`, {
+      await api.put(`/api/v1/settings/agent-config-${agent.name}`, {
         autonomy: config.autonomy,
         name: config.name,
         role: config.role,

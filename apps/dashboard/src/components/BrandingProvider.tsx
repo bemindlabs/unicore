@@ -13,7 +13,7 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
   const [config, setConfig] = useState<BrandingConfig | null>(null);
 
   useEffect(() => {
-    api.get<BrandingConfig>('/settings/branding')
+    api.get<BrandingConfig>('/api/v1/settings/branding')
       .then(setConfig)
       .catch(() => {}); // No branding = use defaults
   }, []);

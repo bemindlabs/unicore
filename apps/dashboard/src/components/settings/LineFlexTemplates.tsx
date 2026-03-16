@@ -208,7 +208,7 @@ export function LineFlexTemplates() {
 
   useEffect(() => {
     api
-      .get<{ templates: FlexTemplate[] }>('/settings/line-flex-templates')
+      .get<{ templates: FlexTemplate[] }>('/api/v1/settings/line-flex-templates')
       .then((data) => setTemplates(data.templates ?? []))
       .catch(() => {})
       .finally(() => setIsLoading(false));
@@ -217,7 +217,7 @@ export function LineFlexTemplates() {
   const persistTemplates = useCallback(async (updated: FlexTemplate[]) => {
     setIsSaving(true);
     try {
-      await api.put('/settings/line-flex-templates', { templates: updated });
+      await api.put('/api/v1/settings/line-flex-templates', { templates: updated });
       setTemplates(updated);
     } catch (err) {
       toast({

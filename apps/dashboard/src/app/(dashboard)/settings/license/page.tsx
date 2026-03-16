@@ -133,8 +133,8 @@ export default function SettingsLicensePage() {
     }
 
     Promise.all([
-      api.get<LicenseStatusResponse>('/license/status'),
-      api.get<{ count: number }>('/settings/team/count').catch(() => ({ count: 0 })),
+      api.get<LicenseStatusResponse>('/api/v1/license/status'),
+      api.get<{ count: number }>('/api/v1/settings/team/count').catch(() => ({ count: 0 })),
     ])
       .then(([raw, teamData]) => {
         if (!mounted) return;
@@ -186,7 +186,7 @@ export default function SettingsLicensePage() {
     if (!upgradeKey.trim()) return;
     setIsActivating(true);
     try {
-      await api.post('/license/activate', { key: upgradeKey });
+      await api.post('/api/v1/license/activate', { key: upgradeKey });
       toast({
         title: 'License activation',
         description: 'Key validated. Reload required to apply Pro features.',
@@ -200,7 +200,7 @@ export default function SettingsLicensePage() {
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      await api.post('/license/refresh');
+      await api.post('/api/v1/license/refresh');
       toast({ title: 'License refreshed', description: 'Status is up to date.' });
     } finally {
       setIsRefreshing(false);

@@ -2,7 +2,7 @@ import { Controller, Get, Query } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 
-@Controller('admin')
+@Controller('api/v1/admin')
 export class AdminController {
   constructor(
     private readonly prisma: PrismaService,

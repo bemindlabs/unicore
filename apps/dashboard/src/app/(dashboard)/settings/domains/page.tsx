@@ -209,7 +209,7 @@ function AddDomainDialog({ open, onOpenChange, onAdd }: AddDomainDialogProps) {
     if (!isValid) return;
     setIsAdding(true);
     try {
-      const created = await api.post<Domain>("/settings/domains", {
+      const created = await api.post<Domain>("/api/v1/settings/domains", {
         hostname: domainValue.trim(),
       });
       onAdd(created);
@@ -390,7 +390,7 @@ function RemoveDomainDialog({
     if (!domain) return;
     setIsRemoving(true);
     try {
-      await api.delete(`/settings/domains/${domain.id}`);
+      await api.delete(`/api/v1/settings/domains/${domain.id}`);
       onConfirm(domain.id);
       onClose();
     } catch (err: unknown) {
@@ -567,7 +567,7 @@ export default function SettingsDomainsPage() {
 
   useEffect(() => {
     api
-      .get<Domain[]>("/settings/domains")
+      .get<Domain[]>("/api/v1/settings/domains")
       .then(setDomains)
       .catch((err: unknown) => {
         toast({
@@ -600,7 +600,7 @@ export default function SettingsDomainsPage() {
   const handleReverify = useCallback(async (id: string) => {
     setVerifyingIds((prev) => new Set(prev).add(id));
     try {
-      const updated = await api.post<Domain>(`/settings/domains/${id}/verify`);
+      const updated = await api.post<Domain>(`/api/v1/settings/domains/${id}/verify`);
       setDomains((prev) => prev.map((d) => (d.id === id ? updated : d)));
       toast({
         title: "Verification started",
@@ -624,7 +624,7 @@ export default function SettingsDomainsPage() {
   const handleForceSslRefresh = useCallback(async (id: string) => {
     setSslRefreshingIds((prev) => new Set(prev).add(id));
     try {
-      await api.post(`/settings/domains/${id}/ssl-refresh`);
+      await api.post(`/api/v1/settings/domains/${id}/ssl-refresh`);
       toast({
         title: "SSL refresh queued",
         description: "Certificate renewal has been requested.",

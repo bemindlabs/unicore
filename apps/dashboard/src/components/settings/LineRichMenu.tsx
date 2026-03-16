@@ -71,7 +71,7 @@ export function LineRichMenu() {
 
   useEffect(() => {
     api
-      .get<{ menus: RichMenuConfig[] }>('/settings/line-rich-menus')
+      .get<{ menus: RichMenuConfig[] }>('/api/v1/settings/line-rich-menus')
       .then((data) => setMenus(data.menus ?? []))
       .catch(() => {})
       .finally(() => setIsLoading(false));
@@ -81,7 +81,7 @@ export function LineRichMenu() {
     async (updated: RichMenuConfig[]) => {
       setIsSaving(true);
       try {
-        await api.put('/settings/line-rich-menus', { menus: updated });
+        await api.put('/api/v1/settings/line-rich-menus', { menus: updated });
         setMenus(updated);
       } catch (err) {
         toast({

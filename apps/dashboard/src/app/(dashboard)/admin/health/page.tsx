@@ -35,7 +35,7 @@ export default function AdminHealthPage() {
 
   useEffect(() => {
     api
-      .get<HealthResponse>('/admin/health')
+      .get<HealthResponse>('/api/v1/admin/health')
       .then(setHealth)
       .catch(() => setHealth(null))
       .finally(() => setLoading(false));

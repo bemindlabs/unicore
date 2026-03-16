@@ -42,7 +42,7 @@ function makeActivity(
 
 export async function getTasks(): Promise<{ tasks: BoardTask[]; cached: boolean }> {
   try {
-    const data = await api.get<{ tasks: BoardTask[] }>('/tasks');
+    const data = await api.get<{ tasks: BoardTask[] }>('/api/v1/tasks');
     const tasks = data.tasks.length > 0 ? data.tasks : defaultTasks;
     setCache(tasks);
     return { tasks, cached: false };
@@ -68,7 +68,7 @@ export async function createTask(
   };
 
   try {
-    await api.post('/tasks', newTask);
+    await api.post('/api/v1/tasks', newTask);
   } catch {
     // Local-only mode
   }
@@ -110,7 +110,7 @@ export async function updateTask(
   });
 
   try {
-    await api.put(`/tasks/${id}`, patch);
+    await api.put(`/api/v1/tasks/${id}`, patch);
   } catch {
     // Local-only mode
   }
@@ -121,7 +121,7 @@ export async function updateTask(
 
 export async function deleteTask(id: string): Promise<BoardTask[]> {
   try {
-    await api.delete(`/tasks/${id}`);
+    await api.delete(`/api/v1/tasks/${id}`);
   } catch {
     // Local-only mode
   }
@@ -160,7 +160,7 @@ export async function addComment(
   });
 
   try {
-    await api.post(`/tasks/${taskId}/comments`, comment);
+    await api.post(`/api/v1/tasks/${taskId}/comments`, comment);
   } catch {
     // Local-only mode
   }

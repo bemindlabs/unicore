@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
-@Controller('tasks')
+@Controller('api/v1/tasks')
 export class TasksController {
   constructor(private readonly prisma: PrismaService) {}
 

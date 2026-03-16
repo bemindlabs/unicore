@@ -89,7 +89,7 @@ export function TelegramConfig() {
 
     setIsSaving(true);
     try {
-      await api.put('/settings/telegram', {
+      await api.put('/api/v1/settings/telegram', {
         botToken: config.botToken,
         enabled: config.enabled,
       });

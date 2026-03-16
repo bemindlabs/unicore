@@ -5,7 +5,7 @@ import { LicenseService } from './license.service';
  * Exposes license status information to authenticated clients.
  * All routes require JWT authentication (applied globally via JwtAuthGuard).
  */
-@Controller('license')
+@Controller('api/v1/license')
 export class LicenseController {
   constructor(private readonly licenseService: LicenseService) {}
 

@@ -96,7 +96,7 @@ export function LineConfig() {
 
     setIsSaving(true);
     try {
-      await api.put('/settings/line', {
+      await api.put('/api/v1/settings/line', {
         channelId: config.channelId,
         channelSecret: config.channelSecret,
         channelAccessToken: config.channelAccessToken,
