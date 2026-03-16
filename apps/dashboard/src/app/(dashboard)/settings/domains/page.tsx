@@ -209,10 +209,20 @@ function AddDomainDialog({ open, onOpenChange, onAdd }: AddDomainDialogProps) {
     if (!isValid) return;
     setIsAdding(true);
     try {
-      const created = await api.post<Domain>("/api/v1/settings/domains", {
+      const newDomain: Domain = {
+        id: crypto.randomUUID?.() ?? Math.random().toString(36).slice(2),
         hostname: domainValue.trim(),
-      });
-      onAdd(created);
+        status: 'pending_verification',
+        sslStatus: 'none',
+        createdAt: new Date().toISOString(),
+        verificationRecord: { type: 'TXT', name: `_unicore-verify.${domainValue.trim()}`, value: `unicore-verify=${Date.now()}` },
+      };
+      // Save full array to settings
+      const current = await api.get<any>('/api/v1/settings/domains').catch(() => ({}));
+      const list = Array.isArray(current) ? current : current?.domains ?? [];
+      list.push(newDomain);
+      await api.put('/api/v1/settings/domains', { domains: list });
+      onAdd(newDomain);
       setDomainValue("");
       setTouched(false);
       onOpenChange(false);
@@ -390,7 +400,9 @@ function RemoveDomainDialog({
     if (!domain) return;
     setIsRemoving(true);
     try {
-      await api.delete(`/api/v1/settings/domains/${domain.id}`);
+      const current = await api.get<any>('/api/v1/settings/domains').catch(() => ({}));
+      const list = (Array.isArray(current) ? current : current?.domains ?? []).filter((d: any) => d.id !== domain.id);
+      await api.put('/api/v1/settings/domains', { domains: list });
       onConfirm(domain.id);
       onClose();
     } catch (err: unknown) {
@@ -567,8 +579,8 @@ export default function SettingsDomainsPage() {
 
   useEffect(() => {
     api
-      .get<Domain[]>("/api/v1/settings/domains")
-      .then(setDomains)
+      .get<any>("/api/v1/settings/domains")
+      .then((res: any) => setDomains(Array.isArray(res) ? res : res?.domains ?? []))
       .catch((err: unknown) => {
         toast({
           title: "Failed to load domains",
