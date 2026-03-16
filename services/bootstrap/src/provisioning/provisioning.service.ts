@@ -145,6 +145,9 @@ export class ProvisioningService {
       );
     }
 
+    // Auto-register default agents with OpenClaw gateway
+    await this.registerDefaultAgents();
+
     return {
       success: true,
       config,
@@ -158,5 +161,46 @@ export class ProvisioningService {
       },
       licenseKey,
     };
+  }
+
+  private async registerDefaultAgents(): Promise<void> {
+    const openclawUrl =
+      process.env.OPENCLAW_GATEWAY_URL ?? "http://localhost:18790";
+
+    const defaultAgents = [
+      { agentId: "router", name: "ROUTER", type: "router", capabilities: ["routing", "delegation", "intent-classification"] },
+      { agentId: "comms", name: "COMMS", type: "comms", capabilities: ["messaging", "email", "notifications"] },
+      { agentId: "finance", name: "FINANCE", type: "finance", capabilities: ["invoicing", "expenses", "reports"] },
+      { agentId: "growth", name: "GROWTH", type: "growth", capabilities: ["marketing", "analytics", "campaigns"] },
+      { agentId: "ops", name: "OPS", type: "ops", capabilities: ["monitoring", "deployment", "system-health"] },
+      { agentId: "research", name: "RESEARCH", type: "research", capabilities: ["market-research", "analysis", "trends"] },
+      { agentId: "sentinel", name: "SENTINEL", type: "security", capabilities: ["security-scan", "threat-detection"] },
+      { agentId: "builder", name: "BUILDER", type: "builder", capabilities: ["code-generation", "feature-building"] },
+      { agentId: "erp", name: "ERP", type: "erp", capabilities: ["data-entry", "workflow-automation"] },
+    ];
+
+    let registered = 0;
+    for (const agent of defaultAgents) {
+      try {
+        const res = await fetch(`${openclawUrl}/health/agents/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(agent),
+        });
+        if (res.ok) registered++;
+      } catch {
+        // OpenClaw may not be available during provisioning — non-fatal
+      }
+    }
+
+    if (registered > 0) {
+      this.logger.log(
+        `Registered ${registered}/${defaultAgents.length} default agents with OpenClaw`,
+      );
+    } else {
+      this.logger.warn(
+        "Could not register any agents with OpenClaw — gateway may be unavailable",
+      );
+    }
   }
 }
