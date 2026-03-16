@@ -161,8 +161,8 @@ export default function SettingsLicensePage() {
 
         const mapped: LicenseInfo = {
           key: raw.key ?? (isPro ? 'PRO-XXXX-XXXX-XXXX' : 'COMM-XXXX-XXXX-XXXX'),
-          edition,
-          status: raw.status ?? (raw.valid !== false ? 'active' : 'invalid') as LicenseStatus,
+          edition: edition as LicenseInfo['edition'],
+          status: (raw.status ?? (raw.valid !== false ? 'active' : 'invalid')) as LicenseStatus,
           maxAgents: raw.maxAgents ?? (isPro ? 50 : 2),
           maxRoles: raw.maxRoles ?? (isPro ? 20 : 3),
           expiresAt: raw.expiresAt ?? '2099-12-31T23:59:59Z',
