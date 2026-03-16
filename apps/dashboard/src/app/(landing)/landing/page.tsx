@@ -39,83 +39,259 @@ import {
   Zap,
   Globe,
   Heart,
+  LayoutDashboard,
+  BookOpen,
+  History,
+  Workflow,
+  Shield,
+  Activity,
+  Server,
+  Lock,
+  Radio,
+  Send,
+  MonitorCheck,
+  ScrollText,
+  ChevronRight,
+  Container,
+  Cog,
+  UserCog,
+  Cable,
+  Brain,
 } from 'lucide-react';
 
+/* ── Data ── */
+
 const agents = [
-  { name: 'Router', icon: Router, desc: 'Intelligent task routing to the right agent' },
-  { name: 'Comms', icon: MessageSquare, desc: 'Multi-channel communication management' },
-  { name: 'Finance', icon: DollarSign, desc: 'Invoicing, expenses, and financial insights' },
-  { name: 'Growth', icon: TrendingUp, desc: 'Marketing campaigns and analytics' },
-  { name: 'Ops', icon: Settings, desc: 'Operations, inventory, and logistics' },
-  { name: 'Research', icon: Search, desc: 'Market research and competitor analysis' },
-  { name: 'Builder', icon: Hammer, desc: 'Workflow and integration builder' },
-  { name: 'ERP', icon: Database, desc: 'Full enterprise resource planning suite' },
+  {
+    name: 'Router',
+    icon: Router,
+    desc: 'Intent classification and intelligent task delegation to the right specialist agent.',
+    color: 'from-violet-500/20 to-violet-500/5',
+  },
+  {
+    name: 'Comms',
+    icon: MessageSquare,
+    desc: 'Customer communication across LINE, Telegram, and other channels with unified inbox.',
+    color: 'from-blue-500/20 to-blue-500/5',
+  },
+  {
+    name: 'Finance',
+    icon: DollarSign,
+    desc: 'Automated invoicing, expense tracking, payment recording, and financial reports.',
+    color: 'from-emerald-500/20 to-emerald-500/5',
+  },
+  {
+    name: 'Growth',
+    icon: TrendingUp,
+    desc: 'Marketing campaign management, customer analytics, and growth optimization.',
+    color: 'from-orange-500/20 to-orange-500/5',
+  },
+  {
+    name: 'Ops',
+    icon: Cog,
+    desc: 'System monitoring, deployment management, and operational health tracking.',
+    color: 'from-slate-500/20 to-slate-500/5',
+  },
+  {
+    name: 'Research',
+    icon: Search,
+    desc: 'Market research, competitor analysis, and data-driven business intelligence.',
+    color: 'from-cyan-500/20 to-cyan-500/5',
+  },
+  {
+    name: 'Builder',
+    icon: Hammer,
+    desc: 'Code generation, feature implementation, and workflow construction.',
+    color: 'from-amber-500/20 to-amber-500/5',
+  },
+  {
+    name: 'ERP',
+    icon: Database,
+    desc: 'Automated data entry, record management, and ERP workflow orchestration.',
+    color: 'from-rose-500/20 to-rose-500/5',
+  },
 ];
 
 const erpModules = [
-  { name: 'Contacts', icon: Users },
-  { name: 'Orders', icon: ShoppingCart },
-  { name: 'Inventory', icon: Boxes },
-  { name: 'Invoicing', icon: FileText },
-  { name: 'Expenses', icon: Receipt },
-  { name: 'Reports', icon: BarChart3 },
+  {
+    name: 'Contacts CRM',
+    icon: Users,
+    desc: 'Full CRUD, contact types, lead scoring, and customer lifecycle management.',
+  },
+  {
+    name: 'Orders',
+    icon: ShoppingCart,
+    desc: 'Status workflow: pending, confirmed, processing, shipped, fulfilled.',
+  },
+  {
+    name: 'Inventory',
+    icon: Boxes,
+    desc: 'Real-time stock levels, low stock alerts, and inventory adjustments.',
+  },
+  {
+    name: 'Invoicing',
+    icon: FileText,
+    desc: 'Draft to sent to paid workflow with payment recording and tracking.',
+  },
+  {
+    name: 'Expenses',
+    icon: Receipt,
+    desc: 'Expense categories, submission workflow, and approval management.',
+  },
+  {
+    name: 'Reports',
+    icon: BarChart3,
+    desc: 'Revenue analytics, inventory reports, top products, and top contacts.',
+  },
+];
+
+const dashboardFeatures = [
+  { name: 'Real-time Widgets', icon: Activity, desc: 'Revenue, orders, inventory, MRR, churn, signups, and activity charts' },
+  { name: 'AI Agents Overview', icon: Bot, desc: 'Status cards showing agent health, activity, and task assignments' },
+  { name: 'Knowledge Base', icon: BookOpen, desc: 'Document upload with RAG-powered vector search via Qdrant' },
+  { name: 'Chat History', icon: History, desc: 'Searchable conversation archive across all agent interactions' },
+  { name: 'Tasks Board', icon: KanbanSquare, desc: 'Kanban and list views with drag-and-drop, backed by PostgreSQL' },
+  { name: 'Workflows', icon: Workflow, desc: 'CRUD operations, manual triggers, and Kafka event-driven automation' },
+];
+
+const backofficeFeatures = [
+  { name: 'RetroDeck Workspace', icon: Gamepad2, desc: 'Pixel art themed workspace with 5 unique agent characters' },
+  { name: 'Command Center', icon: Terminal, desc: 'Prompt any agent with natural language commands' },
+  { name: 'Agent Terminal', icon: MonitorCheck, desc: 'Per-agent CLI interface for direct interaction' },
+  { name: 'Agent Settings', icon: Settings, desc: 'Configure autonomy levels, channels, and capabilities' },
+  { name: 'Real-time Chat', icon: MessagesSquare, desc: 'Broadcast and 1:1 messaging with emoji reactions' },
+  { name: 'Smart Features', icon: Sparkles, desc: '@mentions, notification sounds, and full message search' },
+];
+
+const integrations = [
+  { name: 'LINE', desc: 'Messaging API, webhooks, rich menus, Flex message templates', icon: Send },
+  { name: 'Telegram', desc: 'Bot API, webhook handling, workflow action triggers', icon: Send },
+  { name: 'Kafka', desc: 'Event-driven ERP workflows with real-time processing', icon: Cable },
+  { name: 'OpenClaw', desc: 'WebSocket-based multi-agent communication framework', icon: Brain },
+  { name: 'Qdrant', desc: 'Vector database powering RAG knowledge base search', icon: Database },
+];
+
+const infrastructure = [
+  { name: '17 Docker Services', icon: Container },
+  { name: 'Cloudflare SSL + CDN', icon: Lock },
+  { name: 'Nginx Reverse Proxy', icon: Server },
+  { name: 'PostgreSQL 16', icon: Database },
+  { name: 'Redis 7 Caching', icon: Zap },
+  { name: 'WebSocket Real-time', icon: Radio },
+];
+
+const adminFeatures = [
+  { name: 'User Management', icon: UserCog },
+  { name: 'Audit Logs', icon: ScrollText },
+  { name: 'System Health', icon: Activity },
+  { name: '5 Roles', icon: Shield },
+];
+
+const roles = ['Owner', 'Operator', 'Marketer', 'Finance', 'Viewer'];
+
+const settingsFeatures = [
+  'ERP module toggles',
+  'Integration configs (Telegram, LINE)',
+  'Custom domains management',
+  'License management (Community vs Pro)',
+  'Branding system (custom colors)',
+  '6-step setup wizard',
 ];
 
 const communityFeatures = [
   '2 AI agents',
   '3 user roles',
   'Basic ERP modules',
-  'Basic workflows',
+  'Dashboard with widgets',
+  'Tasks board (Kanban + list)',
+  'Knowledge base + RAG',
+  'Workflow automation',
   'Community support',
-  'Self-hosted',
+  'Self-hosted deployment',
 ];
 
 const proFeatures = [
-  '50 AI agents',
+  'Up to 50 AI agents',
   '20 user roles',
   'All ERP modules',
-  'Advanced workflows',
+  'Advanced workflows + Kafka events',
+  'LINE + Telegram integrations',
+  'All messaging channels',
+  'SSO authentication',
+  'White-label branding',
+  'Audit logs + compliance',
+  'Custom domain support',
   'Priority support',
   'Cloud or self-hosted',
-  'Custom integrations',
-  'Audit logs & compliance',
+];
+
+const communityExcluded = [
+  'SSO authentication',
+  'White-label branding',
+  'Audit logs',
+  'Custom domains',
+];
+
+const techStack = [
+  { name: 'Next.js 14', category: 'Frontend' },
+  { name: 'React 18', category: 'Frontend' },
+  { name: 'TypeScript 5.5', category: 'Language' },
+  { name: 'NestJS', category: 'Backend' },
+  { name: 'Prisma ORM', category: 'Database' },
+  { name: 'PostgreSQL 16', category: 'Database' },
+  { name: 'Redis 7', category: 'Cache' },
+  { name: 'Qdrant', category: 'Vectors' },
+  { name: 'Kafka', category: 'Events' },
+  { name: 'Tailwind CSS', category: 'Styling' },
+  { name: 'shadcn/ui', category: 'Components' },
+  { name: 'OpenClaw', category: 'AI Agents' },
 ];
 
 const showcaseItems = [
   {
     icon: Gamepad2,
     title: 'Pixel Art Backoffice',
-    desc: 'A unique retro-styled agent workspace that makes managing your business feel like an adventure. Each agent has its own pixel character and personality.',
+    desc: 'A retro-styled agent workspace (RetroDeck theme) where each of the 5 AI characters has its own pixel art avatar and personality. Managing your business feels like an adventure game.',
   },
   {
     icon: Terminal,
-    title: 'AI Commander',
-    desc: 'Prompt any agent using natural language. Just describe what you need and the Router agent delegates to the right specialist automatically.',
+    title: 'Command Center',
+    desc: 'Prompt any agent using natural language. Describe what you need and the Router agent classifies intent, then delegates to the right specialist automatically.',
   },
   {
     icon: KanbanSquare,
-    title: 'Task Board',
-    desc: 'Kanban-style task management with drag-and-drop. Agents can create, update, and complete tasks across your entire organization.',
+    title: 'Tasks Board',
+    desc: 'Full Kanban and list view task management with drag-and-drop. PostgreSQL-backed with real-time sync. Agents can create, update, and complete tasks across your organization.',
   },
   {
     icon: MessagesSquare,
-    title: 'Real-time Chat',
-    desc: 'Talk to your AI agents directly in a chat interface. Get instant answers, reports, and actions without leaving the conversation.',
+    title: 'Real-time Agent Chat',
+    desc: 'Broadcast and 1:1 direct messaging with your AI agents. Includes emoji reactions, @mentions, notification sounds, and full message search.',
+  },
+  {
+    icon: BookOpen,
+    title: 'Knowledge Base + RAG',
+    desc: 'Upload documents and let Qdrant-powered vector search make your knowledge instantly accessible. Agents reference your docs to give context-aware answers.',
+  },
+  {
+    icon: Workflow,
+    title: 'Event-Driven Workflows',
+    desc: 'Build workflows with CRUD operations and manual triggers. Kafka integration enables event-driven automation that connects your ERP modules and agents seamlessly.',
   },
 ];
+
+/* ── Page ── */
 
 export default function LandingPage() {
   return (
     <div className="flex flex-col">
       {/* ── Hero Section ── */}
       <section className="relative overflow-hidden">
-        {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-primary/5" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,119,198,0.15),transparent)]" />
 
         <div className="relative mx-auto max-w-6xl px-6 py-24 sm:py-32 lg:py-40">
           <div className="flex flex-col items-center text-center space-y-8">
-            {/* Logo mark */}
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground font-bold text-2xl shadow-lg">
               U
             </div>
@@ -130,9 +306,27 @@ export default function LandingPage() {
               AI-First Business Ecosystem for Solopreneurs
             </p>
 
-            <p className="max-w-2xl text-lg text-muted-foreground">
-              8 specialized AI agents. Full ERP. Workflow automation. One platform.
+            <p className="max-w-2xl text-lg text-muted-foreground leading-relaxed">
+              8 specialized AI agents. Full ERP with 6 modules. 25+ dashboard pages.
+              Kafka-driven workflows. LINE and Telegram integrations.
+              One self-hosted platform that runs your entire business.
             </p>
+
+            {/* Stats bar */}
+            <div className="flex flex-wrap justify-center gap-6 sm:gap-10 pt-2">
+              {[
+                { value: '8', label: 'AI Agents' },
+                { value: '25+', label: 'Dashboard Pages' },
+                { value: '6', label: 'ERP Modules' },
+                { value: '17', label: 'Docker Services' },
+                { value: '5', label: 'User Roles' },
+              ].map((stat) => (
+                <div key={stat.label} className="flex flex-col items-center">
+                  <span className="text-2xl sm:text-3xl font-bold text-primary">{stat.value}</span>
+                  <span className="text-xs sm:text-sm text-muted-foreground">{stat.label}</span>
+                </div>
+              ))}
+            </div>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <Button asChild size="lg" className="text-base px-8">
@@ -155,24 +349,26 @@ export default function LandingPage() {
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
             What is UniCore?
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            A unified platform that combines AI-powered agents with enterprise tools
-            to run your entire business.
+          <p className="text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            UniCore is a unified, self-hosted platform that combines 8 AI-powered agents
+            with a complete ERP suite, workflow automation, and multi-channel integrations.
+            Built for solopreneurs and small teams who want enterprise-grade tools
+            without enterprise complexity.
           </p>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           <Card className="border-2 hover:border-primary/40 transition-colors">
             <CardHeader className="items-center text-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary mb-2">
                 <Bot className="h-6 w-6" />
               </div>
-              <CardTitle className="text-lg">AI-Powered Agents</CardTitle>
+              <CardTitle className="text-lg">8 AI Agents</CardTitle>
             </CardHeader>
             <CardContent className="text-center">
               <CardDescription className="text-sm">
-                8 specialized agents that handle communication, finance, growth,
-                operations, and more — all coordinated by an intelligent router.
+                Specialized agents for routing, communication, finance, growth,
+                ops, research, building, and ERP — coordinated by an intelligent router.
               </CardDescription>
             </CardContent>
           </Card>
@@ -186,8 +382,23 @@ export default function LandingPage() {
             </CardHeader>
             <CardContent className="text-center">
               <CardDescription className="text-sm">
-                Contacts, orders, inventory, invoicing, expenses, and reports.
-                Everything you need to manage your business in one place.
+                Contacts CRM, orders, inventory, invoicing, expenses, and reports.
+                Full status workflows, lead scoring, and real-time stock alerts.
+              </CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 hover:border-primary/40 transition-colors">
+            <CardHeader className="items-center text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary mb-2">
+                <Gamepad2 className="h-6 w-6" />
+              </div>
+              <CardTitle className="text-lg">Pixel Art Backoffice</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+              <CardDescription className="text-sm">
+                A retro-styled RetroDeck workspace with 5 pixel art characters.
+                Command center, agent terminal, real-time chat with reactions and mentions.
               </CardDescription>
             </CardContent>
           </Card>
@@ -201,85 +412,291 @@ export default function LandingPage() {
             </CardHeader>
             <CardContent className="text-center">
               <CardDescription className="text-sm">
-                Build custom workflows with a visual editor. Connect agents, triggers,
-                and actions to automate any business process.
+                Event-driven workflows powered by Kafka. Manual triggers, CRUD operations,
+                and seamless agent-to-ERP automation pipelines.
               </CardDescription>
             </CardContent>
           </Card>
         </div>
 
-        <p className="text-center text-sm text-muted-foreground mt-8">
-          Built by <span className="font-medium text-foreground">BeMind Technology</span>
+        <p className="text-center text-sm text-muted-foreground mt-10">
+          Built by{' '}
+          <a href="mailto:info@bemind.tech" className="font-medium text-foreground hover:text-primary transition-colors">
+            BeMind Technology
+          </a>
+          {' '}&mdash; Made in Thailand
         </p>
       </section>
 
       <Separator />
 
-      {/* ── Features Grid ── */}
+      {/* ── AI Agents Section ── */}
       <section className="mx-auto max-w-6xl px-6 py-20">
         <div className="text-center space-y-4 mb-12">
+          <Badge variant="secondary" className="px-3 py-1 text-xs uppercase tracking-wider">
+            <Bot className="h-3 w-3 mr-1.5" />
+            Multi-Agent System
+          </Badge>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-            Powerful Features
+            8 Specialized AI Agents
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            8 AI agents working together, plus a full ERP suite and integrations
-            with the tools you already use.
+            Each agent is a specialist. The Router classifies intent and delegates tasks
+            to the right agent automatically. Powered by the OpenClaw multi-agent framework.
           </p>
         </div>
 
-        {/* Agent cards */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-12">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {agents.map((agent) => (
-            <Card key={agent.name} className="hover:shadow-md transition-shadow">
+            <Card key={agent.name} className="hover:shadow-md transition-shadow group">
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${agent.color} text-primary group-hover:scale-110 transition-transform`}>
                     <agent.icon className="h-5 w-5" />
                   </div>
-                  <CardTitle className="text-base">{agent.name}</CardTitle>
+                  <CardTitle className="text-base">{agent.name} Agent</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">{agent.desc}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{agent.desc}</p>
               </CardContent>
             </Card>
           ))}
         </div>
+      </section>
 
-        {/* ERP module badges */}
-        <div className="text-center space-y-4 mb-10">
-          <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-            ERP Modules
+      <Separator />
+
+      {/* ── Dashboard Section ── */}
+      <section className="mx-auto max-w-6xl px-6 py-20">
+        <div className="text-center space-y-4 mb-12">
+          <Badge variant="secondary" className="px-3 py-1 text-xs uppercase tracking-wider">
+            <LayoutDashboard className="h-3 w-3 mr-1.5" />
+            25+ Pages
+          </Badge>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+            Full-Featured Dashboard
+          </h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Real-time widgets, AI agent management, knowledge base with RAG search,
+            task boards, and event-driven workflow automation.
           </p>
-          <div className="flex flex-wrap justify-center gap-3">
-            {erpModules.map((mod) => (
-              <Badge
-                key={mod.name}
-                variant="secondary"
-                className="px-4 py-2 text-sm gap-2"
-              >
-                <mod.icon className="h-4 w-4" />
-                {mod.name}
-              </Badge>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {dashboardFeatures.map((feature) => (
+            <Card key={feature.name} className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <feature.icon className="h-5 w-5" />
+                  </div>
+                  <CardTitle className="text-base">{feature.name}</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">{feature.desc}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      <Separator />
+
+      {/* ── ERP Section ── */}
+      <section className="mx-auto max-w-6xl px-6 py-20">
+        <div className="text-center space-y-4 mb-12">
+          <Badge variant="secondary" className="px-3 py-1 text-xs uppercase tracking-wider">
+            <Package className="h-3 w-3 mr-1.5" />
+            Enterprise Resource Planning
+          </Badge>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+            6 ERP Modules
+          </h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            A complete business management suite with CRM, order processing,
+            inventory tracking, invoicing, expense management, and reporting.
+          </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {erpModules.map((mod) => (
+            <Card key={mod.name} className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
+                    <mod.icon className="h-5 w-5" />
+                  </div>
+                  <CardTitle className="text-base">{mod.name}</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">{mod.desc}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      <Separator />
+
+      {/* ── Backoffice Section ── */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-primary/5" />
+        <div className="relative mx-auto max-w-6xl px-6 py-20">
+          <div className="text-center space-y-4 mb-12">
+            <Badge variant="secondary" className="px-3 py-1 text-xs uppercase tracking-wider">
+              <Gamepad2 className="h-3 w-3 mr-1.5" />
+              RetroDeck Theme
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+              Pixel Art Backoffice
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              A unique retro-styled agent workspace where managing your business
+              feels like playing a game. 5 pixel art characters, real-time chat,
+              and powerful command tools.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {backofficeFeatures.map((feature) => (
+              <Card key={feature.name} className="hover:shadow-md transition-shadow bg-card/80 backdrop-blur-sm">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-500/10 text-violet-600">
+                      <feature.icon className="h-5 w-5" />
+                    </div>
+                    <CardTitle className="text-base">{feature.name}</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">{feature.desc}</p>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>
+      </section>
 
-        {/* Integration logos */}
-        <div className="text-center space-y-4">
-          <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+      <Separator />
+
+      {/* ── Integrations Section ── */}
+      <section className="mx-auto max-w-6xl px-6 py-20">
+        <div className="text-center space-y-4 mb-12">
+          <Badge variant="secondary" className="px-3 py-1 text-xs uppercase tracking-wider">
+            <Globe className="h-3 w-3 mr-1.5" />
+            Connect Everything
+          </Badge>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
             Integrations
+          </h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Connect with messaging platforms, event streams, and vector databases.
+            Every integration is production-ready with webhook support and adapter patterns.
           </p>
-          <div className="flex flex-wrap justify-center gap-6">
-            {['LINE', 'Telegram', 'Slack', 'Kafka'].map((name) => (
-              <div
-                key={name}
-                className="flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium text-muted-foreground"
-              >
-                <Globe className="h-4 w-4" />
-                {name}
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-4xl mx-auto">
+          {integrations.map((integration) => (
+            <Card key={integration.name} className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
+                    <integration.icon className="h-5 w-5" />
+                  </div>
+                  <CardTitle className="text-base">{integration.name}</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">{integration.desc}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      <Separator />
+
+      {/* ── Infrastructure + Admin Section ── */}
+      <section className="mx-auto max-w-6xl px-6 py-20">
+        <div className="grid gap-12 lg:grid-cols-2">
+          {/* Infrastructure */}
+          <div>
+            <div className="space-y-4 mb-8">
+              <Badge variant="secondary" className="px-3 py-1 text-xs uppercase tracking-wider">
+                <Server className="h-3 w-3 mr-1.5" />
+                Infrastructure
+              </Badge>
+              <h3 className="text-2xl font-bold tracking-tight">
+                Production-Ready Stack
+              </h3>
+              <p className="text-muted-foreground text-sm">
+                17 Docker services with Cloudflare SSL, Nginx reverse proxy, and real-time WebSocket support.
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {infrastructure.map((item) => (
+                <div key={item.name} className="flex items-center gap-3 rounded-lg border px-4 py-3">
+                  <item.icon className="h-4 w-4 text-primary flex-shrink-0" />
+                  <span className="text-sm font-medium">{item.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Admin + Settings */}
+          <div>
+            <div className="space-y-4 mb-8">
+              <Badge variant="secondary" className="px-3 py-1 text-xs uppercase tracking-wider">
+                <Shield className="h-3 w-3 mr-1.5" />
+                Administration
+              </Badge>
+              <h3 className="text-2xl font-bold tracking-tight">
+                Admin + Settings
+              </h3>
+              <p className="text-muted-foreground text-sm">
+                User management, audit logging, system health monitoring, and role-based access control.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              {/* Admin features */}
+              <div className="grid gap-3 sm:grid-cols-2">
+                {adminFeatures.map((item) => (
+                  <div key={item.name} className="flex items-center gap-3 rounded-lg border px-4 py-3">
+                    <item.icon className="h-4 w-4 text-primary flex-shrink-0" />
+                    <span className="text-sm font-medium">{item.name}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+
+              {/* Roles */}
+              <div className="rounded-lg border px-4 py-3">
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Access Roles</p>
+                <div className="flex flex-wrap gap-2">
+                  {roles.map((role) => (
+                    <Badge key={role} variant="outline" className="text-xs">
+                      {role}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Settings list */}
+              <div className="rounded-lg border px-4 py-3">
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Settings</p>
+                <ul className="space-y-1.5">
+                  {settingsFeatures.map((feature) => (
+                    <li key={feature} className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <ChevronRight className="h-3 w-3 text-primary flex-shrink-0" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -290,11 +707,11 @@ export default function LandingPage() {
       <section className="mx-auto max-w-6xl px-6 py-20">
         <div className="text-center space-y-4 mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-            Simple Pricing
+            Simple, Transparent Pricing
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Start free with the Community edition. Upgrade to Pro when you need more
-            power.
+            Start free with the Community edition. Upgrade to Pro when you need
+            more agents, roles, integrations, and enterprise features.
           </p>
         </div>
 
@@ -317,14 +734,12 @@ export default function LandingPage() {
                     {feature}
                   </li>
                 ))}
-                <li className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <X className="h-4 w-4 flex-shrink-0" />
-                  Custom integrations
-                </li>
-                <li className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <X className="h-4 w-4 flex-shrink-0" />
-                  Audit logs & compliance
-                </li>
+                {communityExcluded.map((feature) => (
+                  <li key={feature} className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <X className="h-4 w-4 flex-shrink-0" />
+                    {feature}
+                  </li>
+                ))}
               </ul>
             </CardContent>
             <CardFooter>
@@ -375,15 +790,15 @@ export default function LandingPage() {
       <section className="mx-auto max-w-6xl px-6 py-20">
         <div className="text-center space-y-4 mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-            See it in Action
+            See It in Action
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
             Explore the unique features that make UniCore stand out from traditional
-            business tools.
+            business tools and generic SaaS platforms.
           </p>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {showcaseItems.map((item) => (
             <Card key={item.title} className="hover:shadow-md transition-shadow">
               <CardHeader>
@@ -400,6 +815,25 @@ export default function LandingPage() {
                 </p>
               </CardContent>
             </Card>
+          ))}
+        </div>
+      </section>
+
+      <Separator />
+
+      {/* ── Tech Stack Section ── */}
+      <section className="mx-auto max-w-6xl px-6 py-16">
+        <div className="text-center space-y-4 mb-8">
+          <h3 className="text-xl font-bold tracking-tight text-muted-foreground">
+            Built With Modern Technology
+          </h3>
+        </div>
+        <div className="flex flex-wrap justify-center gap-2">
+          {techStack.map((tech) => (
+            <Badge key={tech.name} variant="outline" className="text-xs px-3 py-1.5">
+              <Zap className="h-3 w-3 mr-1.5" />
+              {tech.name}
+            </Badge>
           ))}
         </div>
       </section>
@@ -423,7 +857,7 @@ export default function LandingPage() {
               Dashboard
             </Link>
             <Link href="/wizard" className="hover:text-foreground transition-colors">
-              Wizard
+              Setup Wizard
             </Link>
             <a
               href="https://github.com/bemindlabs/unicore"
@@ -441,6 +875,12 @@ export default function LandingPage() {
             >
               Docs
             </a>
+            <a
+              href="mailto:info@bemind.tech"
+              className="hover:text-foreground transition-colors"
+            >
+              Contact
+            </a>
           </nav>
 
           {/* Made with love */}
@@ -449,20 +889,10 @@ export default function LandingPage() {
             <span className="font-medium text-foreground">BeMind Technology</span>
           </p>
 
-          {/* Tech stack */}
-          <div className="flex flex-wrap justify-center gap-2">
-            {['Next.js', 'NestJS', 'PostgreSQL', 'Redis', 'Kafka', 'Qdrant'].map((tech) => (
-              <Badge key={tech} variant="outline" className="text-xs">
-                <Zap className="h-3 w-3 mr-1" />
-                {tech}
-              </Badge>
-            ))}
-          </div>
-
           <Separator className="max-w-xs" />
 
           <p className="text-xs text-muted-foreground">
-            &copy; 2026 BeMind Technology. All rights reserved.
+            &copy; 2026 BeMind Technology (Pituk Kaewsuksai). All rights reserved.
           </p>
         </div>
       </footer>
