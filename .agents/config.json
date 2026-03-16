@@ -1,9 +1,0 @@
-{
-  "maxConcurrentAgents": 8,
-  "defaultModel": "sonnet",
-  "autoCollect": true,
-  "sessionPrefix": "unc-correct",
-  "workingBranch": "fix/{task-slug}",
-  "project": "unicore",
-  "createdAt": "2026-03-15"
-}

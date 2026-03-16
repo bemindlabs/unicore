@@ -1,9 +1,0 @@
-{
-  "task": "correct-agent-research-erp",
-  "status": "completed",
-  "timestamp": "2026-03-15T00:00:00.000Z",
-  "files_modified": [
-    "services/openclaw-gateway/src/agents/research/research.agent.ts",
-    "services/openclaw-gateway/src/agents/erp/erp.agent.ts"
-  ]
-}

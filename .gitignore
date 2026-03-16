@@ -49,3 +49,6 @@ prisma/*.db
 playwright-report/
 test-results/
 blob-report/
+
+# Agents
+.agents
