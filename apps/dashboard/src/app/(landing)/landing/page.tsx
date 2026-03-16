@@ -426,7 +426,7 @@ export default function LandingPage() {
               Wizard
             </Link>
             <a
-              href="https://github.com/bemindtech/unicore"
+              href="https://github.com/bemindlabs/unicore"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-foreground transition-colors"
@@ -434,7 +434,7 @@ export default function LandingPage() {
               GitHub
             </a>
             <a
-              href="https://github.com/bemindtech/unicore#readme"
+              href="https://github.com/bemindlabs/unicore#readme"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-foreground transition-colors"
