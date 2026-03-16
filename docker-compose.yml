@@ -1,7 +1,19 @@
-version: "3.8"
+# ============================================================================
+# UniCore Community Edition
+# ============================================================================
+# Open-source core platform — includes all community services, infrastructure,
+# and the license server integration.
+#
+# Usage:
+#   docker compose up -d                          # infrastructure only
+#   docker compose --profile apps up -d           # + backend & frontend
+#   docker compose --profile apps --profile workflows up -d  # + Kafka workflows
+# ============================================================================
 
 services:
-  # ─── Infrastructure ───────────────────────────────────────────────
+
+  # ─── Infrastructure ────────────────────────────────────────────────────────
+
   unicore-postgres:
     image: postgres:16-alpine
     environment:
@@ -61,7 +73,8 @@ services:
       timeout: 5s
       retries: 10
 
-  # ─── Backend Services ─────────────────────────────────────────────
+  # ─── Backend Services (Community) ──────────────────────────────────────────
+
   unicore-api-gateway:
     build:
       context: .
@@ -69,6 +82,7 @@ services:
     ports:
       - "4000:4000"
     environment:
+      UNICORE_EDITION: community
       DATABASE_URL: postgresql://unicore:password@unicore-postgres:5432/unicore?schema=public
       REDIS_URL: redis://unicore-redis:6379
       JWT_SECRET: unicore-local-dev-secret-key-minimum-32-chars
@@ -201,7 +215,8 @@ services:
         condition: service_healthy
     profiles: [workflows]
 
-  # ─── License Server ──────────────────────────────────────────────
+  # ─── License Server ────────────────────────────────────────────────────────
+
   unicore-license-api:
     build:
       context: ../unicore-license
@@ -243,7 +258,8 @@ services:
       retries: 5
     profiles: [apps]
 
-  # ─── Nginx Reverse Proxy ──────────────────────────────────────────
+  # ─── Nginx Reverse Proxy ───────────────────────────────────────────────────
+
   unicore-nginx:
     image: nginx:alpine
     volumes:
@@ -257,21 +273,25 @@ services:
       - nginx-proxy
     profiles: [apps]
 
-  # ─── Frontend Apps ────────────────────────────────────────────────
+  # ─── Frontend Apps (Community) ─────────────────────────────────────────────
+
   unicore-dashboard:
     build:
       context: .
       dockerfile: apps/dashboard/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: https://unicore.bemind.tech
+        NEXT_PUBLIC_EDITION: community
     ports:
       - "3000:3000"
     environment:
       NEXT_PUBLIC_API_URL: https://unicore.bemind.tech
+      NEXT_PUBLIC_EDITION: community
     depends_on:
       - unicore-api-gateway
     profiles: [apps]
 
+# ─── Volumes ─────────────────────────────────────────────────────────────────
 
 volumes:
   postgres_data:
@@ -279,6 +299,8 @@ volumes:
   vectordb_data:
   license_postgres_data:
   license_redis_data:
+
+# ─── Networks ────────────────────────────────────────────────────────────────
 
 networks:
   nginx-proxy:
