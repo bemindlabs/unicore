@@ -905,7 +905,7 @@ export default function LandingPage() {
           <Separator className="max-w-xs" />
 
           <p className="text-xs text-muted-foreground">
-            &copy; 2026 BeMind Technology (Pituk Kaewsuksai). All rights reserved.
+            &copy; 2026 BeMind Technology. All rights reserved.
           </p>
         </div>
       </footer>
