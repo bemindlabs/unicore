@@ -81,7 +81,7 @@ export class AdminController {
     const aiPort = process.env.AI_ENGINE_SERVICE_PORT ?? '4200';
     try {
       const aiStart = Date.now();
-      const res = await fetch(`http://${aiHost}:${aiPort}/health`, { signal: AbortSignal.timeout(3000) });
+      const res = await fetch(`http://${aiHost}:${aiPort}/api/v1/llm/health`, { signal: AbortSignal.timeout(3000) });
       services.push({ name: 'AI Engine', status: res.ok ? 'healthy' : 'degraded', latencyMs: Date.now() - aiStart });
     } catch {
       services.push({ name: 'AI Engine', status: 'down' });
