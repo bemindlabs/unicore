@@ -12,20 +12,6 @@ const REACTION_EMOJIS = ['\u{1F44D}', '\u{2764}\u{FE0F}', '\u{1F602}', '\u{1F389
 
 const NOTIFICATION_STORAGE_KEY = 'unicore_chat_sound_enabled';
 
-// A short beep as a base64-encoded WAV data URI
-const BEEP_DATA_URI =
-  'data:audio/wav;base64,UklGRl9vT19teleGZtdCAQAAAAABAAEARKwAAIhYAQACABAAZGF0YQ' +
-  'AAAA==';
-
-function createBeepAudio(): HTMLAudioElement | null {
-  try {
-    // Use AudioContext for a simple beep
-    return new Audio(BEEP_DATA_URI);
-  } catch {
-    return null;
-  }
-}
-
 function playBeep() {
   try {
     const ctx = new AudioContext();
