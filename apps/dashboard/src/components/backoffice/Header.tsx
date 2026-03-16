@@ -4,15 +4,15 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { LayoutGrid, Terminal, Settings, Menu } from 'lucide-react';
-import { useChinjanTheme } from './chinjan/ChinjanThemeProvider';
-import { findCharacterByRole } from '@/lib/backoffice/chinjan-characters';
+import { useRetroDeskTheme } from './retrodesk/RetroDeskThemeProvider';
+import { findCharacterByRole } from '@/lib/backoffice/retrodesk-characters';
 
-const ChinjanThemeToggle = dynamic(
-  () => import('./chinjan/ChinjanThemeToggle').then((m) => m.ChinjanThemeToggle),
+const ThemeSelector = dynamic(
+  () => import('./ThemeSelector').then((m) => m.ThemeSelector),
   { ssr: false }
 );
 const PixelCharacter = dynamic(
-  () => import('./chinjan/PixelCharacter').then((m) => m.PixelCharacter),
+  () => import('./retrodesk/PixelCharacter').then((m) => m.PixelCharacter),
   { ssr: false }
 );
 
@@ -35,7 +35,7 @@ const TAB_CONFIG: { key: BackofficeTab; label: string; icon: typeof LayoutGrid }
 
 export function Header({ agentCount, workingCount, onAddAgent, activeTab, onTabChange, onToggleMobileSidebar }: Props) {
   const [time, setTime] = useState('');
-  const { isActive: isChinjan } = useChinjanTheme();
+  const { isActive: isRetroDesk } = useRetroDeskTheme();
 
   useEffect(() => {
     function tick() {
@@ -51,27 +51,27 @@ export function Header({ agentCount, workingCount, onAddAgent, activeTab, onTabC
     return () => clearInterval(interval);
   }, []);
 
-  if (isChinjan) {
+  if (isRetroDesk) {
     return (
-      <header className="flex flex-wrap items-center justify-between px-4 lg:px-6 py-3 border-b-2" style={{ borderColor: 'var(--chinjan-border)', background: 'var(--chinjan-surface)' }}>
+      <header className="flex flex-wrap items-center justify-between px-4 lg:px-6 py-3 border-b-2" style={{ borderColor: 'var(--retrodesk-border)', background: 'var(--retrodesk-surface)' }}>
         <div className="flex items-center gap-2 sm:gap-4">
           {activeTab === 'overview' && onToggleMobileSidebar && (
             <button
               onClick={onToggleMobileSidebar}
               className="md:hidden p-1.5 border-2 transition-colors"
-              style={{ borderColor: 'var(--chinjan-border)', color: 'var(--chinjan-muted)' }}
+              style={{ borderColor: 'var(--retrodesk-border)', color: 'var(--retrodesk-muted)' }}
               aria-label="Toggle sidebar"
             >
               <Menu className="w-4 h-4" />
             </button>
           )}
-          <Link href="/" className="text-[var(--chinjan-muted)] hover:text-[var(--chinjan-pink)] text-xs mr-2 transition-colors hidden sm:inline" style={{ fontFamily: "'Nunito', sans-serif" }}>
+          <Link href="/" className="text-[var(--retrodesk-muted)] hover:text-[var(--retrodesk-pink)] text-xs mr-2 transition-colors hidden sm:inline" style={{ fontFamily: "'Nunito', sans-serif" }}>
             &larr; Dashboard
           </Link>
           <div className="flex items-center gap-2">
-            <ChinjanMascotMini />
+            <RetroDeskMascotMini />
           </div>
-          <div className="hidden sm:flex items-center gap-2 ml-2 text-[10px] chinjan-mono" style={{ color: 'var(--chinjan-muted)' }}>
+          <div className="hidden sm:flex items-center gap-2 ml-2 text-[10px] retrodesk-mono" style={{ color: 'var(--retrodesk-muted)' }}>
             <span className="flex items-center gap-1">
               <span className="w-2 h-2 bg-[#a8e6cf]" />
               {workingCount} ACTIVE
@@ -85,11 +85,11 @@ export function Header({ agentCount, workingCount, onAddAgent, activeTab, onTabC
               <button
                 key={key}
                 onClick={() => onTabChange(key)}
-                className="chinjan-mono text-[10px] sm:text-xs px-2 sm:px-3 py-1 sm:py-1.5 border-2 transition-all tracking-wider uppercase flex items-center gap-1 sm:gap-1.5"
+                className="retrodesk-mono text-[10px] sm:text-xs px-2 sm:px-3 py-1 sm:py-1.5 border-2 transition-all tracking-wider uppercase flex items-center gap-1 sm:gap-1.5"
                 style={{
-                  borderColor: activeTab === key ? 'var(--chinjan-pink)' : 'var(--chinjan-border)',
-                  color: activeTab === key ? 'var(--chinjan-pink)' : 'var(--chinjan-muted)',
-                  background: activeTab === key ? 'color-mix(in srgb, var(--chinjan-pink) 10%, transparent)' : 'transparent',
+                  borderColor: activeTab === key ? 'var(--retrodesk-pink)' : 'var(--retrodesk-border)',
+                  color: activeTab === key ? 'var(--retrodesk-pink)' : 'var(--retrodesk-muted)',
+                  background: activeTab === key ? 'color-mix(in srgb, var(--retrodesk-pink) 10%, transparent)' : 'transparent',
                 }}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -100,23 +100,23 @@ export function Header({ agentCount, workingCount, onAddAgent, activeTab, onTabC
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <ChinjanThemeToggle />
+          <ThemeSelector />
           {activeTab === 'overview' && (
             <button
               onClick={onAddAgent}
-              className="chinjan-mono text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 border-2 transition-all tracking-wider uppercase"
+              className="retrodesk-mono text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 border-2 transition-all tracking-wider uppercase"
               style={{
-                borderColor: 'var(--chinjan-pink)',
-                color: 'var(--chinjan-pink)',
-                background: 'color-mix(in srgb, var(--chinjan-pink) 10%, transparent)',
+                borderColor: 'var(--retrodesk-pink)',
+                color: 'var(--retrodesk-pink)',
+                background: 'color-mix(in srgb, var(--retrodesk-pink) 10%, transparent)',
               }}
             >
               + <span className="hidden sm:inline">Add Agent</span><span className="sm:hidden">Add</span>
             </button>
           )}
-          <div className="chinjan-mono text-sm">
-            <span className="text-[10px] mr-2 hidden sm:inline uppercase" style={{ color: 'var(--chinjan-muted)' }}>Time:</span>
-            <span style={{ color: 'var(--chinjan-text)' }}>{time}</span>
+          <div className="retrodesk-mono text-sm">
+            <span className="text-[10px] mr-2 hidden sm:inline uppercase" style={{ color: 'var(--retrodesk-muted)' }}>Time:</span>
+            <span style={{ color: 'var(--retrodesk-text)' }}>{time}</span>
           </div>
         </div>
       </header>
@@ -170,7 +170,7 @@ export function Header({ agentCount, workingCount, onAddAgent, activeTab, onTabC
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3">
-        <ChinjanThemeToggle />
+        <ThemeSelector />
         {activeTab === 'overview' && (
           <button
             onClick={onAddAgent}
@@ -189,7 +189,7 @@ export function Header({ agentCount, workingCount, onAddAgent, activeTab, onTabC
 }
 
 /** Tiny inline mascot for header */
-function ChinjanMascotMini() {
+function RetroDeskMascotMini() {
   const mascot = findCharacterByRole('mascot');
   if (!mascot) return null;
   return <PixelCharacter character={mascot} size="xs" animation="wave" />;

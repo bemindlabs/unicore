@@ -1,11 +1,11 @@
 'use client';
 
-import { findCharacterByRole } from '@/lib/backoffice/chinjan-characters';
+import { findCharacterByRole } from '@/lib/backoffice/retrodesk-characters';
 import { PixelCharacter } from './PixelCharacter';
 
 const oopsy = findCharacterByRole('error')!;
 
-export function ChinjanErrorState({ message }: { message?: string }) {
+export function RetroDeskErrorState({ message }: { message?: string }) {
   return (
     <div className="flex items-center justify-center gap-3 px-4 py-2 bg-[#ffb347]/10 border-b-2 border-[#ffb347]/30">
       <PixelCharacter

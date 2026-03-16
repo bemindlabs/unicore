@@ -2,8 +2,8 @@
 
 import type { BoardTask } from '@/lib/tasks/types';
 import { PRIORITY_CONFIG } from '@/lib/tasks/types';
-import { ChinjanOnly, DefaultOnly } from '@/components/backoffice/chinjan/ChinjanThemeProvider';
-import { ChinjanTaskCard } from './ChinjanTaskCard';
+import { RetroDeskOnly, DefaultOnly } from '@/components/backoffice/retrodesk/RetroDeskThemeProvider';
+import { RetroDeskTaskCard } from './RetroDeskTaskCard';
 
 function relativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -27,9 +27,9 @@ export function TaskCard({ task, onClick, onDragStart }: Props) {
 
   return (
     <>
-    <ChinjanOnly>
-      <ChinjanTaskCard task={task} onClick={onClick} onDragStart={onDragStart} />
-    </ChinjanOnly>
+    <RetroDeskOnly>
+      <RetroDeskTaskCard task={task} onClick={onClick} onDragStart={onDragStart} />
+    </RetroDeskOnly>
     <DefaultOnly>
     <div
       draggable

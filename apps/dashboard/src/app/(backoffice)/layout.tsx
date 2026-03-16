@@ -5,16 +5,16 @@ import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
-import { ChinjanThemeProvider } from '@/components/backoffice/chinjan/ChinjanThemeProvider';
+import { RetroDeskThemeProvider } from '@/components/backoffice/retrodesk/RetroDeskThemeProvider';
 import { ChatBox } from '@/components/backoffice/chat/ChatBox';
 import '@unicore/ui/globals.css';
-import '@/styles/chinjan-theme.css';
+import '@/styles/retrodesk-theme.css';
 
 export default function BackofficeLayout({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
   const { characterTheme } = useTheme();
   const router = useRouter();
-  const isChinjan = characterTheme === 'chinjan';
+  const isRetroDesk = characterTheme === 'retrodesk';
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -24,7 +24,7 @@ export default function BackofficeLayout({ children }: { children: ReactNode }) 
 
   if (isLoading) {
     return (
-      <div className={`flex h-screen items-center justify-center ${isChinjan ? '' : 'bg-[#060a14]'}`} style={isChinjan ? { background: 'var(--chinjan-bg, #faf8f5)' } : undefined}>
+      <div className={`flex h-screen items-center justify-center ${isRetroDesk ? '' : 'bg-[#060a14]'}`} style={isRetroDesk ? { background: 'var(--retrodesk-bg, #faf8f5)' } : undefined}>
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
       </div>
     );
@@ -35,11 +35,11 @@ export default function BackofficeLayout({ children }: { children: ReactNode }) 
   }
 
   return (
-    <ChinjanThemeProvider>
-      <div className={`min-h-screen ${isChinjan ? 'chinjan-body' : 'bg-[#060a14] text-white'}`} style={isChinjan ? { background: 'var(--chinjan-bg, #faf8f5)', color: 'var(--chinjan-text, #2d2d2d)' } : undefined}>
+    <RetroDeskThemeProvider>
+      <div className={`min-h-screen ${isRetroDesk ? 'retrodesk-body' : 'bg-[#060a14] text-white'}`} style={isRetroDesk ? { background: 'var(--retrodesk-bg, #faf8f5)', color: 'var(--retrodesk-text, #2d2d2d)' } : undefined}>
         {children}
         <ChatBox />
       </div>
-    </ChinjanThemeProvider>
+    </RetroDeskThemeProvider>
   );
 }

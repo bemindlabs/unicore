@@ -1,11 +1,11 @@
 'use client';
 
-import { useChinjanTheme } from './ChinjanThemeProvider';
+import { useRetroDeskTheme } from './RetroDeskThemeProvider';
 
 const _ = 'transparent';
 
 function PixelShape({ grid, px = 3, animation, className = '' }: { grid: string[][]; px?: number; animation?: string; className?: string }) {
-  const { animationLevel } = useChinjanTheme();
+  const { animationLevel } = useRetroDeskTheme();
   const cols = grid[0]?.length ?? 0;
   const rows = grid.length;
 

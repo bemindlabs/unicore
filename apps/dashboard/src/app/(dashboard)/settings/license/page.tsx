@@ -200,7 +200,7 @@ export default function SettingsLicensePage() {
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      await api.post('/api/v1/license/refresh');
+      await api.post('/api/v1/license/revalidate');
       toast({ title: 'License refreshed', description: 'Status is up to date.' });
     } finally {
       setIsRefreshing(false);

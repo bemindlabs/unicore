@@ -26,7 +26,7 @@ interface Props {
   onDragStart?: (e: React.DragEvent) => void;
 }
 
-export function ChinjanTaskCard({ task, onClick, onDragStart }: Props) {
+export function RetroDeskTaskCard({ task, onClick, onDragStart }: Props) {
   const priorityCfg = PRIORITY_CONFIG[task.priority];
 
   return (
@@ -40,20 +40,20 @@ export function ChinjanTaskCard({ task, onClick, onDragStart }: Props) {
       onClick={onClick}
       className="border-2 p-3 cursor-pointer hover:shadow-md transition-all group"
       style={{
-        borderColor: 'var(--chinjan-border)',
-        background: 'var(--chinjan-surface)',
+        borderColor: 'var(--retrodesk-border)',
+        background: 'var(--retrodesk-surface)',
       }}
     >
       {/* Priority + Labels */}
       <div className="flex items-center gap-1.5 mb-2">
-        <span className="chinjan-mono text-base" style={{ color: priorityCfg.color }}>
+        <span className="retrodesk-mono text-base" style={{ color: priorityCfg.color }}>
           {PRIORITY_ICONS[task.priority]}
         </span>
-        <span className="chinjan-mono text-xs" style={{ color: priorityCfg.color }}>
+        <span className="retrodesk-mono text-xs" style={{ color: priorityCfg.color }}>
           {priorityCfg.label}
         </span>
         {task.labels.slice(0, 2).map((label: string) => (
-          <span key={label} className="chinjan-mono text-[10px] px-1 border" style={{ borderColor: 'var(--chinjan-border)', color: 'var(--chinjan-muted)' }}>
+          <span key={label} className="retrodesk-mono text-[10px] px-1 border" style={{ borderColor: 'var(--retrodesk-border)', color: 'var(--retrodesk-muted)' }}>
             {label}
           </span>
         ))}
@@ -61,24 +61,24 @@ export function ChinjanTaskCard({ task, onClick, onDragStart }: Props) {
 
       {/* Title */}
       <h4
-        className="chinjan-mono text-sm leading-snug mb-2 line-clamp-2"
-        style={{ color: 'var(--chinjan-text)' }}
+        className="retrodesk-mono text-sm leading-snug mb-2 line-clamp-2"
+        style={{ color: 'var(--retrodesk-text)' }}
       >
         {task.title}
       </h4>
 
       {/* Progress bar (pixel style) */}
       {task.progress > 0 && task.status !== 'done' && (
-        <div className="w-full h-2 mb-2" style={{ background: 'var(--chinjan-border)' }}>
+        <div className="w-full h-2 mb-2" style={{ background: 'var(--retrodesk-border)' }}>
           <div
             className="h-full transition-all"
-            style={{ width: `${task.progress}%`, background: 'var(--chinjan-pink)' }}
+            style={{ width: `${task.progress}%`, background: 'var(--retrodesk-pink)' }}
           />
         </div>
       )}
 
       {task.status === 'done' && (
-        <div className="chinjan-mono text-xs mb-1" style={{ color: 'var(--chinjan-green)' }}>
+        <div className="retrodesk-mono text-xs mb-1" style={{ color: 'var(--retrodesk-green)' }}>
           ★ Complete!
         </div>
       )}
@@ -87,17 +87,17 @@ export function ChinjanTaskCard({ task, onClick, onDragStart }: Props) {
       <div className="flex items-center justify-between">
         {task.assignee ? (
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3" style={{ background: task.assignee.color ?? 'var(--chinjan-blue)' }} />
-            <span className="chinjan-mono text-[10px]" style={{ color: 'var(--chinjan-text)' }}>
+            <span className="w-3 h-3" style={{ background: task.assignee.color ?? 'var(--retrodesk-blue)' }} />
+            <span className="retrodesk-mono text-[10px]" style={{ color: 'var(--retrodesk-text)' }}>
               {task.assignee.name}
             </span>
           </div>
         ) : (
-          <span className="chinjan-mono text-[10px]" style={{ color: 'var(--chinjan-muted)' }}>
+          <span className="retrodesk-mono text-[10px]" style={{ color: 'var(--retrodesk-muted)' }}>
             Unassigned
           </span>
         )}
-        <span className="chinjan-mono text-[10px]" style={{ color: 'var(--chinjan-muted)' }}>
+        <span className="retrodesk-mono text-[10px]" style={{ color: 'var(--retrodesk-muted)' }}>
           {relativeTime(task.updatedAt)}
         </span>
       </div>

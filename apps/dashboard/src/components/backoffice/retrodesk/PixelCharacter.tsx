@@ -1,12 +1,12 @@
 'use client';
 
-import type { ChinjanCharacter } from '@/lib/backoffice/chinjan-characters';
-import { useChinjanTheme } from './ChinjanThemeProvider';
+import type { RetroDeskCharacter } from '@/lib/backoffice/retrodesk-characters';
+import { useRetroDeskTheme } from './RetroDeskThemeProvider';
 
 type AnimationType = 'idle' | 'bounce' | 'wave' | 'sleep' | 'celebrate' | 'none';
 
 interface Props {
-  character: ChinjanCharacter;
+  character: RetroDeskCharacter;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   animation?: AnimationType;
   flipped?: boolean;
@@ -26,7 +26,7 @@ const ANIMATION_MAP: Record<AnimationType, string | undefined> = {
 };
 
 export function PixelCharacter({ character, size = 'md', animation = 'idle', flipped, speechBubble, className = '' }: Props) {
-  const { animationLevel } = useChinjanTheme();
+  const { animationLevel } = useRetroDeskTheme();
   const px = SCALES[size];
   const cols = character.grid[0]?.length ?? 12;
   const rows = character.grid.length;

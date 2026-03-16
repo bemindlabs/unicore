@@ -13,8 +13,8 @@ import { BackofficeApp } from "@/components/backoffice/BackofficeApp";
 import { useTheme } from "@/hooks/use-theme";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
-const ChinjanLoadingState = dynamic(
-  () => import("@/components/backoffice/chinjan/ChinjanLoadingState").then((m) => m.ChinjanLoadingState),
+const RetroDeskLoadingState = dynamic(
+  () => import("@/components/backoffice/retrodesk/RetroDeskLoadingState").then((m) => m.RetroDeskLoadingState),
   { ssr: false }
 );
 
@@ -41,8 +41,8 @@ export default function BackofficePage() {
   }, [fetchAgents]);
 
   if (loading) {
-    if (characterTheme === "chinjan") {
-      return <ChinjanLoadingState />;
+    if (characterTheme === "retrodesk") {
+      return <RetroDeskLoadingState />;
     }
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#060a14]">

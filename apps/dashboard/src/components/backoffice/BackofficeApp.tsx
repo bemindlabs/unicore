@@ -10,18 +10,18 @@ import { WorkstationGrid } from "./WorkstationGrid";
 import { AgentModal } from "./AgentModal";
 import { CommandCenter } from "./CommandCenter";
 import { AgentSettings } from "./AgentSettings";
-import { ChinjanOnly, DefaultOnly } from "./chinjan/ChinjanThemeProvider";
+import { RetroDeskOnly, DefaultOnly } from "./retrodesk/RetroDeskThemeProvider";
 
-const ChinjanErrorState = dynamic(
-  () => import("./chinjan/ChinjanErrorState").then((m) => m.ChinjanErrorState),
+const RetroDeskErrorState = dynamic(
+  () => import("./retrodesk/RetroDeskErrorState").then((m) => m.RetroDeskErrorState),
   { ssr: false }
 );
 const PixelStar = dynamic(
-  () => import("./chinjan/PixelDecorations").then((m) => m.PixelStar),
+  () => import("./retrodesk/PixelDecorations").then((m) => m.PixelStar),
   { ssr: false }
 );
 const PixelCloud = dynamic(
-  () => import("./chinjan/PixelDecorations").then((m) => m.PixelCloud),
+  () => import("./retrodesk/PixelDecorations").then((m) => m.PixelCloud),
   { ssr: false }
 );
 const AgentTerminal = dynamic(
@@ -82,8 +82,8 @@ export function BackofficeApp({
           }}
         />
       </DefaultOnly>
-      <ChinjanOnly>
-        <div className="fixed inset-0 pointer-events-none chinjan-grid-bg" />
+      <RetroDeskOnly>
+        <div className="fixed inset-0 pointer-events-none retrodesk-grid-bg" />
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
           <PixelCloud className="absolute top-8 left-[10%]" px={2} />
           <PixelCloud className="absolute top-16 right-[15%]" px={3} />
@@ -92,7 +92,7 @@ export function BackofficeApp({
           <PixelStar className="absolute bottom-20 left-[20%]" px={2} />
           <PixelStar className="absolute bottom-32 right-[25%]" px={2} />
         </div>
-      </ChinjanOnly>
+      </RetroDeskOnly>
 
       <div className="relative z-10 flex flex-col h-screen transition-colors duration-300">
         {apiError && (
@@ -104,9 +104,9 @@ export function BackofficeApp({
                 </span>
               </div>
             </DefaultOnly>
-            <ChinjanOnly>
-              <ChinjanErrorState />
-            </ChinjanOnly>
+            <RetroDeskOnly>
+              <RetroDeskErrorState />
+            </RetroDeskOnly>
           </>
         )}
 

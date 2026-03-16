@@ -1,16 +1,19 @@
 import { Controller, Get, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { LicenseService } from './license.service';
+import { ActivateLicenseDto } from './dto/activate-license.dto';
 
 /**
  * Exposes license status information to authenticated clients.
  * All routes require JWT authentication (applied globally via JwtAuthGuard).
+ *
+ * Route prefix: api/v1/license
  */
 @Controller('api/v1/license')
 export class LicenseController {
   constructor(private readonly licenseService: LicenseService) {}
 
   /**
-   * GET /license/status
+   * GET /api/v1/license/status
    * Returns the current license status including tier and available features.
    */
   @Get('status')
@@ -26,13 +29,13 @@ export class LicenseController {
   }
 
   /**
-   * POST /license/activate
+   * POST /api/v1/license/activate
    * Accepts a new license key, persists it, and validates against the license server.
    */
   @Post('activate')
   @HttpCode(HttpStatus.OK)
-  async activate(@Body() body: { key: string }) {
-    const status = await this.licenseService.activate(body.key);
+  async activate(@Body() dto: ActivateLicenseDto) {
+    const status = await this.licenseService.activate(dto.key);
     return {
       valid: status.valid,
       tier: status.tier,
@@ -44,27 +47,9 @@ export class LicenseController {
   }
 
   /**
-   * POST /license/refresh
-   * Forces an immediate re-validation of the current license key.
-   */
-  @Post('refresh')
-  @HttpCode(HttpStatus.OK)
-  async refresh() {
-    const status = await this.licenseService.revalidate();
-    return {
-      valid: status.valid,
-      tier: status.tier,
-      features: status.features,
-      expiresAt: status.expiresAt,
-      validatedAt: status.validatedAt,
-      nextRevalidationAt: status.nextRevalidationAt,
-    };
-  }
-
-  /**
-   * POST /license/revalidate
+   * POST /api/v1/license/revalidate
    * Forces an immediate re-validation against the license server.
-   * Useful after updating the UNICORE_LICENSE_KEY without restarting.
+   * Useful after updating the license key without restarting.
    */
   @Post('revalidate')
   @HttpCode(HttpStatus.OK)

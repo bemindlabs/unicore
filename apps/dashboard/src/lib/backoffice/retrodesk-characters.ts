@@ -1,6 +1,6 @@
 export type CharacterRole = 'mascot' | 'helper' | 'error' | 'empty-state' | 'loading' | 'celebration';
 
-export interface ChinjanCharacter {
+export interface RetroDeskCharacter {
   id: string;
   name: string;
   /** 12x14 grid of hex color values. 'transparent' for empty pixels. */
@@ -20,7 +20,7 @@ const WHITE = '#ffffff';
 const BLUSH = '#ffb3b3';
 
 /** Chinja — main mascot, pink shirt, star hair clip */
-const chinja: ChinjanCharacter = {
+const chinja: RetroDeskCharacter = {
   id: 'chinja',
   name: 'Chinja',
   role: 'mascot',
@@ -45,7 +45,7 @@ const chinja: ChinjanCharacter = {
 };
 
 /** Pixo — helper bot, blue, square head, antenna */
-const pixo: ChinjanCharacter = {
+const pixo: RetroDeskCharacter = {
   id: 'pixo',
   name: 'Pixo',
   role: 'helper',
@@ -70,7 +70,7 @@ const pixo: ChinjanCharacter = {
 };
 
 /** Oopsy — error character, orange, surprised face */
-const oopsy: ChinjanCharacter = {
+const oopsy: RetroDeskCharacter = {
   id: 'oopsy',
   name: 'Oopsy',
   role: 'error',
@@ -95,7 +95,7 @@ const oopsy: ChinjanCharacter = {
 };
 
 /** Sleepy — idle/empty state character, green pajamas */
-const sleepy: ChinjanCharacter = {
+const sleepy: RetroDeskCharacter = {
   id: 'sleepy',
   name: 'Sleepy',
   role: 'empty-state',
@@ -120,7 +120,7 @@ const sleepy: ChinjanCharacter = {
 };
 
 /** Sparky — celebration character, yellow, confetti mood */
-const sparky: ChinjanCharacter = {
+const sparky: RetroDeskCharacter = {
   id: 'sparky',
   name: 'Sparky',
   role: 'celebration',
@@ -144,12 +144,12 @@ const sparky: ChinjanCharacter = {
   ],
 };
 
-export const CHINJAN_CHARACTERS: ChinjanCharacter[] = [chinja, pixo, oopsy, sleepy, sparky];
+export const RETRODESK_CHARACTERS: RetroDeskCharacter[] = [chinja, pixo, oopsy, sleepy, sparky];
 
-export function findCharacter(id: string): ChinjanCharacter | undefined {
-  return CHINJAN_CHARACTERS.find((c) => c.id === id);
+export function findCharacter(id: string): RetroDeskCharacter | undefined {
+  return RETRODESK_CHARACTERS.find((c) => c.id === id);
 }
 
-export function findCharacterByRole(role: CharacterRole): ChinjanCharacter | undefined {
-  return CHINJAN_CHARACTERS.find((c) => c.role === role);
+export function findCharacterByRole(role: CharacterRole): RetroDeskCharacter | undefined {
+  return RETRODESK_CHARACTERS.find((c) => c.role === role);
 }

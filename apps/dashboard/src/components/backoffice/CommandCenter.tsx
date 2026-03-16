@@ -4,9 +4,10 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Send, Copy, Check, Trash2 } from 'lucide-react';
 import { useChatWebSocket, type ChatMessage } from '@/hooks/use-chat-ws';
 import { getAgents } from '@/lib/backoffice/store';
+import { api } from '@/lib/api';
 import type { BackofficeAgent } from '@/lib/backoffice/types';
 import { StatusIndicator } from './StatusIndicator';
-import { useChinjanTheme } from './chinjan/ChinjanThemeProvider';
+import { useRetroDeskTheme } from './retrodesk/RetroDeskThemeProvider';
 
 /* ------------------------------------------------------------------ */
 /*  Quick prompts per agent type                                       */
@@ -190,11 +191,29 @@ function clearStoredMessages(agentId: string) {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Save conversation to backend                                       */
+/* ------------------------------------------------------------------ */
+
+function saveChatHistory(agent: BackofficeAgent, msgs: ChatMessage[]) {
+  if (msgs.length === 0) return;
+  api.post('/api/v1/chat-history', {
+    agentId: agent.id,
+    agentName: agent.name,
+    userId: 'user-1',
+    userName: 'You',
+    messages: msgs,
+    channel: 'command',
+  }).catch(() => {
+    // API unavailable — silently ignore
+  });
+}
+
+/* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
 export function CommandCenter() {
-  const { isActive: isChinjan } = useChinjanTheme();
+  const { isActive: isRetroDesk } = useRetroDeskTheme();
 
   /* --- agents --- */
   const [agents, setAgents] = useState<BackofficeAgent[]>([]);
@@ -273,6 +292,10 @@ export function CommandCenter() {
   }
 
   function handleClearMessages() {
+    // Save conversation to chat history before clearing
+    if (selectedAgent && messages.length > 0) {
+      saveChatHistory(selectedAgent, messages);
+    }
     setMessages([]);
     setIsWaiting(false);
     if (selectedAgent) clearStoredMessages(selectedAgent.id);
@@ -286,6 +309,10 @@ export function CommandCenter() {
   }
 
   function handleAgentClick(agent: BackofficeAgent) {
+    // Auto-save current conversation when switching agents
+    if (selectedAgent && selectedAgent.id !== agent.id && messages.length > 0) {
+      saveChatHistory(selectedAgent, messages);
+    }
     setSelectedAgent(agent);
   }
 
@@ -295,21 +322,21 @@ export function CommandCenter() {
 
   return (
     <div className={`flex flex-col md:flex-row h-full min-h-0 border backdrop-blur-sm rounded-lg overflow-hidden ${
-      isChinjan
-        ? 'border-[var(--chinjan-border)] bg-[var(--chinjan-bg)]'
+      isRetroDesk
+        ? 'border-[var(--retrodesk-border)] bg-[var(--retrodesk-bg)]'
         : 'border-cyan-900/30 bg-[#0a0e1a]/60'
     }`}>
       {/* ---- Top (mobile) / Left (desktop): Agent Selector ---- */}
       <aside className={`md:w-64 flex-shrink-0 border-b md:border-b-0 md:border-r overflow-x-auto md:overflow-x-hidden md:overflow-y-auto ${
-        isChinjan
-          ? 'border-[var(--chinjan-border)] bg-[var(--chinjan-surface)]'
+        isRetroDesk
+          ? 'border-[var(--retrodesk-border)] bg-[var(--retrodesk-surface)]'
           : 'border-cyan-900/30 bg-[#080c16]/80'
       }`}>
         <div className={`px-4 py-3 border-b hidden md:block ${
-          isChinjan ? 'border-[var(--chinjan-border)]' : 'border-cyan-900/30'
+          isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-cyan-900/30'
         }`}>
           <h2 className={`text-[10px] uppercase tracking-wider ${
-            isChinjan ? 'chinjan-heading text-[var(--chinjan-pink)]' : 'font-mono text-cyan-600/60'
+            isRetroDesk ? 'retrodesk-heading text-[var(--retrodesk-pink)]' : 'font-mono text-cyan-600/60'
           }`}>
             Select Agent
           </h2>
@@ -322,10 +349,10 @@ export function CommandCenter() {
                 key={agent.id}
                 onClick={() => handleAgentClick(agent)}
                 className={`flex-shrink-0 md:flex-shrink md:w-full text-left rounded-md px-3 py-2.5 transition-colors ${
-                  isChinjan
+                  isRetroDesk
                     ? active
-                      ? 'bg-[color-mix(in_srgb,var(--chinjan-pink)_10%,transparent)] border-2 border-[var(--chinjan-pink)]'
-                      : 'hover:bg-[color-mix(in_srgb,var(--chinjan-pink)_5%,transparent)] border-2 border-transparent'
+                      ? 'bg-[color-mix(in_srgb,var(--retrodesk-pink)_10%,transparent)] border-2 border-[var(--retrodesk-pink)]'
+                      : 'hover:bg-[color-mix(in_srgb,var(--retrodesk-pink)_5%,transparent)] border-2 border-transparent'
                     : active
                       ? 'bg-cyan-500/15 border border-cyan-500/30'
                       : 'hover:bg-cyan-500/5 border border-transparent'
@@ -338,8 +365,8 @@ export function CommandCenter() {
                   />
                   <span
                     className={`text-xs font-bold tracking-wider whitespace-nowrap ${
-                      isChinjan
-                        ? active ? 'chinjan-mono text-[var(--chinjan-text)]' : 'chinjan-mono text-[var(--chinjan-muted)]'
+                      isRetroDesk
+                        ? active ? 'retrodesk-mono text-[var(--retrodesk-text)]' : 'retrodesk-mono text-[var(--retrodesk-muted)]'
                         : active ? 'font-mono text-cyan-300' : 'font-mono text-cyan-500/80'
                     }`}
                   >
@@ -348,7 +375,7 @@ export function CommandCenter() {
                 </div>
                 <div className="flex items-center justify-between mt-1 ml-[18px]">
                   <span className={`text-[10px] font-mono truncate ${
-                    isChinjan ? 'text-[var(--chinjan-muted)]' : 'text-cyan-600/50'
+                    isRetroDesk ? 'text-[var(--retrodesk-muted)]' : 'text-cyan-600/50'
                   }`}>
                     {agent.role}
                   </span>
@@ -364,7 +391,7 @@ export function CommandCenter() {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Conversation header */}
         <div className={`flex items-center gap-3 px-5 py-3 border-b ${
-          isChinjan ? 'border-[var(--chinjan-border)]' : 'border-cyan-900/30'
+          isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-cyan-900/30'
         }`}>
           {selectedAgent && (
             <>
@@ -374,12 +401,12 @@ export function CommandCenter() {
               />
               <div>
                 <span className={`text-sm font-bold tracking-wider ${
-                  isChinjan ? 'chinjan-mono text-[var(--chinjan-text)]' : 'font-mono text-cyan-300'
+                  isRetroDesk ? 'retrodesk-mono text-[var(--retrodesk-text)]' : 'font-mono text-cyan-300'
                 }`}>
                   {selectedAgent.name}
                 </span>
                 <span className={`text-[10px] ml-2 ${
-                  isChinjan ? 'chinjan-mono text-[var(--chinjan-muted)]' : 'font-mono text-cyan-600/50'
+                  isRetroDesk ? 'retrodesk-mono text-[var(--retrodesk-muted)]' : 'font-mono text-cyan-600/50'
                 }`}>
                   {selectedAgent.role}
                 </span>
@@ -398,12 +425,12 @@ export function CommandCenter() {
                 <span
                   className={`w-2 h-2 rounded-full ${
                     connected
-                      ? isChinjan ? 'bg-[var(--chinjan-green)]' : 'bg-green-400 animate-pulse'
+                      ? isRetroDesk ? 'bg-[var(--retrodesk-green)]' : 'bg-green-400 animate-pulse'
                       : 'bg-red-500'
                   }`}
                 />
                 <span className={`font-mono text-[9px] uppercase ${
-                  isChinjan ? 'text-[var(--chinjan-muted)]' : 'text-cyan-600/40'
+                  isRetroDesk ? 'text-[var(--retrodesk-muted)]' : 'text-cyan-600/40'
                 }`}>
                   {connected ? 'Connected' : 'Disconnected'}
                 </span>
@@ -498,7 +525,7 @@ export function CommandCenter() {
 
         {/* Input Area */}
         <div className={`p-4 border-t ${
-          isChinjan ? 'border-[var(--chinjan-border)]' : 'border-cyan-900/30'
+          isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-cyan-900/30'
         }`}>
           <div className="flex gap-3 items-end">
             <textarea
@@ -514,8 +541,8 @@ export function CommandCenter() {
               disabled={!connected}
               rows={3}
               className={`flex-1 resize-none rounded-md border px-4 py-3 text-sm focus:outline-none disabled:opacity-40 ${
-                isChinjan
-                  ? 'border-[var(--chinjan-border)] bg-[var(--chinjan-surface)] chinjan-mono text-[var(--chinjan-text)] placeholder:text-[var(--chinjan-muted)] focus:border-[var(--chinjan-pink)] focus:ring-1 focus:ring-[var(--chinjan-pink)]'
+                isRetroDesk
+                  ? 'border-[var(--retrodesk-border)] bg-[var(--retrodesk-surface)] retrodesk-mono text-[var(--retrodesk-text)] placeholder:text-[var(--retrodesk-muted)] focus:border-[var(--retrodesk-pink)] focus:ring-1 focus:ring-[var(--retrodesk-pink)]'
                   : 'border-cyan-900/40 bg-[#080c16] font-mono text-cyan-200 placeholder:text-cyan-600/30 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20'
               }`}
             />
@@ -523,8 +550,8 @@ export function CommandCenter() {
               onClick={() => handleSend()}
               disabled={!input.trim() || !connected}
               className={`flex-shrink-0 rounded-md border p-3 disabled:opacity-30 disabled:cursor-not-allowed transition-all ${
-                isChinjan
-                  ? 'bg-[color-mix(in_srgb,var(--chinjan-pink)_15%,transparent)] border-[var(--chinjan-pink)] text-[var(--chinjan-pink)] hover:bg-[color-mix(in_srgb,var(--chinjan-pink)_25%,transparent)]'
+                isRetroDesk
+                  ? 'bg-[color-mix(in_srgb,var(--retrodesk-pink)_15%,transparent)] border-[var(--retrodesk-pink)] text-[var(--retrodesk-pink)] hover:bg-[color-mix(in_srgb,var(--retrodesk-pink)_25%,transparent)]'
                   : 'bg-cyan-500/20 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/30 hover:border-cyan-400/50'
               }`}
               aria-label="Send message"
@@ -534,7 +561,7 @@ export function CommandCenter() {
             </button>
           </div>
           <p className={`font-mono text-[9px] mt-1.5 text-right ${
-            isChinjan ? 'text-[var(--chinjan-muted)]' : 'text-cyan-600/30'
+            isRetroDesk ? 'text-[var(--retrodesk-muted)]' : 'text-cyan-600/30'
           }`}>
             Press Ctrl+Enter to send
           </p>

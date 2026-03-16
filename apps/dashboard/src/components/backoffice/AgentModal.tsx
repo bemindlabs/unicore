@@ -8,11 +8,11 @@ import type {
   RoomId,
 } from "@/lib/backoffice/types";
 import { PixelAvatar } from "./PixelAvatar";
-import { useChinjanTheme } from "./chinjan/ChinjanThemeProvider";
-import { findCharacterByRole } from "@/lib/backoffice/chinjan-characters";
+import { useRetroDeskTheme } from "./retrodesk/RetroDeskThemeProvider";
+import { findCharacterByRole } from "@/lib/backoffice/retrodesk-characters";
 
 const PixelCharacter = dynamic(
-  () => import("./chinjan/PixelCharacter").then((m) => m.PixelCharacter),
+  () => import("./retrodesk/PixelCharacter").then((m) => m.PixelCharacter),
   { ssr: false }
 );
 
@@ -30,10 +30,10 @@ const ROOMS: { value: RoomId; label: string }[] = [
   { value: "standalone", label: "Standalone Workstation" },
 ];
 
-const STATUSES: { value: AgentStatus; label: string; cls: string; chinjanColor: string }[] = [
-  { value: "working", label: "WORKING", cls: "text-green-400", chinjanColor: "var(--chinjan-green, #a8e6cf)" },
-  { value: "idle", label: "IDLE", cls: "text-yellow-400", chinjanColor: "var(--chinjan-yellow, #ffd93d)" },
-  { value: "offline", label: "OFFLINE", cls: "text-red-400", chinjanColor: "var(--chinjan-orange, #ffb347)" },
+const STATUSES: { value: AgentStatus; label: string; cls: string; retrodeskColor: string }[] = [
+  { value: "working", label: "WORKING", cls: "text-green-400", retrodeskColor: "var(--retrodesk-green, #a8e6cf)" },
+  { value: "idle", label: "IDLE", cls: "text-yellow-400", retrodeskColor: "var(--retrodesk-yellow, #ffd93d)" },
+  { value: "offline", label: "OFFLINE", cls: "text-red-400", retrodeskColor: "var(--retrodesk-orange, #ffb347)" },
 ];
 
 const COLORS = [
@@ -68,7 +68,7 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const { isActive: isChinjan } = useChinjanTheme();
+  const { isActive: isRetroDesk } = useRetroDeskTheme();
 
   function update(field: keyof BackofficeAgent, value: string | string[]) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -94,20 +94,20 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
 
   const helper = findCharacterByRole('helper');
 
-  const inputCls = isChinjan
-    ? "w-full border-2 px-3 py-2 text-sm chinjan-mono focus:outline-none"
+  const inputCls = isRetroDesk
+    ? "w-full border-2 px-3 py-2 text-sm retrodesk-mono focus:outline-none"
     : "w-full bg-[#060a14] border border-cyan-900/40 text-cyan-300 px-3 py-2 text-sm font-mono focus:outline-none focus:border-cyan-500/40 uppercase";
 
-  const inputStyle = isChinjan
-    ? { background: 'var(--chinjan-bg)', borderColor: 'var(--chinjan-border)', color: 'var(--chinjan-text)' }
+  const inputStyle = isRetroDesk
+    ? { background: 'var(--retrodesk-bg)', borderColor: 'var(--retrodesk-border)', color: 'var(--retrodesk-text)' }
     : undefined;
 
-  const labelCls = isChinjan
-    ? "chinjan-mono text-xs block mb-1.5 uppercase tracking-wider"
+  const labelCls = isRetroDesk
+    ? "retrodesk-mono text-xs block mb-1.5 uppercase tracking-wider"
     : "font-mono text-[9px] text-cyan-600/60 block mb-1.5 uppercase tracking-wider";
 
-  const labelStyle = isChinjan
-    ? { color: 'var(--chinjan-muted)' }
+  const labelStyle = isRetroDesk
+    ? { color: 'var(--retrodesk-muted)' }
     : undefined;
 
   return (
@@ -116,11 +116,11 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
       onClick={onClose}
       onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
     >
-      <div className={`absolute inset-0 backdrop-blur-sm ${isChinjan ? 'bg-black/30' : 'bg-black/60'}`} />
+      <div className={`absolute inset-0 backdrop-blur-sm ${isRetroDesk ? 'bg-black/30' : 'bg-black/60'}`} />
       <div
-        className={`relative w-full max-w-md mx-4 overflow-hidden ${isChinjan ? 'border-2' : 'border border-cyan-900/50'}`}
-        style={isChinjan
-          ? { borderColor: 'var(--chinjan-border)', background: 'var(--chinjan-surface)' }
+        className={`relative w-full max-w-md mx-4 overflow-hidden ${isRetroDesk ? 'border-2' : 'border border-cyan-900/50'}`}
+        style={isRetroDesk
+          ? { borderColor: 'var(--retrodesk-border)', background: 'var(--retrodesk-surface)' }
           : { background: '#0a0e1a' }}
         role="dialog"
         aria-modal="true"
@@ -131,23 +131,23 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
       >
         <div
           className={`flex items-center justify-between px-4 py-3 border-b ${
-            isChinjan ? 'border-[var(--chinjan-border)]' : 'border-cyan-900/30 bg-[#0d1225]'
+            isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-cyan-900/30 bg-[#0d1225]'
           }`}
         >
           <span
             id="agent-modal-title"
-            className={isChinjan
-              ? 'chinjan-heading text-[9px] tracking-wider uppercase'
+            className={isRetroDesk
+              ? 'retrodesk-heading text-[9px] tracking-wider uppercase'
               : 'font-mono text-[11px] text-cyan-400 tracking-wider uppercase'}
-            style={isChinjan ? { color: 'var(--chinjan-pink)' } : undefined}
+            style={isRetroDesk ? { color: 'var(--retrodesk-pink)' } : undefined}
           >
             {mode === "edit" ? `Edit: ${agent?.name}` : "New Agent"}
           </span>
           <button
             onClick={onClose}
             aria-label="Close"
-            className={`text-lg ${isChinjan ? '' : 'text-cyan-600/50 hover:text-cyan-400'}`}
-            style={isChinjan ? { color: 'var(--chinjan-muted)' } : undefined}
+            className={`text-lg ${isRetroDesk ? '' : 'text-cyan-600/50 hover:text-cyan-400'}`}
+            style={isRetroDesk ? { color: 'var(--retrodesk-muted)' } : undefined}
           >
             &times;
           </button>
@@ -156,7 +156,7 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
         <div className="p-6 space-y-5">
           <div className="flex justify-center py-2 gap-4 items-end">
             <PixelAvatar color={form.color} status={form.status} size="lg" />
-            {isChinjan && helper && (
+            {isRetroDesk && helper && (
               <PixelCharacter character={helper} size="sm" animation="wave" />
             )}
           </div>
@@ -201,18 +201,18 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
                 <button
                   key={s.value}
                   onClick={() => update("status", s.value)}
-                  className={isChinjan
-                    ? `chinjan-mono text-sm px-3 py-1.5 border-2 transition-all tracking-wider`
+                  className={isRetroDesk
+                    ? `retrodesk-mono text-sm px-3 py-1.5 border-2 transition-all tracking-wider`
                     : `font-mono text-[9px] px-3 py-1.5 border transition-all tracking-wider ${
                         form.status === s.value
                           ? `${s.cls} border-current bg-current/10`
                           : "text-cyan-700/40 border-cyan-900/30 hover:border-cyan-700/40"
                       }`}
-                  style={isChinjan
+                  style={isRetroDesk
                     ? {
-                        color: form.status === s.value ? s.chinjanColor : 'var(--chinjan-muted)',
-                        borderColor: form.status === s.value ? s.chinjanColor : 'var(--chinjan-border)',
-                        background: form.status === s.value ? `color-mix(in srgb, ${s.chinjanColor} 10%, transparent)` : undefined,
+                        color: form.status === s.value ? s.retrodeskColor : 'var(--retrodesk-muted)',
+                        borderColor: form.status === s.value ? s.retrodeskColor : 'var(--retrodesk-border)',
+                        background: form.status === s.value ? `color-mix(in srgb, ${s.retrodeskColor} 10%, transparent)` : undefined,
                       }
                     : undefined}
                 >
@@ -247,8 +247,8 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
                   onClick={() => update("color", c)}
                   className={`w-6 h-6 transition-all ${
                     form.color === c
-                      ? isChinjan
-                        ? "border-2 border-[var(--chinjan-text)] scale-110"
+                      ? isRetroDesk
+                        ? "border-2 border-[var(--retrodesk-text)] scale-110"
                         : "border-2 border-white scale-110 shadow-[0_0_8px_rgba(255,255,255,0.3)]"
                       : "border-2 border-transparent hover:border-white/30"
                   }`}
@@ -260,10 +260,10 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
 
           {saveError && (
             <div
-              className={isChinjan
-                ? 'chinjan-mono text-xs border-2 px-3 py-2 tracking-wider'
+              className={isRetroDesk
+                ? 'retrodesk-mono text-xs border-2 px-3 py-2 tracking-wider'
                 : 'font-mono text-[9px] text-red-400 border border-red-900/40 bg-red-500/5 px-3 py-2 tracking-wider'}
-              style={isChinjan ? { color: '#ef4444', borderColor: '#ef4444', background: '#ef444410' } : undefined}
+              style={isRetroDesk ? { color: '#ef4444', borderColor: '#ef4444', background: '#ef444410' } : undefined}
             >
               ERROR: {saveError}
             </div>
@@ -273,10 +273,10 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
             <button
               onClick={handleSave}
               disabled={!form.name.trim() || isSaving}
-              className={isChinjan
-                ? 'flex-1 chinjan-mono text-sm border-2 py-2.5 transition-all disabled:opacity-40 uppercase tracking-wider'
+              className={isRetroDesk
+                ? 'flex-1 retrodesk-mono text-sm border-2 py-2.5 transition-all disabled:opacity-40 uppercase tracking-wider'
                 : 'flex-1 font-mono text-[10px] bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 py-2.5 hover:bg-cyan-500/25 transition-all disabled:opacity-40 uppercase tracking-wider'}
-              style={isChinjan ? { borderColor: 'var(--chinjan-pink)', color: 'var(--chinjan-pink)', background: 'color-mix(in srgb, var(--chinjan-pink) 10%, transparent)' } : undefined}
+              style={isRetroDesk ? { borderColor: 'var(--retrodesk-pink)', color: 'var(--retrodesk-pink)', background: 'color-mix(in srgb, var(--retrodesk-pink) 10%, transparent)' } : undefined}
             >
               {isSaving
                 ? "SAVING..."
@@ -290,8 +290,8 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
                   if (confirmDelete) void onDelete();
                   else setConfirmDelete(true);
                 }}
-                className={isChinjan
-                  ? `chinjan-mono text-sm border-2 py-2.5 px-4 transition-all uppercase tracking-wider ${
+                className={isRetroDesk
+                  ? `retrodesk-mono text-sm border-2 py-2.5 px-4 transition-all uppercase tracking-wider ${
                       confirmDelete ? 'bg-red-500/20' : ''
                     }`
                   : `font-mono text-[10px] border py-2.5 px-4 transition-all uppercase tracking-wider ${
@@ -299,10 +299,10 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
                         ? "bg-red-500/20 border-red-500/50 text-red-400"
                         : "bg-red-500/5 border-red-900/30 text-red-500/60 hover:border-red-500/40"
                     }`}
-                style={isChinjan
+                style={isRetroDesk
                   ? {
-                      borderColor: confirmDelete ? '#ef4444' : 'var(--chinjan-border)',
-                      color: confirmDelete ? '#ef4444' : 'var(--chinjan-muted)',
+                      borderColor: confirmDelete ? '#ef4444' : 'var(--retrodesk-border)',
+                      color: confirmDelete ? '#ef4444' : 'var(--retrodesk-muted)',
                     }
                   : undefined}
               >

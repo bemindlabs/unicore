@@ -3,16 +3,16 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { useTheme } from '@/hooks/use-theme';
 
-interface ChinjanThemeContext {
+interface RetroDeskThemeContext {
   isActive: boolean;
   animationLevel: 'none' | 'minimal' | 'full';
 }
 
-const ChinjanCtx = createContext<ChinjanThemeContext>({ isActive: false, animationLevel: 'full' });
+const RetroDeskCtx = createContext<RetroDeskThemeContext>({ isActive: false, animationLevel: 'full' });
 
-export function ChinjanThemeProvider({ children }: { children: ReactNode }) {
+export function RetroDeskThemeProvider({ children }: { children: ReactNode }) {
   const { characterTheme } = useTheme();
-  const isActive = characterTheme === 'chinjan';
+  const isActive = characterTheme === 'retrodesk';
   const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
@@ -24,24 +24,24 @@ export function ChinjanThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <ChinjanCtx.Provider value={{ isActive, animationLevel: reducedMotion ? 'none' : 'full' }}>
+    <RetroDeskCtx.Provider value={{ isActive, animationLevel: reducedMotion ? 'none' : 'full' }}>
       {children}
-    </ChinjanCtx.Provider>
+    </RetroDeskCtx.Provider>
   );
 }
 
-export function useChinjanTheme() {
-  return useContext(ChinjanCtx);
+export function useRetroDeskTheme() {
+  return useContext(RetroDeskCtx);
 }
 
-export function ChinjanOnly({ children, fallback }: { children: ReactNode; fallback?: ReactNode }) {
-  const { isActive } = useChinjanTheme();
+export function RetroDeskOnly({ children, fallback }: { children: ReactNode; fallback?: ReactNode }) {
+  const { isActive } = useRetroDeskTheme();
   if (!isActive) return fallback ?? null;
   return <>{children}</>;
 }
 
 export function DefaultOnly({ children }: { children: ReactNode }) {
-  const { isActive } = useChinjanTheme();
+  const { isActive } = useRetroDeskTheme();
   if (isActive) return null;
   return <>{children}</>;
 }

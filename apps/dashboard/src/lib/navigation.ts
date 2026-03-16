@@ -1,6 +1,8 @@
 import {
   Activity,
+  BookOpen,
   Bot,
+  MessageSquare,
   ClipboardList,
   DollarSign,
   FileText,
@@ -34,6 +36,18 @@ export const menuSections: NavSection[] = [
         label: 'Tasks Board',
         icon: ClipboardList,
         href: '/tasks',
+        roles: [UserRole.Owner, UserRole.Operator],
+      },
+      {
+        label: 'Knowledge Base',
+        icon: BookOpen,
+        href: '/knowledge',
+        roles: [UserRole.Owner, UserRole.Operator],
+      },
+      {
+        label: 'Chat History',
+        icon: MessageSquare,
+        href: '/chat-history',
         roles: [UserRole.Owner, UserRole.Operator],
       },
     ],

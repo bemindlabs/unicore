@@ -118,3 +118,25 @@ model Task {
   @@index([status])
   @@map("tasks")
 }
+
+// ---------------------------------------------------------------------------
+// Chat History (UNC-118)
+// ---------------------------------------------------------------------------
+
+model ChatHistory {
+  id        String   @id @default(uuid())
+  agentId   String
+  agentName String
+  userId    String
+  userName  String
+  messages  Json     @default("[]")
+  summary   String?
+  channel   String   @default("command")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([agentId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("chat_histories")
+}

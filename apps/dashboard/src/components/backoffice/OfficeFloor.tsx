@@ -3,7 +3,7 @@
 import type { BackofficeAgent } from '@/lib/backoffice/types';
 import { PixelAvatar } from './PixelAvatar';
 import { StatusIndicator } from './StatusIndicator';
-import { useChinjanTheme, ChinjanOnly } from './chinjan/ChinjanThemeProvider';
+import { useRetroDeskTheme, RetroDeskOnly } from './retrodesk/RetroDeskThemeProvider';
 
 interface Props {
   conferenceAgents: BackofficeAgent[];
@@ -12,24 +12,24 @@ interface Props {
 }
 
 function RoomPanel({ title, children }: { title: string; children: React.ReactNode }) {
-  const { isActive: isChinjan } = useChinjanTheme();
+  const { isActive: isRetroDesk } = useRetroDeskTheme();
   return (
     <div
-      className={isChinjan
+      className={isRetroDesk
         ? 'border-2 overflow-hidden'
         : 'border border-cyan-900/40 bg-[#0b1120]/80 overflow-hidden'}
-      style={isChinjan ? { borderColor: 'var(--chinjan-border)', background: 'var(--chinjan-surface)' } : undefined}
+      style={isRetroDesk ? { borderColor: 'var(--retrodesk-border)', background: 'var(--retrodesk-surface)' } : undefined}
     >
       <div
         className={`flex items-center justify-between px-3 py-1.5 border-b ${
-          isChinjan ? 'border-[var(--chinjan-border)]' : 'border-cyan-900/30'
+          isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-cyan-900/30'
         }`}
       >
         <span
-          className={isChinjan
-            ? 'chinjan-heading text-[8px] tracking-wider uppercase'
+          className={isRetroDesk
+            ? 'retrodesk-heading text-[8px] tracking-wider uppercase'
             : 'font-mono text-[10px] text-cyan-500/80 tracking-wider uppercase'}
-          style={isChinjan ? { color: 'var(--chinjan-blue)' } : undefined}
+          style={isRetroDesk ? { color: 'var(--retrodesk-blue)' } : undefined}
         >
           {title}
         </span>
@@ -41,7 +41,7 @@ function RoomPanel({ title, children }: { title: string; children: React.ReactNo
 }
 
 function PixelDesk({ variant = 'standard' }: { variant?: 'standard' | 'command' | 'round-table' }) {
-  const { isActive: isChinjan } = useChinjanTheme();
+  const { isActive: isRetroDesk } = useRetroDeskTheme();
 
   if (variant === 'round-table') {
     return (
@@ -49,9 +49,9 @@ function PixelDesk({ variant = 'standard' }: { variant?: 'standard' | 'command' 
         <div
           className="absolute inset-0 rounded-[50%] border-2"
           style={{
-            borderColor: isChinjan ? 'var(--chinjan-border)' : '#5a4a3a',
-            background: isChinjan
-              ? 'linear-gradient(135deg, var(--chinjan-yellow), #ffe8a3)'
+            borderColor: isRetroDesk ? 'var(--retrodesk-border)' : '#5a4a3a',
+            background: isRetroDesk
+              ? 'linear-gradient(135deg, var(--retrodesk-yellow), #ffe8a3)'
               : 'linear-gradient(135deg, #4a3a2a, #3a2a1a)',
           }}
         />
@@ -60,8 +60,8 @@ function PixelDesk({ variant = 'standard' }: { variant?: 'standard' | 'command' 
             key={angle}
             className="absolute w-3 h-3 border"
             style={{
-              background: isChinjan ? 'var(--chinjan-surface)' : '#2a2a3a',
-              borderColor: isChinjan ? 'var(--chinjan-border)' : '#3a3a4a',
+              background: isRetroDesk ? 'var(--retrodesk-surface)' : '#2a2a3a',
+              borderColor: isRetroDesk ? 'var(--retrodesk-border)' : '#3a3a4a',
               left: `${50 + 48 * Math.cos((angle * Math.PI) / 180)}%`,
               top: `${50 + 42 * Math.sin((angle * Math.PI) / 180)}%`,
               transform: 'translate(-50%, -50%)',
@@ -80,8 +80,8 @@ function PixelDesk({ variant = 'standard' }: { variant?: 'standard' | 'command' 
             <div
               className="w-10 h-7 border relative overflow-hidden"
               style={{
-                background: isChinjan ? 'var(--chinjan-surface)' : '#0a1628',
-                borderColor: isChinjan ? 'var(--chinjan-border)' : '#1a3a5a',
+                background: isRetroDesk ? 'var(--retrodesk-surface)' : '#0a1628',
+                borderColor: isRetroDesk ? 'var(--retrodesk-border)' : '#1a3a5a',
               }}
             >
               <div className="absolute inset-0.5 opacity-60">
@@ -91,15 +91,15 @@ function PixelDesk({ variant = 'standard' }: { variant?: 'standard' | 'command' 
                     className="h-[2px] mb-[2px] rounded-full"
                     style={{
                       width: `${40 + ((line * 37 + i * 13) % 50)}%`,
-                      background: isChinjan
-                        ? (i === 0 ? 'var(--chinjan-pink)' : i === 1 ? 'var(--chinjan-blue)' : 'var(--chinjan-yellow)')
+                      background: isRetroDesk
+                        ? (i === 0 ? 'var(--retrodesk-pink)' : i === 1 ? 'var(--retrodesk-blue)' : 'var(--retrodesk-yellow)')
                         : (i === 0 ? '#00ff88' : i === 1 ? '#00e5ff' : '#4fc3f7'),
                     }}
                   />
                 ))}
               </div>
             </div>
-            <div className="w-2 h-1" style={{ background: isChinjan ? 'var(--chinjan-border)' : '#2a2a3a' }} />
+            <div className="w-2 h-1" style={{ background: isRetroDesk ? 'var(--retrodesk-border)' : '#2a2a3a' }} />
           </div>
         ))}
       </div>
@@ -119,17 +119,17 @@ function PixelPlant() {
   );
 }
 
-/** Chinjan-style pixel flower (replaces plant) */
+/** RetroDesk-style pixel flower (replaces plant) */
 function PixelFlowerDeco() {
   return (
     <div className="flex flex-col items-center">
       <div className="flex gap-[1px]">
-        <div className="w-2 h-2" style={{ background: 'var(--chinjan-pink)' }} />
-        <div className="w-2 h-2" style={{ background: 'var(--chinjan-yellow)' }} />
-        <div className="w-2 h-2" style={{ background: 'var(--chinjan-pink)' }} />
+        <div className="w-2 h-2" style={{ background: 'var(--retrodesk-pink)' }} />
+        <div className="w-2 h-2" style={{ background: 'var(--retrodesk-yellow)' }} />
+        <div className="w-2 h-2" style={{ background: 'var(--retrodesk-pink)' }} />
       </div>
-      <div className="w-2 h-2 mx-auto" style={{ background: 'var(--chinjan-yellow)' }} />
-      <div className="w-1 h-3" style={{ background: 'var(--chinjan-green)' }} />
+      <div className="w-2 h-2 mx-auto" style={{ background: 'var(--retrodesk-yellow)' }} />
+      <div className="w-1 h-3" style={{ background: 'var(--retrodesk-green)' }} />
       <div className="w-3 h-2" style={{ background: '#d4a76a' }} />
     </div>
   );
@@ -148,9 +148,9 @@ function PixelServerRack() {
   );
 }
 
-/** Chinjan-style pixel bookshelf (replaces server rack) */
+/** RetroDesk-style pixel bookshelf (replaces server rack) */
 function PixelBookshelf() {
-  const colors = ['var(--chinjan-pink)', 'var(--chinjan-blue)', 'var(--chinjan-yellow)', 'var(--chinjan-green)', 'var(--chinjan-orange)'];
+  const colors = ['var(--retrodesk-pink)', 'var(--retrodesk-blue)', 'var(--retrodesk-yellow)', 'var(--retrodesk-green)', 'var(--retrodesk-orange)'];
   return (
     <div className="w-8 h-14 border-2 p-0.5 flex flex-col gap-1 justify-end" style={{ borderColor: '#d4a76a', background: '#f5e6c8' }}>
       {[0, 1, 2].map(row => (
@@ -174,27 +174,27 @@ function PixelWaterCooler() {
   );
 }
 
-/** Chinjan-style pixel vending machine (replaces water cooler) */
+/** RetroDesk-style pixel vending machine (replaces water cooler) */
 function PixelVendingMachine() {
   return (
     <div className="flex flex-col items-center">
-      <div className="w-5 h-3 border-2" style={{ borderColor: 'var(--chinjan-pink)', background: 'var(--chinjan-surface)' }}>
-        <div className="w-full h-full flex items-center justify-center" style={{ fontFamily: "'VT323', monospace", fontSize: 6, color: 'var(--chinjan-pink)' }}>♥</div>
+      <div className="w-5 h-3 border-2" style={{ borderColor: 'var(--retrodesk-pink)', background: 'var(--retrodesk-surface)' }}>
+        <div className="w-full h-full flex items-center justify-center" style={{ fontFamily: "'VT323', monospace", fontSize: 6, color: 'var(--retrodesk-pink)' }}>♥</div>
       </div>
-      <div className="w-5 h-5 border-2 border-t-0" style={{ borderColor: 'var(--chinjan-pink)', background: 'var(--chinjan-surface)' }}>
+      <div className="w-5 h-5 border-2 border-t-0" style={{ borderColor: 'var(--retrodesk-pink)', background: 'var(--retrodesk-surface)' }}>
         <div className="flex gap-[1px] p-0.5 flex-wrap">
-          {['var(--chinjan-pink)', 'var(--chinjan-blue)', 'var(--chinjan-yellow)', 'var(--chinjan-green)'].map((c, i) => (
+          {['var(--retrodesk-pink)', 'var(--retrodesk-blue)', 'var(--retrodesk-yellow)', 'var(--retrodesk-green)'].map((c, i) => (
             <div key={i} className="w-1.5 h-1.5" style={{ background: c }} />
           ))}
         </div>
       </div>
-      <div className="w-5 h-1" style={{ background: 'var(--chinjan-border)' }} />
+      <div className="w-5 h-1" style={{ background: 'var(--retrodesk-border)' }} />
     </div>
   );
 }
 
 export function OfficeFloor({ conferenceAgents, mainOfficeAgents, onSelectAgent }: Props) {
-  const { isActive: isChinjan } = useChinjanTheme();
+  const { isActive: isRetroDesk } = useRetroDeskTheme();
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -209,10 +209,10 @@ export function OfficeFloor({ conferenceAgents, mainOfficeAgents, onSelectAgent 
               >
                 <PixelAvatar color={agent.color} status={agent.status} size="md" />
                 <span
-                  className={isChinjan
-                    ? 'chinjan-mono text-xs uppercase'
+                  className={isRetroDesk
+                    ? 'retrodesk-mono text-xs uppercase'
                     : 'font-mono text-[8px] text-cyan-400/60 uppercase'}
-                  style={isChinjan ? { color: 'var(--chinjan-text)' } : undefined}
+                  style={isRetroDesk ? { color: 'var(--retrodesk-text)' } : undefined}
                 >
                   {agent.name}
                 </span>
@@ -221,14 +221,14 @@ export function OfficeFloor({ conferenceAgents, mainOfficeAgents, onSelectAgent 
           </div>
           <PixelDesk variant="round-table" />
           <div className="flex justify-between w-full px-4">
-            <ChinjanOnly fallback={<PixelPlant />}><PixelFlowerDeco /></ChinjanOnly>
+            <RetroDeskOnly fallback={<PixelPlant />}><PixelFlowerDeco /></RetroDeskOnly>
             <div
               className="w-16 h-10 border"
-              style={isChinjan
-                ? { background: 'var(--chinjan-bg)', borderColor: 'var(--chinjan-border)' }
+              style={isRetroDesk
+                ? { background: 'var(--retrodesk-bg)', borderColor: 'var(--retrodesk-border)' }
                 : { background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.1)' }}
             />
-            <ChinjanOnly fallback={<PixelPlant />}><PixelFlowerDeco /></ChinjanOnly>
+            <RetroDeskOnly fallback={<PixelPlant />}><PixelFlowerDeco /></RetroDeskOnly>
           </div>
         </div>
       </RoomPanel>
@@ -237,7 +237,7 @@ export function OfficeFloor({ conferenceAgents, mainOfficeAgents, onSelectAgent 
         <div className="flex flex-col items-center gap-4 py-4">
           <PixelDesk variant="command" />
           <div className="flex items-end gap-6">
-            <ChinjanOnly fallback={<PixelWaterCooler />}><PixelVendingMachine /></ChinjanOnly>
+            <RetroDeskOnly fallback={<PixelWaterCooler />}><PixelVendingMachine /></RetroDeskOnly>
             <div className="flex flex-col items-center gap-1">
               {mainOfficeAgents.map(agent => (
                 <button
@@ -247,21 +247,21 @@ export function OfficeFloor({ conferenceAgents, mainOfficeAgents, onSelectAgent 
                 >
                   <PixelAvatar color={agent.color} status={agent.status} size="lg" />
                   <span
-                    className={isChinjan
-                      ? 'chinjan-mono text-xs uppercase'
+                    className={isRetroDesk
+                      ? 'retrodesk-mono text-xs uppercase'
                       : 'font-mono text-[8px] text-cyan-400/60 uppercase'}
-                    style={isChinjan ? { color: 'var(--chinjan-text)' } : undefined}
+                    style={isRetroDesk ? { color: 'var(--retrodesk-text)' } : undefined}
                   >
                     {agent.name}
                   </span>
                 </button>
               ))}
             </div>
-            <ChinjanOnly fallback={<PixelServerRack />}><PixelBookshelf /></ChinjanOnly>
+            <RetroDeskOnly fallback={<PixelServerRack />}><PixelBookshelf /></RetroDeskOnly>
           </div>
           <div className="flex justify-between w-full px-4">
-            <ChinjanOnly fallback={<PixelPlant />}><PixelFlowerDeco /></ChinjanOnly>
-            <ChinjanOnly fallback={<PixelPlant />}><PixelFlowerDeco /></ChinjanOnly>
+            <RetroDeskOnly fallback={<PixelPlant />}><PixelFlowerDeco /></RetroDeskOnly>
+            <RetroDeskOnly fallback={<PixelPlant />}><PixelFlowerDeco /></RetroDeskOnly>
           </div>
         </div>
       </RoomPanel>

@@ -1,12 +1,12 @@
 'use client';
 
-import { findCharacterByRole } from '@/lib/backoffice/chinjan-characters';
+import { findCharacterByRole } from '@/lib/backoffice/retrodesk-characters';
 import { PixelCharacter } from './PixelCharacter';
 import { PixelStar } from './PixelDecorations';
 
 const sleepy = findCharacterByRole('empty-state')!;
 
-export function ChinjanEmptyState({ message }: { message?: string }) {
+export function RetroDeskEmptyState({ message }: { message?: string }) {
   return (
     <div className="flex flex-col items-center gap-4 py-8">
       <div className="relative">

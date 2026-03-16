@@ -64,5 +64,5 @@
   50% { transform: translateY(-2px); }
 }
 /* All other pixel animations (pixelFloat, pixelBounce, pixelWave, pixelCelebrate,
-   pixelTwinkle, pixelSleep) are defined in chinjan-theme.css and loaded by the
-   backoffice layout which uses those Chinjan components. */
+   pixelTwinkle, pixelSleep) are defined in retrodesk-theme.css and loaded by the
+   backoffice layout which uses those RetroDesk components. */

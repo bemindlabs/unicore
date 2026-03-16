@@ -1,14 +1,14 @@
 'use client';
 
-import { findCharacterByRole } from '@/lib/backoffice/chinjan-characters';
+import { findCharacterByRole } from '@/lib/backoffice/retrodesk-characters';
 import { PixelCharacter } from './PixelCharacter';
 import { PixelStar } from './PixelDecorations';
 
 const mascot = findCharacterByRole('mascot')!;
 
-export function ChinjanLoadingState() {
+export function RetroDeskLoadingState() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center" style={{ background: 'var(--chinjan-bg, #faf8f5)' }}>
+    <div className="min-h-screen flex flex-col items-center justify-center" style={{ background: 'var(--retrodesk-bg, #faf8f5)' }}>
       <div className="relative">
         <PixelStar className="absolute -top-6 -left-8" px={3} />
         <PixelStar className="absolute -top-4 right-0" px={2} />

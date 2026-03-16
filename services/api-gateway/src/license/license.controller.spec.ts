@@ -18,6 +18,7 @@ const mockProStatus: LicenseStatus = {
 
 const mockLicenseService = {
   getLicenseStatus: jest.fn().mockResolvedValue(mockProStatus),
+  activate: jest.fn().mockResolvedValue(mockProStatus),
   revalidate: jest.fn().mockResolvedValue(mockProStatus),
 };
 
@@ -33,6 +34,7 @@ describe('LicenseController', () => {
     controller = module.get<LicenseController>(LicenseController);
     jest.clearAllMocks();
     mockLicenseService.getLicenseStatus.mockResolvedValue(mockProStatus);
+    mockLicenseService.activate.mockResolvedValue(mockProStatus);
     mockLicenseService.revalidate.mockResolvedValue(mockProStatus);
   });
 
@@ -58,6 +60,24 @@ describe('LicenseController', () => {
     it('calls getLicenseStatus once', async () => {
       await controller.getStatus();
       expect(mockLicenseService.getLicenseStatus).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('activate', () => {
+    it('calls licenseService.activate with the provided key', async () => {
+      const result = await controller.activate({ key: 'UC-NEW-KEY' });
+
+      expect(mockLicenseService.activate).toHaveBeenCalledTimes(1);
+      expect(mockLicenseService.activate).toHaveBeenCalledWith('UC-NEW-KEY');
+      expect(result.valid).toBe(true);
+      expect(result.tier).toBe('pro');
+    });
+
+    it('returns status with validatedAt but without the raw key', async () => {
+      const result = await controller.activate({ key: 'UC-NEW-KEY' });
+
+      expect(result).toHaveProperty('validatedAt');
+      expect(result).not.toHaveProperty('key');
     });
   });
 

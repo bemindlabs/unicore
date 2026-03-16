@@ -38,10 +38,13 @@ const TIER_FEATURES: Record<LicenseTier, ProFeature[]> = {
 };
 
 /**
- * LicenseService reads UNICORE_LICENSE_KEY from the environment, validates it
- * against the UniCore License Server, and caches the result locally with a
- * weekly revalidation window so the application keeps working even when the
- * license server is temporarily unreachable.
+ * LicenseService manages the license key and validates it against the UniCore
+ * License Server. The license key is stored in-memory and falls back to the
+ * UNICORE_LICENSE_KEY environment variable on first boot.
+ *
+ * Validation results are cached locally with a weekly revalidation window so
+ * the application keeps working even when the license server is temporarily
+ * unreachable.
  *
  * Cache is in-memory; for multi-replica deployments a Redis-backed cache
  * should replace it (tracked as a follow-up task).
@@ -50,11 +53,22 @@ const TIER_FEATURES: Record<LicenseTier, ProFeature[]> = {
 export class LicenseService {
   private readonly logger = new Logger(LicenseService.name);
 
+  /** The active license key. Falls back to env var when null. */
+  private licenseKey: string | null = null;
+
   /** Cached license status — null until first validation completes. */
   private cachedStatus: LicenseStatus | null = null;
 
   /** Promise guard to avoid concurrent validation races on startup. */
   private validationInFlight: Promise<LicenseStatus> | null = null;
+
+  /**
+   * Returns the current license key, preferring the in-memory value
+   * and falling back to the environment variable.
+   */
+  private getKey(): string | null {
+    return this.licenseKey ?? process.env.UNICORE_LICENSE_KEY ?? null;
+  }
 
   /**
    * Returns the current license status.
@@ -86,11 +100,11 @@ export class LicenseService {
   }
 
   /**
-   * Activates a new license key by setting it in the environment and
-   * immediately validating it against the license server.
+   * Activates a new license key by storing it in-memory and immediately
+   * validating it against the license server.
    */
   async activate(key: string): Promise<LicenseStatus> {
-    process.env.UNICORE_LICENSE_KEY = key;
+    this.licenseKey = key;
     this.cachedStatus = null;
     return this.getLicenseStatus();
   }
@@ -113,7 +127,7 @@ export class LicenseService {
   }
 
   private async validate(): Promise<LicenseStatus> {
-    const key = process.env.UNICORE_LICENSE_KEY ?? null;
+    const key = this.getKey();
 
     if (!key) {
       this.logger.log('No UNICORE_LICENSE_KEY set — running in Community tier');

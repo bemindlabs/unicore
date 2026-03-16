@@ -4,10 +4,10 @@ import dynamic from 'next/dynamic';
 import type { BackofficeAgent } from '@/lib/backoffice/types';
 import { PixelAvatar } from './PixelAvatar';
 import { StatusIndicator } from './StatusIndicator';
-import { useChinjanTheme, ChinjanOnly } from './chinjan/ChinjanThemeProvider';
+import { useRetroDeskTheme, RetroDeskOnly } from './retrodesk/RetroDeskThemeProvider';
 
-const ChinjanEmptyState = dynamic(
-  () => import('./chinjan/ChinjanEmptyState').then((m) => m.ChinjanEmptyState),
+const RetroDeskEmptyState = dynamic(
+  () => import('./retrodesk/RetroDeskEmptyState').then((m) => m.RetroDeskEmptyState),
   { ssr: false }
 );
 
@@ -28,7 +28,7 @@ export function TeamSidebar({ agents, filter, onFilterChange, onSelectAgent, onO
     { key: 'idle', label: 'IDLE' },
   ];
 
-  const { isActive: isChinjan } = useChinjanTheme();
+  const { isActive: isRetroDesk } = useRetroDeskTheme();
 
   return (
     <aside
@@ -37,31 +37,31 @@ export function TeamSidebar({ agents, filter, onFilterChange, onSelectAgent, onO
           ? 'fixed inset-y-0 left-0 z-50 flex'
           : 'hidden md:flex'
       } ${
-        isChinjan ? 'border-[var(--chinjan-border)]' : 'border-cyan-900/30 bg-[#0a0e1a]/60'
+        isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-cyan-900/30 bg-[#0a0e1a]/60'
       }`}
-      style={isChinjan ? { background: 'var(--chinjan-surface)', borderColor: 'var(--chinjan-border)' } : !isChinjan && mobileOpen ? { background: '#0a0e1a' } : undefined}
+      style={isRetroDesk ? { background: 'var(--retrodesk-surface)', borderColor: 'var(--retrodesk-border)' } : !isRetroDesk && mobileOpen ? { background: '#0a0e1a' } : undefined}
     >
-      <div className={`px-4 py-3 border-b ${isChinjan ? 'border-[var(--chinjan-border)]' : 'border-cyan-900/20'}`}>
+      <div className={`px-4 py-3 border-b ${isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-cyan-900/20'}`}>
         <h2
-          className={isChinjan
-            ? 'chinjan-heading text-[8px] tracking-widest uppercase'
+          className={isRetroDesk
+            ? 'retrodesk-heading text-[8px] tracking-widest uppercase'
             : 'font-mono text-[10px] text-cyan-500/70 tracking-widest uppercase'}
-          style={isChinjan ? { color: 'var(--chinjan-pink)' } : undefined}
+          style={isRetroDesk ? { color: 'var(--retrodesk-pink)' } : undefined}
         >
           Team Status Overview
         </h2>
       </div>
 
-      <div className={`flex gap-1 px-3 py-2 border-b ${isChinjan ? 'border-[var(--chinjan-border)]' : 'border-cyan-900/20'}`}>
+      <div className={`flex gap-1 px-3 py-2 border-b ${isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-cyan-900/20'}`}>
         {filters.map(f => (
           <button
             key={f.key}
             onClick={() => onFilterChange(f.key)}
-            className={isChinjan
-              ? `chinjan-mono text-sm px-2 py-1 transition-all tracking-wider border-2 ${
+            className={isRetroDesk
+              ? `retrodesk-mono text-sm px-2 py-1 transition-all tracking-wider border-2 ${
                   filter === f.key
-                    ? 'border-[var(--chinjan-pink)] text-[var(--chinjan-pink)]'
-                    : 'border-transparent text-[var(--chinjan-muted)] hover:text-[var(--chinjan-text)]'
+                    ? 'border-[var(--retrodesk-pink)] text-[var(--retrodesk-pink)]'
+                    : 'border-transparent text-[var(--retrodesk-muted)] hover:text-[var(--retrodesk-text)]'
                 }`
               : `font-mono text-[9px] px-2 py-1 transition-all tracking-wider ${
                   filter === f.key
@@ -69,9 +69,9 @@ export function TeamSidebar({ agents, filter, onFilterChange, onSelectAgent, onO
                     : 'text-cyan-600/40 hover:text-cyan-400/60 border border-transparent'
                 }`
             }
-            style={isChinjan && filter === f.key ? { background: 'color-mix(in srgb, var(--chinjan-pink) 10%, transparent)' } : undefined}
+            style={isRetroDesk && filter === f.key ? { background: 'color-mix(in srgb, var(--retrodesk-pink) 10%, transparent)' } : undefined}
           >
-            {isChinjan ? f.label : `[${f.label}]`}
+            {isRetroDesk ? f.label : `[${f.label}]`}
           </button>
         ))}
       </div>
@@ -82,18 +82,18 @@ export function TeamSidebar({ agents, filter, onFilterChange, onSelectAgent, onO
             key={agent.id}
             onClick={() => onSelectAgent(agent)}
             className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-left group ${
-              isChinjan
-                ? 'hover:bg-[color-mix(in_srgb,var(--chinjan-pink)_5%,transparent)]'
+              isRetroDesk
+                ? 'hover:bg-[color-mix(in_srgb,var(--retrodesk-pink)_5%,transparent)]'
                 : 'hover:bg-cyan-500/5'
             }`}
           >
             <PixelAvatar color={agent.color} status={agent.status} size="sm" />
             <div className="flex-1 min-w-0">
               <div
-                className={isChinjan
-                  ? 'chinjan-mono text-sm truncate uppercase tracking-wider'
+                className={isRetroDesk
+                  ? 'retrodesk-mono text-sm truncate uppercase tracking-wider'
                   : 'font-mono text-[10px] text-cyan-300 group-hover:text-cyan-200 truncate uppercase tracking-wider'}
-                style={isChinjan ? { color: 'var(--chinjan-text)' } : undefined}
+                style={isRetroDesk ? { color: 'var(--retrodesk-text)' } : undefined}
               >
                 {agent.name}
               </div>
@@ -107,8 +107,8 @@ export function TeamSidebar({ agents, filter, onFilterChange, onSelectAgent, onO
                   onOpenTerminal(agent);
                 }}
                 className={`opacity-0 group-hover:opacity-100 transition-opacity font-mono text-[9px] px-1.5 py-0.5 ${
-                  isChinjan
-                    ? 'text-[var(--chinjan-muted)] hover:text-[var(--chinjan-pink)] border border-[var(--chinjan-border)]'
+                  isRetroDesk
+                    ? 'text-[var(--retrodesk-muted)] hover:text-[var(--retrodesk-pink)] border border-[var(--retrodesk-border)]'
                     : 'text-green-600/50 hover:text-green-400 border border-green-900/30 hover:border-green-500/40'
                 }`}
                 title={`Open terminal for ${agent.name}`}
@@ -120,10 +120,10 @@ export function TeamSidebar({ agents, filter, onFilterChange, onSelectAgent, onO
         ))}
         {agents.length === 0 && (
           <>
-            <ChinjanOnly>
-              <ChinjanEmptyState message="No agents found" />
-            </ChinjanOnly>
-            {!isChinjan && (
+            <RetroDeskOnly>
+              <RetroDeskEmptyState message="No agents found" />
+            </RetroDeskOnly>
+            {!isRetroDesk && (
               <p className="text-center text-cyan-600/30 font-mono text-[9px] py-8 uppercase">
                 No agents found
               </p>

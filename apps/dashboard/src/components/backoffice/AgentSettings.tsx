@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
-import { useChinjanTheme } from './chinjan/ChinjanThemeProvider';
+import { useRetroDeskTheme } from './retrodesk/RetroDeskThemeProvider';
 
 type AutonomyLevel = 'suggest' | 'approval' | 'full-auto';
 
@@ -61,7 +61,7 @@ function uptimeLabel(lastHeartbeat?: string): string {
 }
 
 export function AgentSettings() {
-  const { isActive: isChinjan } = useChinjanTheme();
+  const { isActive: isRetroDesk } = useRetroDeskTheme();
   const [agents, setAgents] = useState<OpenClawAgent[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -171,7 +171,7 @@ export function AgentSettings() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className={`text-xs uppercase tracking-wider ${
-          isChinjan ? 'chinjan-heading text-[var(--chinjan-pink)]' : 'font-mono text-cyan-400'
+          isRetroDesk ? 'retrodesk-heading text-[var(--retrodesk-pink)]' : 'font-mono text-cyan-400'
         }`}>
           OpenClaw Gateway Agents
         </h3>
@@ -179,8 +179,8 @@ export function AgentSettings() {
           onClick={fetchAgents}
           disabled={loading}
           className={`text-[9px] px-3 py-1.5 transition-all uppercase tracking-wider border ${
-            isChinjan
-              ? 'chinjan-mono text-[var(--chinjan-text)] hover:text-[var(--chinjan-pink)] border-[var(--chinjan-border)] hover:border-[var(--chinjan-pink)] disabled:text-[var(--chinjan-muted)] disabled:border-[var(--chinjan-border)]'
+            isRetroDesk
+              ? 'retrodesk-mono text-[var(--retrodesk-text)] hover:text-[var(--retrodesk-pink)] border-[var(--retrodesk-border)] hover:border-[var(--retrodesk-pink)] disabled:text-[var(--retrodesk-muted)] disabled:border-[var(--retrodesk-border)]'
               : 'font-mono text-cyan-500 hover:text-cyan-300 disabled:text-cyan-800 border-cyan-500/30 hover:border-cyan-400/50 disabled:border-cyan-900/30'
           }`}
         >
@@ -198,7 +198,7 @@ export function AgentSettings() {
       {/* Empty state */}
       {!loading && !error && agents.length === 0 && (
         <div className={`text-[10px] text-center py-8 uppercase tracking-wider ${
-          isChinjan ? 'chinjan-mono text-[var(--chinjan-muted)]' : 'font-mono text-cyan-600/40'
+          isRetroDesk ? 'retrodesk-mono text-[var(--retrodesk-muted)]' : 'font-mono text-cyan-600/40'
         }`}>
           No agents registered
         </div>
@@ -216,8 +216,8 @@ export function AgentSettings() {
             <div
               key={`${agent.name}-${i}`}
               className={`border overflow-hidden transition-all ${
-                isChinjan
-                  ? 'border-[var(--chinjan-border)] bg-[var(--chinjan-surface)]'
+                isRetroDesk
+                  ? 'border-[var(--retrodesk-border)] bg-[var(--retrodesk-surface)]'
                   : 'border-cyan-900/30 bg-[#0a0e1a]/60'
               }`}
             >
@@ -226,19 +226,19 @@ export function AgentSettings() {
                 type="button"
                 onClick={() => setExpandedIndex(isExpanded ? null : i)}
                 className={`w-full px-4 py-3 flex items-center justify-between transition-colors text-left ${
-                  isChinjan
-                    ? 'hover:bg-[color-mix(in_srgb,var(--chinjan-pink)_5%,transparent)]'
+                  isRetroDesk
+                    ? 'hover:bg-[color-mix(in_srgb,var(--retrodesk-pink)_5%,transparent)]'
                     : 'hover:bg-cyan-500/5'
                 }`}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <span className={`text-xs uppercase tracking-wider truncate ${
-                    isChinjan ? 'chinjan-mono text-[var(--chinjan-text)]' : 'font-mono text-cyan-300'
+                    isRetroDesk ? 'retrodesk-mono text-[var(--retrodesk-text)]' : 'font-mono text-cyan-300'
                   }`}>
                     {agent.name}
                   </span>
                   <span className={`text-[9px] ${
-                    isChinjan ? 'chinjan-mono text-[var(--chinjan-muted)]' : 'font-mono text-cyan-600/50'
+                    isRetroDesk ? 'retrodesk-mono text-[var(--retrodesk-muted)]' : 'font-mono text-cyan-600/50'
                   }`}>
                     {agent.type}
                   </span>
