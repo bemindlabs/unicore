@@ -67,6 +67,22 @@ export function PixelCharacter({ character, size = 'md', animation = 'idle', fli
         </div>
       )}
       <div style={{ width: cols * px, height: rows * px, position: 'relative' }}>
+        {animationLevel !== 'none' && character.auraColor && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              width: cols * px * 1.4,
+              height: rows * px * 1.4,
+              transform: 'translate(-50%, -50%)',
+              borderRadius: '50%',
+              background: `radial-gradient(circle, ${character.auraColor}40 0%, ${character.auraColor}00 70%)`,
+              animation: 'pixelAura 3s ease-in-out infinite',
+              pointerEvents: 'none',
+            }}
+          />
+        )}
         <div
           style={{
             width: px,

@@ -42,8 +42,11 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     api
-      .get<UserRecord[]>('/admin/users')
-      .then(setUsers)
+      .get<UserRecord[] | { data: UserRecord[] }>('/admin/users')
+      .then((res) => {
+        const data = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
+        setUsers(data);
+      })
       .catch(() => setUsers([]))
       .finally(() => setLoading(false));
   }, []);

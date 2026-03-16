@@ -7,6 +7,8 @@ export interface ChinjanCharacter {
   grid: string[][];
   role: CharacterRole;
   defaultMessage?: string;
+  /** Hex color used for the glowing aura behind the pixel character */
+  auraColor?: string;
 }
 
 const _ = 'transparent';
@@ -23,6 +25,7 @@ const chinja: ChinjanCharacter = {
   name: 'Chinja',
   role: 'mascot',
   defaultMessage: 'Hi there!',
+  auraColor: '#ff6b9d',
   grid: [
     [_, _, _, HAIR_DARK, HAIR_DARK, HAIR_DARK, HAIR_DARK, _, _, _, _, _],
     [_, _, HAIR_DARK, HAIR_DARK, HAIR_DARK, HAIR_DARK, HAIR_DARK, HAIR_DARK, _, _, _, _],
@@ -47,6 +50,7 @@ const pixo: ChinjanCharacter = {
   name: 'Pixo',
   role: 'helper',
   defaultMessage: 'Need help?',
+  auraColor: '#7ec8e3',
   grid: [
     [_, _, _, _, '#7ec8e3', _, _, _, _, _, _, _],
     [_, _, _, _, '#7ec8e3', _, _, _, _, _, _, _],
@@ -71,6 +75,7 @@ const oopsy: ChinjanCharacter = {
   name: 'Oopsy',
   role: 'error',
   defaultMessage: 'Oops! Something went wrong...',
+  auraColor: '#ffb347',
   grid: [
     [_, _, _, '#ffb347', '#ffb347', '#ffb347', '#ffb347', _, _, _, _, _],
     [_, _, '#ffb347', '#ffb347', '#ffb347', '#ffb347', '#ffb347', '#ffb347', _, _, _, _],
@@ -95,6 +100,7 @@ const sleepy: ChinjanCharacter = {
   name: 'Sleepy',
   role: 'empty-state',
   defaultMessage: 'No agents here yet... Add one!',
+  auraColor: '#a8e6cf',
   grid: [
     [_, _, _, HAIR_DARK, HAIR_DARK, HAIR_DARK, HAIR_DARK, _, _, _, _, _],
     [_, _, HAIR_DARK, HAIR_DARK, HAIR_DARK, HAIR_DARK, HAIR_DARK, HAIR_DARK, _, _, _, _],
@@ -119,6 +125,7 @@ const sparky: ChinjanCharacter = {
   name: 'Sparky',
   role: 'celebration',
   defaultMessage: 'Woohoo!',
+  auraColor: '#ffd93d',
   grid: [
     [_, _, _, '#ffd93d', '#ffd93d', '#ffd93d', '#ffd93d', _, _, _, _, _],
     [_, _, '#ffd93d', '#ffd93d', '#ffd93d', '#ffd93d', '#ffd93d', '#ffd93d', _, _, _, _],

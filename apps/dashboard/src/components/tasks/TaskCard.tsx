@@ -2,6 +2,8 @@
 
 import type { BoardTask } from '@/lib/tasks/types';
 import { PRIORITY_CONFIG } from '@/lib/tasks/types';
+import { ChinjanOnly, DefaultOnly } from '@/components/backoffice/chinjan/ChinjanThemeProvider';
+import { ChinjanTaskCard } from './ChinjanTaskCard';
 
 function relativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -24,6 +26,11 @@ export function TaskCard({ task, onClick, onDragStart }: Props) {
   const priorityCfg = PRIORITY_CONFIG[task.priority];
 
   return (
+    <>
+    <ChinjanOnly>
+      <ChinjanTaskCard task={task} onClick={onClick} onDragStart={onDragStart} />
+    </ChinjanOnly>
+    <DefaultOnly>
     <div
       draggable
       role="button"
@@ -93,5 +100,7 @@ export function TaskCard({ task, onClick, onDragStart }: Props) {
         </div>
       </div>
     </div>
+    </DefaultOnly>
+    </>
   );
 }

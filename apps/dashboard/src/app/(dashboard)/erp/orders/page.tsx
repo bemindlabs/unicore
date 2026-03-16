@@ -154,6 +154,12 @@ const TRANSITIONS: Partial<
 // Create Order Dialog
 // ---------------------------------------------------------------------------
 
+interface Contact {
+  id: string;
+  firstName: string;
+  lastName: string;
+}
+
 interface CreateOrderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -167,9 +173,19 @@ function CreateOrderDialog({
 }: CreateOrderDialogProps) {
   const [form, setForm] = useState<CreateOrderForm>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [contactsLoading, setContactsLoading] = useState(false);
 
   useEffect(() => {
-    if (open) setForm(EMPTY_FORM);
+    if (open) {
+      setForm(EMPTY_FORM);
+      setContactsLoading(true);
+      api
+        .get<Contact[]>("/api/proxy/erp/contacts")
+        .then((res) => setContacts(Array.isArray(res) ? res : (res as any).data ?? []))
+        .catch(() => setContacts([]))
+        .finally(() => setContactsLoading(false));
+    }
   }, [open]);
 
   const set = (field: keyof CreateOrderForm, value: string) =>
@@ -212,13 +228,21 @@ function CreateOrderDialog({
 
         <div className="space-y-4 py-2">
           <div className="space-y-1">
-            <Label htmlFor="o-contact">Contact ID *</Label>
-            <Input
+            <Label htmlFor="o-contact">Contact *</Label>
+            <select
               id="o-contact"
               value={form.contactId}
               onChange={(e) => set("contactId", e.target.value)}
-              placeholder="UUID of the contact"
-            />
+              disabled={contactsLoading}
+              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+            >
+              <option value="">{contactsLoading ? "Loading contacts…" : "Select a contact"}</option>
+              {contacts.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.firstName} {c.lastName}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="space-y-1">
             <Label htmlFor="o-currency">Currency</Label>

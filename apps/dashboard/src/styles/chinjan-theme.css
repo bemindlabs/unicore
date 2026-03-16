@@ -92,6 +92,11 @@
   100% { opacity: 0; transform: translateY(-16px) scale(0.5); }
 }
 
+@keyframes pixelAura {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.1); }
+}
+
 @keyframes pixelBob {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-2px); }

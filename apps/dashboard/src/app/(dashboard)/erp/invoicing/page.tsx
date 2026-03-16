@@ -125,6 +125,12 @@ function StatusBadge({ status }: { status: InvoiceStatus }) {
 // Create Invoice Dialog
 // ---------------------------------------------------------------------------
 
+interface Contact {
+  id: string;
+  firstName: string;
+  lastName: string;
+}
+
 interface CreateInvoiceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -138,9 +144,19 @@ function CreateInvoiceDialog({
 }: CreateInvoiceDialogProps) {
   const [form, setForm] = useState<CreateInvoiceForm>(EMPTY_CREATE);
   const [saving, setSaving] = useState(false);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [contactsLoading, setContactsLoading] = useState(false);
 
   useEffect(() => {
-    if (open) setForm(EMPTY_CREATE);
+    if (open) {
+      setForm(EMPTY_CREATE);
+      setContactsLoading(true);
+      api
+        .get<Contact[]>("/api/proxy/erp/contacts")
+        .then((res) => setContacts(Array.isArray(res) ? res : (res as any).data ?? []))
+        .catch(() => setContacts([]))
+        .finally(() => setContactsLoading(false));
+    }
   }, [open]);
 
   const set = (field: keyof CreateInvoiceForm, value: string) =>
@@ -187,13 +203,21 @@ function CreateInvoiceDialog({
 
         <div className="space-y-4 py-2">
           <div className="space-y-1">
-            <Label htmlFor="inv-contact">Contact ID *</Label>
-            <Input
+            <Label htmlFor="inv-contact">Contact *</Label>
+            <select
               id="inv-contact"
               value={form.contactId}
               onChange={(e) => set("contactId", e.target.value)}
-              placeholder="UUID of the contact"
-            />
+              disabled={contactsLoading}
+              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+            >
+              <option value="">{contactsLoading ? "Loading contacts…" : "Select a contact"}</option>
+              {contacts.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.firstName} {c.lastName}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">

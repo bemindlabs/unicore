@@ -81,3 +81,13 @@ model AuditLog {
   @@index([resource])
   @@map("audit_logs")
 }
+
+// ---------------------------------------------------------------------------
+// Settings Persistence (key-value JSON store for dashboard settings)
+// ---------------------------------------------------------------------------
+
+model Settings {
+  id        String   @id @default("default")
+  data      Json     @default("{}")
+  updatedAt DateTime @updatedAt
+}

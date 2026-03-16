@@ -11,6 +11,7 @@ import {
   Settings,
   Shield,
   ShoppingCart,
+  TrendingUp,
   Users,
   UsersRound,
 } from 'lucide-react';
@@ -69,6 +70,12 @@ export const menuSections: NavSection[] = [
         icon: DollarSign,
         href: '/erp/expenses',
         roles: [UserRole.Owner, UserRole.Finance],
+      },
+      {
+        label: 'Reports',
+        icon: TrendingUp,
+        href: '/erp/reports',
+        roles: [UserRole.Owner, UserRole.Operator],
       },
     ],
   },

@@ -40,8 +40,11 @@ export default function AdminAuditLogsPage() {
 
   useEffect(() => {
     api
-      .get<AuditEntry[]>('/admin/audit-logs')
-      .then(setLogs)
+      .get<AuditEntry[] | { data: AuditEntry[] }>('/admin/audit-logs')
+      .then((res) => {
+        const data = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
+        setLogs(data);
+      })
       .catch(() => setLogs([]))
       .finally(() => setLoading(false));
   }, []);
