@@ -166,7 +166,7 @@ export default function SettingsLicensePage() {
           maxAgents: raw.maxAgents ?? (isPro ? 50 : 2),
           maxRoles: raw.maxRoles ?? (isPro ? 20 : 3),
           expiresAt: raw.expiresAt ?? '2099-12-31T23:59:59Z',
-          features: featureObj,
+          features: featureObj as LicenseInfo['features'],
         };
 
         setLicense(mapped);
