@@ -10,6 +10,7 @@ import { WorkflowStateStore } from '../state/workflow-state.store';
 import { CallAgentExecutor } from '../executors/call-agent.executor';
 import { UpdateErpExecutor } from '../executors/update-erp.executor';
 import { SendNotificationExecutor } from '../executors/send-notification.executor';
+import { SendTelegramExecutor } from '../executors/send-telegram.executor';
 
 @Module({
   controllers: [WorkflowController],
@@ -25,6 +26,7 @@ import { SendNotificationExecutor } from '../executors/send-notification.executo
     CallAgentExecutor,
     UpdateErpExecutor,
     SendNotificationExecutor,
+    SendTelegramExecutor,
   ],
   exports: [WorkflowService, WorkflowEngineService],
 })

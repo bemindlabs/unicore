@@ -87,6 +87,8 @@ services:
       OPENCLAW_SERVICE_PORT: "18790"
       WORKFLOW_SERVICE_HOST: unicore-workflow
       WORKFLOW_SERVICE_PORT: "4600"
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:-unicore-telegram-secret}
     depends_on:
       unicore-postgres:
         condition: service_healthy
@@ -189,6 +191,7 @@ services:
       REDIS_URL: redis://unicore-redis:6379
       ERP_SERVICE_URL: http://unicore-erp:4100
       OPENCLAW_GATEWAY_URL: ws://unicore-openclaw-gateway:18789
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
     depends_on:
       unicore-kafka:
         condition: service_healthy

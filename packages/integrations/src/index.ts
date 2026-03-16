@@ -64,6 +64,15 @@ export type { IPlaidClient } from './adapters/plaid/index.js';
 export { EmailAdapter } from './adapters/email/index.js';
 export type { IEmailTransport } from './adapters/email/index.js';
 
+// Telegram channel adapter
+export { TelegramAdapter } from './channels/telegram.js';
+export type {
+  TelegramAdapterConfig,
+  TelegramSendMessageOptions,
+  TelegramUser,
+  TelegramApiResponse,
+} from './channels/telegram.js';
+
 // Registry
 export { AdapterRegistry } from './registry.js';
 

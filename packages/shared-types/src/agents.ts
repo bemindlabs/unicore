@@ -25,7 +25,8 @@ export type AgentChannel =
   | 'email'
   | 'sms'
   | 'slack'
-  | 'whatsapp';
+  | 'whatsapp'
+  | 'telegram';
 
 export interface AgentInstance {
   id: string;

@@ -61,7 +61,7 @@ export interface WorkflowTrigger {
 // ---------------------------------------------------------------------------
 
 /** Discriminated union tag for action executors. */
-export type ActionType = 'call_agent' | 'update_erp' | 'send_notification';
+export type ActionType = 'call_agent' | 'update_erp' | 'send_notification' | 'send_telegram';
 
 /** Base fields shared by every action step. */
 export interface BaseAction {
@@ -127,10 +127,26 @@ export interface SendNotificationAction extends BaseAction {
   };
 }
 
+/** Sends a message to a Telegram chat via the Bot API. */
+export interface SendTelegramAction extends BaseAction {
+  type: 'send_telegram';
+  config: {
+    /** Telegram chat ID — supports `{{field}}` interpolation. */
+    chatId: string;
+    /** Direct message text — supports `{{field}}` interpolation. */
+    message?: string;
+    /** Message template (alternative to message) — supports `{{field}}` interpolation. */
+    template?: string;
+    /** Telegram parse mode. Defaults to 'HTML'. */
+    parseMode?: 'HTML' | 'Markdown' | 'MarkdownV2';
+  };
+}
+
 export type WorkflowAction =
   | CallAgentAction
   | UpdateErpAction
-  | SendNotificationAction;
+  | SendNotificationAction
+  | SendTelegramAction;
 
 // ---------------------------------------------------------------------------
 // Top-level Workflow Definition
