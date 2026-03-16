@@ -38,6 +38,7 @@ const CHANNEL_OPTIONS: { value: AgentChannel; label: string }[] = [
   { value: 'line', label: 'LINE' },
   { value: 'facebook', label: 'Facebook' },
   { value: 'instagram', label: 'Instagram' },
+  { value: 'telegram', label: 'Telegram' },
 ];
 
 export function StepAgents() {

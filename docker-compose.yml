@@ -120,6 +120,7 @@ services:
     ports:
       - "4100:4100"
     environment:
+      UNICORE_EDITION: community
       DATABASE_URL: postgresql://${POSTGRES_USER:-unicore}:${POSTGRES_PASSWORD:-password}@unicore-postgres:5432/${POSTGRES_DB_ERP:-unicore_erp}?schema=public
       REDIS_URL: redis://unicore-redis:6379
       PORT: "4100"
@@ -136,6 +137,7 @@ services:
     ports:
       - "4200:4200"
     environment:
+      UNICORE_EDITION: community
       PORT: "4200"
       REDIS_URL: redis://unicore-redis:6379
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
@@ -152,6 +154,7 @@ services:
     ports:
       - "4300:4300"
     environment:
+      UNICORE_EDITION: community
       PORT: "4300"
       QDRANT_URL: http://unicore-vectordb:6333
       REDIS_URL: redis://unicore-redis:6379
@@ -169,6 +172,7 @@ services:
     ports:
       - "4500:4500"
     environment:
+      UNICORE_EDITION: community
       DATABASE_URL: postgresql://${POSTGRES_USER:-unicore}:${POSTGRES_PASSWORD:-password}@unicore-postgres:5432/${POSTGRES_DB:-unicore}?schema=public
       PORT: "4500"
       BOOTSTRAP_SECRET: ${BOOTSTRAP_SECRET:-change-me-bootstrap-secret}
@@ -191,6 +195,7 @@ services:
     ports:
       - "18790:18790"
     environment:
+      UNICORE_EDITION: community
       PORT: "18789"
       HTTP_PORT: "18790"
       REDIS_URL: redis://unicore-redis:6379
@@ -204,6 +209,7 @@ services:
       context: .
       dockerfile: services/workflow/Dockerfile
     environment:
+      UNICORE_EDITION: community
       PORT: "4400"
       KAFKA_BROKERS: unicore-kafka:9092
       REDIS_URL: redis://unicore-redis:6379
@@ -286,6 +292,7 @@ services:
     ports:
       - "3000:3000"
     environment:
+      UNICORE_EDITION: community
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
       NEXT_PUBLIC_EDITION: community
     depends_on:

@@ -51,10 +51,11 @@ export type WizardAction =
 export const BUSINESS_TEMPLATES: { value: BusinessTemplate; label: string; description: string }[] = [
   { value: 'ecommerce', label: 'E-Commerce', description: 'Online store with products, orders, and shipping' },
   { value: 'freelance', label: 'Freelance', description: 'Solo services with invoicing and client management' },
+  { value: 'agency', label: 'Agency', description: 'Creative or professional agency with client projects' },
   { value: 'saas', label: 'SaaS', description: 'Software subscriptions with recurring billing' },
   { value: 'retail', label: 'Retail', description: 'Physical or hybrid retail with POS and inventory' },
-  { value: 'content-creator', label: 'Content Creator', description: 'Content production with audience and sponsorships' },
-  { value: 'professional', label: 'Professional Services', description: 'Consulting, legal, or agency with project tracking' },
+  { value: 'content_creator', label: 'Content Creator', description: 'Content production with audience and sponsorships' },
+  { value: 'professional_services', label: 'Professional Services', description: 'Consulting, legal, or accounting with project tracking' },
   { value: 'custom', label: 'Custom', description: 'Start from scratch and configure everything' },
 ];
 

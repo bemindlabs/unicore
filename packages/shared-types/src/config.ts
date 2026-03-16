@@ -6,10 +6,11 @@ import type { UserRole } from './auth.js';
 export type BusinessTemplate =
   | 'ecommerce'
   | 'freelance'
+  | 'agency'
   | 'saas'
   | 'retail'
-  | 'content-creator'
-  | 'professional'
+  | 'content_creator'
+  | 'professional_services'
   | 'custom';
 
 export interface ErpModulesConfig {

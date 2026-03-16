@@ -24,5 +24,5 @@ COPY --from=deps /app/services/openclaw-gateway/node_modules ./services/openclaw
 COPY --from=build /app/services/openclaw-gateway/dist ./services/openclaw-gateway/dist
 COPY --from=build /app/services/openclaw-gateway/package.json ./services/openclaw-gateway/
 WORKDIR /app/services/openclaw-gateway
-EXPOSE 18789
+EXPOSE 18789 18790
 CMD ["node", "dist/main"]
