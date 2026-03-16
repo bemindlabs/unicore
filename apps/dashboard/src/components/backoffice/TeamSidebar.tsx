@@ -16,9 +16,10 @@ interface Props {
   filter: 'all' | 'working' | 'idle';
   onFilterChange: (filter: 'all' | 'working' | 'idle') => void;
   onSelectAgent: (agent: BackofficeAgent) => void;
+  onOpenTerminal?: (agent: BackofficeAgent) => void;
 }
 
-export function TeamSidebar({ agents, filter, onFilterChange, onSelectAgent }: Props) {
+export function TeamSidebar({ agents, filter, onFilterChange, onSelectAgent, onOpenTerminal }: Props) {
   const filters: { key: 'all' | 'working' | 'idle'; label: string }[] = [
     { key: 'all', label: 'ALL' },
     { key: 'working', label: 'WORKING' },
@@ -93,6 +94,22 @@ export function TeamSidebar({ agents, filter, onFilterChange, onSelectAgent }: P
               <StatusIndicator status={agent.status} showLabel />
             </div>
             <StatusIndicator status={agent.status} />
+            {onOpenTerminal && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenTerminal(agent);
+                }}
+                className={`opacity-0 group-hover:opacity-100 transition-opacity font-mono text-[9px] px-1.5 py-0.5 ${
+                  isChinjan
+                    ? 'text-[var(--chinjan-muted)] hover:text-[var(--chinjan-pink)] border border-[var(--chinjan-border)]'
+                    : 'text-green-600/50 hover:text-green-400 border border-green-900/30 hover:border-green-500/40'
+                }`}
+                title={`Open terminal for ${agent.name}`}
+              >
+                {'>_'}
+              </button>
+            )}
           </button>
         ))}
         {agents.length === 0 && (

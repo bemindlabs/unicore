@@ -121,9 +121,22 @@ export function useChatWebSocket(
     }
   }, []);
 
+  // Reconnect when channel changes
   useEffect(() => {
     unmountedRef.current = false;
+
+    // Close existing connection and reconnect with new channel
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+    backoffRef.current = 2000;
     connect();
+
     return () => {
       unmountedRef.current = true;
       if (reconnectTimerRef.current) {
@@ -133,7 +146,7 @@ export function useChatWebSocket(
       wsRef.current?.close();
       wsRef.current = null;
     };
-  }, [connect]);
+  }, [connect, channel]);
 
   return { connected, send };
 }

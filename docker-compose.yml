@@ -85,6 +85,8 @@ services:
       BOOTSTRAP_SERVICE_PORT: "4500"
       OPENCLAW_SERVICE_HOST: unicore-openclaw-gateway
       OPENCLAW_SERVICE_PORT: "18790"
+      WORKFLOW_SERVICE_HOST: unicore-workflow
+      WORKFLOW_SERVICE_PORT: "4600"
     depends_on:
       unicore-postgres:
         condition: service_healthy

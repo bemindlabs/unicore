@@ -36,6 +36,12 @@ export const DOWNSTREAM_SERVICES: DownstreamService[] = [
     port: parseInt(process.env.OPENCLAW_SERVICE_PORT ?? '18790', 10),
     pathPrefix: '/openclaw',
   },
+  {
+    name: 'workflow',
+    host: process.env.WORKFLOW_SERVICE_HOST ?? 'localhost',
+    port: parseInt(process.env.WORKFLOW_SERVICE_PORT ?? '4600', 10),
+    pathPrefix: '/workflow',
+  },
 ] as const;
 
 export function resolveDownstreamService(

@@ -22,6 +22,10 @@ const PixelCloud = dynamic(
   () => import("./chinjan/PixelDecorations").then((m) => m.PixelCloud),
   { ssr: false }
 );
+const AgentTerminal = dynamic(
+  () => import("./AgentTerminal").then((m) => m.AgentTerminal),
+  { ssr: false }
+);
 
 interface Props {
   agents: BackofficeAgent[];
@@ -42,6 +46,9 @@ export function BackofficeApp({
     null,
   );
   const [showAddModal, setShowAddModal] = useState(false);
+  const [terminalAgent, setTerminalAgent] = useState<BackofficeAgent | null>(
+    null,
+  );
   const [sidebarFilter, setSidebarFilter] = useState<
     "all" | "working" | "idle"
   >("all");
@@ -110,6 +117,7 @@ export function BackofficeApp({
             filter={sidebarFilter}
             onFilterChange={setSidebarFilter}
             onSelectAgent={setSelectedAgent}
+            onOpenTerminal={setTerminalAgent}
           />
 
           <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6">
@@ -150,6 +158,14 @@ export function BackofficeApp({
             setShowAddModal(false);
           }}
           onClose={() => setShowAddModal(false)}
+        />
+      )}
+
+      {terminalAgent && (
+        <AgentTerminal
+          agent={terminalAgent}
+          open={!!terminalAgent}
+          onClose={() => setTerminalAgent(null)}
         />
       )}
     </div>

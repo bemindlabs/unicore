@@ -36,7 +36,7 @@ interface ValidationResponse {
  *
  * Base path: /workflow/templates
  */
-@Controller('workflow/templates')
+@Controller('templates')
 export class WorkflowTemplatesController {
   constructor(private readonly registry: TemplateRegistryService) {}
 

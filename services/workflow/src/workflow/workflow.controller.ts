@@ -1,7 +1,7 @@
 /**
  * WorkflowController — REST endpoints for the workflow engine.
  *
- * Base path: /workflows
+ * Base path: / (proxied via /api/proxy/workflow)
  */
 import {
   Controller,
@@ -22,7 +22,7 @@ import { RegisterDefinitionDto } from '../dto/register-definition.dto';
 
 const PIPE = new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true });
 
-@Controller('workflows')
+@Controller()
 export class WorkflowController {
   constructor(private readonly workflowService: WorkflowService) {}
 

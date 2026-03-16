@@ -5,6 +5,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useChinjanTheme } from './chinjan/ChinjanThemeProvider';
 import { findCharacterByRole } from '@/lib/backoffice/chinjan-characters';
+import { AgentSettings } from './AgentSettings';
 
 const ChinjanThemeToggle = dynamic(
   () => import('./chinjan/ChinjanThemeToggle').then((m) => m.ChinjanThemeToggle),
@@ -23,6 +24,7 @@ interface Props {
 
 export function Header({ agentCount, workingCount, onAddAgent }: Props) {
   const [time, setTime] = useState('');
+  const [showSettings, setShowSettings] = useState(false);
   const { isActive: isChinjan } = useChinjanTheme();
 
   useEffect(() => {
