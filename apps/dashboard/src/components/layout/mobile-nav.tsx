@@ -18,8 +18,8 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="w-64 p-0">
-        <SheetHeader className="border-b px-4 py-3">
+      <SheetContent side="left" className="w-64 p-0 flex flex-col h-full">
+        <SheetHeader className="border-b px-4 py-3 shrink-0">
           <SheetTitle className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground text-xs font-bold">
               U
@@ -27,7 +27,7 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
             <span className="text-base font-semibold">UniCore</span>
           </SheetTitle>
         </SheetHeader>
-        <nav className="px-2 py-3">
+        <nav className="flex-1 min-h-0 overflow-y-auto px-2 py-3">
           {sections.map((section, idx) => (
             <div key={section.label} className={cn(idx > 0 && 'mt-3')}>
               <p className="mb-1 px-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70">
