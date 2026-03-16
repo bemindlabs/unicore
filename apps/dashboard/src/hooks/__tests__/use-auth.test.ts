@@ -33,7 +33,8 @@ describe('useAuth', () => {
       logout: jest.fn(),
     };
 
-    mockUseContext.mockReturnValue(mockAuthState);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockUseContext.mockReturnValue(mockAuthState as any);
 
     const result = useAuth();
 
@@ -54,7 +55,8 @@ describe('useAuth', () => {
       logout: mockLogout,
     };
 
-    mockUseContext.mockReturnValue(mockAuthState);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockUseContext.mockReturnValue(mockAuthState as any);
 
     const result = useAuth();
 
@@ -90,7 +92,8 @@ describe('useRequireAuth', () => {
       logout: jest.fn(),
     };
 
-    mockUseContext.mockReturnValue(mockAuthState);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockUseContext.mockReturnValue(mockAuthState as any);
 
     // useRequireAuth calls useAuth internally, then wraps with useCallback.
     // Since we're mocking useContext, the useCallback will still work as React

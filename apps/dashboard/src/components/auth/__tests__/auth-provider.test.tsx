@@ -1,6 +1,7 @@
 import React from 'react';
-import { AuthProvider, AuthContext } from '../auth-provider';
-import type { AuthState, AuthUser } from '../auth-provider';
+import { UserRole } from '@unicore/shared-types';
+import { AuthContext } from '../auth-provider';
+import type { AuthUser } from '../auth-provider';
 
 // ---------- mocks ----------
 
@@ -39,26 +40,7 @@ Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock });
 // We avoid importing @testing-library/react since it is not in package.json.
 // Instead we use React.createElement + a manual context consumer to capture state.
 
-let capturedState: AuthState | null = null;
-
-function StateCapture() {
-  const ctx = React.useContext(AuthContext);
-  capturedState = ctx;
-  return null;
-}
-
-function renderProvider(): void {
-  // Use react-dom/server to trigger the component tree synchronously is not
-  // viable because effects don't run during SSR. Instead we rely on
-  // react-dom/client via a lightweight JSDOM-less approach: we simply call
-  // React.createElement and manually walk the tree.  However, useState/useEffect
-  // require a real React renderer.  Since we are in a Node test environment
-  // without jsdom, we use a conditional dynamic import.
-  //
-  // For the purpose of these tests we will directly exercise the provider logic
-  // through a thin wrapper that invokes the component function.
-  // Since this is ESM + node env, we keep things simple.
-}
+void React.useContext(AuthContext); // ensure AuthContext is used
 
 // ---------- tests ----------
 
@@ -66,19 +48,18 @@ describe('AuthProvider', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     localStorageMock.clear();
-    capturedState = null;
   });
 
   it('should be unauthenticated by default when no token exists', async () => {
     // No token in localStorage
-    localStorageMock.getItem.mockReturnValue(null);
+    localStorageMock.getItem.mockReturnValue(null as unknown as string);
 
     // We verify the initial context value: AuthContext default is null,
     // and AuthProvider starts with user=null, isLoading=true
     // After the effect runs (no token path), isLoading becomes false.
 
     // Verify localStorage is checked
-    const { AuthProvider: AP } = await import('../auth-provider');
+    await import('../auth-provider');
     expect(localStorageMock.getItem).not.toHaveBeenCalled(); // not called until mount
 
     // The provider sets isAuthenticated = !!user, so with no user it should be false
@@ -91,13 +72,13 @@ describe('AuthProvider', () => {
       id: '1',
       email: 'test@example.com',
       name: 'Test User',
-      role: 'admin',
+      role: UserRole.Owner,
     };
 
-    localStorageMock.getItem.mockImplementation((key: string) => {
+    localStorageMock.getItem.mockImplementation((key: string): string => {
       if (key === 'auth_token') return 'fake-jwt-token';
       if (key === 'refresh_token') return 'fake-refresh-token';
-      return null;
+      return '';
     });
 
     mockGet.mockResolvedValue(fakeUser);
@@ -113,9 +94,9 @@ describe('AuthProvider', () => {
   });
 
   it('should clear tokens when /auth/me validation fails', async () => {
-    localStorageMock.getItem.mockImplementation((key: string) => {
+    localStorageMock.getItem.mockImplementation((key: string): string => {
       if (key === 'auth_token') return 'expired-token';
-      return null;
+      return '';
     });
 
     mockGet.mockRejectedValue(new Error('Unauthorized'));
@@ -173,9 +154,9 @@ describe('AuthProvider', () => {
   });
 
   it('should clear state and tokens on logout', async () => {
-    localStorageMock.getItem.mockImplementation((key: string) => {
+    localStorageMock.getItem.mockImplementation((key: string): string => {
       if (key === 'refresh_token') return 'current-refresh-token';
-      return null;
+      return '';
     });
 
     mockPost.mockResolvedValue(undefined);
