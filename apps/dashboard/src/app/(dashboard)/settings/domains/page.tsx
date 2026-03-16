@@ -209,13 +209,15 @@ function AddDomainDialog({ open, onOpenChange, onAdd }: AddDomainDialogProps) {
     if (!isValid) return;
     setIsAdding(true);
     try {
+      const now = new Date().toISOString();
       const newDomain: Domain = {
         id: crypto.randomUUID?.() ?? Math.random().toString(36).slice(2),
-        hostname: domainValue.trim(),
+        name: domainValue.trim(),
         status: 'pending' as DomainStatus,
         sslStatus: 'pending' as SslStatus,
-        createdAt: new Date().toISOString(),
-        verificationRecord: { type: 'TXT', name: `_unicore-verify.${domainValue.trim()}`, value: `unicore-verify=${Date.now()}` },
+        addedAt: now,
+        dnsRecords: [{ type: 'TXT', name: `_unicore-verify.${domainValue.trim()}`, value: `unicore-verify=${Date.now()}`, status: 'pending' as const }],
+        verificationHistory: [{ timestamp: now, action: 'domain_added', result: 'pending' }],
       };
       // Save full array to settings
       const current = await api.get<any>('/api/v1/settings/domains').catch(() => ({}));
