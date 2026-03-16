@@ -6,8 +6,10 @@ import { Bot, ExternalLink, Settings } from 'lucide-react';
 import { Badge, Card, CardContent, CardHeader, CardTitle } from '@unicore/ui';
 import { getAgents } from '@/lib/backoffice/store';
 import type { BackofficeAgent } from '@/lib/backoffice/types';
+import { useLicense } from '@/hooks/use-license';
 
 export default function AgentsPage() {
+  const { maxAgents, isPro } = useLicense();
   const [agents, setAgents] = useState<BackofficeAgent[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -31,13 +33,23 @@ export default function AgentsPage() {
             <p className="text-muted-foreground">Manage and monitor your AI agents</p>
           </div>
         </div>
-        <Link
-          href="/backoffice"
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <Settings className="h-4 w-4" />
-          Open Backoffice
-        </Link>
+        <div className="flex items-center gap-4">
+          {!loading && (
+            <span className={`text-sm font-medium ${agents.length >= maxAgents ? 'text-amber-600' : 'text-muted-foreground'}`}>
+              Agents: {agents.length}/{maxAgents}
+              {!isPro && agents.length >= maxAgents && (
+                <a href="/settings/license" className="text-amber-600 underline ml-1 text-xs">(upgrade for more)</a>
+              )}
+            </span>
+          )}
+          <Link
+            href="/backoffice"
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Settings className="h-4 w-4" />
+            Open Backoffice
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}

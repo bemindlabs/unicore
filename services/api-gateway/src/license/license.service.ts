@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, ForbiddenException } from '@nestjs/common';
 import type {
   LicenseStatus,
   LicenseTier,
@@ -15,7 +15,9 @@ const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
  * Enterprise tier is a superset of Pro.
  */
 const TIER_FEATURES: Record<LicenseTier, ProFeature[]> = {
-  community: [],
+  community: [
+    'audit_log',
+  ],
   pro: [
     'advanced_agents',
     'rbac',
@@ -97,6 +99,26 @@ export class LicenseService {
   async hasFeature(feature: ProFeature): Promise<boolean> {
     const status = await this.getLicenseStatus();
     return status.valid && status.features.includes(feature);
+  }
+
+  /**
+   * Validates that the current agent count is within the tier limit.
+   * Throws ForbiddenException when the limit has been reached.
+   *
+   * Tier limits:
+   *   - Community: 2 agents
+   *   - Pro: 50 agents
+   *   - Enterprise: 999 agents
+   */
+  async checkAgentLimit(currentCount: number): Promise<void> {
+    const status = await this.getLicenseStatus();
+    const maxAgents =
+      status.tier === 'enterprise' ? 999 : status.tier === 'pro' ? 50 : 2;
+    if (currentCount >= maxAgents) {
+      throw new ForbiddenException(
+        `Agent limit reached (${maxAgents}). Upgrade to Pro for more agents.`,
+      );
+    }
   }
 
   /**

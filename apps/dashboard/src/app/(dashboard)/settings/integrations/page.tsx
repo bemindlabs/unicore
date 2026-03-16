@@ -27,6 +27,7 @@ import { TelegramConfig } from '../../../../components/settings/TelegramConfig';
 import { LineConfig } from '../../../../components/settings/LineConfig';
 import { LineRichMenu } from '../../../../components/settings/LineRichMenu';
 import { LineFlexTemplates } from '../../../../components/settings/LineFlexTemplates';
+import { useLicense } from '@/hooks/use-license';
 
 interface IntegrationDef {
   provider: string;
@@ -120,6 +121,7 @@ const DEFAULT_INTEGRATIONS: IntegrationState[] = INTEGRATION_DEFS.map((def) => (
 const CATEGORY_ORDER = ['Messaging', 'Payments', 'Productivity', 'E-Commerce'];
 
 export default function SettingsIntegrationsPage() {
+  const { isPro } = useLicense();
   const [integrations, setIntegrations] = useState<IntegrationState[]>(DEFAULT_INTEGRATIONS);
   const [configTarget, setConfigTarget] = useState<IntegrationDef | null>(null);
   const [configValues, setConfigValues] = useState<Record<string, string>>({});
@@ -173,11 +175,33 @@ export default function SettingsIntegrationsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Pro feature banner for channel integrations */}
+      {!isPro && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+          <strong>Pro Feature</strong> — Telegram and LINE channel integrations require a Pro license.
+          <a href="/settings/license" className="underline ml-1">Upgrade</a>
+        </div>
+      )}
+
       {/* Telegram Bot — dedicated config panel */}
-      <TelegramConfig />
+      <div className="relative">
+        {!isPro && (
+          <div className="absolute top-3 right-3 z-10">
+            <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 text-xs font-semibold">PRO</Badge>
+          </div>
+        )}
+        <TelegramConfig />
+      </div>
 
       {/* LINE Messaging — dedicated config panel */}
-      <LineConfig />
+      <div className="relative">
+        {!isPro && (
+          <div className="absolute top-3 right-3 z-10">
+            <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 text-xs font-semibold">PRO</Badge>
+          </div>
+        )}
+        <LineConfig />
+      </div>
 
       {/* LINE Rich Menu management */}
       <LineRichMenu />

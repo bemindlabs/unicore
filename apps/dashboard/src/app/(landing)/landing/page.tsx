@@ -206,6 +206,7 @@ const communityFeatures = [
   'Tasks board (Kanban + list)',
   'Knowledge base + RAG',
   'Workflow automation',
+  'Audit logs',
   'Community support',
   'Self-hosted deployment',
 ];
@@ -217,7 +218,7 @@ const proFeatures = [
   'Advanced workflows + Kafka events',
   'LINE + Telegram integrations',
   'All messaging channels',
-  'SSO authentication',
+  'SSO authentication (Coming Soon)',
   'White-label branding',
   'Audit logs + compliance',
   'Custom domain support',
@@ -226,9 +227,8 @@ const proFeatures = [
 ];
 
 const communityExcluded = [
-  'SSO authentication',
+  'SSO authentication (Coming Soon)',
   'White-label branding',
-  'Audit logs',
   'Custom domains',
 ];
 

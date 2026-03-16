@@ -41,6 +41,7 @@ import {
   toast,
 } from "@unicore/ui";
 import { api } from "@/lib/api";
+import { useLicense } from "@/hooks/use-license";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -569,6 +570,7 @@ function DomainDetailPanel({ domain }: DomainDetailPanelProps) {
 // ---------------------------------------------------------------------------
 
 export default function SettingsDomainsPage() {
+  const { isPro } = useLicense();
   const [domains, setDomains] = useState<Domain[]>([]);
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
@@ -664,6 +666,14 @@ export default function SettingsDomainsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Pro feature banner */}
+      {!isPro && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+          <strong>Pro Feature</strong> — Custom domain support requires a Pro license.
+          <a href="/settings/license" className="underline ml-1">Upgrade</a>
+        </div>
+      )}
+
       {/* Header card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">

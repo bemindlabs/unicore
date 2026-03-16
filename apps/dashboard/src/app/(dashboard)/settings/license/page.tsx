@@ -46,7 +46,7 @@ const MOCK_LICENSE: LicenseInfo = {
     unlimitedRag: false,
     whiteLabelBranding: false,
     sso: false,
-    auditLogs: false,
+    auditLogs: true,
     prioritySupport: false,
   },
 };
@@ -329,7 +329,8 @@ export default function SettingsLicensePage() {
               ['All Agents', MOCK_LICENSE.features.allAgents, PRO_FEATURES.features.allAgents],
               ['Advanced Workflows', MOCK_LICENSE.features.advancedWorkflows, PRO_FEATURES.features.advancedWorkflows],
               ['White Label', MOCK_LICENSE.features.whiteLabelBranding, PRO_FEATURES.features.whiteLabelBranding],
-              ['SSO', MOCK_LICENSE.features.sso, PRO_FEATURES.features.sso],
+              ['Audit Logs', MOCK_LICENSE.features.auditLogs, PRO_FEATURES.features.auditLogs],
+              ['SSO (Coming Soon)', MOCK_LICENSE.features.sso, PRO_FEATURES.features.sso],
               ['Priority Support', MOCK_LICENSE.features.prioritySupport, PRO_FEATURES.features.prioritySupport],
             ] as [string, boolean | number, boolean | number][]
           ).map(([label, community, pro]) => (

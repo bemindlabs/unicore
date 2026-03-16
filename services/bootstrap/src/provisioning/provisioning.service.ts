@@ -126,7 +126,7 @@ export class ProvisioningService {
           edition: "community",
           expiry: "2099-12-31T23:59:59Z",
           maxAgents: 2,
-          maxRoles: 5,
+          maxRoles: 3,
         }),
       });
       if (licenseRes.ok) {
