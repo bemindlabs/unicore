@@ -282,9 +282,26 @@ const showcaseItems = [
 
 /* ── Page ── */
 
+import { ThemeToggle } from '@/components/ThemeToggle';
+
 export default function LandingPage() {
   return (
     <div className="flex flex-col">
+      {/* ── Top Nav Bar ── */}
+      <nav className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-sm">
+        <div className="mx-auto max-w-6xl flex items-center justify-between px-6 py-3">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground text-xs font-bold">U</div>
+            <span className="font-semibold">UniCore</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Login</Link>
+            <Link href="/wizard" className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors">Get Started</Link>
+          </div>
+        </div>
+      </nav>
+
       {/* ── Hero Section ── */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-primary/5" />
