@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { LayoutGrid, Terminal, Settings } from 'lucide-react';
+import { LayoutGrid, Terminal, Settings, Menu } from 'lucide-react';
 import { useChinjanTheme } from './chinjan/ChinjanThemeProvider';
 import { findCharacterByRole } from '@/lib/backoffice/chinjan-characters';
 
@@ -24,6 +24,7 @@ interface Props {
   onAddAgent: () => void;
   activeTab: BackofficeTab;
   onTabChange: (tab: BackofficeTab) => void;
+  onToggleMobileSidebar?: () => void;
 }
 
 const TAB_CONFIG: { key: BackofficeTab; label: string; icon: typeof LayoutGrid }[] = [
@@ -32,7 +33,7 @@ const TAB_CONFIG: { key: BackofficeTab; label: string; icon: typeof LayoutGrid }
   { key: 'settings', label: 'Settings', icon: Settings },
 ];
 
-export function Header({ agentCount, workingCount, onAddAgent, activeTab, onTabChange }: Props) {
+export function Header({ agentCount, workingCount, onAddAgent, activeTab, onTabChange, onToggleMobileSidebar }: Props) {
   const [time, setTime] = useState('');
   const { isActive: isChinjan } = useChinjanTheme();
 
@@ -52,9 +53,19 @@ export function Header({ agentCount, workingCount, onAddAgent, activeTab, onTabC
 
   if (isChinjan) {
     return (
-      <header className="flex items-center justify-between px-4 lg:px-6 py-3 border-b-2" style={{ borderColor: 'var(--chinjan-border)', background: 'var(--chinjan-surface)' }}>
-        <div className="flex items-center gap-4">
-          <Link href="/" className="text-[var(--chinjan-muted)] hover:text-[var(--chinjan-pink)] text-xs mr-2 transition-colors" style={{ fontFamily: "'Nunito', sans-serif" }}>
+      <header className="flex flex-wrap items-center justify-between px-4 lg:px-6 py-3 border-b-2" style={{ borderColor: 'var(--chinjan-border)', background: 'var(--chinjan-surface)' }}>
+        <div className="flex items-center gap-2 sm:gap-4">
+          {activeTab === 'overview' && onToggleMobileSidebar && (
+            <button
+              onClick={onToggleMobileSidebar}
+              className="md:hidden p-1.5 border-2 transition-colors"
+              style={{ borderColor: 'var(--chinjan-border)', color: 'var(--chinjan-muted)' }}
+              aria-label="Toggle sidebar"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
+          )}
+          <Link href="/" className="text-[var(--chinjan-muted)] hover:text-[var(--chinjan-pink)] text-xs mr-2 transition-colors hidden sm:inline" style={{ fontFamily: "'Nunito', sans-serif" }}>
             &larr; Dashboard
           </Link>
           <div className="flex items-center gap-2">
@@ -69,12 +80,12 @@ export function Header({ agentCount, workingCount, onAddAgent, activeTab, onTabC
             <span>{agentCount} TOTAL</span>
           </div>
           {/* Tab buttons */}
-          <div className="hidden sm:flex items-center gap-1 ml-4">
+          <div className="flex items-center gap-1 ml-2 sm:ml-4 flex-wrap">
             {TAB_CONFIG.map(({ key, label, icon: Icon }) => (
               <button
                 key={key}
                 onClick={() => onTabChange(key)}
-                className="chinjan-mono text-[10px] px-3 py-1.5 border-2 transition-all tracking-wider uppercase flex items-center gap-1.5"
+                className="chinjan-mono text-[10px] sm:text-xs px-2 sm:px-3 py-1 sm:py-1.5 border-2 transition-all tracking-wider uppercase flex items-center gap-1 sm:gap-1.5"
                 style={{
                   borderColor: activeTab === key ? 'var(--chinjan-pink)' : 'var(--chinjan-border)',
                   color: activeTab === key ? 'var(--chinjan-pink)' : 'var(--chinjan-muted)',
@@ -82,25 +93,25 @@ export function Header({ agentCount, workingCount, onAddAgent, activeTab, onTabC
                 }}
               >
                 <Icon className="w-3.5 h-3.5" />
-                {label}
+                <span className="hidden sm:inline">{label}</span>
               </button>
             ))}
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <ChinjanThemeToggle />
           {activeTab === 'overview' && (
             <button
               onClick={onAddAgent}
-              className="chinjan-mono text-sm px-4 py-2 border-2 transition-all tracking-wider uppercase"
+              className="chinjan-mono text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 border-2 transition-all tracking-wider uppercase"
               style={{
                 borderColor: 'var(--chinjan-pink)',
                 color: 'var(--chinjan-pink)',
                 background: 'color-mix(in srgb, var(--chinjan-pink) 10%, transparent)',
               }}
             >
-              + Add Agent
+              + <span className="hidden sm:inline">Add Agent</span><span className="sm:hidden">Add</span>
             </button>
           )}
           <div className="chinjan-mono text-sm">
@@ -113,9 +124,18 @@ export function Header({ agentCount, workingCount, onAddAgent, activeTab, onTabC
   }
 
   return (
-    <header className="flex items-center justify-between px-4 lg:px-6 py-3 border-b border-cyan-900/30 bg-[#0a0e1a]/80 backdrop-blur-sm">
-      <div className="flex items-center gap-4">
-        <Link href="/" className="text-cyan-600/40 hover:text-cyan-400 text-xs mr-2 transition-colors">
+    <header className="flex flex-wrap items-center justify-between px-4 lg:px-6 py-3 border-b border-cyan-900/30 bg-[#0a0e1a]/80 backdrop-blur-sm">
+      <div className="flex items-center gap-2 sm:gap-4">
+        {activeTab === 'overview' && onToggleMobileSidebar && (
+          <button
+            onClick={onToggleMobileSidebar}
+            className="md:hidden p-1.5 border border-cyan-900/30 text-cyan-500/60 hover:text-cyan-400 transition-colors"
+            aria-label="Toggle sidebar"
+          >
+            <Menu className="w-4 h-4" />
+          </button>
+        )}
+        <Link href="/" className="text-cyan-600/40 hover:text-cyan-400 text-xs mr-2 transition-colors hidden sm:inline">
           &larr; Dashboard
         </Link>
         <h1 className="font-mono text-sm lg:text-base text-cyan-400 font-bold tracking-wider uppercase">
@@ -131,32 +151,32 @@ export function Header({ agentCount, workingCount, onAddAgent, activeTab, onTabC
           <span>{agentCount} TOTAL</span>
         </div>
         {/* Tab buttons */}
-        <div className="hidden sm:flex items-center gap-1 ml-4">
+        <div className="flex items-center gap-1 ml-2 sm:ml-4 flex-wrap">
           {TAB_CONFIG.map(({ key, label, icon: Icon }) => (
             <button
               key={key}
               onClick={() => onTabChange(key)}
-              className={`font-mono text-[10px] px-3 py-1.5 border transition-all tracking-wider uppercase flex items-center gap-1.5 ${
+              className={`font-mono text-[10px] sm:text-xs px-2 sm:px-3 py-1 sm:py-1.5 border transition-all tracking-wider uppercase flex items-center gap-1 sm:gap-1.5 ${
                 activeTab === key
                   ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-300'
                   : 'bg-cyan-500/5 border-cyan-500/20 text-cyan-500/50 hover:bg-cyan-500/10 hover:text-cyan-400 hover:border-cyan-500/40'
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
-              {label}
+              <span className="hidden sm:inline">{label}</span>
             </button>
           ))}
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         <ChinjanThemeToggle />
         {activeTab === 'overview' && (
           <button
             onClick={onAddAgent}
-            className="font-mono text-[10px] bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 px-4 py-2 hover:bg-cyan-500/20 hover:border-cyan-400/50 hover:shadow-[0_0_15px_rgba(0,229,255,0.1)] transition-all tracking-wider uppercase"
+            className="font-mono text-[10px] bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 px-2 sm:px-4 py-1.5 sm:py-2 hover:bg-cyan-500/20 hover:border-cyan-400/50 hover:shadow-[0_0_15px_rgba(0,229,255,0.1)] transition-all tracking-wider uppercase"
           >
-            + Add Agent
+            + <span className="hidden sm:inline">Add Agent</span><span className="sm:hidden">Add</span>
           </button>
         )}
         <div className="font-mono text-xs lg:text-sm">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import type { BackofficeAgent } from "@/lib/backoffice/types";
 import { Header, type BackofficeTab } from "./Header";
@@ -55,6 +55,8 @@ export function BackofficeApp({
   const [sidebarFilter, setSidebarFilter] = useState<
     "all" | "working" | "idle"
   >("all");
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const toggleMobileSidebar = useCallback(() => setMobileSidebarOpen((v) => !v), []);
   const filteredAgents =
     sidebarFilter === "all"
       ? agents
@@ -92,7 +94,7 @@ export function BackofficeApp({
         </div>
       </ChinjanOnly>
 
-      <div className="relative z-10 flex flex-col h-screen">
+      <div className="relative z-10 flex flex-col h-screen transition-colors duration-300">
         {apiError && (
           <>
             <DefaultOnly>
@@ -114,16 +116,29 @@ export function BackofficeApp({
           onAddAgent={() => setShowAddModal(true)}
           activeTab={activeTab}
           onTabChange={setActiveTab}
+          onToggleMobileSidebar={toggleMobileSidebar}
         />
 
         {activeTab === "overview" && (
-          <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex overflow-hidden relative">
+            {/* Mobile sidebar overlay */}
+            {mobileSidebarOpen && (
+              <div
+                className="fixed inset-0 z-40 bg-black/50 md:hidden"
+                onClick={() => setMobileSidebarOpen(false)}
+              />
+            )}
             <TeamSidebar
               agents={filteredAgents}
               filter={sidebarFilter}
               onFilterChange={setSidebarFilter}
-              onSelectAgent={setSelectedAgent}
+              onSelectAgent={(agent) => {
+                setSelectedAgent(agent);
+                setMobileSidebarOpen(false);
+              }}
               onOpenTerminal={setTerminalAgent}
+              mobileOpen={mobileSidebarOpen}
+              onCloseMobile={() => setMobileSidebarOpen(false)}
             />
 
             <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6">

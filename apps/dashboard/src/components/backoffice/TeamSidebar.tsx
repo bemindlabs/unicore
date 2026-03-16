@@ -17,9 +17,11 @@ interface Props {
   onFilterChange: (filter: 'all' | 'working' | 'idle') => void;
   onSelectAgent: (agent: BackofficeAgent) => void;
   onOpenTerminal?: (agent: BackofficeAgent) => void;
+  mobileOpen?: boolean;
+  onCloseMobile?: () => void;
 }
 
-export function TeamSidebar({ agents, filter, onFilterChange, onSelectAgent, onOpenTerminal }: Props) {
+export function TeamSidebar({ agents, filter, onFilterChange, onSelectAgent, onOpenTerminal, mobileOpen, onCloseMobile }: Props) {
   const filters: { key: 'all' | 'working' | 'idle'; label: string }[] = [
     { key: 'all', label: 'ALL' },
     { key: 'working', label: 'WORKING' },
@@ -30,10 +32,14 @@ export function TeamSidebar({ agents, filter, onFilterChange, onSelectAgent, onO
 
   return (
     <aside
-      className={`w-56 lg:w-64 border-r flex-shrink-0 hidden md:flex flex-col ${
+      className={`w-64 border-r flex-shrink-0 flex-col transition-transform duration-200 ${
+        mobileOpen
+          ? 'fixed inset-y-0 left-0 z-50 flex'
+          : 'hidden md:flex'
+      } ${
         isChinjan ? 'border-[var(--chinjan-border)]' : 'border-cyan-900/30 bg-[#0a0e1a]/60'
       }`}
-      style={isChinjan ? { background: 'var(--chinjan-surface)', borderColor: 'var(--chinjan-border)' } : undefined}
+      style={isChinjan ? { background: 'var(--chinjan-surface)', borderColor: 'var(--chinjan-border)' } : !isChinjan && mobileOpen ? { background: '#0a0e1a' } : undefined}
     >
       <div className={`px-4 py-3 border-b ${isChinjan ? 'border-[var(--chinjan-border)]' : 'border-cyan-900/20'}`}>
         <h2
