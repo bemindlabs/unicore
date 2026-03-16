@@ -73,6 +73,16 @@ export function StepReview() {
       const res = await provisionWorkspace(request);
       if (res.success) {
         localStorage.setItem('wizard_completed', 'true');
+        // Also save server-side so other browsers/users see it
+        try {
+          await fetch('/api/v1/settings/wizard-status', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ completed: true, completedAt: new Date().toISOString() }),
+          });
+        } catch {
+          // Server save failed — localStorage is fallback
+        }
       }
       setResult(res);
     } catch (err) {

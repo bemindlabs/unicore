@@ -2,10 +2,31 @@ import { Controller, Get, Put, Param, Body, UseGuards } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { LicenseGuard } from '../license/guards/license.guard';
 import { ProFeatureRequired } from '../license/decorators/pro-feature.decorator';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('api/v1/settings')
 export class SettingsController {
   constructor(private readonly prisma: PrismaService) {}
+
+  /** Public: wizard completion status (no auth required) */
+  @Public()
+  @Get('wizard-status')
+  async getWizardStatus() {
+    const settings = await this.prisma.settings.findUnique({ where: { id: 'wizard-status' } });
+    return settings?.data ?? { completed: false };
+  }
+
+  /** Public: save wizard completion (called after provisioning) */
+  @Public()
+  @Put('wizard-status')
+  async setWizardStatus(@Body() body: any) {
+    const settings = await this.prisma.settings.upsert({
+      where: { id: 'wizard-status' },
+      create: { id: 'wizard-status', data: body },
+      update: { data: body },
+    });
+    return settings.data;
+  }
 
   @Get(':key')
   async get(@Param('key') key: string) {
