@@ -57,3 +57,27 @@ model CustomDomain {
   @@index([tenantId])
   @@map("custom_domains")
 }
+
+// ---------------------------------------------------------------------------
+// Audit Logging
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  timestamp  DateTime @default(now())
+  userId     String?
+  userEmail  String?
+  action     String   // create, update, delete, login, logout
+  resource   String   // contacts, orders, users, auth
+  resourceId String?
+  detail     String?  // e.g. "Created contact John Doe"
+  ip         String?
+  success    Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  @@index([timestamp])
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+  @@map("audit_logs")
+}

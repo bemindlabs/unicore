@@ -8,7 +8,9 @@ import {
   HttpCode,
   HttpStatus,
   UnauthorizedException,
+  Req,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -17,10 +19,14 @@ import { CurrentUser } from './decorators/current-user.decorator';
 import { RegisterDto } from './dto/register.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { LoginDto } from './dto/login.dto';
+import { AuditService } from '../audit/audit.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly auditService: AuditService,
+  ) {}
 
   @Public()
   @Post('register')
@@ -32,8 +38,29 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  login(@CurrentUser() user: any, @Body() _dto: LoginDto) {
-    return this.authService.login(user);
+  async login(@CurrentUser() user: any, @Body() _dto: LoginDto, @Req() req: Request) {
+    try {
+      const result = await this.authService.login(user);
+      await this.auditService.log({
+        userId: user.id,
+        userEmail: user.email,
+        action: 'login',
+        resource: 'auth',
+        detail: 'Login successful',
+        ip: req.ip,
+      });
+      return result;
+    } catch (err) {
+      await this.auditService.log({
+        userEmail: _dto.email,
+        action: 'login',
+        resource: 'auth',
+        success: false,
+        detail: 'Invalid credentials',
+        ip: req.ip,
+      });
+      throw err;
+    }
   }
 
   @Public()
@@ -46,8 +73,17 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  logout(@Body() dto: RefreshTokenDto) {
-    return this.authService.logout(dto.refreshToken);
+  async logout(@CurrentUser() user: any, @Body() dto: RefreshTokenDto, @Req() req: Request) {
+    const result = await this.authService.logout(dto.refreshToken);
+    await this.auditService.log({
+      userId: user?.id,
+      userEmail: user?.email,
+      action: 'logout',
+      resource: 'auth',
+      detail: 'Logout',
+      ip: req.ip,
+    });
+    return result;
   }
 
   @UseGuards(JwtAuthGuard)
@@ -59,19 +95,28 @@ export class AuthController {
   @Public()
   @Post('provision-admin')
   @HttpCode(HttpStatus.CREATED)
-  provisionAdmin(
+  async provisionAdmin(
     @Headers('x-bootstrap-secret') secret: string,
     @Body() body: { email: string; name: string; password: string; role?: 'OWNER' | 'OPERATOR' },
+    @Req() req: Request,
   ) {
     const expectedSecret = process.env.BOOTSTRAP_SECRET;
     if (!expectedSecret || secret !== expectedSecret) {
       throw new UnauthorizedException('Invalid bootstrap secret');
     }
-    return this.authService.provisionAdmin(
+    const result = await this.authService.provisionAdmin(
       body.email,
       body.name,
       body.password,
       body.role ?? 'OWNER',
     );
+    await this.auditService.log({
+      userEmail: body.email,
+      action: 'create',
+      resource: 'users',
+      detail: `Admin provisioned: ${body.email} (${body.role ?? 'OWNER'})`,
+      ip: req.ip,
+    });
+    return result;
   }
 }
