@@ -1,4 +1,4 @@
-import { Controller, Get, Post, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { LicenseService } from './license.service';
 
 /**
@@ -21,6 +21,42 @@ export class LicenseController {
       tier: status.tier,
       features: status.features,
       expiresAt: status.expiresAt,
+      nextRevalidationAt: status.nextRevalidationAt,
+    };
+  }
+
+  /**
+   * POST /license/activate
+   * Accepts a new license key, persists it, and validates against the license server.
+   */
+  @Post('activate')
+  @HttpCode(HttpStatus.OK)
+  async activate(@Body() body: { key: string }) {
+    const status = await this.licenseService.activate(body.key);
+    return {
+      valid: status.valid,
+      tier: status.tier,
+      features: status.features,
+      expiresAt: status.expiresAt,
+      validatedAt: status.validatedAt,
+      nextRevalidationAt: status.nextRevalidationAt,
+    };
+  }
+
+  /**
+   * POST /license/refresh
+   * Forces an immediate re-validation of the current license key.
+   */
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refresh() {
+    const status = await this.licenseService.revalidate();
+    return {
+      valid: status.valid,
+      tier: status.tier,
+      features: status.features,
+      expiresAt: status.expiresAt,
+      validatedAt: status.validatedAt,
       nextRevalidationAt: status.nextRevalidationAt,
     };
   }

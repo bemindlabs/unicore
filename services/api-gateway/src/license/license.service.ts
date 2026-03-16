@@ -86,6 +86,16 @@ export class LicenseService {
   }
 
   /**
+   * Activates a new license key by setting it in the environment and
+   * immediately validating it against the license server.
+   */
+  async activate(key: string): Promise<LicenseStatus> {
+    process.env.UNICORE_LICENSE_KEY = key;
+    this.cachedStatus = null;
+    return this.getLicenseStatus();
+  }
+
+  /**
    * Forces an immediate re-validation, bypassing the cache TTL.
    * Useful after a license key change at runtime.
    */
