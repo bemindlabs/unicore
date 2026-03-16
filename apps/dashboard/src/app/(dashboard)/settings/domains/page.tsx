@@ -212,8 +212,8 @@ function AddDomainDialog({ open, onOpenChange, onAdd }: AddDomainDialogProps) {
       const newDomain: Domain = {
         id: crypto.randomUUID?.() ?? Math.random().toString(36).slice(2),
         hostname: domainValue.trim(),
-        status: 'pending_verification',
-        sslStatus: 'none',
+        status: 'pending' as DomainStatus,
+        sslStatus: 'pending' as SslStatus,
         createdAt: new Date().toISOString(),
         verificationRecord: { type: 'TXT', name: `_unicore-verify.${domainValue.trim()}`, value: `unicore-verify=${Date.now()}` },
       };
