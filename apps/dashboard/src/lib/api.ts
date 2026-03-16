@@ -48,10 +48,15 @@ class ApiClient {
   }
 
   private handleRefreshFailure(): void {
+    const hadToken = localStorage.getItem('auth_token');
     localStorage.removeItem('auth_token');
     localStorage.removeItem('refresh_token');
     document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    window.location.href = '/login';
+    // Only redirect to login if the user was previously authenticated
+    // (prevents redirect loop on pages that don't require auth)
+    if (hadToken) {
+      window.location.href = '/login';
+    }
   }
 
   private flushQueue(success: boolean): void {
@@ -85,7 +90,7 @@ class ApiClient {
       body: body ? JSON.stringify(body) : undefined,
     });
 
-    if (response.status === 401 && !path.startsWith('/auth/refresh')) {
+    if (response.status === 401 && !path.startsWith('/auth/refresh') && this.getToken()) {
       if (this.isRefreshing) {
         return new Promise<T>((resolve, reject) => {
           this.requestQueue.push({
