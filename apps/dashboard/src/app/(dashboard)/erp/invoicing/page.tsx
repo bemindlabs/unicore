@@ -511,69 +511,71 @@ export default function InvoicingPage() {
               No invoices yet. Create your first invoice to get started.
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Invoice</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Due Date</TableHead>
-                  <TableHead className="w-48" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {invoices.map((invoice) => {
-                  const contactName = invoice.contact
-                    ? `${invoice.contact.firstName} ${invoice.contact.lastName}`
-                    : invoice.contactId;
-                  const busy = sending.has(invoice.id);
-                  return (
-                    <TableRow key={invoice.id}>
-                      <TableCell className="font-mono text-sm">
-                        {invoice.invoiceNumber ?? invoice.id.slice(0, 8)}
-                      </TableCell>
-                      <TableCell className="text-sm">{contactName}</TableCell>
-                      <TableCell>
-                        <StatusBadge status={invoice.status} />
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {fmt(invoice.total ?? 0, invoice.currency ?? "USD")}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {invoice.dueDate
-                          ? new Date(invoice.dueDate).toLocaleDateString()
-                          : "—"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          {invoice.status === "DRAFT" && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={busy}
-                              onClick={() => handleSend(invoice)}
-                            >
-                              {busy ? "…" : "Send"}
-                            </Button>
-                          )}
-                          {(invoice.status === "SENT" ||
-                            invoice.status === "OVERDUE") && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setPaymentTarget(invoice)}
-                            >
-                              Record Payment
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[600px]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Invoice</TableHead>
+                    <TableHead>Contact</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead>Due Date</TableHead>
+                    <TableHead className="w-48" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {invoices.map((invoice) => {
+                    const contactName = invoice.contact
+                      ? `${invoice.contact.firstName} ${invoice.contact.lastName}`
+                      : invoice.contactId;
+                    const busy = sending.has(invoice.id);
+                    return (
+                      <TableRow key={invoice.id}>
+                        <TableCell className="font-mono text-sm">
+                          {invoice.invoiceNumber ?? invoice.id.slice(0, 8)}
+                        </TableCell>
+                        <TableCell className="text-sm">{contactName}</TableCell>
+                        <TableCell>
+                          <StatusBadge status={invoice.status} />
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {fmt(invoice.total ?? 0, invoice.currency ?? "USD")}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {invoice.dueDate
+                            ? new Date(invoice.dueDate).toLocaleDateString()
+                            : "—"}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            {invoice.status === "DRAFT" && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={busy}
+                                onClick={() => handleSend(invoice)}
+                              >
+                                {busy ? "…" : "Send"}
+                              </Button>
+                            )}
+                            {(invoice.status === "SENT" ||
+                              invoice.status === "OVERDUE") && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPaymentTarget(invoice)}
+                              >
+                                Record Payment
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

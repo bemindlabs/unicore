@@ -470,75 +470,77 @@ export default function OrdersPage() {
               No orders yet. Create your first order to get started.
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Order</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="w-40" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {orders.map((order) => {
-                  const transition =
-                    order.status in TRANSITIONS
-                      ? TRANSITIONS[order.status]
-                      : null;
-                  const busy = transitioning.has(order.id);
-                  const contactName = order.contact
-                    ? `${order.contact.firstName} ${order.contact.lastName}`
-                    : order.contactId;
-                  return (
-                    <TableRow key={order.id}>
-                      <TableCell className="font-mono text-sm">
-                        {order.orderNumber ?? order.id.slice(0, 8)}
-                      </TableCell>
-                      <TableCell className="text-sm">{contactName}</TableCell>
-                      <TableCell>
-                        <StatusBadge status={order.status} />
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {fmt(order.total ?? 0, order.currency ?? "USD")}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {new Date(order.createdAt).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          {transition && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={busy}
-                              onClick={() =>
-                                handleTransition(order, transition.action)
-                              }
-                            >
-                              {busy ? "…" : transition.label}
-                            </Button>
-                          )}
-                          {order.status !== "CANCELLED" &&
-                            order.status !== "REFUNDED" &&
-                            order.status !== "FULFILLED" && (
+            <div className="overflow-x-auto">
+              <Table className="min-w-[600px]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Order</TableHead>
+                    <TableHead>Contact</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="w-40" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {orders.map((order) => {
+                    const transition =
+                      order.status in TRANSITIONS
+                        ? TRANSITIONS[order.status]
+                        : null;
+                    const busy = transitioning.has(order.id);
+                    const contactName = order.contact
+                      ? `${order.contact.firstName} ${order.contact.lastName}`
+                      : order.contactId;
+                    return (
+                      <TableRow key={order.id}>
+                        <TableCell className="font-mono text-sm">
+                          {order.orderNumber ?? order.id.slice(0, 8)}
+                        </TableCell>
+                        <TableCell className="text-sm">{contactName}</TableCell>
+                        <TableCell>
+                          <StatusBadge status={order.status} />
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {fmt(order.total ?? 0, order.currency ?? "USD")}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {new Date(order.createdAt).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            {transition && (
                               <Button
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
-                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                onClick={() => setCancelTarget(order)}
+                                disabled={busy}
+                                onClick={() =>
+                                  handleTransition(order, transition.action)
+                                }
                               >
-                                Cancel
+                                {busy ? "…" : transition.label}
                               </Button>
                             )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                            {order.status !== "CANCELLED" &&
+                              order.status !== "REFUNDED" &&
+                              order.status !== "FULFILLED" && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  onClick={() => setCancelTarget(order)}
+                                >
+                                  Cancel
+                                </Button>
+                              )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
