@@ -4,9 +4,11 @@ import {
 
 export enum ContactType {
   LEAD = 'LEAD',
+  PROSPECT = 'PROSPECT',
   CUSTOMER = 'CUSTOMER',
-  VENDOR = 'VENDOR',
   PARTNER = 'PARTNER',
+  VENDOR = 'VENDOR',
+  ARCHIVED = 'ARCHIVED',
 }
 
 export class CreateContactDto {

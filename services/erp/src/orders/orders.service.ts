@@ -12,7 +12,7 @@ import { FulfillOrderDto } from './dto/fulfill-order.dto';
 import { ShipOrderDto } from './dto/ship-order.dto';
 import { CancelOrderDto } from './dto/cancel-order.dto';
 import { paginate, PaginatedResult } from '../common/dto/pagination.dto';
-import { OrderStatus, canTransition, getAllowedTransitions } from './order-state-machine';
+import { OrderStatus, canTransition, getAllowedTransitions, isTerminalStatus } from './order-state-machine';
 
 const ORDER_INCLUDE = {
   contact: { select: { id: true, name: true, email: true } },
@@ -123,7 +123,7 @@ export class OrdersService {
   async update(id: string, dto: UpdateOrderDto): Promise<OrderWithRelations> {
     const order = await this.findOne(id);
     const status = order.status as OrderStatus;
-    if (status === OrderStatus.CANCELLED || status === OrderStatus.FULFILLED) {
+    if (isTerminalStatus(status)) {
       throw new BadRequestException(`Cannot update a ${status.toLowerCase()} order`);
     }
     return this.prisma.order.update({ where: { id }, data: dto, include: ORDER_INCLUDE });

@@ -11,7 +11,7 @@ import { OpsAgent } from "./ops/ops.agent";
 import { ResearchAgent } from "./research/research.agent";
 import { ErpAgent } from "./erp/erp.agent";
 import { BuilderAgent } from "./builder/builder.agent";
-import { AgentRegistryService } from "./agent-registry.service";
+import { SpecialistRegistryService } from "./agent-registry.service";
 
 export const SPECIALIST_AGENTS = [
   CommsAgent,
@@ -24,7 +24,7 @@ export const SPECIALIST_AGENTS = [
 ];
 
 @Module({
-  providers: [...SPECIALIST_AGENTS, AgentRegistryService],
-  exports: [...SPECIALIST_AGENTS, AgentRegistryService],
+  providers: [...SPECIALIST_AGENTS, SpecialistRegistryService],
+  exports: [...SPECIALIST_AGENTS, SpecialistRegistryService],
 })
 export class AgentsModule {}

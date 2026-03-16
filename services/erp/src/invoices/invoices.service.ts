@@ -9,8 +9,6 @@ import { QueryInvoicesDto } from './dto/query-invoices.dto';
 import { RecordPaymentDto } from './dto/record-payment.dto';
 import { InvoiceStatus } from '../generated/prisma';
 
-let invoiceCounter = 1000;
-
 const INVOICE_INCLUDE = {
   contact: { select: { id: true, name: true, email: true, company: true } },
   order: { select: { id: true, orderNumber: true } },
@@ -27,10 +25,11 @@ export class InvoicesService {
     private readonly events: EventPublisherService,
   ) {}
 
-  private generateInvoiceNumber(): string {
+  private async generateInvoiceNumber(): Promise<string> {
+    const count = await this.prisma.invoice.count();
     const now = new Date();
-    const yymm = `${String(now.getFullYear()).slice(2)}${String(now.getMonth() + 1).padStart(2, '0')}`;
-    return `INV-${yymm}-${String(++invoiceCounter).padStart(4, '0')}`;
+    const yyyy = String(now.getFullYear());
+    return `INV-${yyyy}-${String(count + 1).padStart(5, '0')}`;
   }
 
   async findAll(query: QueryInvoicesDto) {
@@ -64,7 +63,7 @@ export class InvoicesService {
 
     const invoice = await this.prisma.invoice.create({
       data: {
-        invoiceNumber: this.generateInvoiceNumber(),
+        invoiceNumber: await this.generateInvoiceNumber(),
         contactId: dto.contactId,
         orderId: dto.orderId,
         subtotal,
@@ -190,9 +189,32 @@ export class InvoicesService {
   async markOverdue() {
     const now = new Date();
     const result = await this.prisma.invoice.updateMany({
-      where: { status: InvoiceStatus.SENT, dueDate: { lt: now } },
+      where: {
+        status: { in: [InvoiceStatus.SENT, InvoiceStatus.PARTIALLY_PAID] },
+        dueDate: { lt: now },
+      },
       data: { status: InvoiceStatus.OVERDUE },
     });
+
+    // Publish overdue events for newly marked invoices
+    if (result.count > 0) {
+      const overdueInvoices = await this.prisma.invoice.findMany({
+        where: { status: InvoiceStatus.OVERDUE },
+        select: { id: true, invoiceNumber: true, contactId: true, amountDue: true, currency: true, dueDate: true },
+      });
+      for (const inv of overdueInvoices) {
+        const daysOverdue = Math.floor((now.getTime() - new Date(inv.dueDate).getTime()) / (1000 * 60 * 60 * 24));
+        this.events.publish(ERP_TOPICS.INVOICE_OVERDUE, {
+          invoiceId: inv.id,
+          invoiceNumber: inv.invoiceNumber,
+          contactId: inv.contactId,
+          amountDue: Number(inv.amountDue),
+          currency: inv.currency,
+          daysOverdue,
+        }, inv.id).catch(err => this.logger.error('Failed to publish invoice.overdue event', err));
+      }
+    }
+
     return { updated: result.count };
   }
 }

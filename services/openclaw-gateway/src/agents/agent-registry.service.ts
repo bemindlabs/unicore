@@ -1,13 +1,13 @@
 /**
- * AgentRegistryService (specialist agent registry)
+ * SpecialistRegistryService (specialist agent registry)
  *
  * A simple in-process registry that maps AgentType strings to ISpecialistAgent
  * instances.  On module init it registers all real specialist agent
  * implementations injected via NestJS DI.
  *
- * NOTE: This is distinct from registry/agent-registry.service.ts which tracks
- * WebSocket-connected agents.  This registry tracks NestJS-injectable
- * specialist agent classes.
+ * NOTE: This is distinct from registry/agent-registry.service.ts (AgentRegistryService)
+ * which tracks WebSocket-connected agents.  This registry tracks NestJS-injectable
+ * specialist agent classes used for intent routing and delegation.
  */
 
 import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
@@ -24,8 +24,8 @@ import { ErpAgent } from "./erp/erp.agent";
 import { BuilderAgent } from "./builder/builder.agent";
 
 @Injectable()
-export class AgentRegistryService implements OnModuleInit {
-  private readonly logger = new Logger(AgentRegistryService.name);
+export class SpecialistRegistryService implements OnModuleInit {
+  private readonly logger = new Logger(SpecialistRegistryService.name);
   private readonly agents = new Map<AgentType, ISpecialistAgent>();
 
   constructor(

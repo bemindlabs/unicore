@@ -1,4 +1,4 @@
-import { IsInt, IsString, IsOptional, Min, IsNotEmpty } from 'class-validator';
+import { IsInt, IsString, IsOptional, Min } from 'class-validator';
 
 export class RestockProductDto {
   @IsInt()
@@ -11,7 +11,6 @@ export class RestockProductDto {
 
   @IsString()
   @IsOptional()
-  @IsNotEmpty()
   performedBy?: string;
 
   @IsString()

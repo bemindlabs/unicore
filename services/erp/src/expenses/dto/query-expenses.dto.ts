@@ -2,7 +2,8 @@ import { IsOptional, IsEnum, IsString } from 'class-validator';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 
 export enum ExpenseStatusFilter {
-  PENDING = 'PENDING',
+  DRAFT = 'DRAFT',
+  SUBMITTED = 'SUBMITTED',
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
   REIMBURSED = 'REIMBURSED',

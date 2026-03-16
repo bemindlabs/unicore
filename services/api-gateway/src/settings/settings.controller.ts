@@ -28,23 +28,9 @@ export class SettingsController {
     return settings.data;
   }
 
-  @Get(':key')
-  async get(@Param('key') key: string) {
-    const settings = await this.prisma.settings.findUnique({ where: { id: key } });
-    return settings?.data ?? {};
-  }
-
-  @Put(':key')
-  async put(@Param('key') key: string, @Body() body: any) {
-    const settings = await this.prisma.settings.upsert({
-      where: { id: key },
-      create: { id: key, data: body },
-      update: { data: body },
-    });
-    return settings.data;
-  }
-
   // ── Pro-only: White-label branding ──
+  // NOTE: Specific named routes MUST be declared before the catch-all :key routes
+  // to prevent NestJS from matching the parameterized route first.
 
   @Put('branding')
   @ProFeatureRequired('white_label')
@@ -103,6 +89,24 @@ export class SettingsController {
     const settings = await this.prisma.settings.upsert({
       where: { id: 'telegram' },
       create: { id: 'telegram', data: body },
+      update: { data: body },
+    });
+    return settings.data;
+  }
+
+  // ── Generic catch-all routes — MUST be last to avoid shadowing named routes ──
+
+  @Get(':key')
+  async get(@Param('key') key: string) {
+    const settings = await this.prisma.settings.findUnique({ where: { id: key } });
+    return settings?.data ?? {};
+  }
+
+  @Put(':key')
+  async put(@Param('key') key: string, @Body() body: any) {
+    const settings = await this.prisma.settings.upsert({
+      where: { id: key },
+      create: { id: key, data: body },
       update: { data: body },
     });
     return settings.data;

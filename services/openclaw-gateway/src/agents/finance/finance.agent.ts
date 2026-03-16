@@ -197,14 +197,23 @@ export class FinanceAgent extends SpecialistAgentBase {
     ];
   }
 
+  private get AI_ENGINE_URL(): string {
+    return process.env["AI_ENGINE_URL"] ?? "http://localhost:4200";
+  }
+
+  private get ERP_SERVICE_URL(): string {
+    return process.env["ERP_SERVICE_URL"] ?? "http://localhost:4100";
+  }
+
   protected async executeTool(
     call: ToolCall,
     _context: AgentContext,
   ): Promise<ToolResult> {
     this.logger.debug(`[finance] executing tool: ${call.toolName}`);
+    try {
     switch (call.toolName) {
       case "categorize_transaction": {
-        const res = await fetch(`${process.env.AI_ENGINE_URL}/llm/invoke`, {
+        const res = await fetch(`${this.AI_ENGINE_URL}/llm/invoke`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -229,14 +238,14 @@ export class FinanceAgent extends SpecialistAgentBase {
         if (call.arguments["limit"] != null)
           params.set("limit", String(call.arguments["limit"]));
         const res = await fetch(
-          `${process.env.ERP_SERVICE_URL}/finance/transactions?${params.toString()}`,
+          `${this.ERP_SERVICE_URL}/finance/transactions?${params.toString()}`,
         );
         const data = await res.json();
         return { toolName: call.toolName, result: data };
       }
       case "generate_report": {
         const res = await fetch(
-          `${process.env.ERP_SERVICE_URL}/finance/reports/generate`,
+          `${this.ERP_SERVICE_URL}/finance/reports/generate`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -260,10 +269,10 @@ export class FinanceAgent extends SpecialistAgentBase {
             String(call.arguments["confidenceInterval"]),
           );
         const cashflowRes = await fetch(
-          `${process.env.ERP_SERVICE_URL}/finance/cashflow?${params.toString()}`,
+          `${this.ERP_SERVICE_URL}/finance/cashflow?${params.toString()}`,
         );
         const cashflowData = await cashflowRes.json();
-        const res = await fetch(`${process.env.AI_ENGINE_URL}/llm/invoke`, {
+        const res = await fetch(`${this.AI_ENGINE_URL}/llm/invoke`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -274,7 +283,7 @@ export class FinanceAgent extends SpecialistAgentBase {
         return { toolName: call.toolName, result: data };
       }
       case "detect_anomalies": {
-        const res = await fetch(`${process.env.AI_ENGINE_URL}/llm/invoke`, {
+        const res = await fetch(`${this.AI_ENGINE_URL}/llm/invoke`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -286,7 +295,7 @@ export class FinanceAgent extends SpecialistAgentBase {
       }
       case "create_invoice": {
         const res = await fetch(
-          `${process.env.ERP_SERVICE_URL}/finance/invoices`,
+          `${this.ERP_SERVICE_URL}/finance/invoices`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -298,7 +307,7 @@ export class FinanceAgent extends SpecialistAgentBase {
       }
       case "reconcile_accounts": {
         const res = await fetch(
-          `${process.env.ERP_SERVICE_URL}/finance/reconcile`,
+          `${this.ERP_SERVICE_URL}/finance/reconcile`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -314,6 +323,14 @@ export class FinanceAgent extends SpecialistAgentBase {
           result: null,
           error: `Unknown tool: ${call.toolName}`,
         };
+    }
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      return {
+        toolName: call.toolName,
+        result: null,
+        error: error.message,
+      };
     }
   }
 }

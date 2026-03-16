@@ -32,6 +32,8 @@ import { ChatHistoryModule } from './chat-history/chat-history.module';
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
     RateLimitStore,
+    RateLimitMiddleware,
+    RequestValidationMiddleware,
   ],
 })
 export class AppModule implements NestModule {

@@ -23,7 +23,7 @@ export class EmbeddingService implements EmbeddingProvider {
   constructor(private readonly config: ConfigService) {
     this.aiEngineUrl = this.config.get<string>(
       "AI_ENGINE_URL",
-      "http://localhost:4001",
+      "http://localhost:4200",
     );
     this.apiKey = this.config.get<string>("AI_ENGINE_API_KEY");
     this.model = this.config.get<string>(
@@ -37,7 +37,7 @@ export class EmbeddingService implements EmbeddingProvider {
     const model = request.model ?? this.model;
 
     try {
-      const response = await fetch(`${this.aiEngineUrl}/llm/embed`, {
+      const response = await fetch(`${this.aiEngineUrl}/api/v1/llm/embed`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -65,7 +65,7 @@ export class EmbeddingService implements EmbeddingProvider {
     try {
       const results = await Promise.all(
         texts.map(async (text) => {
-          const response = await fetch(`${this.aiEngineUrl}/llm/embed`, {
+          const response = await fetch(`${this.aiEngineUrl}/api/v1/llm/embed`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

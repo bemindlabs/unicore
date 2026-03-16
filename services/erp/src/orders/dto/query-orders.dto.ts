@@ -2,11 +2,15 @@ import { IsOptional, IsEnum, IsUUID } from 'class-validator';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 
 export enum OrderStatusFilter {
-  PENDING = 'PENDING',
+  DRAFT = 'DRAFT',
+  QUOTED = 'QUOTED',
   CONFIRMED = 'CONFIRMED',
   PROCESSING = 'PROCESSING',
-  SHIPPED = 'SHIPPED',
+  PARTIALLY_FULFILLED = 'PARTIALLY_FULFILLED',
   FULFILLED = 'FULFILLED',
+  SHIPPED = 'SHIPPED',
+  DELIVERED = 'DELIVERED',
+  RETURNED = 'RETURNED',
   CANCELLED = 'CANCELLED',
   REFUNDED = 'REFUNDED',
 }

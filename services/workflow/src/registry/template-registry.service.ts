@@ -38,6 +38,8 @@ const VALID_ACTION_TYPES = new Set<ActionType>([
   'call_agent',
   'update_erp',
   'send_notification',
+  'send_telegram',
+  'send_line',
 ]);
 
 /**

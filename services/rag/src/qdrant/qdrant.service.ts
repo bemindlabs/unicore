@@ -33,7 +33,7 @@ export class QdrantService implements OnModuleInit {
   }
 
   async onModuleInit(): Promise<void> {
-    const url = this.config.getOrThrow<string>('QDRANT_URL');
+    const url = this.config.get<string>('QDRANT_URL', 'http://localhost:6333');
     const apiKey = this.config.get<string>('QDRANT_API_KEY');
 
     this.client = new QdrantClient({

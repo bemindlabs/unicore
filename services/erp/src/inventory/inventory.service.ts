@@ -176,20 +176,32 @@ export class InventoryService {
   }
 
   async getLowStockProducts(): Promise<ProductRecord[]> {
-    const lowStockItems = await this.prisma.inventoryItem.findMany({
-      where: { quantityAvailable: { lte: this.prisma.inventoryItem.fields?.reorderPoint as unknown as number ?? 0 } },
-      include: { product: true },
-    }).catch(() => []);
-    // Fallback: use the view
+    // Use the PostgreSQL view for accurate low-stock detection (compares quantityAvailable <= reorderPoint)
     const alerts = await this.prisma.$queryRaw<Array<{ sku: string }>>`
       SELECT DISTINCT sku FROM "v_low_stock_alert"
     `.catch(() => [] as Array<{ sku: string }>);
+
     if (alerts.length > 0) {
       return this.prisma.product.findMany({
         where: { sku: { in: alerts.map(a => a.sku) } },
         orderBy: { name: 'asc' },
       });
     }
-    return lowStockItems.map(item => item.product);
+
+    // Fallback: raw query to compare columns within the same row
+    const lowStockItems = await this.prisma.$queryRaw<Array<{ product_id: string }>>`
+      SELECT DISTINCT "productId" as product_id
+      FROM "InventoryItem"
+      WHERE "quantityAvailable" <= "reorderPoint"
+    `.catch(() => [] as Array<{ product_id: string }>);
+
+    if (lowStockItems.length > 0) {
+      return this.prisma.product.findMany({
+        where: { id: { in: lowStockItems.map(item => item.product_id) } },
+        orderBy: { name: 'asc' },
+      });
+    }
+
+    return [];
   }
 }

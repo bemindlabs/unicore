@@ -182,14 +182,23 @@ export class CommsAgent extends SpecialistAgentBase {
     ];
   }
 
+  private get AI_ENGINE_URL(): string {
+    return process.env["AI_ENGINE_URL"] ?? "http://localhost:4200";
+  }
+
+  private get ERP_SERVICE_URL(): string {
+    return process.env["ERP_SERVICE_URL"] ?? "http://localhost:4100";
+  }
+
   protected async executeTool(
     call: ToolCall,
     _context: AgentContext,
   ): Promise<ToolResult> {
     this.logger.debug(`[comms] executing tool: ${call.toolName}`);
+    try {
     switch (call.toolName) {
       case "draft_email": {
-        const res = await fetch(`${process.env.AI_ENGINE_URL}/llm/invoke`, {
+        const res = await fetch(`${this.AI_ENGINE_URL}/llm/invoke`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -204,7 +213,7 @@ export class CommsAgent extends SpecialistAgentBase {
       }
       case "send_email": {
         const res = await fetch(
-          `${process.env.ERP_SERVICE_URL}/comms/email/send`,
+          `${this.ERP_SERVICE_URL}/comms/email/send`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -223,14 +232,14 @@ export class CommsAgent extends SpecialistAgentBase {
         if (call.arguments["onlyUnread"] != null)
           params.set("onlyUnread", String(call.arguments["onlyUnread"]));
         const res = await fetch(
-          `${process.env.ERP_SERVICE_URL}/comms/email/inbox?${params.toString()}`,
+          `${this.ERP_SERVICE_URL}/comms/email/inbox?${params.toString()}`,
         );
         const data = await res.json();
         return { toolName: call.toolName, result: data };
       }
       case "reply_email": {
         const draftRes = await fetch(
-          `${process.env.AI_ENGINE_URL}/llm/invoke`,
+          `${this.AI_ENGINE_URL}/llm/invoke`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -241,7 +250,7 @@ export class CommsAgent extends SpecialistAgentBase {
         );
         const draft = await draftRes.json();
         const res = await fetch(
-          `${process.env.ERP_SERVICE_URL}/comms/email/reply`,
+          `${this.ERP_SERVICE_URL}/comms/email/reply`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -253,7 +262,7 @@ export class CommsAgent extends SpecialistAgentBase {
       }
       case "schedule_post": {
         const res = await fetch(
-          `${process.env.ERP_SERVICE_URL}/comms/social/schedule`,
+          `${this.ERP_SERVICE_URL}/comms/social/schedule`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -271,13 +280,13 @@ export class CommsAgent extends SpecialistAgentBase {
         if (call.arguments["limit"] != null)
           params.set("limit", String(call.arguments["limit"]));
         const res = await fetch(
-          `${process.env.ERP_SERVICE_URL}/comms/social/feed?${params.toString()}`,
+          `${this.ERP_SERVICE_URL}/comms/social/feed?${params.toString()}`,
         );
         const data = await res.json();
         return { toolName: call.toolName, result: data };
       }
       case "moderate_comment": {
-        const res = await fetch(`${process.env.AI_ENGINE_URL}/llm/invoke`, {
+        const res = await fetch(`${this.AI_ENGINE_URL}/llm/invoke`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -301,6 +310,14 @@ export class CommsAgent extends SpecialistAgentBase {
           result: null,
           error: `Unknown tool: ${call.toolName}`,
         };
+    }
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      return {
+        toolName: call.toolName,
+        result: null,
+        error: error.message,
+      };
     }
   }
 }

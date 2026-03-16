@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 
 interface RateLimitEntry {
   count: number;
@@ -14,7 +14,7 @@ export interface IncrementResult {
 const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
 
 @Injectable()
-export class RateLimitStore {
+export class RateLimitStore implements OnModuleDestroy {
   private readonly logger = new Logger(RateLimitStore.name);
   private readonly store = new Map<string, RateLimitEntry>();
   private cleanupTimer: NodeJS.Timeout | null = null;

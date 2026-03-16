@@ -4,7 +4,7 @@ import { AiEngineModule } from './ai-engine.module';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
-  const port = process.env.PORT ?? 4002;
+  const port = process.env.PORT ?? 4200;
 
   const app = await NestFactory.create(AiEngineModule);
 

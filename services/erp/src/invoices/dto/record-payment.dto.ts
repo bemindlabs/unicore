@@ -2,8 +2,16 @@ import { IsNumber, IsString, IsOptional, IsEnum, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export enum PaymentMethodDto {
-  CASH = 'CASH', BANK_TRANSFER = 'BANK_TRANSFER', CREDIT_CARD = 'CREDIT_CARD',
-  DEBIT_CARD = 'DEBIT_CARD', CRYPTO = 'CRYPTO', OTHER = 'OTHER',
+  CASH = 'CASH',
+  BANK_TRANSFER = 'BANK_TRANSFER',
+  CREDIT_CARD = 'CREDIT_CARD',
+  DEBIT_CARD = 'DEBIT_CARD',
+  STRIPE = 'STRIPE',
+  PAYPAL = 'PAYPAL',
+  PROMPTPAY = 'PROMPTPAY',
+  QR_CODE = 'QR_CODE',
+  CRYPTO = 'CRYPTO',
+  OTHER = 'OTHER',
 }
 
 export class RecordPaymentDto {

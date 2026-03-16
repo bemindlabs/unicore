@@ -5,7 +5,7 @@ import { RagModule } from './rag.module';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
-  const port = process.env['PORT'] ?? 4002;
+  const port = process.env['PORT'] ?? 4300;
 
   if (!process.env['QDRANT_URL']) {
     logger.warn('QDRANT_URL not set, defaulting to http://localhost:6333');

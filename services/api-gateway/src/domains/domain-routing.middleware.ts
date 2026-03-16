@@ -53,8 +53,12 @@ export class DomainRoutingMiddleware implements NestMiddleware {
       res.setHeader('X-Tenant-Id', resolution.tenantId);
     }
 
-    // Apply per-domain CORS headers
-    this.applyCorsHeaders(req, res, resolution);
+    // Apply per-domain CORS headers; returns true if the request was
+    // short-circuited (OPTIONS preflight) and next() should NOT be called.
+    const handled = this.applyCorsHeaders(req, res, resolution);
+    if (handled) {
+      return;
+    }
 
     next();
   }
@@ -63,11 +67,16 @@ export class DomainRoutingMiddleware implements NestMiddleware {
   // Private helpers
   // ---------------------------------------------------------------------------
 
+  /**
+   * Sets CORS response headers based on the domain resolution.
+   * Returns `true` when the request was fully handled (OPTIONS preflight)
+   * so the caller must NOT call next().
+   */
   private applyCorsHeaders(
     req: Request,
     res: Response,
     resolution: DomainResolution | null,
-  ): void {
+  ): boolean {
     const requestOrigin = req.headers['origin'] as string | undefined;
 
     const corsOptions = this.corsService.buildCorsOptions(requestOrigin, resolution);
@@ -95,9 +104,13 @@ export class DomainRoutingMiddleware implements NestMiddleware {
     res.setHeader('Access-Control-Allow-Credentials', String(corsOptions.credentials));
     res.setHeader('Access-Control-Max-Age', String(corsOptions.maxAge));
 
-    // Handle preflight short-circuit
+    // Handle preflight short-circuit — end the response and signal the caller
+    // to skip next() so downstream middleware/controllers are not invoked.
     if (req.method === 'OPTIONS') {
       res.status(204).end();
+      return true;
     }
+
+    return false;
   }
 }

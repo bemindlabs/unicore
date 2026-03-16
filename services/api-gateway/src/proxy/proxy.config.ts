@@ -39,7 +39,7 @@ export const DOWNSTREAM_SERVICES: DownstreamService[] = [
   {
     name: 'workflow',
     host: process.env.WORKFLOW_SERVICE_HOST ?? 'localhost',
-    port: parseInt(process.env.WORKFLOW_SERVICE_PORT ?? '4600', 10),
+    port: parseInt(process.env.WORKFLOW_SERVICE_PORT ?? '4400', 10),
     pathPrefix: '/workflow',
   },
 ] as const;

@@ -2,10 +2,15 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { getKafkaConfig } from './kafka/kafka.config';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap(): Promise<void> {
   const logger = new Logger('ERP Bootstrap');
   const app = await NestFactory.create(AppModule);
+
+  // Global prefix for all ERP routes
+  app.setGlobalPrefix('api/v1');
 
   // Connect Kafka microservice consumer
   app.connectMicroservice(getKafkaConfig());
@@ -19,6 +24,9 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
+  // Global exception filter and logging interceptor
+  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalInterceptors(new LoggingInterceptor());
 
   await app.startAllMicroservices();
 

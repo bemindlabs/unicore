@@ -9,6 +9,17 @@ import { RecordPaymentDto } from './dto/record-payment.dto';
 export class InvoicesController {
   constructor(private readonly invoicesService: InvoicesService) {}
 
+  @Post()
+  create(@Body() dto: CreateInvoiceDto) {
+    return this.invoicesService.create(dto);
+  }
+
+  @Post('mark-overdue')
+  @HttpCode(HttpStatus.OK)
+  markOverdue() {
+    return this.invoicesService.markOverdue();
+  }
+
   @Get()
   findAll(@Query() query: QueryInvoicesDto) {
     return this.invoicesService.findAll(query);
@@ -17,11 +28,6 @@ export class InvoicesController {
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.invoicesService.findOne(id);
-  }
-
-  @Post()
-  create(@Body() dto: CreateInvoiceDto) {
-    return this.invoicesService.create(dto);
   }
 
   @Put(':id')
@@ -48,10 +54,5 @@ export class InvoicesController {
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.invoicesService.remove(id);
-  }
-
-  @Post('mark-overdue')
-  markOverdue() {
-    return this.invoicesService.markOverdue();
   }
 }
