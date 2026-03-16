@@ -34,7 +34,7 @@ interface ValidationResponse {
  * WorkflowTemplatesController exposes the pre-built workflow template registry
  * over HTTP for the Dashboard UI and integration consumers.
  *
- * Base path: /workflow/templates
+ * Base path: /templates (proxied via /api/proxy/workflow/templates)
  */
 @Controller('templates')
 export class WorkflowTemplatesController {

@@ -14,25 +14,71 @@ import {
 } from '@unicore/ui';
 import { api } from '@/lib/api';
 
-type TriggerType = 'manual' | 'schedule' | 'event';
+// ---------------------------------------------------------------------------
+// Types aligned with the workflow service's WorkflowDefinition schema
+// ---------------------------------------------------------------------------
+
+type ServiceTriggerType =
+  | 'erp.order.created'
+  | 'erp.order.updated'
+  | 'erp.order.fulfilled'
+  | 'erp.inventory.low'
+  | 'erp.inventory.restocked'
+  | 'erp.invoice.created'
+  | 'erp.invoice.overdue'
+  | 'erp.invoice.paid'
+  | 'schedule.cron'
+  | 'webhook'
+  | 'manual';
+
+/** Simplified trigger category for the UI. */
+type TriggerCategory = 'manual' | 'schedule' | 'event';
+
 type WorkflowStatus = 'active' | 'inactive' | 'draft';
 
-interface WorkflowTemplate {
+interface WorkflowDefinition {
   id: string;
   name: string;
-  description: string;
-  status: WorkflowStatus;
-  triggerType: TriggerType;
+  description?: string;
   enabled: boolean;
+  schemaVersion: number;
+  trigger: {
+    type: ServiceTriggerType;
+    conditions?: unknown[];
+    cron?: string;
+  };
+  actions: unknown[];
+  createdAt: string;
+  updatedAt: string;
 }
 
-const TRIGGER_ICONS: Record<TriggerType, React.ComponentType<{ className?: string }>> = {
+/** The definitions endpoint may return a plain array or a paginated envelope. */
+type DefinitionsResponse =
+  | WorkflowDefinition[]
+  | { data: WorkflowDefinition[]; meta?: unknown; total?: number; success?: boolean };
+
+// ---------------------------------------------------------------------------
+// UI helpers
+// ---------------------------------------------------------------------------
+
+function triggerCategory(type: ServiceTriggerType): TriggerCategory {
+  if (type === 'manual') return 'manual';
+  if (type === 'schedule.cron') return 'schedule';
+  return 'event';
+}
+
+function deriveStatus(def: WorkflowDefinition): WorkflowStatus {
+  if (def.enabled) return 'active';
+  return 'inactive';
+}
+
+const TRIGGER_ICONS: Record<TriggerCategory, React.ComponentType<{ className?: string }>> = {
   manual: MousePointer,
   schedule: Calendar,
   event: Zap,
 };
 
-const TRIGGER_LABELS: Record<TriggerType, string> = {
+const TRIGGER_LABELS: Record<TriggerCategory, string> = {
   manual: 'Manual',
   schedule: 'Scheduled',
   event: 'Event-driven',
@@ -44,20 +90,31 @@ const STATUS_VARIANTS: Record<WorkflowStatus, 'default' | 'secondary' | 'outline
   draft: 'secondary',
 };
 
+/** Extract the definitions array regardless of response shape. */
+function unwrapDefinitions(raw: DefinitionsResponse): WorkflowDefinition[] {
+  if (Array.isArray(raw)) return raw;
+  if (raw && Array.isArray(raw.data)) return raw.data;
+  return [];
+}
+
+// ---------------------------------------------------------------------------
+// Page component
+// ---------------------------------------------------------------------------
+
 export default function WorkflowsPage() {
-  const [templates, setTemplates] = useState<WorkflowTemplate[]>([]);
+  const [definitions, setDefinitions] = useState<WorkflowDefinition[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
     api
-      .get<WorkflowTemplate[]>('/api/proxy/workflow/templates')
-      .then((data) => {
-        if (mounted) setTemplates(data);
+      .get<DefinitionsResponse>('/api/proxy/workflow/definitions')
+      .then((raw) => {
+        if (mounted) setDefinitions(unwrapDefinitions(raw));
       })
       .catch(() => {
-        if (mounted) setTemplates([]);
+        if (mounted) setDefinitions([]);
       })
       .finally(() => {
         if (mounted) setIsLoading(false);
@@ -70,9 +127,12 @@ export default function WorkflowsPage() {
   const handleToggle = useCallback(async (id: string, enabled: boolean) => {
     setTogglingId(id);
     try {
-      await api.put(`/api/proxy/workflow/templates/${id}`, { enabled });
-      setTemplates((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, enabled, status: enabled ? 'active' : 'inactive' } : t)),
+      await api.post('/api/proxy/workflow/definitions', {
+        id,
+        enabled,
+      });
+      setDefinitions((prev) =>
+        prev.map((d) => (d.id === id ? { ...d, enabled } : d)),
       );
       toast({
         title: enabled ? 'Workflow enabled' : 'Workflow disabled',
@@ -103,27 +163,29 @@ export default function WorkflowsPage() {
         </div>
       </div>
 
-      {templates.length === 0 ? (
+      {definitions.length === 0 ? (
         <div className="flex h-64 items-center justify-center rounded-lg border border-dashed text-muted-foreground">
-          No workflow templates found
+          No workflow definitions found
         </div>
       ) : (
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
               <GitBranch className="h-5 w-5 text-primary" />
-              <CardTitle>Workflow Templates</CardTitle>
+              <CardTitle>Workflow Definitions</CardTitle>
             </div>
             <CardDescription>
-              {templates.filter((t) => t.enabled).length} of {templates.length} workflows active
+              {definitions.filter((d) => d.enabled).length} of {definitions.length} workflows active
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            {templates.map((template) => {
-              const TriggerIcon = TRIGGER_ICONS[template.triggerType];
+            {definitions.map((def) => {
+              const category = triggerCategory(def.trigger.type);
+              const status = deriveStatus(def);
+              const TriggerIcon = TRIGGER_ICONS[category];
               return (
                 <div
-                  key={template.id}
+                  key={def.id}
                   className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/40"
                 >
                   <div className="flex items-center gap-4">
@@ -131,22 +193,27 @@ export default function WorkflowsPage() {
                       <TriggerIcon className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium">{template.name}</p>
-                      <p className="text-xs text-muted-foreground">{template.description}</p>
+                      <p className="text-sm font-medium">{def.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {def.description ?? 'No description'}
+                      </p>
                       <div className="mt-1 flex items-center gap-2">
-                        <Badge variant={STATUS_VARIANTS[template.status]} className="text-xs">
-                          {template.status}
+                        <Badge variant={STATUS_VARIANTS[status]} className="text-xs">
+                          {status}
                         </Badge>
                         <span className="text-xs text-muted-foreground">
-                          {TRIGGER_LABELS[template.triggerType]}
+                          {TRIGGER_LABELS[category]}
+                        </span>
+                        <span className="text-xs text-muted-foreground/60">
+                          {def.trigger.type}
                         </span>
                       </div>
                     </div>
                   </div>
                   <Switch
-                    checked={template.enabled}
-                    disabled={togglingId === template.id}
-                    onCheckedChange={(enabled) => handleToggle(template.id, enabled)}
+                    checked={def.enabled}
+                    disabled={togglingId === def.id}
+                    onCheckedChange={(enabled) => handleToggle(def.id, enabled)}
                   />
                 </div>
               );

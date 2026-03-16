@@ -36,6 +36,28 @@ export function KanbanBoard({ tasks, onTaskClick, onStatusChange }: Props) {
     setDragOverColumn(null);
   }, []);
 
+  const handleCardKeyDown = useCallback(
+    (e: React.KeyboardEvent, task: BoardTask) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onTaskClick(task);
+        return;
+      }
+
+      const colIndex = KANBAN_COLUMNS.findIndex((c) => c.key === task.status);
+      if (colIndex === -1) return;
+
+      if (e.key === 'ArrowRight' && colIndex < KANBAN_COLUMNS.length - 1) {
+        e.preventDefault();
+        onStatusChange(task.id, KANBAN_COLUMNS[colIndex + 1]!.key);
+      } else if (e.key === 'ArrowLeft' && colIndex > 0) {
+        e.preventDefault();
+        onStatusChange(task.id, KANBAN_COLUMNS[colIndex - 1]!.key);
+      }
+    },
+    [onTaskClick, onStatusChange],
+  );
+
   return (
     <div className="flex gap-4 overflow-x-auto pb-4 min-h-0 flex-1">
       {KANBAN_COLUMNS.map((col) => {
@@ -64,13 +86,20 @@ export function KanbanBoard({ tasks, onTaskClick, onStatusChange }: Props) {
             </div>
 
             {/* Cards */}
-            <div className="flex-1 overflow-y-auto p-2 space-y-2">
+            <div className="flex-1 overflow-y-auto p-2 space-y-2" role="list" aria-label={`${col.label} tasks`}>
               {columnTasks.map((task) => (
-                <TaskCard
+                <div
                   key={task.id}
-                  task={task}
-                  onClick={() => onTaskClick(task)}
-                />
+                  tabIndex={0}
+                  role="listitem"
+                  onKeyDown={(e) => handleCardKeyDown(e, task)}
+                  className="outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 rounded-lg"
+                >
+                  <TaskCard
+                    task={task}
+                    onClick={() => onTaskClick(task)}
+                  />
+                </div>
               ))}
               {columnTasks.length === 0 && (
                 <div className="text-center py-8 text-[10px] text-muted-foreground">

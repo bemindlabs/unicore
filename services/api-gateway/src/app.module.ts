@@ -19,9 +19,10 @@ import { RateLimitMiddleware } from './common/middleware/rate-limit.middleware';
 import { RequestValidationMiddleware } from './common/middleware/request-validation.middleware';
 import { DomainRoutingMiddleware } from './domains/domain-routing.middleware';
 import { SettingsModule } from './settings/settings.module';
+import { TasksModule } from './tasks/tasks.module';
 
 @Module({
-  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule, AdminModule, AuditModule, SettingsModule],
+  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule, AdminModule, AuditModule, SettingsModule, TasksModule],
   controllers: [AppController],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
