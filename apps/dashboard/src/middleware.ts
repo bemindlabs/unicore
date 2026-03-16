@@ -26,11 +26,11 @@ export function middleware(request: NextRequest) {
     return response;
   }
 
-  // If no token on a protected route, redirect to /login
+  // If no token on a protected route, redirect to /landing
   if (!token) {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('from', pathname);
-    return NextResponse.redirect(loginUrl);
+    const landingUrl = new URL('/landing', request.url);
+    landingUrl.searchParams.set('from', pathname);
+    return NextResponse.redirect(landingUrl);
   }
 
   return NextResponse.next();
@@ -38,6 +38,6 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!login|register|wizard|_next|api|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|eot)).*)',
+    '/((?!login|landing|register|wizard|_next|api|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|eot)).*)',
   ],
 };
