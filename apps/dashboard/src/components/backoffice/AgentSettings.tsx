@@ -297,7 +297,7 @@ export function AgentSettings() {
                   <div className="border-t border-cyan-900/15" />
 
                   {/* Edit fields: Name, Role, Status */}
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="space-y-1">
                       <label className="font-mono text-[9px] text-cyan-600/60 uppercase tracking-wider">
                         Name

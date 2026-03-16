@@ -118,7 +118,7 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
     >
       <div className={`absolute inset-0 backdrop-blur-sm ${isRetroDesk ? 'bg-black/30' : 'bg-black/60'}`} />
       <div
-        className={`relative w-full max-w-md mx-4 overflow-hidden ${isRetroDesk ? 'border-2' : 'border border-cyan-900/50'}`}
+        className={`relative w-full max-w-md mx-0 sm:mx-4 h-full sm:h-auto max-h-full sm:max-h-[90vh] overflow-y-auto overflow-x-hidden ${isRetroDesk ? 'border-0 sm:border-2' : 'border-0 sm:border border-cyan-900/50'}`}
         style={isRetroDesk
           ? { borderColor: 'var(--retrodesk-border)', background: 'var(--retrodesk-surface)' }
           : { background: '#0a0e1a' }}

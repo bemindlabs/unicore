@@ -250,7 +250,7 @@ export function ChatBox() {
     return parts.map((part, i) => {
       if (part.startsWith('@')) {
         return (
-          <span key={i} className="font-bold text-primary">
+          <span key={i} className="font-bold text-cyan-300">
             {part}
           </span>
         );
@@ -263,12 +263,12 @@ export function ChatBox() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-primary px-4 py-3 text-primary-foreground shadow-lg hover:bg-primary/90 transition-all"
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-cyan-500/20 border border-cyan-500/30 px-4 py-3 text-cyan-300 shadow-lg hover:bg-cyan-500/30 transition-all"
       >
         <MessageCircle className="h-5 w-5" />
-        <span className="text-sm font-medium">Chat</span>
+        <span className="text-sm font-medium font-mono">Chat</span>
         {unread > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
             {unread}
           </span>
         )}
@@ -277,15 +277,15 @@ export function ChatBox() {
   }
 
   return (
-    <div className="fixed inset-0 sm:inset-auto sm:bottom-6 sm:right-6 z-50 flex flex-col w-full h-full sm:w-80 sm:h-[28rem] sm:rounded-lg border bg-card shadow-xl overflow-hidden">
+    <div className="fixed inset-0 sm:inset-auto sm:bottom-6 sm:right-6 z-50 flex flex-col w-full h-full sm:w-80 sm:h-[28rem] sm:rounded-lg border border-cyan-900/30 bg-[#0a0e1a] shadow-xl overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b bg-primary text-primary-foreground">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-cyan-900/30 bg-[#0d1225] text-cyan-300">
         <div className="flex items-center gap-2 min-w-0 flex-1">
           {selectedAgent ? (
             <>
               <button
                 onClick={backToGeneral}
-                className="p-0.5 hover:bg-primary-foreground/10 rounded flex-shrink-0"
+                className="p-0.5 hover:bg-cyan-500/10 rounded flex-shrink-0"
                 aria-label="Back to General"
                 title="Back to General"
               >
@@ -303,24 +303,24 @@ export function ChatBox() {
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen((v) => !v)}
-                  className="flex items-center gap-1 text-sm font-medium hover:bg-primary-foreground/10 rounded px-1 py-0.5"
+                  className="flex items-center gap-1 text-sm font-medium font-mono hover:bg-cyan-500/10 rounded px-1 py-0.5"
                 >
                   Team Chat
                   <ChevronDown className="h-3 w-3" />
                 </button>
                 {dropdownOpen && (
-                  <div className="absolute top-full left-0 mt-1 w-48 rounded-md border bg-popover text-popover-foreground shadow-md z-10">
-                    <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b">
+                  <div className="absolute top-full left-0 mt-1 w-48 rounded-md border border-cyan-900/30 bg-[#0d1225] text-cyan-300 shadow-md z-10">
+                    <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-cyan-600/50 border-b border-cyan-900/30 font-mono">
                       Direct message
                     </div>
                     {agents.length === 0 && (
-                      <div className="px-3 py-2 text-xs text-muted-foreground">No agents found</div>
+                      <div className="px-3 py-2 text-xs text-cyan-600/40 font-mono">No agents found</div>
                     )}
                     {agents.map((agent) => (
                       <button
                         key={agent.id}
                         onClick={() => selectAgent(agent)}
-                        className="flex items-center gap-2 w-full px-3 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground text-left"
+                        className="flex items-center gap-2 w-full px-3 py-1.5 text-sm hover:bg-cyan-500/10 text-cyan-300 text-left"
                       >
                         <span
                           className="w-2 h-2 rounded-full flex-shrink-0"
@@ -334,7 +334,7 @@ export function ChatBox() {
               </div>
             </>
           )}
-          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${connected ? 'bg-green-400' : 'bg-muted'}`} />
+          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${connected ? 'bg-green-400' : 'bg-cyan-900/40'}`} />
         </div>
         <div className="flex gap-1 flex-shrink-0">
           {/* UNC-103: Search toggle */}
@@ -343,7 +343,7 @@ export function ChatBox() {
               setSearchOpen((v) => !v);
               if (searchOpen) setSearchQuery('');
             }}
-            className={`p-1 hover:bg-primary-foreground/10 rounded ${searchOpen ? 'bg-primary-foreground/20' : ''}`}
+            className={`p-1 hover:bg-cyan-500/10 rounded ${searchOpen ? 'bg-cyan-500/20' : ''}`}
             aria-label="Search messages"
             title="Search messages"
           >
@@ -352,16 +352,16 @@ export function ChatBox() {
           {/* UNC-103: Sound notification toggle */}
           <button
             onClick={() => setSoundEnabled((v) => !v)}
-            className={`p-1 hover:bg-primary-foreground/10 rounded ${soundEnabled ? '' : 'opacity-50'}`}
+            className={`p-1 hover:bg-cyan-500/10 rounded ${soundEnabled ? '' : 'opacity-50'}`}
             aria-label={soundEnabled ? 'Mute notifications' : 'Unmute notifications'}
             title={soundEnabled ? 'Mute notifications' : 'Unmute notifications'}
           >
             {soundEnabled ? <Bell className="h-3.5 w-3.5" /> : <BellOff className="h-3.5 w-3.5" />}
           </button>
-          <button onClick={() => setOpen(false)} className="p-1 hover:bg-primary-foreground/10 rounded" aria-label="Minimize">
+          <button onClick={() => setOpen(false)} className="p-1 hover:bg-cyan-500/10 rounded" aria-label="Minimize">
             <Minimize2 className="h-3.5 w-3.5" />
           </button>
-          <button onClick={() => setOpen(false)} className="p-1 hover:bg-primary-foreground/10 rounded" aria-label="Close">
+          <button onClick={() => setOpen(false)} className="p-1 hover:bg-cyan-500/10 rounded" aria-label="Close">
             <X className="h-3.5 w-3.5" />
           </button>
         </div>
@@ -369,17 +369,17 @@ export function ChatBox() {
 
       {/* UNC-103: Search bar */}
       {searchOpen && (
-        <div className="px-3 py-2 border-b bg-muted/30">
+        <div className="px-3 py-2 border-b border-cyan-900/30 bg-[#080c16]">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search messages..."
             autoFocus
-            className="w-full rounded-md border border-input bg-background px-3 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+            className="w-full rounded-md border border-cyan-900/30 bg-[#060a14] text-cyan-300 placeholder:text-cyan-600/30 px-3 py-1 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-cyan-500/30 focus:border-cyan-500/40"
           />
           {searchQuery && (
-            <div className="text-[10px] text-muted-foreground mt-1">
+            <div className="text-[10px] text-cyan-600/40 mt-1 font-mono">
               {visibleMessages.length} of {messages.length} messages
             </div>
           )}
@@ -389,7 +389,7 @@ export function ChatBox() {
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-3">
         {visibleMessages.length === 0 && (
-          <p className="text-center text-xs text-muted-foreground py-8">
+          <p className="text-center text-xs text-cyan-600/40 font-mono py-8">
             {searchQuery
               ? 'No messages match your search.'
               : selectedAgent
@@ -412,20 +412,20 @@ export function ChatBox() {
                   {!isMe && msg.authorColor && (
                     <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: msg.authorColor }} />
                   )}
-                  <span className="text-[10px] font-medium text-muted-foreground">
+                  <span className="text-[10px] font-medium text-cyan-600/50 font-mono">
                     {isMe ? 'You' : msg.author}
                   </span>
                   {msg.authorType === 'agent' && (
-                    <span className="text-[9px] px-1 rounded bg-primary/10 text-primary">agent</span>
+                    <span className="text-[9px] px-1 rounded bg-cyan-500/10 text-cyan-400 font-mono">agent</span>
                   )}
-                  <span className="text-[9px] text-muted-foreground">{relativeTime(msg.timestamp)}</span>
+                  <span className="text-[9px] text-cyan-600/30 font-mono">{relativeTime(msg.timestamp)}</span>
                 </div>
                 <div className="relative">
                   <div
-                    className={`rounded-lg px-3 py-2 text-sm ${
+                    className={`rounded-lg px-3 py-2 text-sm font-mono ${
                       isMe
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted'
+                        ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-500/20'
+                        : 'bg-[#0d1220] text-cyan-100/80 border border-cyan-900/20'
                     }`}
                   >
                     {renderMessageText(msg.text)}
@@ -434,13 +434,13 @@ export function ChatBox() {
                   {/* UNC-103: Reaction picker on hover */}
                   {isHovered && (
                     <div
-                      className={`absolute -bottom-3 ${isMe ? 'right-0' : 'left-0'} flex gap-0.5 bg-card border rounded-full shadow-md px-1 py-0.5 z-10`}
+                      className={`absolute -bottom-3 ${isMe ? 'right-0' : 'left-0'} flex gap-0.5 bg-[#0d1225] border border-cyan-900/30 rounded-full shadow-md px-1 py-0.5 z-10`}
                     >
                       {REACTION_EMOJIS.map((emoji) => (
                         <button
                           key={emoji}
                           onClick={() => addReaction(msg.id, emoji)}
-                          className="w-5 h-5 flex items-center justify-center text-xs hover:bg-muted rounded-full transition-colors"
+                          className="w-5 h-5 flex items-center justify-center text-xs hover:bg-cyan-500/10 rounded-full transition-colors"
                           title={`React with ${emoji}`}
                         >
                           {emoji}
@@ -459,10 +459,10 @@ export function ChatBox() {
                         <button
                           key={emoji}
                           onClick={() => addReaction(msg.id, emoji)}
-                          className="flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full border bg-muted/50 hover:bg-muted transition-colors"
+                          className="flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full border border-cyan-900/30 bg-cyan-500/5 hover:bg-cyan-500/10 transition-colors"
                         >
                           <span>{emoji}</span>
-                          <span className="text-muted-foreground">{count}</span>
+                          <span className="text-cyan-600/50">{count}</span>
                         </button>
                       ))}
                   </div>
@@ -474,27 +474,27 @@ export function ChatBox() {
       </div>
 
       {/* Input */}
-      <div className="border-t p-2">
+      <div className="border-t border-cyan-900/30 p-2">
         <div className="relative">
           {/* UNC-103: @mention autocomplete dropdown */}
           {mentionOpen && mentionCandidates.length > 0 && (
-            <div className="absolute bottom-full left-0 right-0 mb-1 rounded-md border bg-popover text-popover-foreground shadow-md z-10 max-h-32 overflow-y-auto">
+            <div className="absolute bottom-full left-0 right-0 mb-1 rounded-md border border-cyan-900/30 bg-[#0d1225] text-cyan-300 shadow-md z-10 max-h-32 overflow-y-auto">
               {mentionCandidates.map((agent, idx) => (
                 <button
                   key={agent.id}
                   onClick={() => insertMention(agent)}
                   className={`flex items-center gap-2 w-full px-3 py-1.5 text-sm text-left ${
                     idx === mentionIndex
-                      ? 'bg-accent text-accent-foreground'
-                      : 'hover:bg-accent hover:text-accent-foreground'
+                      ? 'bg-cyan-500/15 text-cyan-200'
+                      : 'hover:bg-cyan-500/10 text-cyan-300'
                   }`}
                 >
                   <span
                     className="w-2 h-2 rounded-full flex-shrink-0"
                     style={{ background: agent.color }}
                   />
-                  <span className="truncate font-medium">@{agent.name}</span>
-                  <span className="text-[10px] text-muted-foreground ml-auto">{agent.role}</span>
+                  <span className="truncate font-medium font-mono">@{agent.name}</span>
+                  <span className="text-[10px] text-cyan-600/50 ml-auto font-mono">{agent.role}</span>
                 </button>
               ))}
             </div>
@@ -513,12 +513,12 @@ export function ChatBox() {
                   : 'Connecting...'
               }
               disabled={!connected}
-              className="flex-1 rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
+              className="flex-1 rounded-md border border-cyan-900/30 bg-[#060a14] text-cyan-200 placeholder:text-cyan-600/30 px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-cyan-500/30 focus:border-cyan-500/40 disabled:opacity-50"
             />
             <button
               onClick={handleSend}
               disabled={!input.trim() || !connected}
-              className="rounded-md bg-primary p-1.5 text-primary-foreground hover:bg-primary/90 disabled:opacity-40 transition-colors"
+              className="rounded-md bg-cyan-500/20 border border-cyan-500/30 p-1.5 text-cyan-400 hover:bg-cyan-500/30 disabled:opacity-40 transition-colors"
               aria-label="Send message"
             >
               <Send className="h-4 w-4" />
