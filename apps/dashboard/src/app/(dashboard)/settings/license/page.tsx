@@ -119,16 +119,59 @@ export default function SettingsLicensePage() {
 
   useEffect(() => {
     let mounted = true;
+
+    interface LicenseStatusResponse {
+      valid?: boolean;
+      tier?: string;
+      features?: string[] | Record<string, boolean>;
+      expiresAt?: string | null;
+      key?: string;
+      edition?: string;
+      status?: string;
+      maxAgents?: number;
+      maxRoles?: number;
+    }
+
     Promise.all([
-      api.get<LicenseInfo>('/license/status'),
+      api.get<LicenseStatusResponse>('/license/status'),
       api.get<{ count: number }>('/settings/team/count').catch(() => ({ count: 0 })),
     ])
-      .then(([licenseData, teamData]) => {
-        if (mounted) {
-          setLicense(licenseData);
-          setUsersUsed(teamData.count);
-          setIsLoading(false);
+      .then(([raw, teamData]) => {
+        if (!mounted) return;
+
+        // Map API response to LicenseInfo format
+        const edition = raw.edition ?? raw.tier ?? 'community';
+        const isPro = edition === 'pro';
+        const featureObj: Record<string, boolean> = {};
+
+        if (Array.isArray(raw.features)) {
+          raw.features.forEach((f: string) => { featureObj[f] = true; });
+          // Fill missing features as false
+          for (const k of ['allAgents', 'customAgentBuilder', 'fullRbac', 'advancedWorkflows', 'allChannels', 'unlimitedRag', 'whiteLabelBranding', 'sso', 'auditLogs', 'prioritySupport']) {
+            if (!(k in featureObj)) featureObj[k] = false;
+          }
+        } else if (raw.features && typeof raw.features === 'object') {
+          Object.assign(featureObj, raw.features);
+        } else {
+          // Default community features
+          for (const k of ['allAgents', 'customAgentBuilder', 'fullRbac', 'advancedWorkflows', 'allChannels', 'unlimitedRag', 'whiteLabelBranding', 'sso', 'auditLogs', 'prioritySupport']) {
+            featureObj[k] = isPro;
+          }
         }
+
+        const mapped: LicenseInfo = {
+          key: raw.key ?? (isPro ? 'PRO-XXXX-XXXX-XXXX' : 'COMM-XXXX-XXXX-XXXX'),
+          edition,
+          status: raw.status ?? (raw.valid !== false ? 'active' : 'invalid') as LicenseStatus,
+          maxAgents: raw.maxAgents ?? (isPro ? 50 : 2),
+          maxRoles: raw.maxRoles ?? (isPro ? 20 : 3),
+          expiresAt: raw.expiresAt ?? '2099-12-31T23:59:59Z',
+          features: featureObj,
+        };
+
+        setLicense(mapped);
+        setUsersUsed(teamData.count);
+        setIsLoading(false);
       })
       .catch(() => {
         if (mounted) setIsLoading(false);
