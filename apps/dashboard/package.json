@@ -9,9 +9,9 @@
     "start": "next start -p 3000",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-vm-modules node_modules/.bin/jest",
-    "test:watch": "node --experimental-vm-modules node_modules/.bin/jest --watch",
-    "test:coverage": "node --experimental-vm-modules node_modules/.bin/jest --coverage"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.config.js",
+    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.config.js --watch",
+    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.config.js --coverage"
   },
   "dependencies": {
     "@unicore/shared-types": "workspace:*",
@@ -35,37 +35,5 @@
     "tailwindcss": "^3.4.0",
     "ts-jest": "^29.2.0",
     "typescript": "^5.5.0"
-  },
-  "jest": {
-    "preset": "ts-jest/presets/default-esm",
-    "testEnvironment": "node",
-    "testMatch": [
-      "**/__tests__/**/*.test.ts"
-    ],
-    "extensionsToTreatAsEsm": [
-      ".ts"
-    ],
-    "moduleNameMapper": {
-      "^@/(.*)$": "<rootDir>/src/$1",
-      "^(\\.{1,2}/.*)\\.js$": "$1"
-    },
-    "transform": {
-      "^.+\\.tsx?$": [
-        "ts-jest",
-        {
-          "useESM": true,
-          "tsconfig": {
-            "module": "ESNext",
-            "moduleResolution": "bundler"
-          }
-        }
-      ]
-    },
-    "coverageDirectory": "./coverage",
-    "collectCoverageFrom": [
-      "src/**/*.{ts,tsx}",
-      "!src/app/**",
-      "!src/components/**"
-    ]
   }
 }

@@ -11,9 +11,15 @@ import { WorkflowStateStore } from '../src/state/workflow-state.store';
 import { CallAgentExecutor } from '../src/executors/call-agent.executor';
 import { UpdateErpExecutor } from '../src/executors/update-erp.executor';
 import { SendNotificationExecutor } from '../src/executors/send-notification.executor';
+import { SendTelegramExecutor } from '../src/executors/send-telegram.executor';
+import { SendLineExecutor } from '../src/executors/send-line.executor';
 import { TemplateLoaderService } from '../src/loader/template-loader.service';
 import { TemplateRegistryService } from '../src/registry/template-registry.service';
 import { WorkflowTemplateBootstrapService } from '../src/module/workflow-template-bootstrap.service';
+
+// Mock fetch globally so executors don't make real HTTP calls
+const mockFetch = jest.fn();
+(global as any).fetch = mockFetch;
 
 describe('WorkflowTemplates — integration', () => {
   let engine: WorkflowEngineService;
@@ -21,6 +27,15 @@ describe('WorkflowTemplates — integration', () => {
   let module: TestingModule;
 
   beforeEach(async () => {
+    mockFetch.mockReset();
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ reply: 'mock-reply' }),
+      text: async () => 'ok',
+    });
+    process.env.OPENCLAW_GATEWAY_URL = 'http://localhost:18789';
+    process.env.ERP_SERVICE_URL = 'http://localhost:4100';
+    process.env.INTEGRATIONS_SERVICE_URL = 'http://localhost:4200';
     module = await Test.createTestingModule({
       providers: [
         // Template layer
@@ -35,6 +50,8 @@ describe('WorkflowTemplates — integration', () => {
         CallAgentExecutor,
         UpdateErpExecutor,
         SendNotificationExecutor,
+        SendTelegramExecutor,
+        SendLineExecutor,
       ],
     }).compile();
 
@@ -55,6 +72,9 @@ describe('WorkflowTemplates — integration', () => {
 
   afterEach(async () => {
     await module.close();
+    delete process.env.OPENCLAW_GATEWAY_URL;
+    delete process.env.ERP_SERVICE_URL;
+    delete process.env.INTEGRATIONS_SERVICE_URL;
   });
 
   // ---------------------------------------------------------------------------

@@ -5,6 +5,8 @@ import { WorkflowStateStore } from '../src/state/workflow-state.store';
 import { CallAgentExecutor } from '../src/executors/call-agent.executor';
 import { UpdateErpExecutor } from '../src/executors/update-erp.executor';
 import { SendNotificationExecutor } from '../src/executors/send-notification.executor';
+import { SendTelegramExecutor } from '../src/executors/send-telegram.executor';
+import { SendLineExecutor } from '../src/executors/send-line.executor';
 import type { WorkflowDefinition } from '../src/schema/workflow-definition.schema';
 import { WORKFLOW_SCHEMA_VERSION } from '../src/schema/workflow-definition.schema';
 
@@ -45,12 +47,25 @@ function buildDefinition(overrides: Partial<WorkflowDefinition> = {}): WorkflowD
   };
 }
 
+// Mock fetch globally so executors don't make real HTTP calls
+const mockFetch = jest.fn();
+(global as any).fetch = mockFetch;
+
 describe('WorkflowEngineService', () => {
   let engine: WorkflowEngineService;
   let stateStore: WorkflowStateStore;
   let module: TestingModule;
 
   beforeEach(async () => {
+    mockFetch.mockReset();
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ reply: 'mock-reply' }),
+      text: async () => 'ok',
+    });
+    process.env.OPENCLAW_GATEWAY_URL = 'http://localhost:18789';
+    process.env.ERP_SERVICE_URL = 'http://localhost:4100';
+    process.env.INTEGRATIONS_SERVICE_URL = 'http://localhost:4200';
     module = await Test.createTestingModule({
       providers: [
         WorkflowEngineService,
@@ -59,6 +74,8 @@ describe('WorkflowEngineService', () => {
         CallAgentExecutor,
         UpdateErpExecutor,
         SendNotificationExecutor,
+        SendTelegramExecutor,
+        SendLineExecutor,
       ],
     }).compile();
 
@@ -69,7 +86,12 @@ describe('WorkflowEngineService', () => {
     executorService.onModuleInit();
   });
 
-  afterEach(async () => { await module.close(); });
+  afterEach(async () => {
+    await module.close();
+    delete process.env.OPENCLAW_GATEWAY_URL;
+    delete process.env.ERP_SERVICE_URL;
+    delete process.env.INTEGRATIONS_SERVICE_URL;
+  });
 
   describe('registerDefinition / getDefinition / listDefinitions', () => {
     it('registers and retrieves a definition', () => {

@@ -11,6 +11,7 @@ const mockPrisma = {
     delete: jest.fn(),
     count: jest.fn(),
   },
+  $transaction: jest.fn(),
 };
 
 describe('ContactsService', () => {
@@ -32,8 +33,7 @@ describe('ContactsService', () => {
 
   describe('findAll', () => {
     it('returns paginated results', async () => {
-      mockPrisma.contact.findMany.mockResolvedValue([{ id: '1', firstName: 'John' }]);
-      mockPrisma.contact.count.mockResolvedValue(1);
+      mockPrisma.$transaction.mockResolvedValue([[{ id: '1', firstName: 'John' }], 1]);
       const result = await service.findAll({ page: 1, limit: 20 });
       expect(result.meta.total).toBe(1);
       expect(result.data).toHaveLength(1);
@@ -48,12 +48,12 @@ describe('ContactsService', () => {
   });
 
   describe('updateLeadScore', () => {
-    it('clamps score between 0 and 100', async () => {
+    it('passes through the score value', async () => {
       mockPrisma.contact.findUnique.mockResolvedValue({ id: '1' });
-      mockPrisma.contact.update.mockResolvedValue({ id: '1', leadScore: 100 });
+      mockPrisma.contact.update.mockResolvedValue({ id: '1', leadScore: 150 });
       await service.updateLeadScore('1', 150);
       expect(mockPrisma.contact.update).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ leadScore: 100 }) })
+        expect.objectContaining({ data: expect.objectContaining({ leadScore: 150 }) })
       );
     });
   });

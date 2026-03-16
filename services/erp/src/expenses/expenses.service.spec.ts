@@ -34,8 +34,8 @@ describe('ExpensesService', () => {
         .rejects.toBeInstanceOf(BadRequestException);
     });
 
-    it('approves a PENDING expense', async () => {
-      mockPrisma.expense.findUnique.mockResolvedValue({ id: '1', status: 'PENDING' });
+    it('approves a SUBMITTED expense', async () => {
+      mockPrisma.expense.findUnique.mockResolvedValue({ id: '1', status: 'SUBMITTED' });
       mockPrisma.expense.update.mockResolvedValue({ id: '1', status: 'APPROVED', approvedBy: 'manager' });
       const result = await service.approve('1', { approvedBy: 'manager' });
       expect(result.status).toBe('APPROVED');

@@ -43,9 +43,9 @@ describe('OrdersService', () => {
   });
 
   describe('confirm', () => {
-    it('should transition PENDING to CONFIRMED', async () => {
+    it('should transition DRAFT to CONFIRMED', async () => {
       const order = {
-        id: 'ord-1', status: 'PENDING', orderNumber: 'ORD-000001',
+        id: 'ord-1', status: 'DRAFT', orderNumber: 'ORD-000001',
         contact: { id: 'c-1' }, lineItems: [],
       };
       const updated = { ...order, status: 'CONFIRMED' };

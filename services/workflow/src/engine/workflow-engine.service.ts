@@ -155,9 +155,24 @@ export class WorkflowEngineService {
     // Transition to running
     this.updateInstance(instance, { status: 'running' });
 
+    let orderedActions: WorkflowAction[];
+    try {
+      // Execute actions in topological order (serial walk respecting dependsOn)
+      orderedActions = this.topologicalSort(definition.actions);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.updateInstance(instance, {
+        status: 'failed',
+        completedAt: new Date().toISOString(),
+        error: message,
+      });
+      this.logger.error(
+        `[${instance.instanceId}] Workflow "${instance.workflowName}" FAILED: ${message}`,
+      );
+      return;
+    }
+
     const previousOutputs: Record<string, unknown> = {};
-    // Execute actions in topological order (serial walk respecting dependsOn)
-    const orderedActions = this.topologicalSort(definition.actions);
 
     for (const action of orderedActions) {
       // Check if all dependencies succeeded

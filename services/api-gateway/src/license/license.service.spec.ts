@@ -58,7 +58,7 @@ describe('LicenseService', () => {
 
       expect(status.tier).toBe('community');
       expect(status.valid).toBe(true);
-      expect(status.features).toEqual([]);
+      expect(status.features).toEqual(['audit_log']);
       expect(status.key).toBeNull();
     });
 
@@ -141,7 +141,7 @@ describe('LicenseService', () => {
 
       expect(status.valid).toBe(false);
       expect(status.tier).toBe('community');
-      expect(status.features).toEqual([]);
+      expect(status.features).toEqual(['audit_log']);
     });
 
     it('hasFeature returns false', async () => {

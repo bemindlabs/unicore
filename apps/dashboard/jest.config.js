@@ -16,7 +16,7 @@ const config = {
   moduleNameMapper: {
     '^@/(.*)$': `${__dirname}/src/$1`,
     '^(\\.{1,2}/.*)\\.js$': '$1',
-    '^@unicore/shared-types$': `${__dirname}/../../packages/shared-types/dist/index.js`,
+    '^@unicore/shared-types$': `${__dirname}/../../packages/shared-types/src/index.ts`,
   },
   transform: {
     '^.+\\.tsx?$': [

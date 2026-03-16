@@ -40,8 +40,6 @@ Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock });
 // We avoid importing @testing-library/react since it is not in package.json.
 // Instead we use React.createElement + a manual context consumer to capture state.
 
-void React.useContext(AuthContext); // ensure AuthContext is used
-
 // ---------- tests ----------
 
 describe('AuthProvider', () => {

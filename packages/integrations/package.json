@@ -27,7 +27,7 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-vm-modules node_modules/.bin/jest --passWithNoTests",
+    "test": "npx jest --passWithNoTests",
     "lint": "eslint src/"
   },
   "dependencies": {

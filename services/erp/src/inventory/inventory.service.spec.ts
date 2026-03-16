@@ -10,6 +10,7 @@ const mockPrisma = {
     update: jest.fn(), delete: jest.fn(), count: jest.fn(),
     fields: { lowStockThreshold: {} },
   },
+  inventoryItem: { findFirst: jest.fn(), update: jest.fn() },
   stockMovement: { findMany: jest.fn(), create: jest.fn(), count: jest.fn() },
   $transaction: jest.fn(),
 };
@@ -35,15 +36,19 @@ describe('InventoryService', () => {
 
   describe('adjustStock', () => {
     it('throws BadRequestException when stock goes negative', async () => {
-      mockPrisma.product.findUnique.mockResolvedValue({ id: '1', quantity: 5, lowStockThreshold: 10, sku: 'SKU1', name: 'P1', warehouseId: null });
+      mockPrisma.product.findUnique.mockResolvedValue({ id: '1', sku: 'SKU1', name: 'P1' });
+      mockPrisma.inventoryItem.findFirst.mockResolvedValue({ id: 'inv-1', productId: '1', quantityOnHand: 5, quantityReserved: 0, reorderPoint: 10, warehouseId: 'wh-1' });
       await expect(service.adjustStock('1', { delta: -10, reason: 'test' }))
         .rejects.toBeInstanceOf(BadRequestException);
     });
 
     it('publishes low stock event when quantity falls below threshold', async () => {
-      const product = { id: '1', quantity: 5, lowStockThreshold: 10, sku: 'SKU1', name: 'P1', warehouseId: null };
+      const product = { id: '1', sku: 'SKU1', name: 'P1' };
+      const inventoryItem = { id: 'inv-1', productId: '1', quantityOnHand: 5, quantityReserved: 0, reorderPoint: 10, warehouseId: 'wh-1' };
       mockPrisma.product.findUnique.mockResolvedValue(product);
-      mockPrisma.$transaction.mockResolvedValue([{ ...product, quantity: 3 }, {}]);
+      mockPrisma.inventoryItem.findFirst.mockResolvedValue(inventoryItem);
+      mockPrisma.stockMovement.create.mockResolvedValue({});
+      mockPrisma.inventoryItem.update.mockResolvedValue({ ...inventoryItem, quantityOnHand: 3 });
       await service.adjustStock('1', { delta: -2, reason: 'sale' });
       expect(mockEvents.publish).toHaveBeenCalled();
     });

@@ -8,14 +8,36 @@ import type {
   SendNotificationAction,
 } from '../src/schema/workflow-definition.schema';
 
-// Trigger payload shape: { payload: { ... } }
-// In executor the triggerPayload is spread at root, so {{payload.orderId}} resolves correctly.
+// The executor builds interpolation context as { payload: triggerPayload, outputs: previousOutputs }
+// so {{payload.orderId}} resolves triggerPayload.orderId.
 const baseContext: ActionExecutionContext = {
-  triggerPayload: { payload: { orderId: 'ORD-42', amount: 150, customer: 'alice@example.com' } },
+  triggerPayload: { orderId: 'ORD-42', amount: 150, customer: 'alice@example.com' },
   previousOutputs: {},
   instanceId: 'test-instance',
   workflowName: 'Test Workflow',
 };
+
+// Mock fetch globally so executors don't make real HTTP calls
+const mockFetch = jest.fn();
+(global as any).fetch = mockFetch;
+
+beforeEach(() => {
+  mockFetch.mockReset();
+  mockFetch.mockResolvedValue({
+    ok: true,
+    json: async () => ({ reply: 'mock-reply' }),
+    text: async () => 'ok',
+  });
+  process.env.OPENCLAW_GATEWAY_URL = 'http://localhost:18789';
+  process.env.ERP_SERVICE_URL = 'http://localhost:4100';
+  process.env.INTEGRATIONS_SERVICE_URL = 'http://localhost:4200';
+});
+
+afterEach(() => {
+  delete process.env.OPENCLAW_GATEWAY_URL;
+  delete process.env.ERP_SERVICE_URL;
+  delete process.env.INTEGRATIONS_SERVICE_URL;
+});
 
 describe('CallAgentExecutor', () => {
   let executor: CallAgentExecutor;
