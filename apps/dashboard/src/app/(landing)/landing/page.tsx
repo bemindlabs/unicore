@@ -199,7 +199,7 @@ const settingsFeatures = [
 ];
 
 const communityFeatures = [
-  '2 AI agents',
+  'All 8 built-in AI agents + 2 custom',
   '3 user roles',
   'Basic ERP modules',
   'Dashboard with widgets',
@@ -212,7 +212,7 @@ const communityFeatures = [
 ];
 
 const proFeatures = [
-  'Up to 50 AI agents',
+  'All 8 built-in + up to 50 custom agents',
   '20 user roles',
   'All ERP modules',
   'Advanced workflows + Kafka events',

@@ -35,10 +35,10 @@ export default function AgentsPage() {
         </div>
         <div className="flex items-center gap-4">
           {!loading && (
-            <span className={`text-sm font-medium ${agents.length >= maxAgents ? 'text-amber-600' : 'text-muted-foreground'}`}>
-              Agents: {agents.length}/{maxAgents}
-              {!isPro && agents.length >= maxAgents && (
-                <a href="/settings/license" className="text-amber-600 underline ml-1 text-xs">(upgrade for more)</a>
+            <span className="text-sm font-medium text-muted-foreground">
+              {agents.length} built-in agents
+              {!isPro && (
+                <span className="text-xs ml-1">(+ {maxAgents} custom slots · <a href="/settings/license" className="text-primary underline">upgrade for more</a>)</span>
               )}
             </span>
           )}

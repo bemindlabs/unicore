@@ -263,8 +263,8 @@ export default function SettingsLicensePage() {
               <p className="text-sm font-mono">{license.key}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Max Agents</p>
-              <p className="text-sm font-medium">{license.maxAgents}</p>
+              <p className="text-xs text-muted-foreground">Custom Agent Slots</p>
+              <p className="text-sm font-medium">{license.maxAgents} (+ 8 built-in)</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Expires</p>
