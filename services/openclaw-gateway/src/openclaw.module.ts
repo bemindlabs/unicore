@@ -4,6 +4,7 @@ import { AgentRegistryService } from './registry/agent-registry.service';
 import { MessageRouterService } from './routing/message-router.service';
 import { HeartbeatService } from './health/heartbeat.service';
 import { HealthController } from './health/health.controller';
+import { AgentsController } from './agents/agents.controller';
 import { RouterModule } from './router/router.module';
 
 /**
@@ -18,7 +19,7 @@ import { RouterModule } from './router/router.module';
  */
 @Module({
   imports: [RouterModule],
-  controllers: [HealthController],
+  controllers: [HealthController, AgentsController],
   providers: [
     OpenClawGateway,
     AgentRegistryService,

@@ -13,7 +13,7 @@ async function bootstrap(): Promise<void> {
   // Start all microservice listeners before accepting HTTP traffic.
   await app.startAllMicroservices();
 
-  const port = Number(process.env['PORT'] ?? 4600);
+  const port = Number(process.env['PORT'] ?? 4400);
   await app.listen(port);
 
   Logger.log(`Workflow service running on port ${port}`, 'Main');

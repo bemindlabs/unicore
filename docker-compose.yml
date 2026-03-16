@@ -17,9 +17,9 @@ services:
   unicore-postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: unicore
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: unicore
+      POSTGRES_USER: ${POSTGRES_USER:-unicore}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-unicore}
     ports:
       - "5433:5432"
     volumes:
@@ -83,12 +83,12 @@ services:
       - "4000:4000"
     environment:
       UNICORE_EDITION: community
-      DATABASE_URL: postgresql://unicore:password@unicore-postgres:5432/unicore?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER:-unicore}:${POSTGRES_PASSWORD:-password}@unicore-postgres:5432/${POSTGRES_DB:-unicore}?schema=public
       REDIS_URL: redis://unicore-redis:6379
-      JWT_SECRET: unicore-local-dev-secret-key-minimum-32-chars
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-min-32-chars}
       NODE_ENV: development
       PORT: "4000"
-      BOOTSTRAP_SECRET: unicore-bootstrap-secret-local
+      BOOTSTRAP_SECRET: ${BOOTSTRAP_SECRET:-change-me-bootstrap-secret}
       ERP_SERVICE_HOST: unicore-erp
       ERP_SERVICE_PORT: "4100"
       AI_ENGINE_SERVICE_HOST: unicore-ai-engine
@@ -100,7 +100,7 @@ services:
       OPENCLAW_SERVICE_HOST: unicore-openclaw-gateway
       OPENCLAW_SERVICE_PORT: "18790"
       WORKFLOW_SERVICE_HOST: unicore-workflow
-      WORKFLOW_SERVICE_PORT: "4600"
+      WORKFLOW_SERVICE_PORT: "4400"
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:-unicore-telegram-secret}
       LINE_CHANNEL_ID: ${LINE_CHANNEL_ID:-}
@@ -120,7 +120,7 @@ services:
     ports:
       - "4100:4100"
     environment:
-      DATABASE_URL: postgresql://unicore:password@unicore-postgres:5432/unicore_erp?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER:-unicore}:${POSTGRES_PASSWORD:-password}@unicore-postgres:5432/${POSTGRES_DB_ERP:-unicore_erp}?schema=public
       REDIS_URL: redis://unicore-redis:6379
       PORT: "4100"
       KAFKA_BROKERS: unicore-kafka:9092
@@ -169,12 +169,12 @@ services:
     ports:
       - "4500:4500"
     environment:
-      DATABASE_URL: postgresql://unicore:password@unicore-postgres:5432/unicore?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER:-unicore}:${POSTGRES_PASSWORD:-password}@unicore-postgres:5432/${POSTGRES_DB:-unicore}?schema=public
       PORT: "4500"
-      BOOTSTRAP_SECRET: unicore-bootstrap-secret-local
+      BOOTSTRAP_SECRET: ${BOOTSTRAP_SECRET:-change-me-bootstrap-secret}
       API_GATEWAY_URL: http://unicore-api-gateway:4000
       LICENSE_API_URL: http://unicore-license-api:4600
-      LICENSE_ADMIN_SECRET: unicore-license-admin-secret-local
+      LICENSE_ADMIN_SECRET: ${LICENSE_ADMIN_SECRET:-change-me-license-secret}
     depends_on:
       unicore-postgres:
         condition: service_healthy
@@ -204,6 +204,7 @@ services:
       context: .
       dockerfile: services/workflow/Dockerfile
     environment:
+      PORT: "4400"
       KAFKA_BROKERS: unicore-kafka:9092
       REDIS_URL: redis://unicore-redis:6379
       ERP_SERVICE_URL: http://unicore-erp:4100
@@ -224,9 +225,9 @@ services:
     ports:
       - "4600:4600"
     environment:
-      DATABASE_URL: postgresql://unicore:password@unicore-license-db:5432/unicore_license?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER:-unicore}:${POSTGRES_PASSWORD:-password}@unicore-license-db:5432/${POSTGRES_DB_LICENSE:-unicore_license}?schema=public
       REDIS_URL: redis://unicore-license-redis:6379
-      ADMIN_SECRET: unicore-license-admin-secret-local
+      ADMIN_SECRET: ${LICENSE_ADMIN_SECRET:-change-me-license-secret}
       PORT: "4600"
     profiles: [apps]
 
@@ -234,9 +235,9 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: unicore
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: unicore_license
+      POSTGRES_USER: ${POSTGRES_USER:-unicore}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB_LICENSE:-unicore_license}
     volumes:
       - license_postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -280,12 +281,12 @@ services:
       context: .
       dockerfile: apps/dashboard/Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: https://unicore.bemind.tech
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
         NEXT_PUBLIC_EDITION: community
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: https://unicore.bemind.tech
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
       NEXT_PUBLIC_EDITION: community
     depends_on:
       - unicore-api-gateway
