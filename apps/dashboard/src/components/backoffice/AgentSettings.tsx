@@ -74,9 +74,7 @@ export function AgentSettings() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/proxy/openclaw/health/agents');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+      const data = await api.get<any>('/api/proxy/openclaw/health/agents');
       const list: OpenClawAgent[] = Array.isArray(data) ? data : data.agents ?? [];
       setAgents(list);
       // Initialize configs from agent data
