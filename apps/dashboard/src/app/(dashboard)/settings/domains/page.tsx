@@ -216,7 +216,7 @@ function AddDomainDialog({ open, onOpenChange, onAdd }: AddDomainDialogProps) {
         status: 'pending' as DomainStatus,
         sslStatus: 'pending' as SslStatus,
         addedAt: now,
-        dnsRecords: [{ type: 'TXT', name: `_unicore-verify.${domainValue.trim()}`, value: `unicore-verify=${Date.now()}`, status: 'pending' as const }],
+        dnsRecords: [{ type: 'TXT' as const, name: `_unicore-verify.${domainValue.trim()}`, value: `unicore-verify=${Date.now()}`, ttl: 300 }],
         verificationHistory: [{ timestamp: now, action: 'domain_added', result: 'pending' }],
       };
       // Save full array to settings
