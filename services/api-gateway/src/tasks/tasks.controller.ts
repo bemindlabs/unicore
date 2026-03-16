@@ -82,7 +82,7 @@ export class TasksController {
   }
 
   @Post(':id/comments')
-  async addComment(@Param('id') id: string, @Body() body: any) {
+  async addComment(@Param('id') id: string, @Body() _body: any) {
     const existing = await this.prisma.task.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException(`Task ${id} not found`);
     return { ok: true };
