@@ -189,7 +189,7 @@ export function ThemeSelector() {
     } else {
       setFocusedIndex(-1);
     }
-  }, [open, activeId]);
+  }, [open, selectedThemeId]);
 
   // Close on outside click
   useEffect(() => {
