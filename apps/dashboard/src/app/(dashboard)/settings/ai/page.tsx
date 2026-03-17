@@ -89,7 +89,7 @@ export default function AiSettingsPage() {
       setAnthropicKey(data.anthropicKey || '');
       // Reload AI Engine providers with new keys
       try {
-        await api.post('/api/proxy/ai/llm/reload');
+        await api.post('/api/proxy/ai/api/v1/llm/reload');
       } catch {
         // AI Engine may not be reachable — keys will load on next restart
       }
