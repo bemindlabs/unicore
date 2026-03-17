@@ -91,13 +91,16 @@ export class ProviderFactoryService implements OnModuleInit {
     const defaultModel = dbKeys.defaultModel || this.config.get<string>('OPENAI_DEFAULT_MODEL', 'gpt-4o');
 
     if (openAiKey) {
+      const openAiAuthType = (dbKeys as Record<string, string>).openaiAuthType === 'oauth' ? 'oauth' : 'api-key';
+      const openAiBaseUrl = (dbKeys as Record<string, string>).openaiBaseUrl || this.config.get<string>('OPENAI_BASE_URL');
       this.registry.set(
         'openai',
         new OpenAiProvider(
           openAiKey,
           defaultModel,
           'text-embedding-3-small',
-          this.config.get<string>('OPENAI_BASE_URL'),
+          openAiBaseUrl,
+          openAiAuthType,
         ),
       );
     }

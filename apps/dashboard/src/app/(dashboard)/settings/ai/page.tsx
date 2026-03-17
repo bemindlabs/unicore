@@ -13,6 +13,8 @@ interface AiConfig {
   anthropicKey: string;
   defaultProvider: string;
   defaultModel: string;
+  openaiAuthType: string;
+  openaiBaseUrl: string;
   hasOpenaiKey: boolean;
   hasAnthropicKey: boolean;
 }
@@ -29,6 +31,8 @@ export default function AiSettingsPage() {
   const [anthropicKey, setAnthropicKey] = useState('');
   const [defaultProvider, setDefaultProvider] = useState('openai');
   const [defaultModel, setDefaultModel] = useState('');
+  const [openaiAuthType, setOpenaiAuthType] = useState('api-key');
+  const [openaiBaseUrl, setOpenaiBaseUrl] = useState('');
   const [showOpenai, setShowOpenai] = useState(false);
   const [showAnthropic, setShowAnthropic] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -44,6 +48,8 @@ export default function AiSettingsPage() {
       setAnthropicKey(data.anthropicKey || '');
       setDefaultProvider(data.defaultProvider || 'openai');
       setDefaultModel(data.defaultModel || '');
+      setOpenaiAuthType(data.openaiAuthType || 'api-key');
+      setOpenaiBaseUrl(data.openaiBaseUrl || '');
     } catch {
       // not logged in or endpoint not available
     }
@@ -79,7 +85,7 @@ export default function AiSettingsPage() {
     setSaving(true);
     setStatus(null);
     try {
-      const body: Record<string, string> = { defaultProvider, defaultModel };
+      const body: Record<string, string> = { defaultProvider, defaultModel, openaiAuthType, openaiBaseUrl };
       if (openaiKey && !openaiKey.includes('••')) body.openaiKey = openaiKey;
       if (anthropicKey && !anthropicKey.includes('••')) body.anthropicKey = anthropicKey;
 
@@ -126,14 +132,34 @@ export default function AiSettingsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="openai-key">OpenAI API Key</Label>
+            <Label htmlFor="openai-auth">OpenAI Auth Type</Label>
+            <select
+              id="openai-auth"
+              value={openaiAuthType}
+              onChange={(e) => setOpenaiAuthType(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="api-key">API Key (sk-...)</option>
+              <option value="oauth">OAuth / Subscription Token</option>
+            </select>
+            {openaiAuthType === 'oauth' && (
+              <p className="text-xs text-muted-foreground">
+                Use a Bearer token from OpenAI OAuth (e.g. ChatGPT subscription session token)
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="openai-key">
+              {openaiAuthType === 'oauth' ? 'OpenAI OAuth Token' : 'OpenAI API Key'}
+            </Label>
             <div className="flex gap-2">
               <Input
                 id="openai-key"
                 type={showOpenai ? 'text' : 'password'}
                 value={openaiKey}
                 onChange={(e) => setOpenaiKey(e.target.value)}
-                placeholder={config?.hasOpenaiKey ? 'Key saved (enter new to replace)' : 'sk-...'}
+                placeholder={config?.hasOpenaiKey ? 'Key saved (enter new to replace)' : openaiAuthType === 'oauth' ? 'Bearer token...' : 'sk-...'}
                 className="font-mono"
               />
               <Button variant="ghost" size="icon" onClick={() => setShowOpenai(!showOpenai)}>
@@ -141,6 +167,20 @@ export default function AiSettingsPage() {
               </Button>
             </div>
           </div>
+
+          {openaiAuthType === 'oauth' && (
+            <div className="space-y-2">
+              <Label htmlFor="openai-base-url">OpenAI Base URL (optional)</Label>
+              <Input
+                id="openai-base-url"
+                value={openaiBaseUrl}
+                onChange={(e) => setOpenaiBaseUrl(e.target.value)}
+                placeholder="https://api.openai.com/v1"
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">Custom API endpoint for OAuth proxy or Azure OpenAI</p>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="anthropic-key">Anthropic API Key</Label>

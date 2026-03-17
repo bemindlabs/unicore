@@ -24,8 +24,18 @@ export class OpenAiProvider implements ILlmProvider {
     defaultModel = 'gpt-4o',
     defaultEmbeddingModel = 'text-embedding-3-small',
     baseURL?: string,
+    authType: 'api-key' | 'oauth' = 'api-key',
   ) {
-    this.client = new OpenAI({ apiKey, baseURL });
+    if (authType === 'oauth') {
+      // OAuth: use the token as a Bearer token, no API key
+      this.client = new OpenAI({
+        apiKey: '',
+        baseURL: baseURL ?? 'https://api.openai.com/v1',
+        defaultHeaders: { Authorization: `Bearer ${apiKey}` },
+      });
+    } else {
+      this.client = new OpenAI({ apiKey, baseURL });
+    }
     this.defaultModel = defaultModel;
     this.defaultEmbeddingModel = defaultEmbeddingModel;
   }

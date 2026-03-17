@@ -131,13 +131,15 @@ export class SettingsController {
       anthropicKey: data.anthropicKey ? safeDecryptMask(data.anthropicKey) : '',
       defaultProvider: data.defaultProvider ?? 'openai',
       defaultModel: data.defaultModel ?? '',
+      openaiAuthType: data.openaiAuthType ?? 'api-key',
+      openaiBaseUrl: data.openaiBaseUrl ?? '',
       hasOpenaiKey: !!data.openaiKey,
       hasAnthropicKey: !!data.anthropicKey,
     };
   }
 
   @Put('ai-config')
-  async putAiConfig(@Body() body: { openaiKey?: string; anthropicKey?: string; defaultProvider?: string; defaultModel?: string }) {
+  async putAiConfig(@Body() body: { openaiKey?: string; anthropicKey?: string; defaultProvider?: string; defaultModel?: string; openaiAuthType?: string; openaiBaseUrl?: string }) {
     // Read existing config
     const existing = await this.prisma.settings.findUnique({ where: { id: 'ai-config' } });
     const current = (existing?.data ?? {}) as Record<string, any>;
@@ -145,6 +147,8 @@ export class SettingsController {
     const data: Record<string, any> = {
       defaultProvider: body.defaultProvider ?? current.defaultProvider ?? 'openai',
       defaultModel: body.defaultModel ?? current.defaultModel ?? '',
+      openaiAuthType: body.openaiAuthType ?? current.openaiAuthType ?? 'api-key',
+      openaiBaseUrl: body.openaiBaseUrl ?? current.openaiBaseUrl ?? '',
     };
 
     // Only update keys if new values provided (not masked placeholders)
@@ -172,6 +176,8 @@ export class SettingsController {
       anthropicKey: data.anthropicKey ? safeDecryptMask(data.anthropicKey) : '',
       defaultProvider: data.defaultProvider,
       defaultModel: data.defaultModel,
+      openaiAuthType: data.openaiAuthType ?? 'api-key',
+      openaiBaseUrl: data.openaiBaseUrl ?? '',
       hasOpenaiKey: !!data.openaiKey,
       hasAnthropicKey: !!data.anthropicKey,
     };
@@ -191,6 +197,8 @@ export class SettingsController {
       anthropicKey: data.anthropicKey ? safeDecrypt(data.anthropicKey) : '',
       defaultProvider: data.defaultProvider ?? 'openai',
       defaultModel: data.defaultModel ?? '',
+      openaiAuthType: data.openaiAuthType ?? 'api-key',
+      openaiBaseUrl: data.openaiBaseUrl ?? '',
     };
   }
 
