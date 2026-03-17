@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { Send, MessageCircle, X, Minimize2, ChevronDown, ArrowLeft, Search, Bell, BellOff } from 'lucide-react';
+import { Send, MessageCircle, ChevronDown, ArrowLeft, Search, Bell, BellOff } from 'lucide-react';
 import { useChatWebSocket, type ChatMessage } from '@/hooks/use-chat-ws';
 import { getAgents } from '@/lib/backoffice/store';
 import type { BackofficeAgent } from '@/lib/backoffice/types';
@@ -48,8 +48,8 @@ interface MessageWithReactions extends ChatMessage {
 export function ChatBox() {
   const [messages, setMessages] = useState<MessageWithReactions[]>([]);
   const [input, setInput] = useState('');
-  const [open, setOpen] = useState(false);
-  const [unread, setUnread] = useState(0);
+  const open = true; // always open when rendered (parent controls visibility)
+  const [_unread, setUnread] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Agent selection state
@@ -259,25 +259,8 @@ export function ChatBox() {
     });
   }
 
-  if (!open) {
-    return (
-      <button
-        onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-cyan-500/20 border border-cyan-500/30 px-4 py-3 text-cyan-300 shadow-lg hover:bg-cyan-500/30 transition-all"
-      >
-        <MessageCircle className="h-5 w-5" />
-        <span className="text-sm font-medium font-mono">Chat</span>
-        {unread > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-            {unread}
-          </span>
-        )}
-      </button>
-    );
-  }
-
   return (
-    <div className="fixed inset-0 sm:inset-auto sm:bottom-6 sm:right-6 z-50 flex flex-col w-full h-full sm:w-80 sm:h-[28rem] sm:rounded-lg border border-cyan-900/30 bg-[#0a0e1a] shadow-xl overflow-hidden">
+    <div className="flex flex-col w-full h-full border-l border-cyan-900/30 bg-[#0a0e1a] shadow-xl overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-cyan-900/30 bg-[#0d1225] text-cyan-300">
         <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -357,12 +340,6 @@ export function ChatBox() {
             title={soundEnabled ? 'Mute notifications' : 'Unmute notifications'}
           >
             {soundEnabled ? <Bell className="h-3.5 w-3.5" /> : <BellOff className="h-3.5 w-3.5" />}
-          </button>
-          <button onClick={() => setOpen(false)} className="p-1 hover:bg-cyan-500/10 rounded" aria-label="Minimize">
-            <Minimize2 className="h-3.5 w-3.5" />
-          </button>
-          <button onClick={() => setOpen(false)} className="p-1 hover:bg-cyan-500/10 rounded" aria-label="Close">
-            <X className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>

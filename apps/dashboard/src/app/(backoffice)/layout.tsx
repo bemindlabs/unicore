@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
 import { RetroDeskThemeProvider } from '@/components/backoffice/retrodesk/RetroDeskThemeProvider';
-import { ChatBox } from '@/components/backoffice/chat/ChatBox';
 import '@unicore/ui/globals.css';
 import '@/styles/retrodesk-theme.css';
 
@@ -38,7 +37,6 @@ export default function BackofficeLayout({ children }: { children: ReactNode }) 
     <RetroDeskThemeProvider>
       <div className={`min-h-screen ${isRetroDesk ? 'retrodesk-body' : 'bg-[#060a14] text-white'}`} style={isRetroDesk ? { background: 'var(--retrodesk-bg, #faf8f5)', color: 'var(--retrodesk-text, #2d2d2d)' } : undefined}>
         {children}
-        <ChatBox />
       </div>
     </RetroDeskThemeProvider>
   );

@@ -12,6 +12,11 @@ import { CommandCenter } from "./CommandCenter";
 import { AgentSettings } from "./AgentSettings";
 import { RetroDeskOnly, DefaultOnly } from "./retrodesk/RetroDeskThemeProvider";
 
+const ChatBox = dynamic(
+  () => import("./chat/ChatBox").then((m) => m.ChatBox),
+  { ssr: false }
+);
+
 const RetroDeskErrorState = dynamic(
   () => import("./retrodesk/RetroDeskErrorState").then((m) => m.RetroDeskErrorState),
   { ssr: false }
@@ -56,7 +61,9 @@ export function BackofficeApp({
     "all" | "working" | "idle"
   >("all");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const toggleMobileSidebar = useCallback(() => setMobileSidebarOpen((v) => !v), []);
+  const toggleChat = useCallback(() => setChatOpen((v) => !v), []);
   const filteredAgents =
     sidebarFilter === "all"
       ? agents
@@ -117,6 +124,8 @@ export function BackofficeApp({
           activeTab={activeTab}
           onTabChange={setActiveTab}
           onToggleMobileSidebar={toggleMobileSidebar}
+          chatOpen={chatOpen}
+          onToggleChat={toggleChat}
         />
 
         {activeTab === "overview" && (
@@ -203,6 +212,16 @@ export function BackofficeApp({
           open={!!terminalAgent}
           onClose={() => setTerminalAgent(null)}
         />
+      )}
+
+      {/* Chat slide-in panel */}
+      {chatOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          <div className="absolute inset-0 bg-black/30" onClick={toggleChat} />
+          <div className="relative w-full max-w-md h-full animate-in slide-in-from-right duration-200">
+            <ChatBox />
+          </div>
+        </div>
       )}
     </div>
   );

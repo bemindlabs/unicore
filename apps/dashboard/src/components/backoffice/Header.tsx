@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { LayoutGrid, Terminal, Settings, Menu } from 'lucide-react';
+import { LayoutGrid, Terminal, Settings, Menu, MessageCircle } from 'lucide-react';
 import { useRetroDeskTheme } from './retrodesk/RetroDeskThemeProvider';
 import { findCharacterByRole } from '@/lib/backoffice/retrodesk-characters';
 
@@ -25,6 +25,8 @@ interface Props {
   activeTab: BackofficeTab;
   onTabChange: (tab: BackofficeTab) => void;
   onToggleMobileSidebar?: () => void;
+  chatOpen?: boolean;
+  onToggleChat?: () => void;
 }
 
 const TAB_CONFIG: { key: BackofficeTab; label: string; icon: typeof LayoutGrid }[] = [
@@ -33,7 +35,7 @@ const TAB_CONFIG: { key: BackofficeTab; label: string; icon: typeof LayoutGrid }
   { key: 'settings', label: 'Settings', icon: Settings },
 ];
 
-export function Header({ agentCount, workingCount, onAddAgent, activeTab, onTabChange, onToggleMobileSidebar }: Props) {
+export function Header({ agentCount, workingCount, onAddAgent, activeTab, onTabChange, onToggleMobileSidebar, chatOpen, onToggleChat }: Props) {
   const [time, setTime] = useState('');
   const { isActive: isRetroDesk } = useRetroDeskTheme();
 
@@ -101,6 +103,20 @@ export function Header({ agentCount, workingCount, onAddAgent, activeTab, onTabC
 
         <div className="flex items-center gap-2 sm:gap-3">
           <ThemeSelector />
+          {onToggleChat && (
+            <button
+              onClick={onToggleChat}
+              className="retrodesk-mono text-xs px-2 py-1.5 border-2 transition-all relative"
+              style={{
+                borderColor: chatOpen ? 'var(--retrodesk-pink)' : 'var(--retrodesk-border)',
+                color: chatOpen ? 'var(--retrodesk-pink)' : 'var(--retrodesk-muted)',
+                background: chatOpen ? 'color-mix(in srgb, var(--retrodesk-pink) 10%, transparent)' : 'transparent',
+              }}
+              title="Team Chat"
+            >
+              <MessageCircle className="w-4 h-4" />
+            </button>
+          )}
           {activeTab === 'overview' && (
             <button
               onClick={onAddAgent}
@@ -171,6 +187,19 @@ export function Header({ agentCount, workingCount, onAddAgent, activeTab, onTabC
 
       <div className="flex items-center gap-2 sm:gap-3">
         <ThemeSelector />
+        {onToggleChat && (
+          <button
+            onClick={onToggleChat}
+            className={`p-1.5 border transition-all ${
+              chatOpen
+                ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-300'
+                : 'border-cyan-900/30 text-cyan-500/60 hover:text-cyan-400 hover:border-cyan-500/40'
+            }`}
+            title="Team Chat"
+          >
+            <MessageCircle className="w-4 h-4" />
+          </button>
+        )}
         {activeTab === 'overview' && (
           <button
             onClick={onAddAgent}
