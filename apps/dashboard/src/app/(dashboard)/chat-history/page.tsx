@@ -1,8 +1,20 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { MessageSquare, Trash2, Search, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';
-import { toast } from '@unicore/ui';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  MessageSquare,
+  Trash2,
+  Search,
+  ChevronDown,
+  ChevronRight,
+  ExternalLink,
+  Bot,
+  User,
+  Clock,
+  Filter,
+  MessagesSquare,
+} from 'lucide-react';
+import { toast, Badge, Button, Input, Skeleton } from '@unicore/ui';
 import { api } from '@/lib/api';
 import { getAgents } from '@/lib/backoffice/store';
 import type { BackofficeAgent } from '@/lib/backoffice/types';
@@ -37,10 +49,29 @@ interface ChatHistoryRecord {
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-function formatDate(iso: string): string {
+function formatRelative(iso: string): string {
   try {
-    const d = new Date(iso);
-    return d.toLocaleDateString(undefined, {
+    const diff = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diff / 60_000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    if (days < 7) return `${days}d ago`;
+    return new Date(iso).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  } catch {
+    return iso;
+  }
+}
+
+function formatAbsolute(iso: string): string {
+  try {
+    return new Date(iso).toLocaleDateString(undefined, {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -49,6 +80,17 @@ function formatDate(iso: string): string {
     });
   } catch {
     return iso;
+  }
+}
+
+function formatTime(iso: string): string {
+  try {
+    return new Date(iso).toLocaleTimeString(undefined, {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return '';
   }
 }
 
@@ -65,68 +107,310 @@ function agentColor(agentId: string, agents: BackofficeAgent[]): string {
   return agent?.color ?? AGENT_COLORS[agentId] ?? '#64748b';
 }
 
+function agentInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? '')
+    .join('');
+}
+
+const CHANNEL_LABELS: Record<string, string> = {
+  command: 'Commander',
+  telegram: 'Telegram',
+  line: 'LINE',
+  web: 'Web',
+  api: 'API',
+};
+
 /* ------------------------------------------------------------------ */
-/*  Component                                                          */
+/*  Sub-components                                                     */
+/* ------------------------------------------------------------------ */
+
+function SkeletonRow() {
+  return (
+    <div className="border rounded-lg bg-card/50 px-4 py-3 space-y-2">
+      <div className="flex items-center gap-3">
+        <Skeleton className="h-4 w-4 rounded-full" />
+        <Skeleton className="h-8 w-8 rounded-full" />
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-4 w-16" />
+        <Skeleton className="h-4 flex-1" />
+      </div>
+    </div>
+  );
+}
+
+interface MessageBubbleProps {
+  msg: ChatMessage;
+  agentColor: string;
+  agentName: string;
+}
+
+function MessageBubble({ msg, agentColor: color, agentName }: MessageBubbleProps) {
+  const isUser = msg.authorId === 'human-user' || msg.authorId === 'user';
+  return (
+    <div className={`flex gap-2.5 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+      {/* Avatar */}
+      <div
+        className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold text-white mt-0.5"
+        style={{ background: isUser ? '#64748b' : color }}
+      >
+        {isUser ? <User className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
+      </div>
+
+      {/* Bubble */}
+      <div className={`flex flex-col gap-0.5 max-w-[75%] ${isUser ? 'items-end' : 'items-start'}`}>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] font-medium text-muted-foreground">
+            {isUser ? (msg.author || 'You') : (msg.author || agentName)}
+          </span>
+          {msg.timestamp && (
+            <span className="text-[9px] text-muted-foreground/50">{formatTime(msg.timestamp)}</span>
+          )}
+        </div>
+        <div
+          className={`rounded-2xl px-3.5 py-2 text-xs leading-relaxed whitespace-pre-wrap break-words ${
+            isUser
+              ? 'bg-primary text-primary-foreground rounded-tr-sm'
+              : 'bg-muted text-foreground rounded-tl-sm'
+          }`}
+          style={!isUser ? { borderLeft: `3px solid ${color}` } : undefined}
+        >
+          {msg.text || <span className="italic text-muted-foreground/60">(empty)</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface ConversationRowProps {
+  record: ChatHistoryRecord;
+  expanded: boolean;
+  onToggle: () => void;
+  onDelete: (id: string) => void;
+  agents: BackofficeAgent[];
+  deleting: boolean;
+}
+
+function ConversationRow({ record, expanded, onToggle, onDelete, agents, deleting }: ConversationRowProps) {
+  const color = agentColor(record.agentId, agents);
+  const msgCount = Array.isArray(record.messages) ? record.messages.length : 0;
+  const preview =
+    record.summary ||
+    (Array.isArray(record.messages) && record.messages.length > 0
+      ? record.messages.find((m) => m.authorId === 'human-user' || m.authorId === 'user')?.text?.slice(0, 120) ??
+        record.messages[0].text?.slice(0, 120)
+      : null);
+  const channelLabel = CHANNEL_LABELS[record.channel] ?? record.channel;
+
+  return (
+    <div className={`border rounded-xl bg-card overflow-hidden transition-shadow ${expanded ? 'shadow-md' : 'hover:shadow-sm'}`}>
+      {/* Colored left accent */}
+      <div className="flex">
+        <div className="w-1 shrink-0 rounded-l-xl" style={{ background: color }} />
+
+        <div className="flex-1 min-w-0">
+          {/* Row header */}
+          <button
+            onClick={onToggle}
+            className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-muted/20 transition-colors"
+          >
+            {/* Chevron */}
+            {expanded ? (
+              <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+            )}
+
+            {/* Agent avatar */}
+            <div
+              className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
+              style={{ background: color }}
+            >
+              {agentInitials(record.agentName) || <Bot className="h-4 w-4" />}
+            </div>
+
+            {/* Agent name + channel */}
+            <div className="flex flex-col min-w-[90px] shrink-0">
+              <span className="text-sm font-semibold leading-tight">{record.agentName}</span>
+              <span className="text-[10px] text-muted-foreground leading-tight">{channelLabel}</span>
+            </div>
+
+            {/* Preview */}
+            <span className="flex-1 text-xs text-muted-foreground truncate hidden sm:block">
+              {preview ?? <em>No messages</em>}
+            </span>
+
+            {/* Meta */}
+            <div className="flex items-center gap-2 shrink-0 ml-auto">
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5">
+                {msgCount} msg{msgCount !== 1 ? 's' : ''}
+              </Badge>
+              <span
+                className="text-xs text-muted-foreground"
+                title={formatAbsolute(record.createdAt)}
+              >
+                <Clock className="inline h-3 w-3 mr-0.5 -mt-0.5" />
+                {formatRelative(record.createdAt)}
+              </span>
+            </div>
+          </button>
+
+          {/* Expanded panel */}
+          {expanded && (
+            <div className="border-t bg-muted/5">
+              {/* Toolbar */}
+              <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/10">
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  <span>
+                    <User className="inline h-3 w-3 mr-1 -mt-0.5" />
+                    {record.userName || 'Unknown user'}
+                  </span>
+                  <span>·</span>
+                  <span title={formatAbsolute(record.createdAt)}>{formatAbsolute(record.createdAt)}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <a
+                    href={`/backoffice?agent=${record.agentId}`}
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline px-2 py-1 rounded hover:bg-primary/10 transition-colors"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    Continue in Commander
+                  </a>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 gap-1"
+                    disabled={deleting}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(record.id);
+                    }}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                    Delete
+                  </Button>
+                </div>
+              </div>
+
+              {/* Messages */}
+              <div className="px-4 py-4">
+                {Array.isArray(record.messages) && record.messages.length > 0 ? (
+                  <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
+                    {record.messages.map((msg, idx) => (
+                      <MessageBubble
+                        key={msg.id ?? idx}
+                        msg={msg}
+                        agentColor={color}
+                        agentName={record.agentName}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground text-center py-6">
+                    No messages in this conversation.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Page                                                               */
 /* ------------------------------------------------------------------ */
 
 export default function ChatHistoryPage() {
   const [records, setRecords] = useState<ChatHistoryRecord[]>([]);
   const [agents, setAgents] = useState<BackofficeAgent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [searchText, setSearchText] = useState('');
   const [filterAgent, setFilterAgent] = useState('');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (search: string, agent: string) => {
     try {
       const params = new URLSearchParams();
-      if (filterAgent) params.set('agentId', filterAgent);
-      if (searchText) params.set('search', searchText);
+      if (agent) params.set('agentId', agent);
+      if (search) params.set('search', search);
       params.set('limit', '100');
 
       const data = await api.get<{ items: ChatHistoryRecord[] }>(
         `/api/v1/chat-history?${params.toString()}`,
       );
-      setRecords(data.items);
+      setRecords(data.items ?? []);
     } catch {
-      // API unavailable — show empty state
       setRecords([]);
     }
-  }, [filterAgent, searchText]);
+  }, []);
 
   useEffect(() => {
     Promise.all([
-      fetchData(),
+      fetchData('', ''),
       getAgents().then(({ agents: list }) => setAgents(list)),
     ]).finally(() => setLoading(false));
   }, [fetchData]);
 
-  // Re-fetch when filters change
+  // Debounced re-fetch on filter change
   useEffect(() => {
-    if (!loading) fetchData();
+    if (loading) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetchData(searchText, filterAgent);
+    }, 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterAgent, searchText]);
+  }, [searchText, filterAgent]);
 
   async function handleDelete(id: string) {
+    if (!window.confirm('Delete this conversation? This cannot be undone.')) return;
+    setDeletingIds((prev) => new Set(prev).add(id));
     try {
       await api.delete(`/api/v1/chat-history/${id}`);
       setRecords((prev) => prev.filter((r) => r.id !== id));
-      if (expandedId === id) setExpandedId(null);
+      setExpandedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+      toast({ title: 'Conversation deleted' });
     } catch (err) {
-      toast({ title: 'Failed to delete', description: err instanceof Error ? err.message : 'Unknown error', variant: 'destructive' });
+      toast({
+        title: 'Failed to delete',
+        description: err instanceof Error ? err.message : 'Unknown error',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeletingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   }
 
   function toggleExpand(id: string) {
-    setExpandedId((prev) => (prev === id ? null : id));
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   }
 
-  // Unique agent IDs from records for dropdown
+  // Unique agent options for filter dropdown
   const agentOptions = Array.from(
     new Map(records.map((r) => [r.agentId, r.agentName])).entries(),
   );
-
-  // Also include agents from the store that may not have records yet
   for (const a of agents) {
     if (!agentOptions.find(([id]) => id === a.id)) {
       agentOptions.push([a.id, a.name]);
@@ -136,173 +420,86 @@ export default function ChatHistoryPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
-          <MessageSquare className="h-6 w-6 text-primary" />
-          Chat History
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Browse and search past conversations with AI agents.
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
+            <MessagesSquare className="h-6 w-6 text-primary" />
+            Chat History
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Browse and search past conversations with AI agents.
+          </p>
+        </div>
+        {!loading && records.length > 0 && (
+          <Badge variant="outline" className="text-xs mt-1">
+            {records.length} conversation{records.length !== 1 ? 's' : ''}
+          </Badge>
+        )}
       </div>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <Input
             type="text"
             placeholder="Search conversations..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            className="w-full rounded-md border border-input bg-background pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className="pl-9"
           />
         </div>
-        <select
-          value={filterAgent}
-          onChange={(e) => setFilterAgent(e.target.value)}
-          className="rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        >
-          <option value="">All Agents</option>
-          {agentOptions.map(([id, name]) => (
-            <option key={id} value={id}>
-              {name}
-            </option>
-          ))}
-        </select>
+        <div className="relative">
+          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <select
+            value={filterAgent}
+            onChange={(e) => setFilterAgent(e.target.value)}
+            className="w-full sm:w-auto rounded-md border border-input bg-background pl-9 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring appearance-none cursor-pointer"
+          >
+            <option value="">All Agents</option>
+            {agentOptions.map(([id, name]) => (
+              <option key={id} value={id}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Content */}
       {loading ? (
-        <div className="flex items-center justify-center py-20 text-muted-foreground text-sm">
-          Loading...
+        <div className="space-y-2">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <SkeletonRow key={i} />
+          ))}
         </div>
       ) : records.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <MessageSquare className="h-12 w-12 text-muted-foreground/30 mb-4" />
-          <p className="text-muted-foreground text-sm">No conversations yet. Start chatting with agents in the Commander.</p>
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+            <MessageSquare className="h-8 w-8 text-muted-foreground/40" />
+          </div>
+          <p className="font-medium text-sm mb-1">
+            {searchText || filterAgent ? 'No conversations match your filters' : 'No conversations yet'}
+          </p>
+          <p className="text-muted-foreground text-xs max-w-xs">
+            {searchText || filterAgent
+              ? 'Try adjusting your search or filter.'
+              : 'Start chatting with agents in the Commander and your history will appear here.'}
+          </p>
         </div>
       ) : (
         <div className="space-y-2">
-          {records.map((record) => {
-            const isExpanded = expandedId === record.id;
-            const color = agentColor(record.agentId, agents);
-            const msgCount = Array.isArray(record.messages) ? record.messages.length : 0;
-            const preview =
-              record.summary ||
-              (Array.isArray(record.messages) && record.messages.length > 0
-                ? record.messages[0].text?.slice(0, 100)
-                : 'No messages');
-
-            return (
-              <div
-                key={record.id}
-                className="border rounded-lg bg-card/50 overflow-hidden"
-              >
-                {/* Row header */}
-                <button
-                  onClick={() => toggleExpand(record.id)}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/30 transition-colors"
-                >
-                  {isExpanded ? (
-                    <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                  )}
-                  <span
-                    className="w-3 h-3 rounded-full shrink-0"
-                    style={{ background: color }}
-                  />
-                  <span className="text-sm font-medium truncate min-w-[100px]">
-                    {record.agentName}
-                  </span>
-                  <span className="text-xs text-muted-foreground shrink-0">
-                    {formatDate(record.createdAt)}
-                  </span>
-                  <span className="text-xs text-muted-foreground/60 shrink-0">
-                    {msgCount} msg{msgCount !== 1 ? 's' : ''}
-                  </span>
-                  <span className="flex-1 text-xs text-muted-foreground truncate">
-                    {preview}
-                  </span>
-                </button>
-
-                {/* Expanded transcript */}
-                {isExpanded && (
-                  <div className="border-t px-4 py-3 space-y-3 bg-muted/10">
-                    {/* Actions */}
-                    <div className="flex gap-2 justify-end">
-                      <a
-                        href={`/backoffice?agent=${record.agentId}`}
-                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                        Continue in Commander
-                      </a>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(record.id);
-                        }}
-                        className="inline-flex items-center gap-1 text-xs text-destructive hover:underline"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                        Delete
-                      </button>
-                    </div>
-
-                    {/* Messages */}
-                    {Array.isArray(record.messages) && record.messages.length > 0 ? (
-                      <div className="space-y-2 max-h-96 overflow-y-auto">
-                        {record.messages.map((msg, idx) => {
-                          const isUser = msg.authorId === 'human-user';
-                          return (
-                            <div
-                              key={msg.id ?? idx}
-                              className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
-                            >
-                              <div className={`max-w-[75%] ${isUser ? 'text-right' : 'text-left'}`}>
-                                <div className="flex items-center gap-1.5 mb-0.5">
-                                  {!isUser && msg.authorColor && (
-                                    <span
-                                      className="w-2 h-2 rounded-full"
-                                      style={{ background: msg.authorColor }}
-                                    />
-                                  )}
-                                  <span className="text-[10px] text-muted-foreground">
-                                    {isUser ? 'You' : msg.author}
-                                  </span>
-                                  <span className="text-[9px] text-muted-foreground/50">
-                                    {msg.timestamp
-                                      ? new Date(msg.timestamp).toLocaleTimeString(undefined, {
-                                          hour: '2-digit',
-                                          minute: '2-digit',
-                                        })
-                                      : ''}
-                                  </span>
-                                </div>
-                                <div
-                                  className={`inline-block rounded-lg px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap ${
-                                    isUser
-                                      ? 'bg-primary/10 text-foreground'
-                                      : 'bg-muted text-foreground/80'
-                                  }`}
-                                >
-                                  {msg.text}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-muted-foreground">No messages in this conversation.</p>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          {records.map((record) => (
+            <ConversationRow
+              key={record.id}
+              record={record}
+              expanded={expandedIds.has(record.id)}
+              onToggle={() => toggleExpand(record.id)}
+              onDelete={handleDelete}
+              agents={agents}
+              deleting={deletingIds.has(record.id)}
+            />
+          ))}
         </div>
       )}
     </div>

@@ -138,5 +138,7 @@ model ChatHistory {
   @@index([agentId])
   @@index([userId])
   @@index([createdAt])
+  @@index([agentId, createdAt])
+  @@index([userId, createdAt])
   @@map("chat_histories")
 }

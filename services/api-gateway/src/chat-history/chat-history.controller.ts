@@ -8,71 +8,67 @@ import {
   Query,
   HttpCode,
   HttpStatus,
-  NotFoundException,
+  Req,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { Request } from 'express';
+import { ChatHistoryService } from './chat-history.service';
+import { AuditService } from '../audit/audit.service';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('api/v1/chat-history')
 export class ChatHistoryController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly chatHistoryService: ChatHistoryService,
+    private readonly audit: AuditService,
+  ) {}
 
   @Get()
   async list(
+    @CurrentUser() user: any,
     @Query('agentId') agentId?: string,
     @Query('userId') userId?: string,
     @Query('channel') channel?: string,
     @Query('search') search?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    const take = Math.min(parseInt(limit ?? '50', 10) || 50, 100);
-    const skip = ((parseInt(page ?? '1', 10) || 1) - 1) * take;
-
-    const where: any = {};
-    if (agentId) where.agentId = agentId;
-    if (userId) where.userId = userId;
-    if (channel) where.channel = channel;
-    if (search) {
-      where.OR = [
-        { agentName: { contains: search, mode: 'insensitive' } },
-        { summary: { contains: search, mode: 'insensitive' } },
-      ];
-    }
-
-    const [items, total] = await Promise.all([
-      this.prisma.chatHistory.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take,
-      }),
-      this.prisma.chatHistory.count({ where }),
-    ]);
-
-    return { items, total, page: Math.floor(skip / take) + 1, limit: take };
+    return this.chatHistoryService.list({
+      agentId,
+      userId,
+      channel,
+      search,
+      from,
+      to,
+      page: parseInt(page ?? '1', 10) || 1,
+      limit: parseInt(limit ?? '50', 10) || 50,
+    });
   }
 
   @Post()
-  async save(@Body() body: any) {
+  async save(@Body() body: any, @CurrentUser() user: any, @Req() req: Request) {
     const { agentId, agentName, userId, userName, messages, summary, channel } = body;
 
-    // Generate a summary from the first user message if not provided
-    const autoSummary =
-      summary ??
-      (Array.isArray(messages)
-        ? (messages.find((m: any) => m.authorId === 'human-user')?.text ?? '').slice(0, 120)
-        : '');
+    const record = await this.chatHistoryService.create({
+      agentId,
+      agentName,
+      userId: userId ?? user?.id ?? 'user-1',
+      userName: userName ?? user?.name ?? 'You',
+      messages,
+      summary,
+      channel,
+    });
 
-    const record = await this.prisma.chatHistory.create({
-      data: {
-        agentId,
-        agentName,
-        userId: userId ?? 'user-1',
-        userName: userName ?? 'You',
-        messages: messages ?? [],
-        summary: autoSummary || null,
-        channel: channel ?? 'command',
-      },
+    await this.audit.log({
+      userId: user?.id,
+      userEmail: user?.email,
+      action: 'create',
+      resource: 'chat_history',
+      resourceId: record.id,
+      detail: `Saved chat history with agent ${agentName ?? agentId}`,
+      ip: req.ip,
+      success: true,
     });
 
     return record;
@@ -80,16 +76,23 @@ export class ChatHistoryController {
 
   @Get(':id')
   async getById(@Param('id') id: string) {
-    const record = await this.prisma.chatHistory.findUnique({ where: { id } });
-    if (!record) throw new NotFoundException(`Chat history ${id} not found`);
-    return record;
+    return this.chatHistoryService.findOne(id);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('id') id: string) {
-    const record = await this.prisma.chatHistory.findUnique({ where: { id } });
-    if (!record) throw new NotFoundException(`Chat history ${id} not found`);
-    await this.prisma.chatHistory.delete({ where: { id } });
+  async delete(@Param('id') id: string, @CurrentUser() user: any, @Req() req: Request) {
+    const record = await this.chatHistoryService.remove(id);
+
+    await this.audit.log({
+      userId: user?.id,
+      userEmail: user?.email,
+      action: 'delete',
+      resource: 'chat_history',
+      resourceId: id,
+      detail: `Deleted chat history with agent ${record.agentName}`,
+      ip: req.ip,
+      success: true,
+    });
   }
 }

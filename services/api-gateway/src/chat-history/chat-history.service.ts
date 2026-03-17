@@ -1,0 +1,109 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+
+@Injectable()
+export class ChatHistoryService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async list(options: {
+    agentId?: string;
+    userId?: string;
+    channel?: string;
+    search?: string;
+    from?: string;
+    to?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    const take = Math.min(options.limit ?? 50, 100);
+    const skip = ((options.page ?? 1) - 1) * take;
+
+    const where: any = {};
+    if (options.agentId) where.agentId = options.agentId;
+    if (options.userId) where.userId = options.userId;
+    if (options.channel) where.channel = options.channel;
+    if (options.from || options.to) {
+      where.createdAt = {};
+      if (options.from) where.createdAt.gte = new Date(options.from);
+      if (options.to) where.createdAt.lte = new Date(options.to);
+    }
+    if (options.search) {
+      where.OR = [
+        { agentName: { contains: options.search, mode: 'insensitive' } },
+        { summary: { contains: options.search, mode: 'insensitive' } },
+        { userName: { contains: options.search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.chatHistory.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take,
+        // Exclude messages from list for smaller payloads
+        select: {
+          id: true,
+          agentId: true,
+          agentName: true,
+          userId: true,
+          userName: true,
+          summary: true,
+          channel: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      }),
+      this.prisma.chatHistory.count({ where }),
+    ]);
+
+    return {
+      items,
+      total,
+      page: options.page ?? 1,
+      limit: take,
+      totalPages: Math.ceil(total / take),
+    };
+  }
+
+  async create(data: {
+    agentId: string;
+    agentName: string;
+    userId: string;
+    userName: string;
+    messages?: any[];
+    summary?: string;
+    channel?: string;
+  }) {
+    const autoSummary =
+      data.summary ??
+      (Array.isArray(data.messages)
+        ? (data.messages.find((m: any) => m.authorId === 'human-user')?.text ?? '').slice(0, 120)
+        : '');
+
+    return this.prisma.chatHistory.create({
+      data: {
+        agentId: data.agentId,
+        agentName: data.agentName,
+        userId: data.userId,
+        userName: data.userName,
+        messages: data.messages ?? [],
+        summary: autoSummary || null,
+        channel: data.channel ?? 'command',
+      },
+    });
+  }
+
+  async findOne(id: string) {
+    const record = await this.prisma.chatHistory.findUnique({ where: { id } });
+    if (!record) throw new NotFoundException(`Chat history ${id} not found`);
+    return record;
+  }
+
+  async remove(id: string) {
+    const record = await this.prisma.chatHistory.findUnique({ where: { id } });
+    if (!record) throw new NotFoundException(`Chat history ${id} not found`);
+    await this.prisma.chatHistory.delete({ where: { id } });
+    return record;
+  }
+}
