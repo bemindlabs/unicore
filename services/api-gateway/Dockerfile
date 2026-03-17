@@ -1,4 +1,8 @@
-FROM node:20-alpine AS base
+# syntax=docker/dockerfile:1
+ARG BUILDPLATFORM=linux/amd64
+ARG TARGETPLATFORM=linux/amd64
+
+FROM --platform=$BUILDPLATFORM node:20-alpine AS base
 RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
 WORKDIR /app
 
@@ -18,7 +22,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/services/api-gateway/node_modules ./services/api-gateway/node_modules
 RUN cd services/api-gateway && npx prisma generate --schema=src/prisma/schema.prisma 2>/dev/null; pnpm run build
 
-FROM node:20-alpine AS runner
+FROM --platform=$TARGETPLATFORM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build /app/node_modules ./node_modules

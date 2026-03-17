@@ -1,4 +1,8 @@
-FROM node:20-alpine AS base
+# syntax=docker/dockerfile:1
+ARG BUILDPLATFORM=linux/amd64
+ARG TARGETPLATFORM=linux/amd64
+
+FROM --platform=$BUILDPLATFORM node:20-alpine AS base
 RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
 WORKDIR /app
 
@@ -12,7 +16,9 @@ RUN pnpm install --frozen-lockfile --filter @unicore/dashboard...
 
 FROM base AS build
 ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_BOOTSTRAP_SECRET
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_BOOTSTRAP_SECRET=$NEXT_PUBLIC_BOOTSTRAP_SECRET
 # Copy source first
 COPY packages/config ./packages/config
 COPY packages/shared-types ./packages/shared-types
@@ -31,7 +37,7 @@ COPY packages/ui ./packages/ui
 RUN cd packages/shared-types && pnpm run build
 RUN cd apps/dashboard && pnpm run build
 
-FROM node:20-alpine AS runner
+FROM --platform=$TARGETPLATFORM node:20-alpine AS runner
 RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
 WORKDIR /app
 ENV NODE_ENV=production
