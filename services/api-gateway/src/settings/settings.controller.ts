@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Put, Param, Body, Headers, UseGuards } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { LicenseGuard } from '../license/guards/license.guard';
 import { ProFeatureRequired } from '../license/decorators/pro-feature.decorator';
@@ -177,9 +177,13 @@ export class SettingsController {
     };
   }
 
-  // Internal endpoint for services to fetch decrypted keys (not exposed via nginx)
+  // Internal endpoint for services to fetch decrypted keys (not exposed externally)
+  @Public()
   @Get('ai-config/keys')
-  async getAiConfigKeys() {
+  async getAiConfigKeys(@Headers('x-internal-service') internalService: string) {
+    if (!internalService) {
+      return { openaiKey: '', anthropicKey: '', defaultProvider: 'openai', defaultModel: '' };
+    }
     const settings = await this.prisma.settings.findUnique({ where: { id: 'ai-config' } });
     const data = (settings?.data ?? {}) as Record<string, any>;
     return {

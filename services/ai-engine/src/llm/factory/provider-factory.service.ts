@@ -50,40 +50,75 @@ export class ProviderFactoryService implements OnModuleInit {
       this.config.get<string>('LLM_FAILOVER_ENABLED', 'true') === 'true';
   }
 
-  onModuleInit(): void {
-    this.initProviders();
+  async onModuleInit(): Promise<void> {
+    await this.initProviders();
     this.logger.log(
       `Provider factory initialised. Primary: ${this.primaryProviderId}. ` +
         `Failover: [${this.failoverProviderIds.join(', ')}]. Failover enabled: ${this.failoverEnabled}`,
     );
   }
 
-  private initProviders(): void {
-    const openAiKey = this.config.get<string>('OPENAI_API_KEY');
+  /**
+   * Reload providers — called on startup and when keys change via settings UI.
+   */
+  async reloadProviders(): Promise<string[]> {
+    this.registry.clear();
+    await this.initProviders();
+    const registered = [...this.registry.keys()];
+    this.logger.log(`Providers reloaded: [${registered.join(', ')}]`);
+    return registered;
+  }
+
+  private async initProviders(): Promise<void> {
+    // 1. Try loading keys from API Gateway settings (saved via dashboard)
+    let dbKeys: { openaiKey?: string; anthropicKey?: string; defaultProvider?: string; defaultModel?: string } = {};
+    const gatewayUrl = this.config.get<string>('API_GATEWAY_URL', 'http://unicore-api-gateway:4000');
+    try {
+      const res = await fetch(`${gatewayUrl}/api/v1/settings/ai-config/keys`, {
+        headers: { 'X-Internal-Service': 'ai-engine' },
+        signal: AbortSignal.timeout(3000),
+      });
+      if (res.ok) {
+        dbKeys = (await res.json()) as typeof dbKeys;
+        this.logger.log('Loaded API keys from settings database');
+      }
+    } catch {
+      this.logger.debug('Could not fetch keys from API Gateway — using env vars');
+    }
+
+    // 2. Env vars take precedence, DB keys as fallback
+    const openAiKey = this.config.get<string>('OPENAI_API_KEY') || dbKeys.openaiKey;
+    const defaultModel = dbKeys.defaultModel || this.config.get<string>('OPENAI_DEFAULT_MODEL', 'gpt-4o');
+
     if (openAiKey) {
       this.registry.set(
         'openai',
         new OpenAiProvider(
           openAiKey,
-          this.config.get<string>('OPENAI_DEFAULT_MODEL', 'gpt-4o'),
+          defaultModel,
           'text-embedding-3-small',
           this.config.get<string>('OPENAI_BASE_URL'),
         ),
       );
     }
 
-    const anthropicKey = this.config.get<string>('ANTHROPIC_API_KEY');
+    const anthropicKey = this.config.get<string>('ANTHROPIC_API_KEY') || dbKeys.anthropicKey;
     if (anthropicKey) {
       this.registry.set(
         'anthropic',
         new AnthropicProvider(
           anthropicKey,
-          this.config.get<string>(
+          dbKeys.defaultModel || this.config.get<string>(
             'ANTHROPIC_DEFAULT_MODEL',
-            'claude-3-5-sonnet-20241022',
+            'claude-sonnet-4-20250514',
           ),
         ),
       );
+    }
+
+    // Update primary provider if set in DB
+    if (dbKeys.defaultProvider && !this.config.get<string>('LLM_PRIMARY_PROVIDER')) {
+      this.primaryProviderId = dbKeys.defaultProvider;
     }
 
     // Ollama is always registered — it's local and requires no key

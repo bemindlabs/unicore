@@ -115,4 +115,11 @@ export class LlmController {
   async health() {
     return { providers: await this.llmService.healthCheck() };
   }
+
+  @Post('reload')
+  @HttpCode(HttpStatus.OK)
+  async reload() {
+    const providers = await this.llmService.reloadProviders();
+    return { reloaded: true, providers };
+  }
 }

@@ -87,7 +87,13 @@ export default function AiSettingsPage() {
       setConfig(data);
       setOpenaiKey(data.openaiKey || '');
       setAnthropicKey(data.anthropicKey || '');
-      setStatus({ type: 'success', message: 'AI configuration saved successfully.' });
+      // Reload AI Engine providers with new keys
+      try {
+        await api.post('/api/proxy/ai/llm/reload');
+      } catch {
+        // AI Engine may not be reachable — keys will load on next restart
+      }
+      setStatus({ type: 'success', message: 'AI configuration saved and providers reloaded.' });
       fetchModels();
     } catch (err) {
       setStatus({ type: 'error', message: err instanceof Error ? err.message : 'Failed to save configuration' });

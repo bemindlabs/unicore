@@ -268,7 +268,7 @@ export function ThemeSelector() {
 
   // Panel styling
   const panelBase =
-    'absolute right-0 top-full mt-1 z-50 min-w-[200px] border overflow-hidden shadow-lg';
+    'fixed sm:absolute right-2 sm:right-0 top-auto sm:top-full mt-1 z-50 min-w-[200px] max-w-[calc(100vw-1rem)] border overflow-hidden shadow-lg';
   const panelDefault =
     'border-cyan-900/40 bg-[#0a0e1a]/95 backdrop-blur-md';
 

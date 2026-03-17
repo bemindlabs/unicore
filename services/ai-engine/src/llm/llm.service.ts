@@ -118,4 +118,8 @@ export class LlmService {
   async healthCheck(): Promise<ProviderHealthStatus[]> {
     return this.factory.checkAllHealth();
   }
+
+  async reloadProviders(): Promise<string[]> {
+    return this.factory.reloadProviders();
+  }
 }
