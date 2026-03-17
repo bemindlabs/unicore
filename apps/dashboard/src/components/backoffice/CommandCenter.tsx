@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Copy, Check, Trash2 } from 'lucide-react';
+import { Send, Copy, Check, Trash2, BookmarkPlus } from 'lucide-react';
 import { useChatWebSocket, type ChatMessage } from '@/hooks/use-chat-ws';
 import { getAgents } from '@/lib/backoffice/store';
 import { api } from '@/lib/api';
@@ -194,14 +194,25 @@ function clearStoredMessages(agentId: string) {
 /*  Save conversation to backend                                       */
 /* ------------------------------------------------------------------ */
 
-function saveChatHistory(agent: BackofficeAgent, msgs: ChatMessage[]) {
-  if (msgs.length === 0) return;
-  api.post('/api/v1/chat-history', {
+function generateSummary(msgs: ChatMessage[]): string {
+  const firstUserMsg = msgs.find((m) => m.authorId === 'human-user');
+  if (!firstUserMsg) return '';
+  const agentResponses = msgs.filter((m) => m.authorId !== 'human-user').length;
+  const question = firstUserMsg.text.slice(0, 120);
+  return agentResponses > 0
+    ? `${question} (${agentResponses} response${agentResponses > 1 ? 's' : ''})`
+    : question;
+}
+
+function saveChatHistory(agent: BackofficeAgent, msgs: ChatMessage[], summary?: string) {
+  if (msgs.length === 0) return Promise.resolve();
+  return api.post('/api/v1/chat-history', {
     agentId: agent.id,
     agentName: agent.name,
     userId: 'user-1',
     userName: 'You',
     messages: msgs,
+    summary: summary ?? generateSummary(msgs),
     channel: 'command',
   }).catch(() => {
     // API unavailable — silently ignore
@@ -235,6 +246,17 @@ export function CommandCenter() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isWaiting, setIsWaiting] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  /* --- save state --- */
+  const [isSaving, setIsSaving] = useState(false);
+  const [savedFeedback, setSavedFeedback] = useState(false);
+  // Tracks "agentId:lastMsgId" of the last persisted snapshot to prevent duplicates
+  const lastSavedKeyRef = useRef<string>('');
+  // Stable refs for use in cleanup (unmount auto-save)
+  const messagesRef = useRef<ChatMessage[]>([]);
+  const selectedAgentRef = useRef<BackofficeAgent | null>(null);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
+  useEffect(() => { selectedAgentRef.current = selectedAgent; }, [selectedAgent]);
 
   const channel = selectedAgent ? commandChannel(selectedAgent.id) : 'command-router';
 
@@ -271,6 +293,21 @@ export function CommandCenter() {
     }
   }, [selectedAgent]);
 
+  // Auto-save on component unmount (e.g. user navigates away)
+  useEffect(() => {
+    return () => {
+      const agent = selectedAgentRef.current;
+      const msgs = messagesRef.current;
+      if (!agent || msgs.length === 0) return;
+      const lastMsgId = msgs[msgs.length - 1]?.id ?? '';
+      const key = `${agent.id}:${lastMsgId}`;
+      if (key && key !== lastSavedKeyRef.current) {
+        saveChatHistory(agent, msgs);
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Scroll to bottom on new messages or when waiting
   useEffect(() => {
     if (scrollRef.current) {
@@ -291,13 +328,38 @@ export function CommandCenter() {
     textareaRef.current?.focus();
   }
 
+  async function handleManualSave() {
+    if (!selectedAgent || messages.length === 0) return;
+    const lastMsgId = messages[messages.length - 1]?.id ?? '';
+    const key = `${selectedAgent.id}:${lastMsgId}`;
+    if (key && key === lastSavedKeyRef.current) {
+      // Already saved — just show feedback
+      setSavedFeedback(true);
+      setTimeout(() => setSavedFeedback(false), 2000);
+      return;
+    }
+    setIsSaving(true);
+    await saveChatHistory(selectedAgent, messages);
+    lastSavedKeyRef.current = key;
+    setIsSaving(false);
+    setSavedFeedback(true);
+    setTimeout(() => setSavedFeedback(false), 2000);
+  }
+
   function handleClearMessages() {
     // Save conversation to chat history before clearing
     if (selectedAgent && messages.length > 0) {
-      saveChatHistory(selectedAgent, messages);
+      const lastMsgId = messages[messages.length - 1]?.id ?? '';
+      const key = `${selectedAgent.id}:${lastMsgId}`;
+      if (!key || key !== lastSavedKeyRef.current) {
+        saveChatHistory(selectedAgent, messages);
+        lastSavedKeyRef.current = key;
+      }
     }
     setMessages([]);
     setIsWaiting(false);
+    setSavedFeedback(false);
+    lastSavedKeyRef.current = '';
     if (selectedAgent) clearStoredMessages(selectedAgent.id);
   }
 
@@ -311,8 +373,14 @@ export function CommandCenter() {
   function handleAgentClick(agent: BackofficeAgent) {
     // Auto-save current conversation when switching agents
     if (selectedAgent && selectedAgent.id !== agent.id && messages.length > 0) {
-      saveChatHistory(selectedAgent, messages);
+      const lastMsgId = messages[messages.length - 1]?.id ?? '';
+      const key = `${selectedAgent.id}:${lastMsgId}`;
+      if (!key || key !== lastSavedKeyRef.current) {
+        saveChatHistory(selectedAgent, messages);
+      }
     }
+    lastSavedKeyRef.current = '';
+    setSavedFeedback(false);
     setSelectedAgent(agent);
   }
 
@@ -413,14 +481,29 @@ export function CommandCenter() {
               </div>
               <div className="ml-auto flex items-center gap-2">
                 {messages.length > 0 && (
-                  <button
-                    onClick={handleClearMessages}
-                    className="font-mono text-[9px] text-cyan-600/40 hover:text-red-400 transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-red-500/10"
-                    title="Clear conversation"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                    Clear
-                  </button>
+                  <>
+                    <button
+                      onClick={handleManualSave}
+                      disabled={isSaving}
+                      className="font-mono text-[9px] text-cyan-600/40 hover:text-cyan-400 transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-cyan-500/10 disabled:opacity-40"
+                      title="Save conversation to history"
+                    >
+                      {savedFeedback ? (
+                        <Check className="w-3 h-3 text-green-400" />
+                      ) : (
+                        <BookmarkPlus className="w-3 h-3" />
+                      )}
+                      {savedFeedback ? 'Saved' : isSaving ? 'Saving…' : 'Save'}
+                    </button>
+                    <button
+                      onClick={handleClearMessages}
+                      className="font-mono text-[9px] text-cyan-600/40 hover:text-red-400 transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-red-500/10"
+                      title="Clear conversation (auto-saves first)"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      Clear
+                    </button>
+                  </>
                 )}
                 <span
                   className={`w-2 h-2 rounded-full ${
