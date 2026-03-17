@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Logger, OnModuleInit } from '@nestjs/common';
+import { Controller, Get, Post, Body, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { AgentRegistryService } from '../registry/agent-registry.service';
 import { MessageRouterService } from '../routing/message-router.service';
 import { HeartbeatService } from './heartbeat.service';
@@ -17,7 +17,7 @@ const DEFAULT_AGENTS = [
 ];
 
 @Controller('health')
-export class HealthController implements OnModuleInit {
+export class HealthController implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(HealthController.name);
 
   constructor(
@@ -25,6 +25,8 @@ export class HealthController implements OnModuleInit {
     private readonly router: MessageRouterService,
     private readonly heartbeat: HeartbeatService,
   ) {}
+
+  private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
 
   onModuleInit() {
     for (const d of DEFAULT_AGENTS) {
@@ -42,6 +44,23 @@ export class HealthController implements OnModuleInit {
       }
     }
     this.logger.log(`Registered ${DEFAULT_AGENTS.length} default agents on startup`);
+
+    // Keep built-in agents alive by sending periodic heartbeats
+    this.heartbeatInterval = setInterval(() => {
+      for (const d of DEFAULT_AGENTS) {
+        try {
+          this.registry.recordHeartbeat(d.id);
+        } catch {
+          /* agent may have been removed */
+        }
+      }
+    }, 30_000);
+  }
+
+  onModuleDestroy() {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+    }
   }
 
   @Get()
