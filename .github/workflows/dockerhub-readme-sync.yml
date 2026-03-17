@@ -1,0 +1,59 @@
+name: Sync Docker Hub READMEs
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'dockerhub/README/**'
+      - '.github/workflows/dockerhub-readme-sync.yml'
+  workflow_dispatch:
+
+jobs:
+  sync-readmes:
+    name: Sync ${{ matrix.service }} README to Docker Hub
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: dashboard
+            repository: bemindlabs/unicore-dashboard
+            readme: dockerhub/README/dashboard.md
+          - service: api-gateway
+            repository: bemindlabs/unicore-api-gateway
+            readme: dockerhub/README/api-gateway.md
+          - service: erp
+            repository: bemindlabs/unicore-erp
+            readme: dockerhub/README/erp.md
+          - service: ai-engine
+            repository: bemindlabs/unicore-ai-engine
+            readme: dockerhub/README/ai-engine.md
+          - service: rag
+            repository: bemindlabs/unicore-rag
+            readme: dockerhub/README/rag.md
+          - service: bootstrap
+            repository: bemindlabs/unicore-bootstrap
+            readme: dockerhub/README/bootstrap.md
+          - service: openclaw-gateway
+            repository: bemindlabs/unicore-openclaw-gateway
+            readme: dockerhub/README/openclaw-gateway.md
+          - service: workflow
+            repository: bemindlabs/unicore-workflow
+            readme: dockerhub/README/workflow.md
+          - service: license-api
+            repository: bemindlabs/unicore-license-api
+            readme: dockerhub/README/license-api.md
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Sync ${{ matrix.service }} README to Docker Hub
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ matrix.repository }}
+          readme-filepath: ${{ matrix.readme }}
+          short-description: "UniCore ${{ matrix.service }} — AI-powered business platform service"
