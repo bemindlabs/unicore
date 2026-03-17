@@ -5,6 +5,22 @@ import { ProFeatureRequired } from '../license/decorators/pro-feature.decorator'
 import { Public } from '../auth/decorators/public.decorator';
 import { encrypt, decrypt, maskKey } from './crypto.util';
 
+function safeDecryptMask(encrypted: string): string {
+  try {
+    return maskKey(decrypt(encrypted));
+  } catch {
+    return '••••(corrupted)';
+  }
+}
+
+function safeDecrypt(encrypted: string): string {
+  try {
+    return decrypt(encrypted);
+  } catch {
+    return '';
+  }
+}
+
 @Controller('api/v1/settings')
 export class SettingsController {
   constructor(private readonly prisma: PrismaService) {}
@@ -111,8 +127,8 @@ export class SettingsController {
     const data = (settings?.data ?? {}) as Record<string, any>;
     // Return masked keys, never plaintext
     return {
-      openaiKey: data.openaiKey ? maskKey(decrypt(data.openaiKey)) : '',
-      anthropicKey: data.anthropicKey ? maskKey(decrypt(data.anthropicKey)) : '',
+      openaiKey: data.openaiKey ? safeDecryptMask(data.openaiKey) : '',
+      anthropicKey: data.anthropicKey ? safeDecryptMask(data.anthropicKey) : '',
       defaultProvider: data.defaultProvider ?? 'openai',
       defaultModel: data.defaultModel ?? '',
       hasOpenaiKey: !!data.openaiKey,
@@ -152,8 +168,8 @@ export class SettingsController {
 
     // Return masked version
     return {
-      openaiKey: data.openaiKey ? maskKey(decrypt(data.openaiKey)) : '',
-      anthropicKey: data.anthropicKey ? maskKey(decrypt(data.anthropicKey)) : '',
+      openaiKey: data.openaiKey ? safeDecryptMask(data.openaiKey) : '',
+      anthropicKey: data.anthropicKey ? safeDecryptMask(data.anthropicKey) : '',
       defaultProvider: data.defaultProvider,
       defaultModel: data.defaultModel,
       hasOpenaiKey: !!data.openaiKey,
@@ -167,8 +183,8 @@ export class SettingsController {
     const settings = await this.prisma.settings.findUnique({ where: { id: 'ai-config' } });
     const data = (settings?.data ?? {}) as Record<string, any>;
     return {
-      openaiKey: data.openaiKey ? decrypt(data.openaiKey) : '',
-      anthropicKey: data.anthropicKey ? decrypt(data.anthropicKey) : '',
+      openaiKey: data.openaiKey ? safeDecrypt(data.openaiKey) : '',
+      anthropicKey: data.anthropicKey ? safeDecrypt(data.anthropicKey) : '',
       defaultProvider: data.defaultProvider ?? 'openai',
       defaultModel: data.defaultModel ?? '',
     };
