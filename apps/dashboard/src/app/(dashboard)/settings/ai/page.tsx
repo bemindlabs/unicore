@@ -1,13 +1,12 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Bot, Eye, EyeOff, Save, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Bot, Eye, EyeOff, Save, CheckCircle, AlertCircle, Loader2, RefreshCw } from 'lucide-react';
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
   Button, Input, Label,
 } from '@unicore/ui';
-
-const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+import { api } from '@/lib/api';
 
 interface AiConfig {
   openaiKey: string;
@@ -18,6 +17,12 @@ interface AiConfig {
   hasAnthropicKey: boolean;
 }
 
+const KNOWN_MODELS: Record<string, string[]> = {
+  openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo', 'o3-mini'],
+  anthropic: ['claude-sonnet-4-20250514', 'claude-haiku-4-5-20251001', 'claude-opus-4-20250514'],
+  ollama: ['llama3.2', 'llama3.1', 'mistral', 'codellama', 'phi3'],
+};
+
 export default function AiSettingsPage() {
   const [config, setConfig] = useState<AiConfig | null>(null);
   const [openaiKey, setOpenaiKey] = useState('');
@@ -27,25 +32,48 @@ export default function AiSettingsPage() {
   const [showOpenai, setShowOpenai] = useState(false);
   const [showAnthropic, setShowAnthropic] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loadingModels, setLoadingModels] = useState(false);
+  const [liveModels, setLiveModels] = useState<string[]>([]);
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const fetchConfig = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/api/v1/settings/ai-config`, { credentials: 'include' });
-      if (res.ok) {
-        const data = await res.json();
-        setConfig(data);
-        setOpenaiKey(data.openaiKey || '');
-        setAnthropicKey(data.anthropicKey || '');
-        setDefaultProvider(data.defaultProvider || 'openai');
-        setDefaultModel(data.defaultModel || '');
-      }
+      const data = await api.get<AiConfig>('/api/v1/settings/ai-config');
+      setConfig(data);
+      setOpenaiKey(data.openaiKey || '');
+      setAnthropicKey(data.anthropicKey || '');
+      setDefaultProvider(data.defaultProvider || 'openai');
+      setDefaultModel(data.defaultModel || '');
     } catch {
-      /* ignore */
+      // not logged in or endpoint not available
     }
   }, []);
 
   useEffect(() => { fetchConfig(); }, [fetchConfig]);
+
+  const fetchModels = useCallback(async () => {
+    setLoadingModels(true);
+    try {
+      const data = await api.get<{ models?: string[] }>('/api/proxy/ai/api/v1/llm/models');
+      if (data.models?.length) {
+        setLiveModels(data.models);
+      }
+    } catch {
+      // AI Engine may not support /models endpoint — fall back to known list
+      setLiveModels([]);
+    } finally {
+      setLoadingModels(false);
+    }
+  }, []);
+
+  // Auto-fetch models when provider changes or after save
+  useEffect(() => {
+    if (config?.hasOpenaiKey || config?.hasAnthropicKey) {
+      fetchModels();
+    }
+  }, [config?.hasOpenaiKey, config?.hasAnthropicKey, fetchModels]);
+
+  const models = liveModels.length > 0 ? liveModels : (KNOWN_MODELS[defaultProvider] ?? []);
 
   const handleSave = async () => {
     setSaving(true);
@@ -55,24 +83,14 @@ export default function AiSettingsPage() {
       if (openaiKey && !openaiKey.includes('••')) body.openaiKey = openaiKey;
       if (anthropicKey && !anthropicKey.includes('••')) body.anthropicKey = anthropicKey;
 
-      const res = await fetch(`${API}/api/v1/settings/ai-config`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(body),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setConfig(data);
-        setOpenaiKey(data.openaiKey || '');
-        setAnthropicKey(data.anthropicKey || '');
-        setStatus({ type: 'success', message: 'AI configuration saved. Restart AI Engine to apply new keys.' });
-      } else {
-        setStatus({ type: 'error', message: 'Failed to save configuration' });
-      }
-    } catch {
-      setStatus({ type: 'error', message: 'Network error' });
+      const data = await api.put<AiConfig>('/api/v1/settings/ai-config', body);
+      setConfig(data);
+      setOpenaiKey(data.openaiKey || '');
+      setAnthropicKey(data.anthropicKey || '');
+      setStatus({ type: 'success', message: 'AI configuration saved successfully.' });
+      fetchModels();
+    } catch (err) {
+      setStatus({ type: 'error', message: err instanceof Error ? err.message : 'Failed to save configuration' });
     } finally {
       setSaving(false);
     }
@@ -139,8 +157,8 @@ export default function AiSettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Defaults</CardTitle>
-          <CardDescription>Choose which provider and model to use by default</CardDescription>
+          <CardTitle>Model Selection</CardTitle>
+          <CardDescription>Choose the default provider and model for AI agents</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -148,7 +166,7 @@ export default function AiSettingsPage() {
             <select
               id="provider"
               value={defaultProvider}
-              onChange={(e) => setDefaultProvider(e.target.value)}
+              onChange={(e) => { setDefaultProvider(e.target.value); setDefaultModel(''); }}
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             >
               <option value="openai">OpenAI</option>
@@ -158,13 +176,36 @@ export default function AiSettingsPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="model">Default Model (optional)</Label>
-            <Input
+            <div className="flex items-center justify-between">
+              <Label htmlFor="model">Default Model</Label>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={fetchModels}
+                disabled={loadingModels}
+                className="h-7 text-xs"
+              >
+                {loadingModels ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />}
+                Refresh models
+              </Button>
+            </div>
+            <select
               id="model"
               value={defaultModel}
               onChange={(e) => setDefaultModel(e.target.value)}
-              placeholder="e.g. gpt-4o, claude-sonnet-4-20250514"
-            />
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="">Auto (provider default)</option>
+              {models.map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+            {liveModels.length > 0 && (
+              <p className="text-xs text-muted-foreground">{liveModels.length} models available from AI Engine</p>
+            )}
+            {liveModels.length === 0 && models.length > 0 && (
+              <p className="text-xs text-muted-foreground">Showing known models for {defaultProvider}</p>
+            )}
           </div>
         </CardContent>
       </Card>
