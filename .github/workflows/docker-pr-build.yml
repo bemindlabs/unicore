@@ -92,6 +92,8 @@ jobs:
           push: false
           load: true
           tags: ${{ matrix.image }}:pr-${{ github.event.pull_request.number }}
+          build-args: |
+            VERSION=0.0.0-pr.${{ github.event.pull_request.number }}
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}
 

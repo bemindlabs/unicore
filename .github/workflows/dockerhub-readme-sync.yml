@@ -18,31 +18,31 @@ jobs:
       matrix:
         include:
           - service: dashboard
-            repository: bemindlabs/unicore-dashboard
+            repository: bemindlab/unicore-dashboard
             readme: dockerhub/README/dashboard.md
           - service: api-gateway
-            repository: bemindlabs/unicore-api-gateway
+            repository: bemindlab/unicore-api-gateway
             readme: dockerhub/README/api-gateway.md
           - service: erp
-            repository: bemindlabs/unicore-erp
+            repository: bemindlab/unicore-erp
             readme: dockerhub/README/erp.md
           - service: ai-engine
-            repository: bemindlabs/unicore-ai-engine
+            repository: bemindlab/unicore-ai-engine
             readme: dockerhub/README/ai-engine.md
           - service: rag
-            repository: bemindlabs/unicore-rag
+            repository: bemindlab/unicore-rag
             readme: dockerhub/README/rag.md
           - service: bootstrap
-            repository: bemindlabs/unicore-bootstrap
+            repository: bemindlab/unicore-bootstrap
             readme: dockerhub/README/bootstrap.md
           - service: openclaw-gateway
-            repository: bemindlabs/unicore-openclaw-gateway
+            repository: bemindlab/unicore-openclaw-gateway
             readme: dockerhub/README/openclaw-gateway.md
           - service: workflow
-            repository: bemindlabs/unicore-workflow
+            repository: bemindlab/unicore-workflow
             readme: dockerhub/README/workflow.md
           - service: license-api
-            repository: bemindlabs/unicore-license-api
+            repository: bemindlab/unicore-license-api
             readme: dockerhub/README/license-api.md
 
     steps:
