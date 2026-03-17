@@ -119,6 +119,9 @@ export function useTheme() {
         body: JSON.stringify({ themeId: id }),
       }).catch(() => {/* silent — localStorage is the source of truth */});
     }
+
+    // Reload to fully apply theme (RetroDesk ↔ Default use different layouts)
+    window.location.reload();
   }, []);
 
   return { theme, toggleTheme, characterTheme, setCharacterTheme, selectedThemeId, setThemeById };

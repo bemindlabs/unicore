@@ -53,7 +53,7 @@ export function Header({ agentCount, workingCount, onAddAgent, activeTab, onTabC
 
   if (isRetroDesk) {
     return (
-      <header className="flex flex-wrap items-center justify-between px-4 lg:px-6 py-3 border-b-2" style={{ borderColor: 'var(--retrodesk-border)', background: 'var(--retrodesk-surface)' }}>
+      <header className="relative z-20 flex flex-wrap items-center justify-between px-4 lg:px-6 py-3 border-b-2" style={{ borderColor: 'var(--retrodesk-border)', background: 'var(--retrodesk-surface)' }}>
         <div className="flex items-center gap-2 sm:gap-4">
           {activeTab === 'overview' && onToggleMobileSidebar && (
             <button
@@ -124,7 +124,7 @@ export function Header({ agentCount, workingCount, onAddAgent, activeTab, onTabC
   }
 
   return (
-    <header className="flex flex-wrap items-center justify-between px-4 lg:px-6 py-3 border-b border-cyan-900/30 bg-[#0a0e1a]/80 backdrop-blur-sm">
+    <header className="relative z-20 flex flex-wrap items-center justify-between px-4 lg:px-6 py-3 border-b border-cyan-900/30 bg-[#0a0e1a]/80 backdrop-blur-sm">
       <div className="flex items-center gap-2 sm:gap-4">
         {activeTab === 'overview' && onToggleMobileSidebar && (
           <button
