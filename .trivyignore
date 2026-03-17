@@ -1,0 +1,32 @@
+# .trivyignore — Trivy vulnerability suppression list
+#
+# Format: one CVE ID per line, with a comment explaining the accepted risk.
+# Docs: https://aquasecurity.github.io/trivy/latest/docs/configuration/filtering/#trivyignore
+#
+# Before adding a CVE here, verify ALL of the following:
+#   1. The vulnerability has been assessed and is not exploitable in our context, OR
+#   2. No upstream fix is available and mitigating controls are in place, OR
+#   3. It is a confirmed false positive for our use case.
+#
+# Each suppression MUST include:
+#   - The CVE ID
+#   - A comment with: reason, date assessed, ticket/owner
+#
+# ──────────────────────────────────────────────────────────────────────────────
+# Example entries (remove and replace with real suppressions as needed):
+# ──────────────────────────────────────────────────────────────────────────────
+
+# CVE-YYYY-XXXXX
+# Reason: <why this is accepted or not applicable>
+# Assessed: YYYY-MM-DD | Ticket: UNC-XXX | Owner: <team>
+
+# ──────────────────────────────────────────────────────────────────────────────
+# node:20-alpine base image — known low-impact musl libc findings
+# These are flagged by Trivy but do not affect our runtime attack surface
+# because they require local access (no remote exploitation vector).
+# ──────────────────────────────────────────────────────────────────────────────
+
+# CVE-2023-4039
+# Reason: GCC stack protection false positive on alpine; no executable stack
+# in our Node.js services. Assessed: 2026-03-17 | Owner: platform-security
+# CVE-2023-4039
