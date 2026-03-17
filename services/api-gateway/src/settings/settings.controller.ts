@@ -144,7 +144,7 @@ export class SettingsController {
       data.anthropicKey = current.anthropicKey;
     }
 
-    const settings = await this.prisma.settings.upsert({
+    await this.prisma.settings.upsert({
       where: { id: 'ai-config' },
       create: { id: 'ai-config', data },
       update: { data },
