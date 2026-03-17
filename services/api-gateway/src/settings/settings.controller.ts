@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { LicenseGuard } from '../license/guards/license.guard';
 import { ProFeatureRequired } from '../license/decorators/pro-feature.decorator';
 import { Public } from '../auth/decorators/public.decorator';
+import { encrypt, decrypt, maskKey } from './crypto.util';
 
 @Controller('api/v1/settings')
 export class SettingsController {
@@ -100,6 +101,77 @@ export class SettingsController {
   async getTeamCount() {
     const count = await this.prisma.user.count();
     return { count };
+  }
+
+  // ── AI Configuration (encrypted API keys) ──
+
+  @Get('ai-config')
+  async getAiConfig() {
+    const settings = await this.prisma.settings.findUnique({ where: { id: 'ai-config' } });
+    const data = (settings?.data ?? {}) as Record<string, any>;
+    // Return masked keys, never plaintext
+    return {
+      openaiKey: data.openaiKey ? maskKey(decrypt(data.openaiKey)) : '',
+      anthropicKey: data.anthropicKey ? maskKey(decrypt(data.anthropicKey)) : '',
+      defaultProvider: data.defaultProvider ?? 'openai',
+      defaultModel: data.defaultModel ?? '',
+      hasOpenaiKey: !!data.openaiKey,
+      hasAnthropicKey: !!data.anthropicKey,
+    };
+  }
+
+  @Put('ai-config')
+  async putAiConfig(@Body() body: { openaiKey?: string; anthropicKey?: string; defaultProvider?: string; defaultModel?: string }) {
+    // Read existing config
+    const existing = await this.prisma.settings.findUnique({ where: { id: 'ai-config' } });
+    const current = (existing?.data ?? {}) as Record<string, any>;
+
+    const data: Record<string, any> = {
+      defaultProvider: body.defaultProvider ?? current.defaultProvider ?? 'openai',
+      defaultModel: body.defaultModel ?? current.defaultModel ?? '',
+    };
+
+    // Only update keys if new values provided (not masked placeholders)
+    if (body.openaiKey && !body.openaiKey.includes('••')) {
+      data.openaiKey = encrypt(body.openaiKey);
+    } else if (current.openaiKey) {
+      data.openaiKey = current.openaiKey;
+    }
+
+    if (body.anthropicKey && !body.anthropicKey.includes('••')) {
+      data.anthropicKey = encrypt(body.anthropicKey);
+    } else if (current.anthropicKey) {
+      data.anthropicKey = current.anthropicKey;
+    }
+
+    const settings = await this.prisma.settings.upsert({
+      where: { id: 'ai-config' },
+      create: { id: 'ai-config', data },
+      update: { data },
+    });
+
+    // Return masked version
+    return {
+      openaiKey: data.openaiKey ? maskKey(decrypt(data.openaiKey)) : '',
+      anthropicKey: data.anthropicKey ? maskKey(decrypt(data.anthropicKey)) : '',
+      defaultProvider: data.defaultProvider,
+      defaultModel: data.defaultModel,
+      hasOpenaiKey: !!data.openaiKey,
+      hasAnthropicKey: !!data.anthropicKey,
+    };
+  }
+
+  // Internal endpoint for services to fetch decrypted keys (not exposed via nginx)
+  @Get('ai-config/keys')
+  async getAiConfigKeys() {
+    const settings = await this.prisma.settings.findUnique({ where: { id: 'ai-config' } });
+    const data = (settings?.data ?? {}) as Record<string, any>;
+    return {
+      openaiKey: data.openaiKey ? decrypt(data.openaiKey) : '',
+      anthropicKey: data.anthropicKey ? decrypt(data.anthropicKey) : '',
+      defaultProvider: data.defaultProvider ?? 'openai',
+      defaultModel: data.defaultModel ?? '',
+    };
   }
 
   // ── Generic catch-all routes — MUST be last to avoid shadowing named routes ──

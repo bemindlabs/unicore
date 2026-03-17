@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import {
   BookOpen,
+  Bot,
   ChevronRight,
   Crown,
   Globe,
@@ -21,6 +22,12 @@ const SETTINGS_LINKS = [
     icon: Puzzle,
     title: 'Integrations',
     description: 'Connect third-party services and external platforms',
+  },
+  {
+    href: '/settings/ai',
+    icon: Bot,
+    title: 'AI Configuration',
+    description: 'Manage LLM API keys, providers, and model preferences',
   },
   {
     href: '/settings/domains',
