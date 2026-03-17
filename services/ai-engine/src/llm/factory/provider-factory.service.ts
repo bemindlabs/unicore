@@ -158,8 +158,10 @@ export class ProviderFactoryService implements OnModuleInit {
         new OpenAiProvider(
           moonshotKey,
           moonshotModel,
-          'text-embedding-3-small',  // Moonshot doesn't support embeddings, will gracefully fail
+          'text-embedding-3-small',
           this.config.get<string>('MOONSHOT_BASE_URL', 'https://api.moonshot.cn/v1'),
+          'api-key',
+          'moonshot',
         ),
       );
     }
@@ -175,6 +177,8 @@ export class ProviderFactoryService implements OnModuleInit {
           openrouterModel,
           'text-embedding-3-small',
           this.config.get<string>('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1'),
+          'api-key',
+          'openrouter',
         ),
       );
     }

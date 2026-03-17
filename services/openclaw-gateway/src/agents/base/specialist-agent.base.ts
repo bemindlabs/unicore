@@ -150,6 +150,7 @@ export abstract class SpecialistAgentBase implements ISpecialistAgent {
             { role: "system", content: systemPrompt },
             { role: "user", content: userMessage },
           ],
+          maxTokens: 1024,
         }),
       });
 

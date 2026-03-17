@@ -13,7 +13,7 @@ import {
 
 @Injectable()
 export class OpenAiProvider implements ILlmProvider {
-  readonly providerId = 'openai';
+  readonly providerId: string;
   private readonly logger = new Logger(OpenAiProvider.name);
   private readonly client: OpenAI;
   private readonly defaultModel: string;
@@ -25,7 +25,9 @@ export class OpenAiProvider implements ILlmProvider {
     defaultEmbeddingModel = 'text-embedding-3-small',
     baseURL?: string,
     authType: 'api-key' | 'oauth' = 'api-key',
+    providerId = 'openai',
   ) {
+    this.providerId = providerId;
     if (authType === 'oauth') {
       // OAuth: use the token as a Bearer token, no API key
       this.client = new OpenAI({
