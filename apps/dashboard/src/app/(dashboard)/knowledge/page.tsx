@@ -244,12 +244,49 @@ export default function KnowledgeBasePage() {
   /* ---------- Ingest ---------- */
 
   async function handleIngest() {
-    if (!ingestTitle.trim() || !ingestContent.trim()) {
-      toast({
-        title: 'Missing fields',
-        description: 'Please provide both a title and content.',
-        variant: 'destructive',
-      });
+    if (!ingestTitle.trim()) {
+      toast({ title: 'Missing title', description: 'Please provide a document title.', variant: 'destructive' });
+      return;
+    }
+
+    if (ingestType === 'pdf') {
+      if (!selectedFile) {
+        toast({ title: 'No file selected', description: 'Please select a PDF file to upload.', variant: 'destructive' });
+        return;
+      }
+      setIngesting(true);
+      setUploadProgress(0);
+      setProcessing(false);
+      try {
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('title', ingestTitle.trim());
+        formData.append('type', 'pdf');
+        formData.append('workspaceId', 'default');
+        await api.uploadFile('/api/proxy/rag/ingest/upload', formData, (pct) => {
+          setUploadProgress(pct);
+          if (pct === 100) setProcessing(true);
+        });
+        toast({ title: 'PDF ingested', description: '"' + ingestTitle + '" has been added to the knowledge base.' });
+        setIngestTitle('');
+        setSelectedFile(null);
+        setIngestType('text');
+        setUploadProgress(undefined);
+        setProcessing(false);
+        await fetchDocuments();
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        toast({ title: 'Upload failed', description: message, variant: 'destructive' });
+        setUploadProgress(undefined);
+        setProcessing(false);
+      } finally {
+        setIngesting(false);
+      }
+      return;
+    }
+
+    if (!ingestContent.trim()) {
+      toast({ title: 'Missing content', description: 'Please provide document content.', variant: 'destructive' });
       return;
     }
 
@@ -395,7 +432,16 @@ export default function KnowledgeBasePage() {
                 </div>
                 <div className="space-y-1.5">
                   <Label>Type</Label>
-                  <Select value={ingestType} onValueChange={setIngestType}>
+                  <Select
+                    value={ingestType}
+                    onValueChange={(v) => {
+                      setIngestType(v);
+                      setSelectedFile(null);
+                      setUploadProgress(undefined);
+                      setProcessing(false);
+                    }}
+                    disabled={ingesting}
+                  >
                     <SelectTrigger className="w-[130px]">
                       <SelectValue placeholder="Type" />
                     </SelectTrigger>
@@ -419,38 +465,50 @@ export default function KnowledgeBasePage() {
                   </Select>
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="ingest-content">
-                  {ingestType === 'url' ? 'URL' : ingestType === 'pdf' ? 'PDF URL or Base64' : 'Content'}
-                </Label>
-                <Textarea
-                  id="ingest-content"
-                  placeholder={
-                    ingestType === 'url'
-                      ? 'https://example.com/page-to-ingest'
-                      : ingestType === 'pdf'
-                        ? 'Paste a PDF URL or base64-encoded content...'
-                        : 'Paste or type the document content here...'
-                  }
-                  rows={5}
-                  value={ingestContent}
-                  onChange={(e) => setIngestContent(e.target.value)}
+              {ingestType === 'pdf' ? (
+                <FileUploadInput
+                  selectedFile={selectedFile}
+                  onFileSelect={setSelectedFile}
+                  progress={uploadProgress}
+                  processing={processing}
                 />
-              </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <Label htmlFor="ingest-content">
+                    {ingestType === 'url' ? 'URL' : 'Content'}
+                  </Label>
+                  <Textarea
+                    id="ingest-content"
+                    placeholder={
+                      ingestType === 'url'
+                        ? 'https://example.com/page-to-ingest'
+                        : 'Paste or type the document content here...'
+                    }
+                    rows={5}
+                    value={ingestContent}
+                    onChange={(e) => setIngestContent(e.target.value)}
+                    disabled={ingesting}
+                  />
+                </div>
+              )}
               <div className="flex justify-end">
                 <Button
                   onClick={handleIngest}
-                  disabled={ingesting || !ingestTitle.trim() || !ingestContent.trim()}
+                  disabled={
+                    ingesting ||
+                    !ingestTitle.trim() ||
+                    (ingestType === 'pdf' ? !selectedFile : !ingestContent.trim())
+                  }
                 >
                   {ingesting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Ingesting...
+                      {ingestType === 'pdf' && processing ? 'Processing...' : 'Uploading...'}
                     </>
                   ) : (
                     <>
                       <Upload className="mr-2 h-4 w-4" />
-                      Ingest
+                      {ingestType === 'pdf' ? 'Upload PDF' : 'Ingest'}
                     </>
                   )}
                 </Button>
