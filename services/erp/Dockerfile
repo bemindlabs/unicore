@@ -22,9 +22,15 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/services/erp/node_modules ./services/erp/node_modules
 RUN cd services/erp && npx prisma generate --schema=src/prisma/schema.prisma 2>/dev/null; pnpm run build
 
+ARG VERSION=0.0.0
 FROM --platform=$TARGETPLATFORM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+LABEL org.opencontainers.image.source="https://github.com/bemindlabs/unicore"
+LABEL org.opencontainers.image.vendor="BeMind Technology"
+LABEL org.opencontainers.image.title="unicore-erp"
+LABEL org.opencontainers.image.description="NestJS ERP service (CRM, inventory, invoicing)"
+LABEL org.opencontainers.image.version="${VERSION}"
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/services/erp/node_modules ./services/erp/node_modules
 COPY --from=build /app/services/erp/dist ./services/erp/dist

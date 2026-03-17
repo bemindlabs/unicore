@@ -20,9 +20,15 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/services/ai-engine/node_modules ./services/ai-engine/node_modules
 RUN cd services/ai-engine && pnpm run build
 
+ARG VERSION=0.0.0
 FROM --platform=$TARGETPLATFORM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+LABEL org.opencontainers.image.source="https://github.com/bemindlabs/unicore"
+LABEL org.opencontainers.image.vendor="BeMind Technology"
+LABEL org.opencontainers.image.title="unicore-ai-engine"
+LABEL org.opencontainers.image.description="NestJS AI model orchestration engine"
+LABEL org.opencontainers.image.version="${VERSION}"
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/services/ai-engine/node_modules ./services/ai-engine/node_modules
 COPY --from=build /app/services/ai-engine/dist ./services/ai-engine/dist

@@ -23,9 +23,15 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/services/bootstrap/node_modules ./services/bootstrap/node_modules
 RUN cd services/bootstrap && pnpm run build
 
+ARG VERSION=0.0.0
 FROM --platform=$TARGETPLATFORM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+LABEL org.opencontainers.image.source="https://github.com/bemindlabs/unicore"
+LABEL org.opencontainers.image.vendor="BeMind Technology"
+LABEL org.opencontainers.image.title="unicore-bootstrap"
+LABEL org.opencontainers.image.description="NestJS wizard and initial platform setup service"
+LABEL org.opencontainers.image.version="${VERSION}"
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/services/bootstrap/node_modules ./services/bootstrap/node_modules
 COPY --from=build /app/services/bootstrap/dist ./services/bootstrap/dist

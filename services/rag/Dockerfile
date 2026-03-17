@@ -20,9 +20,15 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/services/rag/node_modules ./services/rag/node_modules
 RUN cd services/rag && pnpm run build
 
+ARG VERSION=0.0.0
 FROM --platform=$TARGETPLATFORM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+LABEL org.opencontainers.image.source="https://github.com/bemindlabs/unicore"
+LABEL org.opencontainers.image.vendor="BeMind Technology"
+LABEL org.opencontainers.image.title="unicore-rag"
+LABEL org.opencontainers.image.description="NestJS vector search service with Qdrant integration"
+LABEL org.opencontainers.image.version="${VERSION}"
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/services/rag/node_modules ./services/rag/node_modules
 COPY --from=build /app/services/rag/dist ./services/rag/dist

@@ -37,10 +37,16 @@ COPY packages/ui ./packages/ui
 RUN cd packages/shared-types && pnpm run build
 RUN cd apps/dashboard && pnpm run build
 
+ARG VERSION=0.0.0
 FROM --platform=$TARGETPLATFORM node:20-alpine AS runner
 RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
 WORKDIR /app
 ENV NODE_ENV=production
+LABEL org.opencontainers.image.source="https://github.com/bemindlabs/unicore"
+LABEL org.opencontainers.image.vendor="BeMind Technology"
+LABEL org.opencontainers.image.title="unicore-dashboard"
+LABEL org.opencontainers.image.description="Next.js 14 frontend dashboard for UniCore"
+LABEL org.opencontainers.image.version="${VERSION}"
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/dashboard/node_modules ./apps/dashboard/node_modules
 COPY --from=build /app/apps/dashboard/.next ./apps/dashboard/.next
