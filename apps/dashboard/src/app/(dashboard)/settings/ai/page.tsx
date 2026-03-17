@@ -192,16 +192,16 @@ export default function AiSettingsPage() {
 
           {openaiAuthType === 'oauth' && (
             <div className="space-y-2">
-              <Label htmlFor="openai-base-url">ChatGPT API Base URL</Label>
+              <Label htmlFor="openai-base-url">ChatGPT Proxy URL (optional)</Label>
               <Input
                 id="openai-base-url"
                 value={openaiBaseUrl}
                 onChange={(e) => setOpenaiBaseUrl(e.target.value)}
-                placeholder="https://api.openai.com/v1"
+                placeholder="Auto (built-in proxy)"
                 className="font-mono text-sm"
               />
               <p className="text-xs text-muted-foreground">
-                Default: api.openai.com/v1. Change if using a ChatGPT proxy (e.g. Azure OpenAI, local reverse proxy).
+                Leave empty to use the built-in ChatGPT-to-API proxy. Only change if you run your own proxy.
               </p>
             </div>
           )}

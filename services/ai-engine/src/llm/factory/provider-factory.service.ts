@@ -92,7 +92,28 @@ export class ProviderFactoryService implements OnModuleInit {
 
     if (openAiKey) {
       const openAiAuthType = (dbKeys as Record<string, string>).openaiAuthType === 'oauth' ? 'oauth' : 'api-key';
-      const openAiBaseUrl = (dbKeys as Record<string, string>).openaiBaseUrl || this.config.get<string>('OPENAI_BASE_URL');
+      let openAiBaseUrl = (dbKeys as Record<string, string>).openaiBaseUrl || this.config.get<string>('OPENAI_BASE_URL');
+
+      // For ChatGPT subscription tokens, use the chatgpt-to-api proxy
+      if (openAiAuthType === 'oauth') {
+        const proxyBase = this.config.get<string>('CHATGPT_PROXY_URL', 'http://unicore-chatgpt-proxy:8080');
+        if (!openAiBaseUrl) {
+          openAiBaseUrl = `${proxyBase}/v1`;
+        }
+        // Register the access token with the proxy
+        try {
+          await fetch(`${proxyBase}/admin/tokens`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: openAiKey }),
+            signal: AbortSignal.timeout(3000),
+          });
+          this.logger.log('Registered ChatGPT access token with proxy');
+        } catch {
+          this.logger.warn('Could not register token with ChatGPT proxy');
+        }
+      }
+
       this.registry.set(
         'openai',
         new OpenAiProvider(
