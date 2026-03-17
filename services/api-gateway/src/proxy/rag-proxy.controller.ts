@@ -47,13 +47,13 @@ export class RagProxyController {
     @Res() res: Response,
     @CurrentUser('id') userId: string,
   ) {
-    return this.forward(req, res, 'GET', '/rag/ingest/info/default', userId);
+    return this.forward(req, res, 'GET', '/rag/api/v1/ingest/info/default', userId);
   }
 
   /**
    * POST /api/proxy/rag/ingest
    * Ingest a single document (chunk → embed → store in Qdrant).
-   * Proxied to: POST /ingest
+   * Proxied to: POST /api/v1/ingest
    */
   @Post('ingest')
   async ingest(
@@ -61,13 +61,13 @@ export class RagProxyController {
     @Res() res: Response,
     @CurrentUser('id') userId: string,
   ) {
-    return this.forward(req, res, 'POST', '/rag/ingest', userId);
+    return this.forward(req, res, 'POST', '/rag/api/v1/ingest', userId);
   }
 
   /**
    * DELETE /api/proxy/rag/documents/:id
    * Delete a document and all its vector chunks.
-   * Proxied to: DELETE /ingest/:id
+   * Proxied to: DELETE /api/v1/ingest/:id
    */
   @Delete('documents/:id')
   async deleteDocument(
@@ -76,13 +76,13 @@ export class RagProxyController {
     @Res() res: Response,
     @CurrentUser('id') userId: string,
   ) {
-    return this.forward(req, res, 'DELETE', `/rag/ingest/${id}`, userId);
+    return this.forward(req, res, 'DELETE', `/rag/api/v1/ingest/${id}`, userId);
   }
 
   /**
    * POST /api/proxy/rag/query
    * Semantic vector search — find relevant document chunks.
-   * Proxied to: POST /query
+   * Proxied to: POST /api/v1/query
    */
   @Post('query')
   async query(
@@ -90,7 +90,7 @@ export class RagProxyController {
     @Res() res: Response,
     @CurrentUser('id') userId: string,
   ) {
-    return this.forward(req, res, 'POST', '/rag/query', userId);
+    return this.forward(req, res, 'POST', '/rag/api/v1/query', userId);
   }
 
   /**

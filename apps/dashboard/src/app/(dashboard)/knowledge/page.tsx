@@ -215,7 +215,7 @@ export default function KnowledgeBasePage() {
 
   const fetchDocuments = useCallback(async () => {
     try {
-      const data = await api.get<unknown>('/api/proxy/rag/ingest/info/default');
+      const data = await api.get<unknown>('/api/proxy/rag/info');
 
       let docs: IngestedDocument[] = [];
       if (Array.isArray(data)) {
