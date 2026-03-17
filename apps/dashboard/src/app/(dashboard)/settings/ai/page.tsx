@@ -140,8 +140,8 @@ export default function AiSettingsPage() {
                 onChange={(e) => setOpenaiAuthType(e.target.value)}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
-                <option value="api-key">API Key (sk-...)</option>
-                <option value="oauth">OAuth / Subscription Token</option>
+                <option value="api-key">API Key (platform.openai.com)</option>
+                <option value="oauth">ChatGPT Subscription Token</option>
               </select>
               <Button
                 variant="outline"
@@ -149,7 +149,7 @@ export default function AiSettingsPage() {
                 className="shrink-0 h-10"
                 onClick={() => window.open(
                   openaiAuthType === 'oauth'
-                    ? 'https://platform.openai.com/settings/organization/general'
+                    ? 'https://chatgpt.com/api/auth/session'
                     : 'https://platform.openai.com/api-keys',
                   '_blank',
                 )}
@@ -158,15 +158,22 @@ export default function AiSettingsPage() {
               </Button>
             </div>
             {openaiAuthType === 'oauth' && (
-              <p className="text-xs text-muted-foreground">
-                Use a Bearer token from OpenAI OAuth (e.g. ChatGPT subscription session token)
-              </p>
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs dark:border-blue-800 dark:bg-blue-950">
+                <p className="font-medium text-blue-800 dark:text-blue-200 mb-1">How to get your ChatGPT access token:</p>
+                <ol className="list-decimal list-inside space-y-0.5 text-blue-700 dark:text-blue-300">
+                  <li>Log in to <a href="https://chatgpt.com" target="_blank" rel="noreferrer" className="underline">chatgpt.com</a></li>
+                  <li>Open <a href="https://chatgpt.com/api/auth/session" target="_blank" rel="noreferrer" className="underline">chatgpt.com/api/auth/session</a></li>
+                  <li>Copy the <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">accessToken</code> value</li>
+                  <li>Paste it below</li>
+                </ol>
+                <p className="mt-1.5 text-blue-600 dark:text-blue-400">Token refreshes every ~2 weeks. Requires active ChatGPT Plus/Pro/Team subscription.</p>
+              </div>
             )}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="openai-key">
-              {openaiAuthType === 'oauth' ? 'OpenAI OAuth Token' : 'OpenAI API Key'}
+              {openaiAuthType === 'oauth' ? 'ChatGPT Access Token' : 'OpenAI API Key'}
             </Label>
             <div className="flex gap-2">
               <Input
@@ -174,7 +181,7 @@ export default function AiSettingsPage() {
                 type={showOpenai ? 'text' : 'password'}
                 value={openaiKey}
                 onChange={(e) => setOpenaiKey(e.target.value)}
-                placeholder={config?.hasOpenaiKey ? 'Key saved (enter new to replace)' : openaiAuthType === 'oauth' ? 'Bearer token...' : 'sk-...'}
+                placeholder={config?.hasOpenaiKey ? 'Key saved (enter new to replace)' : openaiAuthType === 'oauth' ? 'eyJhbGci...' : 'sk-...'}
                 className="font-mono"
               />
               <Button variant="ghost" size="icon" onClick={() => setShowOpenai(!showOpenai)}>
@@ -185,7 +192,7 @@ export default function AiSettingsPage() {
 
           {openaiAuthType === 'oauth' && (
             <div className="space-y-2">
-              <Label htmlFor="openai-base-url">OpenAI Base URL (optional)</Label>
+              <Label htmlFor="openai-base-url">ChatGPT API Base URL</Label>
               <Input
                 id="openai-base-url"
                 value={openaiBaseUrl}
@@ -193,7 +200,9 @@ export default function AiSettingsPage() {
                 placeholder="https://api.openai.com/v1"
                 className="font-mono text-sm"
               />
-              <p className="text-xs text-muted-foreground">Custom API endpoint for OAuth proxy or Azure OpenAI</p>
+              <p className="text-xs text-muted-foreground">
+                Default: api.openai.com/v1. Change if using a ChatGPT proxy (e.g. Azure OpenAI, local reverse proxy).
+              </p>
             </div>
           )}
 
