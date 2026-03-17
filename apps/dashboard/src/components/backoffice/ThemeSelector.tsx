@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTheme } from '@/hooks/use-theme';
 import { useRetroDeskTheme } from './retrodesk/RetroDeskThemeProvider';
-import { THEME_OPTIONS, resolveThemeId, toThemeId } from '@/lib/backoffice/theme-registry';
+import { THEME_OPTIONS } from '@/lib/backoffice/theme-registry';
 import type { ThemeOption } from '@/lib/backoffice/theme-registry';
 import { findCharacterByRole } from '@/lib/backoffice/retrodesk-characters';
 
@@ -169,7 +169,7 @@ function OptionRow({
 // ThemeSelector (the dropdown)
 // ---------------------------------------------------------------------------
 export function ThemeSelector() {
-  const { characterTheme, setCharacterTheme } = useTheme();
+  const { selectedThemeId, setThemeById } = useTheme();
   const { isActive: isRetroDesk } = useRetroDeskTheme();
   const [open, setOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
@@ -178,13 +178,13 @@ export function ThemeSelector() {
 
   useDropdownStyles();
 
-  const activeId = toThemeId(characterTheme);
+  const activeId = selectedThemeId;
   const activeOption = THEME_OPTIONS.find((t) => t.id === activeId) ?? THEME_OPTIONS[0] ?? null;
 
   // Reset focus index when dropdown opens/closes
   useEffect(() => {
     if (open) {
-      const idx = THEME_OPTIONS.findIndex((t) => t.id === activeId);
+      const idx = THEME_OPTIONS.findIndex((t) => t.id === selectedThemeId);
       setFocusedIndex(idx >= 0 ? idx : 0);
     } else {
       setFocusedIndex(-1);
@@ -248,10 +248,10 @@ export function ThemeSelector() {
 
   const handleSelect = useCallback(
     (id: string) => {
-      setCharacterTheme(resolveThemeId(id));
+      setThemeById(id);
       setOpen(false);
     },
-    [setCharacterTheme],
+    [setThemeById],
   );
 
   // Guard: if THEME_OPTIONS is somehow empty, render nothing
