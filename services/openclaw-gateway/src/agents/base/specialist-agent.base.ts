@@ -138,28 +138,39 @@ export abstract class SpecialistAgentBase implements ISpecialistAgent {
       this.logger.warn(
         `[${this.agentType}] AI_ENGINE_URL not configured — returning fallback response`,
       );
-      return `[${this.config.displayName}] LLM integration requires AI_ENGINE_URL to be set.`;
+      return `⚠️ AI Engine not configured. Please set your API key in Settings → AI Configuration.`;
     }
 
-    const response = await fetch(`${aiEngineUrl}/llm/complete`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userMessage },
-        ],
-      }),
-    });
+    try {
+      const response = await fetch(`${aiEngineUrl}/api/v1/llm/complete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userMessage },
+          ],
+        }),
+      });
 
-    if (!response.ok) {
-      throw new Error(
-        `LLM request failed: ${response.status} ${response.statusText}`,
-      );
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ message: response.statusText })) as { message?: string; errors?: string[] };
+        const detail = err.errors?.join('; ') || err.message || response.statusText;
+        this.logger.error(`[${this.agentType}] LLM request failed: ${response.status} ${detail}`);
+
+        if (response.status === 503) {
+          return `⚠️ All AI providers are currently unavailable. Please check your API keys in Settings → AI Configuration.\n\nDetails: ${detail}`;
+        }
+        return `⚠️ AI request failed (${response.status}): ${detail}`;
+      }
+
+      const result = (await response.json()) as { content: string };
+      return result.content;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.error(`[${this.agentType}] LLM call error: ${msg}`);
+      return `⚠️ Could not reach AI Engine: ${msg}`;
     }
-
-    const result = (await response.json()) as { content: string };
-    return result.content;
   }
 
   protected buildErrorResponse(requestId: string, error: Error): AgentResponse {
