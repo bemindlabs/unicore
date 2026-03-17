@@ -30,6 +30,12 @@ const SETTINGS_LINKS = [
     description: 'Manage LLM API keys, providers, and model preferences',
   },
   {
+    href: '/settings/agents',
+    icon: Bot,
+    title: 'OpenClaw Agents',
+    description: 'Monitor AI agents, heartbeat status, and pub/sub channels',
+  },
+  {
     href: '/settings/domains',
     icon: Globe,
     title: 'Custom Domains',
