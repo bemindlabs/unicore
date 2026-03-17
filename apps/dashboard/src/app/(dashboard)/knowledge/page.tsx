@@ -175,6 +175,9 @@ export default function KnowledgeBasePage() {
   const [ingestContent, setIngestContent] = useState('');
   const [ingestType, setIngestType] = useState<string>('text');
   const [ingesting, setIngesting] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number | undefined>(undefined);
+  const [processing, setProcessing] = useState(false);
 
   /* ---- Search tab state ---- */
   const [searchText, setSearchText] = useState('');
