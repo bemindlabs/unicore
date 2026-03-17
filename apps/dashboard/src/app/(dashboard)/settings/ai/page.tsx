@@ -133,15 +133,30 @@ export default function AiSettingsPage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="openai-auth">OpenAI Auth Type</Label>
-            <select
-              id="openai-auth"
-              value={openaiAuthType}
-              onChange={(e) => setOpenaiAuthType(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            >
-              <option value="api-key">API Key (sk-...)</option>
-              <option value="oauth">OAuth / Subscription Token</option>
-            </select>
+            <div className="flex gap-2">
+              <select
+                id="openai-auth"
+                value={openaiAuthType}
+                onChange={(e) => setOpenaiAuthType(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="api-key">API Key (sk-...)</option>
+                <option value="oauth">OAuth / Subscription Token</option>
+              </select>
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0 h-10"
+                onClick={() => window.open(
+                  openaiAuthType === 'oauth'
+                    ? 'https://platform.openai.com/settings/organization/general'
+                    : 'https://platform.openai.com/api-keys',
+                  '_blank',
+                )}
+              >
+                Get {openaiAuthType === 'oauth' ? 'Token' : 'Key'}
+              </Button>
+            </div>
             {openaiAuthType === 'oauth' && (
               <p className="text-xs text-muted-foreground">
                 Use a Bearer token from OpenAI OAuth (e.g. ChatGPT subscription session token)
