@@ -101,16 +101,25 @@ export class ProviderFactoryService implements OnModuleInit {
           openAiBaseUrl = `${proxyBase}/v1`;
         }
         // Register the access token with the proxy
+        const proxyAdminPw = this.config.get<string>('CHATGPT_PROXY_ADMIN_PASSWORD', 'unicore-proxy-admin');
         try {
-          await fetch(`${proxyBase}/admin/tokens`, {
+          const res = await fetch(`${proxyBase}/admin/tokens`, {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: openAiKey }),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': proxyAdminPw,
+            },
+            body: JSON.stringify([openAiKey]),
             signal: AbortSignal.timeout(3000),
           });
-          this.logger.log('Registered ChatGPT access token with proxy');
-        } catch {
-          this.logger.warn('Could not register token with ChatGPT proxy');
+          if (res.ok) {
+            this.logger.log('Registered ChatGPT access token with proxy');
+          } else {
+            const body = await res.text().catch(() => '');
+            this.logger.warn(`ChatGPT proxy token registration failed: ${res.status} ${body}`);
+          }
+        } catch (err) {
+          this.logger.warn(`Could not reach ChatGPT proxy: ${err instanceof Error ? err.message : err}`);
         }
       }
 
