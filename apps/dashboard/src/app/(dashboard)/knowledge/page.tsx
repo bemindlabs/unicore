@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { RetroDeskThemeProvider, RetroDeskOnly, DefaultOnly } from '@/components/backoffice/retrodesk';
+import { ChinjanKnowledgeBase } from '@/components/knowledge/ChinjanKnowledgeBase';
 import {
   BookOpen,
   Search,
@@ -37,6 +39,7 @@ import {
   toast,
 } from '@unicore/ui';
 import { api } from '@/lib/api';
+import { FileUploadInput } from '@/components/file-upload-input';
 
 /* ---------- Types ---------- */
 
@@ -103,6 +106,9 @@ export default function KnowledgeBasePage() {
   const [ingestContent, setIngestContent] = useState('');
   const [ingestType, setIngestType] = useState<string>('text');
   const [ingesting, setIngesting] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number | undefined>(undefined);
+  const [processing, setProcessing] = useState(false);
 
   /* ---- Search tab state ---- */
   const [searchText, setSearchText] = useState('');
@@ -173,12 +179,52 @@ export default function KnowledgeBasePage() {
   /* ---------- Ingest ---------- */
 
   async function handleIngest() {
-    if (!ingestTitle.trim() || !ingestContent.trim()) {
-      toast({
-        title: 'Missing fields',
-        description: 'Please provide both a title and content.',
-        variant: 'destructive',
-      });
+    if (!ingestTitle.trim()) {
+      toast({ title: 'Missing title', description: 'Please provide a document title.', variant: 'destructive' });
+      return;
+    }
+
+    if (ingestType === 'pdf') {
+      if (!selectedFile) {
+        toast({ title: 'No file selected', description: 'Please select a PDF file to upload.', variant: 'destructive' });
+        return;
+      }
+
+      setIngesting(true);
+      setUploadProgress(0);
+      setProcessing(false);
+      try {
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('title', ingestTitle.trim());
+        formData.append('type', 'pdf');
+        formData.append('workspaceId', 'default');
+
+        await api.uploadFile('/api/proxy/rag/ingest/upload', formData, (pct) => {
+          setUploadProgress(pct);
+          if (pct === 100) setProcessing(true);
+        });
+
+        toast({ title: 'PDF ingested', description: `"${ingestTitle}" has been added to the knowledge base.` });
+        setIngestTitle('');
+        setSelectedFile(null);
+        setIngestType('text');
+        setUploadProgress(undefined);
+        setProcessing(false);
+        await fetchDocuments();
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        toast({ title: 'Upload failed', description: message, variant: 'destructive' });
+        setUploadProgress(undefined);
+        setProcessing(false);
+      } finally {
+        setIngesting(false);
+      }
+      return;
+    }
+
+    if (!ingestContent.trim()) {
+      toast({ title: 'Missing content', description: 'Please provide document content.', variant: 'destructive' });
       return;
     }
 
@@ -197,11 +243,7 @@ export default function KnowledgeBasePage() {
       await fetchDocuments();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Unknown error';
-      toast({
-        title: 'Ingestion failed',
-        description: message,
-        variant: 'destructive',
-      });
+      toast({ title: 'Ingestion failed', description: message, variant: 'destructive' });
     } finally {
       setIngesting(false);
     }
@@ -282,6 +324,11 @@ export default function KnowledgeBasePage() {
   /* ---------- Render ---------- */
 
   return (
+    <RetroDeskThemeProvider>
+      <RetroDeskOnly>
+        <ChinjanKnowledgeBase />
+      </RetroDeskOnly>
+      <DefaultOnly>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
@@ -323,8 +370,18 @@ export default function KnowledgeBasePage() {
                   placeholder="Document title"
                   value={ingestTitle}
                   onChange={(e) => setIngestTitle(e.target.value)}
+                  disabled={ingesting}
                 />
-                <Select value={ingestType} onValueChange={setIngestType}>
+                <Select
+                  value={ingestType}
+                  onValueChange={(v) => {
+                    setIngestType(v);
+                    setSelectedFile(null);
+                    setUploadProgress(undefined);
+                    setProcessing(false);
+                  }}
+                  disabled={ingesting}
+                >
                   <SelectTrigger className="w-[140px]">
                     <SelectValue placeholder="Type" />
                   </SelectTrigger>
@@ -335,27 +392,37 @@ export default function KnowledgeBasePage() {
                   </SelectContent>
                 </Select>
               </div>
-              <Textarea
-                placeholder={
-                  ingestType === 'url'
-                    ? 'Paste URL here...'
-                    : 'Paste content here...'
-                }
-                rows={5}
-                value={ingestContent}
-                onChange={(e) => setIngestContent(e.target.value)}
-              />
+              {ingestType === 'pdf' ? (
+                <FileUploadInput
+                  selectedFile={selectedFile}
+                  onFileSelect={setSelectedFile}
+                  progress={uploadProgress}
+                  processing={processing}
+                />
+              ) : (
+                <Textarea
+                  placeholder={
+                    ingestType === 'url'
+                      ? 'Paste URL here...'
+                      : 'Paste content here...'
+                  }
+                  rows={5}
+                  value={ingestContent}
+                  onChange={(e) => setIngestContent(e.target.value)}
+                  disabled={ingesting}
+                />
+              )}
               <div className="flex justify-end">
-                <Button onClick={handleIngest} disabled={ingesting}>
+                <Button onClick={handleIngest} disabled={ingesting || (ingestType === 'pdf' && !selectedFile)}>
                   {ingesting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Ingesting...
+                      {ingestType === 'pdf' && processing ? 'Processing...' : 'Uploading...'}
                     </>
                   ) : (
                     <>
                       <Upload className="mr-2 h-4 w-4" />
-                      Ingest
+                      {ingestType === 'pdf' ? 'Upload PDF' : 'Ingest'}
                     </>
                   )}
                 </Button>
@@ -717,5 +784,7 @@ export default function KnowledgeBasePage() {
         </TabsContent>
       </Tabs>
     </div>
+      </DefaultOnly>
+    </RetroDeskThemeProvider>
   );
 }
