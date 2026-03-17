@@ -145,6 +145,51 @@ class ApiClient {
   delete<T>(path: string, options?: RequestOptions) {
     return this.request<T>(path, { ...options, method: 'DELETE' });
   }
+
+  uploadFile<T>(
+    path: string,
+    formData: FormData,
+    onProgress?: (percent: number) => void,
+  ): Promise<T> {
+    return new Promise((resolve, reject) => {
+      const token = this.getToken();
+      const xhr = new XMLHttpRequest();
+
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable && onProgress) {
+          onProgress(Math.round((e.loaded / e.total) * 100));
+        }
+      });
+
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            resolve(JSON.parse(xhr.responseText) as T);
+          } catch {
+            resolve(undefined as T);
+          }
+        } else if (xhr.status === 401) {
+          this.handleRefreshFailure();
+          reject(new Error('Authentication expired'));
+        } else {
+          try {
+            const err = JSON.parse(xhr.responseText) as { message?: string };
+            reject(new Error(err.message ?? `Upload failed: ${xhr.status}`));
+          } catch {
+            reject(new Error(`Upload failed: ${xhr.status}`));
+          }
+        }
+      });
+
+      xhr.addEventListener('error', () => reject(new Error('Network error during upload')));
+      xhr.addEventListener('abort', () => reject(new Error('Upload aborted')));
+
+      xhr.open('POST', `${this.baseUrl}${path}`);
+      if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      // Do not set Content-Type — browser sets it with the multipart boundary
+      xhr.send(formData);
+    });
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL);
