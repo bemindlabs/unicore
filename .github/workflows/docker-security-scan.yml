@@ -46,7 +46,7 @@ jobs:
             dockerfile: apps/dashboard/Dockerfile
             context: .
           - name: license-api
-            dockerfile: services/license-api/Dockerfile
+            dockerfile: ../unicore-license/services/license-api/Dockerfile
             context: ../unicore-license
 
     steps:
