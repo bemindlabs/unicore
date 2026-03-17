@@ -24,7 +24,7 @@ export class ChatHistoryController {
 
   @Get()
   async list(
-    @CurrentUser() user: any,
+    @CurrentUser() _user: any,
     @Query('agentId') agentId?: string,
     @Query('userId') userId?: string,
     @Query('channel') channel?: string,

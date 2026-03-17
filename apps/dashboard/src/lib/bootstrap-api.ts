@@ -1,4 +1,5 @@
-const BOOTSTRAP_API = process.env.NEXT_PUBLIC_BOOTSTRAP_URL ?? 'http://localhost:4500';
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+const BOOTSTRAP_API = `${API_URL}/api/proxy/bootstrap`;
 
 export interface ProvisionRequest {
   bootstrapSecret: string;
