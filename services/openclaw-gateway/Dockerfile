@@ -20,9 +20,15 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/services/openclaw-gateway/node_modules ./services/openclaw-gateway/node_modules
 RUN cd services/openclaw-gateway && pnpm run build
 
+ARG VERSION=0.0.0
 FROM --platform=$TARGETPLATFORM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+LABEL org.opencontainers.image.source="https://github.com/bemindlabs/unicore"
+LABEL org.opencontainers.image.vendor="BeMind Technology"
+LABEL org.opencontainers.image.title="unicore-openclaw-gateway"
+LABEL org.opencontainers.image.description="Multi-agent WebSocket gateway for OpenClaw"
+LABEL org.opencontainers.image.version="${VERSION}"
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/services/openclaw-gateway/node_modules ./services/openclaw-gateway/node_modules
 COPY --from=build /app/services/openclaw-gateway/dist ./services/openclaw-gateway/dist
