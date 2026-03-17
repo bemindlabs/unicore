@@ -129,17 +129,23 @@ export class SettingsController {
     return {
       openaiKey: data.openaiKey ? safeDecryptMask(data.openaiKey) : '',
       anthropicKey: data.anthropicKey ? safeDecryptMask(data.anthropicKey) : '',
+      moonshotKey: data.moonshotKey ? safeDecryptMask(data.moonshotKey) : '',
+      openrouterKey: data.openrouterKey ? safeDecryptMask(data.openrouterKey) : '',
       defaultProvider: data.defaultProvider ?? 'openai',
       defaultModel: data.defaultModel ?? '',
       openaiAuthType: data.openaiAuthType ?? 'api-key',
       openaiBaseUrl: data.openaiBaseUrl ?? '',
+      moonshotModel: data.moonshotModel ?? '',
+      openrouterModel: data.openrouterModel ?? '',
       hasOpenaiKey: !!data.openaiKey,
       hasAnthropicKey: !!data.anthropicKey,
+      hasMoonshotKey: !!data.moonshotKey,
+      hasOpenrouterKey: !!data.openrouterKey,
     };
   }
 
   @Put('ai-config')
-  async putAiConfig(@Body() body: { openaiKey?: string; anthropicKey?: string; defaultProvider?: string; defaultModel?: string; openaiAuthType?: string; openaiBaseUrl?: string }) {
+  async putAiConfig(@Body() body: Record<string, string>) {
     // Read existing config
     const existing = await this.prisma.settings.findUnique({ where: { id: 'ai-config' } });
     const current = (existing?.data ?? {}) as Record<string, any>;
@@ -149,19 +155,18 @@ export class SettingsController {
       defaultModel: body.defaultModel ?? current.defaultModel ?? '',
       openaiAuthType: body.openaiAuthType ?? current.openaiAuthType ?? 'api-key',
       openaiBaseUrl: body.openaiBaseUrl ?? current.openaiBaseUrl ?? '',
+      moonshotModel: body.moonshotModel ?? current.moonshotModel ?? '',
+      openrouterModel: body.openrouterModel ?? current.openrouterModel ?? '',
     };
 
     // Only update keys if new values provided (not masked placeholders)
-    if (body.openaiKey && !body.openaiKey.includes('••')) {
-      data.openaiKey = encrypt(body.openaiKey);
-    } else if (current.openaiKey) {
-      data.openaiKey = current.openaiKey;
-    }
-
-    if (body.anthropicKey && !body.anthropicKey.includes('••')) {
-      data.anthropicKey = encrypt(body.anthropicKey);
-    } else if (current.anthropicKey) {
-      data.anthropicKey = current.anthropicKey;
+    const keyFields = ['openaiKey', 'anthropicKey', 'moonshotKey', 'openrouterKey'];
+    for (const field of keyFields) {
+      if (body[field] && !body[field].includes('••')) {
+        data[field] = encrypt(body[field]);
+      } else if (current[field]) {
+        data[field] = current[field];
+      }
     }
 
     await this.prisma.settings.upsert({
@@ -170,16 +175,21 @@ export class SettingsController {
       update: { data },
     });
 
-    // Return masked version
     return {
       openaiKey: data.openaiKey ? safeDecryptMask(data.openaiKey) : '',
       anthropicKey: data.anthropicKey ? safeDecryptMask(data.anthropicKey) : '',
+      moonshotKey: data.moonshotKey ? safeDecryptMask(data.moonshotKey) : '',
+      openrouterKey: data.openrouterKey ? safeDecryptMask(data.openrouterKey) : '',
       defaultProvider: data.defaultProvider,
       defaultModel: data.defaultModel,
       openaiAuthType: data.openaiAuthType ?? 'api-key',
       openaiBaseUrl: data.openaiBaseUrl ?? '',
+      moonshotModel: data.moonshotModel ?? '',
+      openrouterModel: data.openrouterModel ?? '',
       hasOpenaiKey: !!data.openaiKey,
       hasAnthropicKey: !!data.anthropicKey,
+      hasMoonshotKey: !!data.moonshotKey,
+      hasOpenrouterKey: !!data.openrouterKey,
     };
   }
 
@@ -195,10 +205,14 @@ export class SettingsController {
     return {
       openaiKey: data.openaiKey ? safeDecrypt(data.openaiKey) : '',
       anthropicKey: data.anthropicKey ? safeDecrypt(data.anthropicKey) : '',
+      moonshotKey: data.moonshotKey ? safeDecrypt(data.moonshotKey) : '',
+      openrouterKey: data.openrouterKey ? safeDecrypt(data.openrouterKey) : '',
       defaultProvider: data.defaultProvider ?? 'openai',
       defaultModel: data.defaultModel ?? '',
       openaiAuthType: data.openaiAuthType ?? 'api-key',
       openaiBaseUrl: data.openaiBaseUrl ?? '',
+      moonshotModel: data.moonshotModel ?? '',
+      openrouterModel: data.openrouterModel ?? '',
     };
   }
 

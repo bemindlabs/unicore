@@ -11,17 +11,25 @@ import { api } from '@/lib/api';
 interface AiConfig {
   openaiKey: string;
   anthropicKey: string;
+  moonshotKey: string;
+  openrouterKey: string;
   defaultProvider: string;
   defaultModel: string;
   openaiAuthType: string;
   openaiBaseUrl: string;
+  moonshotModel: string;
+  openrouterModel: string;
   hasOpenaiKey: boolean;
   hasAnthropicKey: boolean;
+  hasMoonshotKey: boolean;
+  hasOpenrouterKey: boolean;
 }
 
 const KNOWN_MODELS: Record<string, string[]> = {
   openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo', 'o3-mini'],
   anthropic: ['claude-sonnet-4-20250514', 'claude-haiku-4-5-20251001', 'claude-opus-4-20250514'],
+  moonshot: ['kimi-k2', 'moonshot-v1-128k', 'moonshot-v1-32k', 'moonshot-v1-8k'],
+  openrouter: ['openai/gpt-4o', 'anthropic/claude-sonnet-4-20250514', 'google/gemini-2.5-flash', 'meta-llama/llama-3.1-405b-instruct', 'mistralai/mistral-large-latest'],
   ollama: ['llama3.2', 'llama3.1', 'mistral', 'codellama', 'phi3'],
 };
 
@@ -29,12 +37,16 @@ export default function AiSettingsPage() {
   const [config, setConfig] = useState<AiConfig | null>(null);
   const [openaiKey, setOpenaiKey] = useState('');
   const [anthropicKey, setAnthropicKey] = useState('');
+  const [moonshotKey, setMoonshotKey] = useState('');
+  const [openrouterKey, setOpenrouterKey] = useState('');
   const [defaultProvider, setDefaultProvider] = useState('openai');
   const [defaultModel, setDefaultModel] = useState('');
   const [openaiAuthType, setOpenaiAuthType] = useState('api-key');
   const [openaiBaseUrl, setOpenaiBaseUrl] = useState('');
   const [showOpenai, setShowOpenai] = useState(false);
   const [showAnthropic, setShowAnthropic] = useState(false);
+  const [showMoonshot, setShowMoonshot] = useState(false);
+  const [showOpenrouter, setShowOpenrouter] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loadingModels, setLoadingModels] = useState(false);
   const [liveModels, setLiveModels] = useState<string[]>([]);
@@ -50,6 +62,8 @@ export default function AiSettingsPage() {
       setDefaultModel(data.defaultModel || '');
       setOpenaiAuthType(data.openaiAuthType || 'api-key');
       setOpenaiBaseUrl(data.openaiBaseUrl || '');
+      setMoonshotKey(data.moonshotKey || '');
+      setOpenrouterKey(data.openrouterKey || '');
     } catch {
       // not logged in or endpoint not available
     }
@@ -88,6 +102,8 @@ export default function AiSettingsPage() {
       const body: Record<string, string> = { defaultProvider, defaultModel, openaiAuthType, openaiBaseUrl };
       if (openaiKey && !openaiKey.includes('••')) body.openaiKey = openaiKey;
       if (anthropicKey && !anthropicKey.includes('••')) body.anthropicKey = anthropicKey;
+      if (moonshotKey && !moonshotKey.includes('••')) body.moonshotKey = moonshotKey;
+      if (openrouterKey && !openrouterKey.includes('••')) body.openrouterKey = openrouterKey;
 
       const data = await api.put<AiConfig>('/api/v1/settings/ai-config', body);
       setConfig(data);
@@ -222,6 +238,51 @@ export default function AiSettingsPage() {
               </Button>
             </div>
           </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="moonshot-key">Moonshot AI / Kimi API Key</Label>
+              <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => window.open('https://platform.moonshot.cn/console/api-keys', '_blank')}>
+                Get Key
+              </Button>
+            </div>
+            <div className="flex gap-2">
+              <Input
+                id="moonshot-key"
+                type={showMoonshot ? 'text' : 'password'}
+                value={moonshotKey}
+                onChange={(e) => setMoonshotKey(e.target.value)}
+                placeholder={config?.hasMoonshotKey ? 'Key saved (enter new to replace)' : 'sk-...'}
+                className="font-mono"
+              />
+              <Button variant="ghost" size="icon" onClick={() => setShowMoonshot(!showMoonshot)}>
+                {showMoonshot ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="openrouter-key">OpenRouter API Key</Label>
+              <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => window.open('https://openrouter.ai/keys', '_blank')}>
+                Get Key
+              </Button>
+            </div>
+            <div className="flex gap-2">
+              <Input
+                id="openrouter-key"
+                type={showOpenrouter ? 'text' : 'password'}
+                value={openrouterKey}
+                onChange={(e) => setOpenrouterKey(e.target.value)}
+                placeholder={config?.hasOpenrouterKey ? 'Key saved (enter new to replace)' : 'sk-or-...'}
+                className="font-mono"
+              />
+              <Button variant="ghost" size="icon" onClick={() => setShowOpenrouter(!showOpenrouter)}>
+                {showOpenrouter ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">Access 200+ models (GPT-4o, Claude, Gemini, Llama, Mistral) with one API key. Free tier available.</p>
+          </div>
         </CardContent>
       </Card>
 
@@ -241,6 +302,8 @@ export default function AiSettingsPage() {
             >
               <option value="openai">OpenAI</option>
               <option value="anthropic">Anthropic</option>
+              <option value="moonshot">Moonshot AI / Kimi</option>
+              <option value="openrouter">OpenRouter (200+ models)</option>
               <option value="ollama">Ollama (local)</option>
             </select>
           </div>

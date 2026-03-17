@@ -41,7 +41,7 @@ export class ProviderFactoryService implements OnModuleInit {
       'openai',
     );
     this.failoverProviderIds = (
-      this.config.get<string>('LLM_FAILOVER_PROVIDERS', 'anthropic,ollama')
+      this.config.get<string>('LLM_FAILOVER_PROVIDERS', 'anthropic,moonshot,openrouter,ollama')
     )
       .split(',')
       .map((s) => s.trim())
@@ -145,6 +145,36 @@ export class ProviderFactoryService implements OnModuleInit {
             'ANTHROPIC_DEFAULT_MODEL',
             'claude-sonnet-4-20250514',
           ),
+        ),
+      );
+    }
+
+    // Moonshot AI (Kimi) — OpenAI-compatible API
+    const moonshotKey = this.config.get<string>('MOONSHOT_API_KEY') || (dbKeys as Record<string, string>).moonshotKey;
+    if (moonshotKey) {
+      const moonshotModel = (dbKeys as Record<string, string>).moonshotModel || this.config.get<string>('MOONSHOT_DEFAULT_MODEL', 'kimi-k2');
+      this.registry.set(
+        'moonshot',
+        new OpenAiProvider(
+          moonshotKey,
+          moonshotModel,
+          'text-embedding-3-small',  // Moonshot doesn't support embeddings, will gracefully fail
+          this.config.get<string>('MOONSHOT_BASE_URL', 'https://api.moonshot.cn/v1'),
+        ),
+      );
+    }
+
+    // OpenRouter — access 200+ models via single API key (OpenAI-compatible)
+    const openrouterKey = this.config.get<string>('OPENROUTER_API_KEY') || (dbKeys as Record<string, string>).openrouterKey;
+    if (openrouterKey) {
+      const openrouterModel = (dbKeys as Record<string, string>).openrouterModel || this.config.get<string>('OPENROUTER_DEFAULT_MODEL', 'openai/gpt-4o');
+      this.registry.set(
+        'openrouter',
+        new OpenAiProvider(
+          openrouterKey,
+          openrouterModel,
+          'text-embedding-3-small',
+          this.config.get<string>('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1'),
         ),
       );
     }
