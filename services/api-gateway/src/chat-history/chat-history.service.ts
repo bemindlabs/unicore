@@ -71,15 +71,14 @@ export class ChatHistoryService {
     agentName: string;
     userId: string;
     userName: string;
-    messages?: any[];
+    messages?: Array<{ id: string; text: string; author: string; authorId: string; authorType?: string; authorColor?: string; channel?: string; timestamp?: string }>;
     summary?: string;
     channel?: string;
   }) {
+    const msgs = Array.isArray(data.messages) ? data.messages : [];
+    const firstHumanMsg = msgs.find((m) => m.authorType === 'human' || m.authorId === 'human-user');
     const autoSummary =
-      data.summary ??
-      (Array.isArray(data.messages)
-        ? (data.messages.find((m: any) => m.authorId === 'human-user')?.text ?? '').slice(0, 120)
-        : '');
+      data.summary ?? (firstHumanMsg?.text ?? '').slice(0, 120);
 
     return this.prisma.chatHistory.create({
       data: {
@@ -87,7 +86,7 @@ export class ChatHistoryService {
         agentName: data.agentName,
         userId: data.userId,
         userName: data.userName,
-        messages: data.messages ?? [],
+        messages: msgs,
         summary: autoSummary || null,
         channel: data.channel ?? 'command',
       },
