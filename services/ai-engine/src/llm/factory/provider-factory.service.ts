@@ -41,7 +41,7 @@ export class ProviderFactoryService implements OnModuleInit {
       'openai',
     );
     this.failoverProviderIds = (
-      this.config.get<string>('LLM_FAILOVER_PROVIDERS', 'anthropic,moonshot,openrouter,ollama')
+      this.config.get<string>('LLM_FAILOVER_PROVIDERS', 'anthropic,openrouter,deepseek,groq,gemini,moonshot,mistral,xai,together,fireworks,cohere,ollama')
     )
       .split(',')
       .map((s) => s.trim())
@@ -149,38 +149,30 @@ export class ProviderFactoryService implements OnModuleInit {
       );
     }
 
-    // Moonshot AI (Kimi) — OpenAI-compatible API
-    const moonshotKey = this.config.get<string>('MOONSHOT_API_KEY') || (dbKeys as Record<string, string>).moonshotKey;
-    if (moonshotKey) {
-      const moonshotModel = (dbKeys as Record<string, string>).moonshotModel || this.config.get<string>('MOONSHOT_DEFAULT_MODEL', 'kimi-k2');
-      this.registry.set(
-        'moonshot',
-        new OpenAiProvider(
-          moonshotKey,
-          moonshotModel,
-          'text-embedding-3-small',
-          this.config.get<string>('MOONSHOT_BASE_URL', 'https://api.moonshot.cn/v1'),
-          'api-key',
-          'moonshot',
-        ),
-      );
-    }
+    // OpenAI-compatible providers — all use OpenAiProvider with custom base URL
+    const compatibleProviders = [
+      { id: 'moonshot',   envKey: 'MOONSHOT_API_KEY',    dbKey: 'moonshotKey',    baseUrl: 'https://api.moonshot.cn/v1',                  defaultModel: 'kimi-k2' },
+      { id: 'openrouter', envKey: 'OPENROUTER_API_KEY',  dbKey: 'openrouterKey',  baseUrl: 'https://openrouter.ai/api/v1',                defaultModel: 'openai/gpt-4o' },
+      { id: 'deepseek',   envKey: 'DEEPSEEK_API_KEY',    dbKey: 'deepseekKey',    baseUrl: 'https://api.deepseek.com/v1',                 defaultModel: 'deepseek-chat' },
+      { id: 'groq',       envKey: 'GROQ_API_KEY',        dbKey: 'groqKey',        baseUrl: 'https://api.groq.com/openai/v1',              defaultModel: 'llama-3.3-70b-versatile' },
+      { id: 'gemini',     envKey: 'GEMINI_API_KEY',      dbKey: 'geminiKey',      baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', defaultModel: 'gemini-2.5-flash' },
+      { id: 'mistral',    envKey: 'MISTRAL_API_KEY',     dbKey: 'mistralKey',     baseUrl: 'https://api.mistral.ai/v1',                   defaultModel: 'mistral-large-latest' },
+      { id: 'xai',        envKey: 'XAI_API_KEY',         dbKey: 'xaiKey',         baseUrl: 'https://api.x.ai/v1',                         defaultModel: 'grok-3-mini' },
+      { id: 'together',   envKey: 'TOGETHER_API_KEY',    dbKey: 'togetherKey',    baseUrl: 'https://api.together.xyz/v1',                  defaultModel: 'meta-llama/Llama-3.3-70B-Instruct-Turbo' },
+      { id: 'fireworks',  envKey: 'FIREWORKS_API_KEY',   dbKey: 'fireworksKey',   baseUrl: 'https://api.fireworks.ai/inference/v1',        defaultModel: 'accounts/fireworks/models/llama-v3p1-70b-instruct' },
+      { id: 'cohere',     envKey: 'COHERE_API_KEY',      dbKey: 'cohereKey',      baseUrl: 'https://api.cohere.com/v1',                   defaultModel: 'command-r-plus' },
+    ] as const;
 
-    // OpenRouter — access 200+ models via single API key (OpenAI-compatible)
-    const openrouterKey = this.config.get<string>('OPENROUTER_API_KEY') || (dbKeys as Record<string, string>).openrouterKey;
-    if (openrouterKey) {
-      const openrouterModel = (dbKeys as Record<string, string>).openrouterModel || this.config.get<string>('OPENROUTER_DEFAULT_MODEL', 'openai/gpt-4o');
-      this.registry.set(
-        'openrouter',
-        new OpenAiProvider(
-          openrouterKey,
-          openrouterModel,
-          'text-embedding-3-small',
-          this.config.get<string>('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1'),
-          'api-key',
-          'openrouter',
-        ),
-      );
+    const db = dbKeys as Record<string, string>;
+    for (const p of compatibleProviders) {
+      const key = this.config.get<string>(p.envKey) || db[p.dbKey];
+      if (key) {
+        const model = db[`${p.id}Model`] || this.config.get<string>(`${p.envKey.replace('_API_KEY', '_DEFAULT_MODEL')}`, p.defaultModel);
+        this.registry.set(
+          p.id,
+          new OpenAiProvider(key, model, 'text-embedding-3-small', p.baseUrl, 'api-key', p.id),
+        );
+      }
     }
 
     // Update primary provider if set in DB

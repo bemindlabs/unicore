@@ -121,27 +121,28 @@ export class SettingsController {
 
   // ── AI Configuration (encrypted API keys) ──
 
+  private static readonly PROVIDER_KEY_FIELDS = [
+    'openaiKey', 'anthropicKey', 'moonshotKey', 'openrouterKey',
+    'deepseekKey', 'groqKey', 'geminiKey', 'mistralKey',
+    'xaiKey', 'togetherKey', 'fireworksKey', 'cohereKey',
+  ];
+
   @Get('ai-config')
   async getAiConfig() {
     const settings = await this.prisma.settings.findUnique({ where: { id: 'ai-config' } });
     const data = (settings?.data ?? {}) as Record<string, any>;
-    // Return masked keys, never plaintext
-    return {
-      openaiKey: data.openaiKey ? safeDecryptMask(data.openaiKey) : '',
-      anthropicKey: data.anthropicKey ? safeDecryptMask(data.anthropicKey) : '',
-      moonshotKey: data.moonshotKey ? safeDecryptMask(data.moonshotKey) : '',
-      openrouterKey: data.openrouterKey ? safeDecryptMask(data.openrouterKey) : '',
+    const result: Record<string, any> = {
       defaultProvider: data.defaultProvider ?? 'openai',
       defaultModel: data.defaultModel ?? '',
       openaiAuthType: data.openaiAuthType ?? 'api-key',
       openaiBaseUrl: data.openaiBaseUrl ?? '',
-      moonshotModel: data.moonshotModel ?? '',
-      openrouterModel: data.openrouterModel ?? '',
-      hasOpenaiKey: !!data.openaiKey,
-      hasAnthropicKey: !!data.anthropicKey,
-      hasMoonshotKey: !!data.moonshotKey,
-      hasOpenrouterKey: !!data.openrouterKey,
     };
+    for (const field of SettingsController.PROVIDER_KEY_FIELDS) {
+      result[field] = data[field] ? safeDecryptMask(data[field]) : '';
+      const hasField = `has${field[0].toUpperCase()}${field.slice(1)}`;
+      result[hasField] = !!data[field];
+    }
+    return result;
   }
 
   @Put('ai-config')
@@ -150,18 +151,22 @@ export class SettingsController {
     const existing = await this.prisma.settings.findUnique({ where: { id: 'ai-config' } });
     const current = (existing?.data ?? {}) as Record<string, any>;
 
-    const data: Record<string, any> = {
-      defaultProvider: body.defaultProvider ?? current.defaultProvider ?? 'openai',
-      defaultModel: body.defaultModel ?? current.defaultModel ?? '',
-      openaiAuthType: body.openaiAuthType ?? current.openaiAuthType ?? 'api-key',
-      openaiBaseUrl: body.openaiBaseUrl ?? current.openaiBaseUrl ?? '',
-      moonshotModel: body.moonshotModel ?? current.moonshotModel ?? '',
-      openrouterModel: body.openrouterModel ?? current.openrouterModel ?? '',
-    };
+    const data: Record<string, any> = {};
 
-    // Only update keys if new values provided (not masked placeholders)
-    const keyFields = ['openaiKey', 'anthropicKey', 'moonshotKey', 'openrouterKey'];
-    for (const field of keyFields) {
+    // Copy all non-key string fields from body, falling back to current
+    for (const field of Object.keys(body)) {
+      if (!field.endsWith('Key')) {
+        data[field] = body[field];
+      }
+    }
+    // Ensure defaults
+    data.defaultProvider = data.defaultProvider ?? current.defaultProvider ?? 'openai';
+    data.defaultModel = data.defaultModel ?? current.defaultModel ?? '';
+    data.openaiAuthType = data.openaiAuthType ?? current.openaiAuthType ?? 'api-key';
+    data.openaiBaseUrl = data.openaiBaseUrl ?? current.openaiBaseUrl ?? '';
+
+    // Encrypt key fields
+    for (const field of SettingsController.PROVIDER_KEY_FIELDS) {
       if (body[field] && !body[field].includes('••')) {
         data[field] = encrypt(body[field]);
       } else if (current[field]) {
@@ -175,22 +180,18 @@ export class SettingsController {
       update: { data },
     });
 
-    return {
-      openaiKey: data.openaiKey ? safeDecryptMask(data.openaiKey) : '',
-      anthropicKey: data.anthropicKey ? safeDecryptMask(data.anthropicKey) : '',
-      moonshotKey: data.moonshotKey ? safeDecryptMask(data.moonshotKey) : '',
-      openrouterKey: data.openrouterKey ? safeDecryptMask(data.openrouterKey) : '',
+    // Build masked response
+    const result: Record<string, any> = {
       defaultProvider: data.defaultProvider,
       defaultModel: data.defaultModel,
       openaiAuthType: data.openaiAuthType ?? 'api-key',
       openaiBaseUrl: data.openaiBaseUrl ?? '',
-      moonshotModel: data.moonshotModel ?? '',
-      openrouterModel: data.openrouterModel ?? '',
-      hasOpenaiKey: !!data.openaiKey,
-      hasAnthropicKey: !!data.anthropicKey,
-      hasMoonshotKey: !!data.moonshotKey,
-      hasOpenrouterKey: !!data.openrouterKey,
     };
+    for (const field of SettingsController.PROVIDER_KEY_FIELDS) {
+      result[field] = data[field] ? safeDecryptMask(data[field]) : '';
+      result[`has${field[0].toUpperCase()}${field.slice(1)}`] = !!data[field];
+    }
+    return result;
   }
 
   // Internal endpoint for services to fetch decrypted keys (not exposed externally)
@@ -198,22 +199,20 @@ export class SettingsController {
   @Get('ai-config/keys')
   async getAiConfigKeys(@Headers('x-internal-service') internalService: string) {
     if (!internalService) {
-      return { openaiKey: '', anthropicKey: '', defaultProvider: 'openai', defaultModel: '' };
+      return { defaultProvider: 'openai', defaultModel: '' };
     }
     const settings = await this.prisma.settings.findUnique({ where: { id: 'ai-config' } });
     const data = (settings?.data ?? {}) as Record<string, any>;
-    return {
-      openaiKey: data.openaiKey ? safeDecrypt(data.openaiKey) : '',
-      anthropicKey: data.anthropicKey ? safeDecrypt(data.anthropicKey) : '',
-      moonshotKey: data.moonshotKey ? safeDecrypt(data.moonshotKey) : '',
-      openrouterKey: data.openrouterKey ? safeDecrypt(data.openrouterKey) : '',
+    const result: Record<string, any> = {
       defaultProvider: data.defaultProvider ?? 'openai',
       defaultModel: data.defaultModel ?? '',
       openaiAuthType: data.openaiAuthType ?? 'api-key',
       openaiBaseUrl: data.openaiBaseUrl ?? '',
-      moonshotModel: data.moonshotModel ?? '',
-      openrouterModel: data.openrouterModel ?? '',
     };
+    for (const field of SettingsController.PROVIDER_KEY_FIELDS) {
+      result[field] = data[field] ? safeDecrypt(data[field]) : '';
+    }
+    return result;
   }
 
   // ── Generic catch-all routes — MUST be last to avoid shadowing named routes ──
