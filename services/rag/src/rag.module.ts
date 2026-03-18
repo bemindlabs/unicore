@@ -5,6 +5,7 @@ import { QdrantModule } from './qdrant/qdrant.module';
 import { IngestionModule } from './ingestion/ingestion.module';
 import { RetrievalModule } from './retrieval/retrieval.module';
 import { HealthModule } from './health/health.module';
+import { GitModule } from './git/git.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
@@ -18,6 +19,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
     IngestionModule,
     RetrievalModule,
     HealthModule,
+    GitModule,
   ],
   providers: [
     {

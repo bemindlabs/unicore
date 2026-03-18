@@ -27,6 +27,7 @@
     "helmet": "^7.1.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.0",
+    "simple-git": "^3.27.0",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
