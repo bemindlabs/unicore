@@ -45,4 +45,7 @@ WRAPPER
   echo "[cli-tools] codex → /host-tools/codex/bin/codex.js"
 fi
 
+# Ensure config directories exist for CLI tools
+mkdir -p /root/.gemini /root/.codex /root/.claude 2>/dev/null || true
+
 echo "[cli-tools] setup complete"
