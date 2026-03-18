@@ -332,6 +332,39 @@ export default function AgentsPage() {
         </div>
       )}
 
+      {/* AI Coding CLI Tools */}
+      <Card>
+        <CardContent className="pt-5 pb-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Terminal className="h-4 w-4 text-primary" />
+            <span className="font-medium text-sm">AI Coding CLI Tools</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {[
+              { name: 'Claude Code', cmd: 'claude', icon: '🟣', desc: 'Anthropic CLI', url: '/ssh/' },
+              { name: 'Gemini CLI', cmd: 'gemini', icon: '🔵', desc: 'Google CLI', url: '/ssh/' },
+              { name: 'Codex CLI', cmd: 'codex', icon: '🟢', desc: 'OpenAI CLI', url: '/ssh/' },
+              { name: 'Web SSH', cmd: 'ssh', icon: '⬛', desc: 'Remote shell', url: '/ssh/' },
+            ].map((tool) => (
+              <button
+                key={tool.cmd}
+                onClick={() => window.open(tool.url, '_blank')}
+                className="flex items-center gap-2 rounded-lg border p-3 text-left hover:bg-muted/50 transition-colors group"
+              >
+                <span className="text-lg">{tool.icon}</span>
+                <div>
+                  <span className="text-xs font-medium block group-hover:text-primary transition-colors">{tool.name}</span>
+                  <span className="text-[10px] text-muted-foreground">{tool.desc}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-2">
+            Opens Web SSH terminal. Run <code className="bg-muted px-1 rounded">claude</code>, <code className="bg-muted px-1 rounded">gemini</code>, or <code className="bg-muted px-1 rounded">codex</code> in the shell.
+          </p>
+        </CardContent>
+      </Card>
+
       {/* Backoffice link */}
       <Link
         href="/backoffice"
