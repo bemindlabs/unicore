@@ -18,10 +18,11 @@ export interface TmuxSession {
 export class TmuxService implements OnModuleInit {
   private readonly logger = new Logger(TmuxService.name);
   private readonly sessions = new Map<string, TmuxSession>();
-  private cleanupInterval: NodeJS.Timeout;
+  private cleanupInterval: NodeJS.Timeout | null = null;
 
   onModuleInit() {
     this.cleanupInterval = setInterval(() => this.cleanupStaleSessions(), 10 * 60 * 1000);
+    this.logger.log('Tmux session cleanup started (every 10m)');
   }
 
   private async run(cmd: string): Promise<{ stdout: string; stderr: string }> {
