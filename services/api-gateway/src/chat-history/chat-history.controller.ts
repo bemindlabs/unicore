@@ -9,9 +9,11 @@ import {
   HttpCode,
   HttpStatus,
   Req,
+  ForbiddenException,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { ChatHistoryService } from './chat-history.service';
+import { CreateChatHistoryDto } from './dto/create-chat-history.dto';
 import { AuditService } from '../audit/audit.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
@@ -24,9 +26,8 @@ export class ChatHistoryController {
 
   @Get()
   async list(
-    @CurrentUser() _user: any,
+    @CurrentUser() user: any,
     @Query('agentId') agentId?: string,
-    @Query('userId') userId?: string,
     @Query('channel') channel?: string,
     @Query('search') search?: string,
     @Query('from') from?: string,
@@ -34,9 +35,10 @@ export class ChatHistoryController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
+    // Scope to authenticated user — users can only see their own chat history
     return this.chatHistoryService.list({
       agentId,
-      userId,
+      userId: user.id,
       channel,
       search,
       from,
@@ -47,26 +49,24 @@ export class ChatHistoryController {
   }
 
   @Post()
-  async save(@Body() body: any, @CurrentUser() user: any, @Req() req: Request) {
-    const { agentId, agentName, userId, userName, messages, summary, channel } = body;
-
+  async save(@Body() body: CreateChatHistoryDto, @CurrentUser() user: any, @Req() req: Request) {
     const record = await this.chatHistoryService.create({
-      agentId,
-      agentName,
-      userId: userId ?? user?.id ?? 'user-1',
-      userName: userName ?? user?.name ?? 'You',
-      messages,
-      summary,
-      channel,
+      agentId: body.agentId,
+      agentName: body.agentName,
+      userId: user.id,
+      userName: user.name ?? 'You',
+      messages: body.messages,
+      summary: body.summary,
+      channel: body.channel,
     });
 
     await this.audit.log({
-      userId: user?.id,
-      userEmail: user?.email,
+      userId: user.id,
+      userEmail: user.email,
       action: 'create',
       resource: 'chat_history',
       resourceId: record.id,
-      detail: `Saved chat history with agent ${agentName ?? agentId}`,
+      detail: `Saved chat history with agent ${body.agentName ?? body.agentId}`,
       ip: req.ip,
       success: true,
     });
@@ -75,18 +75,26 @@ export class ChatHistoryController {
   }
 
   @Get(':id')
-  async getById(@Param('id') id: string) {
-    return this.chatHistoryService.findOne(id);
+  async getById(@Param('id') id: string, @CurrentUser() user: any) {
+    const record = await this.chatHistoryService.findOne(id);
+    if (record.userId !== user.id) {
+      throw new ForbiddenException('Access denied');
+    }
+    return record;
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id') id: string, @CurrentUser() user: any, @Req() req: Request) {
-    const record = await this.chatHistoryService.remove(id);
+    const record = await this.chatHistoryService.findOne(id);
+    if (record.userId !== user.id) {
+      throw new ForbiddenException('Access denied');
+    }
+    await this.chatHistoryService.remove(id);
 
     await this.audit.log({
-      userId: user?.id,
-      userEmail: user?.email,
+      userId: user.id,
+      userEmail: user.email,
       action: 'delete',
       resource: 'chat_history',
       resourceId: id,
