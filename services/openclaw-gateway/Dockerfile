@@ -22,6 +22,8 @@ RUN cd services/openclaw-gateway && pnpm run build
 
 ARG VERSION=0.0.0
 FROM --platform=$TARGETPLATFORM node:20-alpine AS runner
+# gcompat provides glibc compatibility for host-mounted binaries (e.g. Claude Code)
+RUN apk add --no-cache gcompat libstdc++
 WORKDIR /app
 ENV NODE_ENV=production
 LABEL org.opencontainers.image.source="https://github.com/bemindlabs/unicore"
