@@ -165,9 +165,11 @@ export class SettingsController {
     data.openaiAuthType = data.openaiAuthType ?? current.openaiAuthType ?? 'api-key';
     data.openaiBaseUrl = data.openaiBaseUrl ?? current.openaiBaseUrl ?? '';
 
-    // Encrypt key fields
+    // Encrypt key fields (or delete if __DELETE__)
     for (const field of SettingsController.PROVIDER_KEY_FIELDS) {
-      if (body[field] && !body[field].includes('••')) {
+      if (body[field] === '__DELETE__') {
+        // Delete the key — don't copy from current
+      } else if (body[field] && !body[field].includes('••')) {
         data[field] = encrypt(body[field]);
       } else if (current[field]) {
         data[field] = current[field];

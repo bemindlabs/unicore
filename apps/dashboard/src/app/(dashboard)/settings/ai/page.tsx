@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Bot, Eye, EyeOff, Save, CheckCircle, AlertCircle, Loader2, RefreshCw, ExternalLink } from 'lucide-react';
+import { Bot, Eye, EyeOff, Save, CheckCircle, AlertCircle, Loader2, RefreshCw, ExternalLink, Trash2 } from 'lucide-react';
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
   Button, Input, Label,
@@ -331,6 +331,23 @@ export default function AiSettingsPage() {
                   <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => setShowKeys((prev) => ({ ...prev, [p.keyField]: !prev[p.keyField] }))}>
                     {showKeys[p.keyField] ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                   </Button>
+                  {hasKey && (
+                    <Button
+                      variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-red-500 hover:text-red-600"
+                      title="Delete key"
+                      onClick={async () => {
+                        if (!window.confirm(`Delete ${p.name} API key?`)) return;
+                        try {
+                          await api.put('/api/v1/settings/ai-config', { [p.keyField]: '__DELETE__' });
+                          setKeys((prev) => ({ ...prev, [p.keyField]: '' }));
+                          fetchConfig();
+                          setStatus({ type: 'success', message: `${p.name} key deleted` });
+                        } catch { /* ignore */ }
+                      }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
                 </div>
               </div>
             );
