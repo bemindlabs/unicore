@@ -4,8 +4,8 @@ const authFile = '.auth/user.json';
 
 setup('authenticate', async ({ page }) => {
   await page.goto('/login');
-  await page.getByLabel('Email').fill('admin@unicore.local');
-  await page.getByLabel('Password').fill('Admin1234');
+  await page.getByLabel('Email').fill('admin@unicore.dev');
+  await page.getByLabel('Password').fill('admin123');
   await page.getByRole('button', { name: /sign in/i }).click();
 
   await page.waitForURL(/\/(dashboard)?$/);
