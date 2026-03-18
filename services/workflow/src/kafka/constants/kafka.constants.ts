@@ -16,6 +16,13 @@ export const WORKFLOW_TOPICS = {
   INVOICE_CREATED: 'invoice.created',
   INVOICE_OVERDUE: 'invoice.overdue',
   INVOICE_PAID: 'invoice.paid',
+
+  // Chat domain — enables audit trail, event replay, and cross-service correlation
+  CHAT_MESSAGE_INBOUND: 'chat.message.inbound',
+  CHAT_MESSAGE_OUTBOUND: 'chat.message.outbound',
+  CHAT_MESSAGE_ACK: 'chat.message.ack',
+  CHAT_CONVERSATION_CREATED: 'chat.conversation.created',
+  CHAT_CONVERSATION_CLOSED: 'chat.conversation.closed',
 } as const;
 
 export type WorkflowTopic = (typeof WORKFLOW_TOPICS)[keyof typeof WORKFLOW_TOPICS];
