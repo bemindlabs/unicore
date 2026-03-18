@@ -6,14 +6,22 @@ set -e
 
 TOOLS_DIR=/host-tools
 
-# Claude Code — standalone ELF binary
+# Claude Code — standalone ELF binary (needs host glibc via ld-linux wrapper)
 if [ -d "$TOOLS_DIR/claude" ]; then
-  # Find the latest version binary (may be in versions/ subdirectory)
   CLAUDE_BIN=$(ls -t "$TOOLS_DIR/claude/versions/"* "$TOOLS_DIR/claude/"* 2>/dev/null | grep -v "versions$" | head -1)
   if [ -n "$CLAUDE_BIN" ] && [ -f "$CLAUDE_BIN" ]; then
-    ln -sf "$CLAUDE_BIN" /usr/local/bin/claude
-    chmod +x /usr/local/bin/claude 2>/dev/null || true
-    echo "[cli-tools] claude → $CLAUDE_BIN"
+    # Use host ld-linux to load with host glibc (Alpine uses musl)
+    if [ -f /host-libs/ld-linux-x86-64.so.2 ]; then
+      cat > /usr/local/bin/claude <<WRAPPER
+#!/bin/sh
+exec /host-libs/ld-linux-x86-64.so.2 --library-path /host-libs $CLAUDE_BIN "\$@"
+WRAPPER
+      chmod +x /usr/local/bin/claude
+      echo "[cli-tools] claude → $CLAUDE_BIN (via host glibc)"
+    else
+      ln -sf "$CLAUDE_BIN" /usr/local/bin/claude
+      echo "[cli-tools] claude → $CLAUDE_BIN (direct)"
+    fi
   fi
 fi
 
