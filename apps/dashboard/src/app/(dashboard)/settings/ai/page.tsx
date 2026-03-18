@@ -113,6 +113,8 @@ export default function AiSettingsPage() {
   const [loadingModels, setLoadingModels] = useState(false);
   const [liveModels, setLiveModels] = useState<string[]>([]);
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [testing, setTesting] = useState(false);
+  const [testResults, setTestResults] = useState<{ provider: string; healthy: boolean; error?: string; latencyMs?: number }[]>([]);
 
   const fetchConfig = useCallback(async () => {
     try {
@@ -143,6 +145,35 @@ export default function AiSettingsPage() {
 
   const activeProvider = PROVIDERS.find((p) => p.id === defaultProvider);
   const models = liveModels.length > 0 ? liveModels : (activeProvider?.models ?? []);
+
+  const handleTest = async () => {
+    setTesting(true);
+    setTestResults([]);
+    try {
+      // Test health of all providers
+      const healthData = await api.get<{ providers: { provider: string; healthy: boolean; error?: string; latencyMs?: number }[] }>('/api/proxy/ai/llm/health');
+      setTestResults(healthData.providers);
+
+      // Quick LLM test with default provider
+      try {
+        const start = Date.now();
+        const result = await api.post<{ content?: string; provider?: string; error?: string }>('/api/proxy/ai/llm/complete', {
+          messages: [{ role: 'user', content: 'Reply with exactly: OK' }],
+          maxTokens: 5,
+        });
+        const latency = Date.now() - start;
+        if (result.content) {
+          setStatus({ type: 'success', message: `LLM responded: "${result.content.trim()}" via ${result.provider} (${latency}ms)` });
+        }
+      } catch (err) {
+        setStatus({ type: 'error', message: `LLM test failed: ${err instanceof Error ? err.message : 'unknown error'}` });
+      }
+    } catch (err) {
+      setStatus({ type: 'error', message: `Health check failed: ${err instanceof Error ? err.message : 'unknown error'}` });
+    } finally {
+      setTesting(false);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -307,7 +338,35 @@ export default function AiSettingsPage() {
         </CardContent>
       </Card>
 
-      <div className="flex justify-end">
+      {/* Test Results */}
+      {testResults.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Connection Test Results</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {testResults.map((r) => (
+                <div key={r.provider} className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${r.healthy ? 'bg-green-500' : 'bg-red-500'}`} />
+                    <span className="font-medium">{r.provider}</span>
+                  </div>
+                  <span className={`text-xs ${r.healthy ? 'text-green-600' : 'text-red-500'}`}>
+                    {r.healthy ? `Healthy${r.latencyMs ? ` (${r.latencyMs}ms)` : ''}` : (r.error?.slice(0, 60) ?? 'Failed')}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="flex justify-end gap-3">
+        <Button variant="outline" onClick={handleTest} disabled={testing}>
+          {testing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Bot className="mr-2 h-4 w-4" />}
+          Test Connection
+        </Button>
         <Button onClick={handleSave} disabled={saving}>
           {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
           Save Configuration
