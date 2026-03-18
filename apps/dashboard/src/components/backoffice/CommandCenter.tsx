@@ -308,6 +308,36 @@ export function CommandCenter() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Auto-save when user switches tab/window (visibilitychange) or leaves page (beforeunload)
+  useEffect(() => {
+    function saveOnLeave() {
+      const agent = selectedAgentRef.current;
+      const msgs = messagesRef.current;
+      if (!agent || msgs.length === 0) return;
+      const lastMsgId = msgs[msgs.length - 1]?.id ?? '';
+      const key = `${agent.id}:${lastMsgId}`;
+      if (key && key !== lastSavedKeyRef.current) {
+        saveChatHistory(agent, msgs);
+        lastSavedKeyRef.current = key;
+      }
+    }
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'hidden') {
+        saveOnLeave();
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', saveOnLeave);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', saveOnLeave);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Scroll to bottom on new messages or when waiting
   useEffect(() => {
     if (scrollRef.current) {
