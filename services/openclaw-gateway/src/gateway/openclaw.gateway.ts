@@ -11,6 +11,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, WebSocket } from 'ws';
 import { v4 as uuidv4 } from 'uuid';
+import * as jwt from 'jsonwebtoken';
 import { AgentRegistryService } from '../registry/agent-registry.service';
 import { MessageRouterService } from '../routing/message-router.service';
 import { HeartbeatService } from '../health/heartbeat.service';
@@ -23,10 +24,16 @@ import {
 } from '../routing/interfaces/message.interface';
 import { AgentMetadata } from '../registry/interfaces/agent.interface';
 
-// Extend the WebSocket type to carry our correlation id
+// Extend the WebSocket type to carry our correlation id and auth context
 interface TrackedSocket extends WebSocket {
   socketId: string;
+  userId?: string;
+  authenticated: boolean;
 }
+
+/** Allowed internal service tokens (agents connecting from backend services). */
+const INTERNAL_SERVICE_SECRET = process.env.INTERNAL_SERVICE_SECRET ?? '';
+const JWT_SECRET = process.env.JWT_SECRET ?? '';
 
 @WebSocketGateway(18789, { path: '/', transports: ['websocket'] })
 export class OpenClawGateway
@@ -53,14 +60,59 @@ export class OpenClawGateway
   afterInit(server: Server): void {
     this.logger.log('OpenClaw Gateway WebSocket server initialised on port 18789');
     // Tag each new socket with a unique id
-    server.on('connection', (socket: WebSocket) => {
-      (socket as TrackedSocket).socketId = uuidv4();
+    server.on('connection', (socket: WebSocket, req: import('http').IncomingMessage) => {
+      const tracked = socket as TrackedSocket;
+      tracked.socketId = uuidv4();
+      tracked.authenticated = false;
+
+      // Authenticate via query params or Authorization header
+      try {
+        const url = new URL(req.url ?? '/', 'http://localhost');
+
+        // Option 1: Internal service token (backend-to-backend)
+        const serviceToken = url.searchParams.get('serviceToken')
+          ?? req.headers['x-internal-service'] as string | undefined;
+        if (serviceToken && INTERNAL_SERVICE_SECRET && serviceToken === INTERNAL_SERVICE_SECRET) {
+          tracked.authenticated = true;
+          tracked.userId = 'internal-service';
+          return;
+        }
+
+        // Option 2: JWT Bearer token
+        const token = url.searchParams.get('token')
+          ?? (req.headers['authorization']?.startsWith('Bearer ')
+            ? req.headers['authorization'].slice(7)
+            : undefined);
+
+        if (token && JWT_SECRET) {
+          const payload = jwt.verify(token, JWT_SECRET) as { sub?: string };
+          if (payload.sub) {
+            tracked.authenticated = true;
+            tracked.userId = payload.sub;
+            return;
+          }
+        }
+      } catch {
+        // JWT verification failed — reject below
+      }
+
+      // If no JWT_SECRET configured (dev mode), allow unauthenticated connections
+      if (!JWT_SECRET) {
+        tracked.authenticated = true;
+        tracked.userId = 'dev-user';
+        return;
+      }
+
+      // Reject unauthenticated connections
+      tracked.authenticated = false;
+      socket.close(4401, 'Authentication required');
     });
   }
 
   handleConnection(client: WebSocket): void {
     const socket = client as TrackedSocket;
-    this.logger.log(`Client connected: ${socket.socketId}`);
+    if (!socket.authenticated) return; // Already closed in afterInit
+    this.logger.log(`Client connected: ${socket.socketId} (user: ${socket.userId})`);
   }
 
   handleDisconnect(client: WebSocket): void {
