@@ -16,14 +16,12 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('auth_token')?.value;
   const { pathname } = request.nextUrl;
 
-  // Root "/" — show landing for guests, dashboard for logged-in users
+  // Root "/" — redirect to dashboard-home if authenticated, login if not
   if (pathname === '/') {
     if (token && isValidToken(token)) {
-      // Authenticated → rewrite to dashboard (internal, no redirect)
       return NextResponse.rewrite(new URL('/dashboard-home', request.url));
     }
-    // Not authenticated → rewrite to landing page
-    return NextResponse.rewrite(new URL('/landing', request.url));
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
   // If user has a valid token and visits /login, redirect to dashboard
@@ -37,9 +35,9 @@ export function middleware(request: NextRequest) {
     return response;
   }
 
-  // If no token on a protected route, redirect to /landing
+  // If no token on a protected route, redirect to /login
   if (!token) {
-    return NextResponse.redirect(new URL('/landing?from=' + encodeURIComponent(pathname), request.url));
+    return NextResponse.redirect(new URL('/login?from=' + encodeURIComponent(pathname), request.url));
   }
 
   return NextResponse.next();
@@ -47,6 +45,6 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!landing|login|register|wizard|dashboard-home|_next|api|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|eot)).*)',
+    '/((?!login|register|wizard|dashboard-home|_next|api|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|eot)).*)',
   ],
 };
