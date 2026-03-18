@@ -116,6 +116,11 @@ export class LlmController {
     return { providers: await this.llmService.healthCheck() };
   }
 
+  @Get('models')
+  async models() {
+    return { models: await this.llmService.listModels() };
+  }
+
   @Post('reload')
   @HttpCode(HttpStatus.OK)
   async reload() {

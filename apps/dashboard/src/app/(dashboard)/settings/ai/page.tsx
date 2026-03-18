@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Bot, Eye, EyeOff, Save, CheckCircle, AlertCircle, Loader2, RefreshCw, ExternalLink } from 'lucide-react';
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
@@ -34,6 +34,70 @@ const PROVIDERS: ProviderDef[] = [
   { id: 'cohere',     name: 'Cohere',               keyField: 'cohereKey',     getKeyUrl: 'https://dashboard.cohere.com/api-keys',          models: ['command-r-plus', 'command-r', 'command-light'] },
   { id: 'ollama',     name: 'Ollama (local)',        keyField: '',              getKeyUrl: '',                                              models: ['llama3.2', 'llama3.1', 'mistral', 'codellama', 'phi3'], description: 'Free, runs locally' },
 ];
+
+// ── Searchable Model Selector ─────────────────────────────────────────────
+
+function ModelSearch({ models, value, onChange, placeholder }: {
+  models: string[];
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  const [query, setQuery] = useState(value);
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { setQuery(value); }, [value]);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [open]);
+
+  const filtered = query
+    ? models.filter((m) => m.toLowerCase().includes(query.toLowerCase())).slice(0, 50)
+    : models.slice(0, 50);
+
+  return (
+    <div ref={ref} className="relative">
+      <Input
+        value={query}
+        onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        placeholder={placeholder}
+        className="font-mono text-xs h-9"
+      />
+      {open && filtered.length > 0 && (
+        <div className="absolute z-50 top-full mt-1 w-full max-h-60 overflow-y-auto rounded-md border bg-popover shadow-lg">
+          <button
+            className="w-full px-3 py-1.5 text-xs text-left text-muted-foreground hover:bg-muted"
+            onClick={() => { onChange(''); setQuery(''); setOpen(false); }}
+          >
+            Auto (provider default)
+          </button>
+          {filtered.map((m) => (
+            <button
+              key={m}
+              className={`w-full px-3 py-1.5 text-xs text-left font-mono hover:bg-muted ${m === value ? 'bg-muted font-bold' : ''}`}
+              onClick={() => { onChange(m); setQuery(m); setOpen(false); }}
+            >
+              {m}
+            </button>
+          ))}
+          {filtered.length === 50 && (
+            <div className="px-3 py-1.5 text-[10px] text-muted-foreground text-center">
+              Type to search more...
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ── Page ──────────────────────────────────────────────────────────────────
 
@@ -150,18 +214,15 @@ export default function AiSettingsPage() {
               <Label htmlFor="model">Model</Label>
               <Button variant="ghost" size="sm" onClick={fetchModels} disabled={loadingModels} className="h-7 text-xs">
                 {loadingModels ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />}
-                Refresh
+                {liveModels.length > 0 ? `${liveModels.length} models` : 'Fetch models'}
               </Button>
             </div>
-            <select
-              id="model"
+            <ModelSearch
+              models={models}
               value={defaultModel}
-              onChange={(e) => setDefaultModel(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            >
-              <option value="">Auto (provider default)</option>
-              {models.map((m) => <option key={m} value={m}>{m}</option>)}
-            </select>
+              onChange={setDefaultModel}
+              placeholder="Search models or type custom..."
+            />
           </div>
         </CardContent>
       </Card>

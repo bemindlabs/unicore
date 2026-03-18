@@ -122,4 +122,8 @@ export class LlmService {
   async reloadProviders(): Promise<string[]> {
     return this.factory.reloadProviders();
   }
+
+  async listModels(): Promise<string[]> {
+    return this.factory.listModels();
+  }
 }

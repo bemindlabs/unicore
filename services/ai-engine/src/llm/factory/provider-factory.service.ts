@@ -59,6 +59,29 @@ export class ProviderFactoryService implements OnModuleInit {
   }
 
   /**
+   * List available models from all registered providers that support /models endpoint.
+   */
+  async listModels(): Promise<string[]> {
+    const models: string[] = [];
+    for (const [id, provider] of this.registry) {
+      try {
+        // OpenAI-compatible providers support /models endpoint
+        const p = provider as any;
+        if (p.client?.models?.list) {
+          const response = await p.client.models.list();
+          const data = response?.data ?? response?.body?.data ?? [];
+          for (const m of data) {
+            models.push(m.id ?? m.name ?? String(m));
+          }
+        }
+      } catch (err) {
+        this.logger.debug(`Could not list models from ${id}: ${err instanceof Error ? err.message : err}`);
+      }
+    }
+    return models.sort();
+  }
+
+  /**
    * Reload providers — called on startup and when keys change via settings UI.
    */
   async reloadProviders(): Promise<string[]> {
