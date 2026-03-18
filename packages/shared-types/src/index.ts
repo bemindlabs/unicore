@@ -9,3 +9,4 @@ export * from './license.js';
 export * from './workflow.js';
 export * from './tasks.js';
 export * from './kb.js';
+export * from './openclaw.js';
