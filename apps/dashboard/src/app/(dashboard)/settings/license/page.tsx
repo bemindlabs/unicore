@@ -1,11 +1,13 @@
 'use client';
 
 import { useCallback, useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   AlertTriangle,
   CheckCircle2,
   Crown,
   KeyRound,
+  Loader2,
   RefreshCcw,
   ShieldCheck,
   Zap,
@@ -25,10 +27,13 @@ import {
   Label,
   Progress,
   Separator,
+  Switch,
   toast,
 } from '@unicore/ui';
 import type { LicenseInfo, LicenseStatus } from '@unicore/shared-types';
 import { api } from '@/lib/api';
+import { useAuth } from '@/hooks/use-auth';
+import { useLicense } from '@/hooks/use-license';
 
 const MOCK_LICENSE: LicenseInfo = {
   key: 'COMM-XXXX-XXXX-XXXX',
@@ -82,6 +87,10 @@ const STATUS_CONFIG: Record<
   invalid: { label: 'Invalid', variant: 'outline', icon: AlertTriangle },
 };
 
+const MONTHLY_PRICE = 99;
+const ANNUAL_PRICE = 990;
+const ANNUAL_SAVINGS = Math.round((1 - ANNUAL_PRICE / (MONTHLY_PRICE * 12)) * 100);
+
 function FeatureRow({
   label,
   community,
@@ -96,7 +105,7 @@ function FeatureRow({
     return v ? (
       <CheckCircle2 className="h-4 w-4 text-emerald-500" />
     ) : (
-      <span className="text-muted-foreground">—</span>
+      <span className="text-muted-foreground">--</span>
     );
   };
 
@@ -109,6 +118,34 @@ function FeatureRow({
   );
 }
 
+function BillingToggle({
+  isAnnual,
+  onToggle,
+}: {
+  isAnnual: boolean;
+  onToggle: (annual: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-center gap-3">
+      <span className={`text-sm font-medium ${!isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>
+        Monthly
+      </span>
+      <Switch
+        checked={isAnnual}
+        onCheckedChange={onToggle}
+      />
+      <span className={`text-sm font-medium ${isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>
+        Annual
+      </span>
+      {isAnnual && (
+        <Badge variant="secondary" className="text-xs">
+          Save {ANNUAL_SAVINGS}%
+        </Badge>
+      )}
+    </div>
+  );
+}
+
 export default function SettingsLicensePage() {
   const [license, setLicense] = useState<LicenseInfo>(MOCK_LICENSE);
   const [isLoading, setIsLoading] = useState(true);
@@ -116,6 +153,14 @@ export default function SettingsLicensePage() {
   const [isActivating, setIsActivating] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [usersUsed, setUsersUsed] = useState(0);
+  const [isAnnual, setIsAnnual] = useState(true);
+  const [isUpgrading, setIsUpgrading] = useState(false);
+
+  const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const { isPolling, upgradeDetected } = useLicense({ pollOnUpgrade: true });
+
+  const isCancelled = searchParams.get('cancelled') === 'true';
 
   useEffect(() => {
     let mounted = true;
@@ -207,6 +252,25 @@ export default function SettingsLicensePage() {
     }
   }, []);
 
+  const handleUpgradeNow = useCallback(async () => {
+    setIsUpgrading(true);
+    try {
+      const res = await api.post<{ checkoutUrl: string }>('/api/v1/license/upgrade', {
+        plan: isAnnual ? 'pro-annual' : 'pro-monthly',
+        email: user?.email ?? '',
+      });
+      if (res.checkoutUrl) {
+        window.location.href = res.checkoutUrl;
+      }
+    } catch (err: any) {
+      toast({
+        title: 'Upgrade failed',
+        description: err?.message ?? 'Could not initiate upgrade. Please try again.',
+      });
+      setIsUpgrading(false);
+    }
+  }, [isAnnual, user?.email]);
+
   const daysUntilExpiry = (() => {
     const expiry = new Date(license.expiresAt);
     const now = new Date();
@@ -221,6 +285,39 @@ export default function SettingsLicensePage() {
 
   return (
     <div className="space-y-6">
+      {/* UPG-5: Upgrade activation polling banner */}
+      {isPolling && (
+        <Alert className="border-amber-500/50 bg-amber-500/10">
+          <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
+          <AlertTitle>Activating your Pro license...</AlertTitle>
+          <AlertDescription>
+            We are verifying your payment and activating Pro features. This usually takes a few seconds.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* UPG-5: Upgrade success banner */}
+      {upgradeDetected && (
+        <Alert className="border-emerald-500/50 bg-emerald-500/10">
+          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+          <AlertTitle>Pro activated!</AlertTitle>
+          <AlertDescription>
+            All features are now unlocked. Refresh the page to see your updated limits and capabilities.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* UPG-5: Cancelled banner */}
+      {isCancelled && (
+        <Alert className="border-orange-500/50 bg-orange-500/10">
+          <AlertTriangle className="h-4 w-4 text-orange-500" />
+          <AlertTitle>Upgrade cancelled</AlertTitle>
+          <AlertDescription>
+            You can try again anytime. Your Community edition remains fully functional.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Status card */}
       <Card>
         <CardHeader>
@@ -339,7 +436,7 @@ export default function SettingsLicensePage() {
         </CardContent>
       </Card>
 
-      {/* Upgrade / activate */}
+      {/* UPG-3: One-click upgrade + manual key activation */}
       {license.edition === 'community' && (
         <Card>
           <CardHeader>
@@ -348,24 +445,73 @@ export default function SettingsLicensePage() {
               <CardTitle>Upgrade to Pro</CardTitle>
             </div>
             <CardDescription>
-              Enter your Pro license key to unlock all 8 agents, 15 users, and advanced features.
+              Unlock all 50 agents, 20 roles, advanced workflows, and premium features.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
+            {/* One-click upgrade section */}
+            <div className="rounded-lg border bg-card p-6 space-y-5">
+              <BillingToggle isAnnual={isAnnual} onToggle={setIsAnnual} />
+
+              <div className="text-center space-y-1">
+                <div className="flex items-baseline justify-center gap-1">
+                  <span className="text-4xl font-bold tracking-tight">
+                    ${isAnnual ? ANNUAL_PRICE : MONTHLY_PRICE}
+                  </span>
+                  <span className="text-muted-foreground">
+                    /{isAnnual ? 'year' : 'month'}
+                  </span>
+                </div>
+                {isAnnual && (
+                  <p className="text-sm text-muted-foreground">
+                    ${Math.round(ANNUAL_PRICE / 12)}/mo billed annually (save {ANNUAL_SAVINGS}%)
+                  </p>
+                )}
+              </div>
+
+              <div className="flex flex-col items-center gap-3">
+                <div className="text-sm text-muted-foreground">
+                  Upgrading as <span className="font-medium text-foreground">{user?.email}</span>
+                </div>
+                <Button
+                  size="lg"
+                  className="w-full max-w-xs gap-2"
+                  onClick={handleUpgradeNow}
+                  disabled={isUpgrading}
+                >
+                  {isUpgrading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Redirecting to checkout...
+                    </>
+                  ) : (
+                    <>
+                      <Crown className="h-4 w-4" />
+                      Upgrade Now
+                    </>
+                  )}
+                </Button>
+                <p className="text-xs text-muted-foreground text-center">
+                  Secure checkout via Stripe. Cancel anytime.
+                </p>
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <Separator />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">or activate with a key</span>
+              </div>
+            </div>
+
+            {/* Manual key activation */}
             <Alert>
               <ShieldCheck className="h-4 w-4" />
-              <AlertTitle>Get a license key</AlertTitle>
+              <AlertTitle>Have a license key?</AlertTitle>
               <AlertDescription>
-                Purchase a Pro license at{' '}
-                <a
-                  href="https://unicore.ai/pricing"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-medium underline underline-offset-4"
-                >
-                  unicore.ai/pricing
-                </a>
-                . Keys are validated against the UniCore license server.
+                Enter your Pro license key below. Keys are validated against the UniCore license server.
               </AlertDescription>
             </Alert>
             <div className="flex gap-3">
@@ -382,8 +528,9 @@ export default function SettingsLicensePage() {
                 <Button
                   onClick={handleActivate}
                   disabled={isActivating || !upgradeKey.trim()}
+                  variant="outline"
                 >
-                  {isActivating ? 'Activating…' : 'Activate'}
+                  {isActivating ? 'Activating...' : 'Activate'}
                 </Button>
               </div>
             </div>
