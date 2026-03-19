@@ -255,12 +255,12 @@ export default function SettingsLicensePage() {
   const handleUpgradeNow = useCallback(async () => {
     setIsUpgrading(true);
     try {
-      const res = await api.post<{ checkoutUrl: string }>('/api/v1/license/upgrade', {
-        plan: isAnnual ? 'pro-annual' : 'pro-monthly',
+      const res = await api.post<{ url: string; sessionId: string }>('/api/v1/license/upgrade', {
+        plan: isAnnual ? 'PRO_ANNUAL' : 'PRO_MONTHLY',
         email: user?.email ?? '',
       });
-      if (res.checkoutUrl) {
-        window.location.href = res.checkoutUrl;
+      if (res.url) {
+        window.location.href = res.url;
       }
     } catch (err: any) {
       toast({
