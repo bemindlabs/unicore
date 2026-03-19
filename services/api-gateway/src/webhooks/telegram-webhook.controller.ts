@@ -42,9 +42,11 @@ interface TelegramUpdate {
 export class TelegramWebhookController {
   private readonly logger = new Logger(TelegramWebhookController.name);
 
+  constructor(private readonly config: ConfigService) {}
+
   /**
    * Receives Telegram Update objects sent by Telegram servers.
-   * Validates the secret token header if TELEGRAM_WEBHOOK_SECRET is configured.
+   * Validates the secret token header if a webhook secret is configured.
    * Currently logs the message; OpenClaw forwarding is a future step.
    */
   @Public()
