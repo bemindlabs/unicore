@@ -18,7 +18,7 @@ export function buildProStatus(): LicenseStatus {
     valid: true,
     tier: 'pro',
     key: 'UC-PRO-KEY',
-    features: ['rbac', 'sso', 'audit_log', 'advanced_agents'],
+    features: ['fullRbac', 'sso', 'auditLogs', 'allAgents'],
     expiresAt: null,
     validatedAt: now,
     nextRevalidationAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
