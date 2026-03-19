@@ -19,7 +19,7 @@ COPY packages/config/package.json ./packages/config/
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY packages/ui/package.json ./packages/ui/
 COPY apps/dashboard/package.json ./apps/dashboard/
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 # Copy source
 COPY tsconfig.json ./
 COPY packages/config ./packages/config
