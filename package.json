@@ -18,7 +18,8 @@
   "pnpm": {
     "overrides": {
       "react": "^18.3.0",
-      "react-dom": "^18.3.0"
+      "react-dom": "^18.3.0",
+      "glob": ">=10.5.0"
     }
   },
   "devDependencies": {
