@@ -73,7 +73,7 @@ export class SettingsController {
   }
 
   @Put('domains')
-  @ProFeatureRequired('custom_integrations')
+  @ProFeatureRequired('allChannels')
   @UseGuards(LicenseGuard)
   async putDomains(@Body() body: any) {
     const settings = await this.prisma.settings.upsert({
