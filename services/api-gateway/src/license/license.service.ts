@@ -10,6 +10,13 @@ import type {
 /** 24 hours in milliseconds — offline grace period for license status cache. */
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
+/** 30 seconds — local in-memory cache TTL to avoid Redis round-trips on every request. */
+const LOCAL_CACHE_TTL_MS = 30 * 1000;
+
+/** Redis key for the cached license status (JSON-serialised LicenseStatus). */
+const REDIS_LICENSE_STATUS_KEY = 'unicore:license:status';
+
+
 /**
  * Features available per tier.
  * Community tier has no Pro features.
@@ -53,12 +60,12 @@ const TIER_FEATURES: Record<LicenseTier, ProFeature[]> = {
  * License Server. The license key is stored in-memory and falls back to the
  * UNICORE_LICENSE_KEY environment variable on first boot.
  *
- * Validation results are cached locally with a weekly revalidation window so
- * the application keeps working even when the license server is temporarily
- * unreachable.
+ * Validation results are cached in Redis (shared across replicas) with a
+ * 30-second local in-memory cache on top to avoid Redis round-trips on every
+ * request. The Redis cache has a 24-hour TTL (offline grace period).
  *
- * Cache is in-memory; for multi-replica deployments a Redis-backed cache
- * should replace it (tracked as a follow-up task).
+ * License revocation is handled by deleting the Redis cache key; the 30-second
+ * local cache ensures all replicas pick up the revocation promptly.
  */
 const REDIS_LICENSE_KEY = 'unicore:license:active_key';
 
@@ -80,8 +87,12 @@ export class LicenseService implements OnModuleInit {
   /** The active license key. Falls back to env var when null. */
   private licenseKey: string | null = null;
 
-  /** Cached license status — null until first validation completes. */
-  private cachedStatus: LicenseStatus | null = null;
+  /**
+   * Local in-memory cache (30s TTL) sitting in front of Redis to avoid
+   * a Redis round-trip on every request. Null until first validation.
+   */
+  private localCache: LicenseStatus | null = null;
+  private localCacheSetAt = 0;
 
   /** Promise guard to avoid concurrent validation races on startup. */
   private validationInFlight: Promise<LicenseStatus> | null = null;
@@ -119,6 +130,18 @@ export class LicenseService implements OnModuleInit {
         this.licenseKey = storedKey;
         this.logger.log('Restored activated license key from Redis');
       }
+
+      // Clear Redis license status cache on startup to force fresh validation
+      // before serving any Pro features.
+      try {
+        await this.redis.del(REDIS_LICENSE_STATUS_KEY);
+      } catch {
+        // Non-critical — validate() will just skip Redis read
+      }
+
+      // Revocation: when license is revoked externally, the Redis cache key
+      // is deleted (via clearRedisCache or direct DEL). The 30-second local
+      // cache ensures all replicas pick up the revocation within 30 seconds.
     } catch (err) {
       this.logger.warn(
         `Could not connect to Redis for license persistence: ${(err as Error).message}. ` +
@@ -126,10 +149,9 @@ export class LicenseService implements OnModuleInit {
       );
     }
 
-    // Clear in-memory cache on startup to force fresh validation before
-    // serving any Pro features. Prevents stale cache from a previous run
-    // granting access after license revocation.
-    this.cachedStatus = null;
+    // Clear local in-memory cache on startup to force fresh validation
+    this.localCache = null;
+    this.localCacheSetAt = 0;
 
     // Validate license on startup if a key is available
     const key = this.getKey();
@@ -155,7 +177,7 @@ export class LicenseService implements OnModuleInit {
     // If UNICORE_EDITION claims 'full'/'pro' but the license says 'community',
     // override to 'community' to prevent env-only bypass.
     const envEdition = process.env.UNICORE_EDITION ?? 'community';
-    const licenseTier = this.cachedStatus?.tier ?? 'community';
+    const licenseTier = this.localCache?.tier ?? 'community';
     this.effectiveEdition = licenseTier;
 
     const envClaimedTier = EDITION_TO_TIER[envEdition] ?? 'community';
@@ -179,14 +201,26 @@ export class LicenseService implements OnModuleInit {
 
   /**
    * Returns the current license status.
-   * Will trigger validation if the cache is empty or stale.
+   * Checks local memory cache (30s) → Redis cache (24h) → license server.
    */
   async getLicenseStatus(): Promise<LicenseStatus> {
-    if (this.cachedStatus && !this.isCacheStale(this.cachedStatus)) {
-      return this.cachedStatus;
+    // 1. Check 30-second local in-memory cache
+    if (
+      this.localCache &&
+      Date.now() - this.localCacheSetAt < LOCAL_CACHE_TTL_MS &&
+      !this.isCacheStale(this.localCache)
+    ) {
+      return this.localCache;
     }
 
-    // Deduplicate concurrent callers
+    // 2. Check Redis cache
+    const redisStatus = await this.getFromRedisCache();
+    if (redisStatus && !this.isCacheStale(redisStatus)) {
+      this.setLocalCache(redisStatus);
+      return redisStatus;
+    }
+
+    // 3. Validate against license server (deduplicate concurrent callers)
     if (this.validationInFlight) {
       return this.validationInFlight;
     }
@@ -262,7 +296,9 @@ export class LicenseService implements OnModuleInit {
    */
   async activate(key: string): Promise<LicenseStatus> {
     this.licenseKey = key;
-    this.cachedStatus = null;
+    this.localCache = null;
+    this.localCacheSetAt = 0;
+    await this.clearRedisCache();
 
     // Persist to Redis so the key survives gateway restarts
     if (this.redis && this.redisConnected) {
@@ -284,13 +320,59 @@ export class LicenseService implements OnModuleInit {
    * Useful after a license key change at runtime.
    */
   async revalidate(): Promise<LicenseStatus> {
-    this.cachedStatus = null;
+    this.localCache = null;
+    this.localCacheSetAt = 0;
+    await this.clearRedisCache();
     return this.getLicenseStatus();
   }
 
   // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
+
+  private setLocalCache(status: LicenseStatus): void {
+    this.localCache = status;
+    this.localCacheSetAt = Date.now();
+  }
+
+  private async getFromRedisCache(): Promise<LicenseStatus | null> {
+    if (!this.redis || !this.redisConnected) return null;
+    try {
+      const raw = await this.redis.get(REDIS_LICENSE_STATUS_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      // Restore Date objects from serialised JSON
+      parsed.validatedAt = new Date(parsed.validatedAt);
+      parsed.nextRevalidationAt = new Date(parsed.nextRevalidationAt);
+      parsed.expiresAt = parsed.expiresAt ? new Date(parsed.expiresAt) : null;
+      return parsed as LicenseStatus;
+    } catch {
+      return null;
+    }
+  }
+
+  private async setRedisCache(status: LicenseStatus): Promise<void> {
+    if (!this.redis || !this.redisConnected) return;
+    try {
+      const ttlSeconds = Math.ceil(CACHE_TTL_MS / 1000);
+      await this.redis.set(
+        REDIS_LICENSE_STATUS_KEY,
+        JSON.stringify(status),
+        { EX: ttlSeconds },
+      );
+    } catch (err) {
+      this.logger.warn(`Failed to cache license status in Redis: ${(err as Error).message}`);
+    }
+  }
+
+  private async clearRedisCache(): Promise<void> {
+    if (!this.redis || !this.redisConnected) return;
+    try {
+      await this.redis.del(REDIS_LICENSE_STATUS_KEY);
+    } catch {
+      // Non-critical
+    }
+  }
 
   private isCacheStale(status: LicenseStatus): boolean {
     return Date.now() - status.validatedAt.getTime() > CACHE_TTL_MS;
@@ -307,7 +389,8 @@ export class LicenseService implements OnModuleInit {
     try {
       const result = await this.callLicenseServer(key);
       const status = this.buildStatusFromResponse(key, result);
-      this.cachedStatus = status;
+      this.setLocalCache(status);
+      await this.setRedisCache(status);
       this.effectiveEdition = status.tier;
 
       this.logger.log(
@@ -318,13 +401,19 @@ export class LicenseService implements OnModuleInit {
     } catch (err) {
       this.logger.warn(
         `License server unreachable: ${(err as Error).message}. ` +
-          `Falling back to ${this.cachedStatus ? 'cached' : 'community'} status.`,
+          `Falling back to ${this.localCache ? 'cached' : 'community'} status.`,
       );
 
-      // If we have a still-valid (but potentially stale) cache entry, preserve it
-      // so the application keeps working during transient network outages.
-      if (this.cachedStatus) {
-        return this.cachedStatus;
+      // Try Redis cache as fallback during transient network outages
+      const redisFallback = await this.getFromRedisCache();
+      if (redisFallback) {
+        this.setLocalCache(redisFallback);
+        return redisFallback;
+      }
+
+      // If we have a local cache entry, preserve it
+      if (this.localCache) {
+        return this.localCache;
       }
 
       return this.buildCommunityStatus(key);
