@@ -101,7 +101,7 @@ export class SettingsController {
   // ── Pro-only: Telegram channel configuration ──
 
   @Put('telegram')
-  @ProFeatureRequired('multi_channel')
+  @ProFeatureRequired('allChannels')
   @UseGuards(LicenseGuard)
   async putTelegram(@Body() body: any) {
     const settings = await this.prisma.settings.upsert({
