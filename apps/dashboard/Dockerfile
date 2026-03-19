@@ -58,5 +58,7 @@ COPY --from=build /app/apps/dashboard/public ./apps/dashboard/public
 COPY --from=build /app/apps/dashboard/package.json ./apps/dashboard/
 COPY --from=build /app/apps/dashboard/next.config.js ./apps/dashboard/
 WORKDIR /app/apps/dashboard
+RUN addgroup -g 1001 -S nodejs && adduser -S -u 1001 appuser
+USER appuser
 EXPOSE 3000
 CMD ["npx", "next", "start", "-p", "3000"]
