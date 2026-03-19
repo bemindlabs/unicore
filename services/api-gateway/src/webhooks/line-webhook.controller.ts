@@ -55,8 +55,8 @@ export class LineWebhookController {
     @Body() body: LineWebhookBody,
     @Headers('x-line-signature') signature?: string,
   ): { ok: true } {
-    // Validate signature
-    const channelSecret = process.env.LINE_CHANNEL_SECRET;
+    // Validate signature (channel secret configured via dashboard Settings → Channels)
+    const channelSecret = this.config.get<string>('LINE_CHANNEL_SECRET');
     if (channelSecret) {
       if (!signature) {
         this.logger.warn('LINE webhook received without X-Line-Signature header');
