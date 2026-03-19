@@ -13,21 +13,11 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_BOOTSTRAP_SECRET=$NEXT_PUBLIC_BOOTSTRAP_SECRET
 ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
 ENV NEXT_PUBLIC_EDITION=$NEXT_PUBLIC_EDITION
-# Copy workspace config + package.jsons for install
-COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
-COPY packages/config/package.json ./packages/config/
-COPY packages/shared-types/package.json ./packages/shared-types/
-COPY packages/ui/package.json ./packages/ui/
-COPY apps/dashboard/package.json ./apps/dashboard/
+# Copy everything and install
+COPY . .
 RUN pnpm install --no-frozen-lockfile
-# Copy source
-COPY tsconfig.json ./
-COPY packages/config ./packages/config
-COPY packages/shared-types ./packages/shared-types
-COPY packages/ui ./packages/ui
-COPY apps/dashboard ./apps/dashboard
-RUN cd packages/shared-types && node $(ls /app/node_modules/.pnpm/typescript@*/node_modules/typescript/bin/tsc)
-RUN cd apps/dashboard && node $(ls /app/node_modules/.pnpm/next@*/node_modules/next/dist/bin/next) build
+RUN cd packages/shared-types && pnpm run build
+RUN cd apps/dashboard && pnpm run build
 
 ARG VERSION=0.0.0
 FROM --platform=$TARGETPLATFORM node:20-alpine AS runner
@@ -40,11 +30,12 @@ LABEL org.opencontainers.image.title="unicore-dashboard"
 LABEL org.opencontainers.image.description="Next.js 14 frontend dashboard for UniCore"
 LABEL org.opencontainers.image.version="${VERSION}"
 COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/apps/dashboard/node_modules ./apps/dashboard/node_modules
+COPY --from=build /app/packages ./packages
 COPY --from=build /app/apps/dashboard/.next ./apps/dashboard/.next
 COPY --from=build /app/apps/dashboard/public ./apps/dashboard/public
 COPY --from=build /app/apps/dashboard/package.json ./apps/dashboard/
 COPY --from=build /app/apps/dashboard/next.config.js ./apps/dashboard/
+COPY --from=build /app/apps/dashboard/node_modules ./apps/dashboard/node_modules
 WORKDIR /app/apps/dashboard
 RUN addgroup -g 1001 -S nodejs && adduser -S -u 1001 appuser
 USER appuser
