@@ -51,7 +51,7 @@ export class SettingsController {
   // to prevent NestJS from matching the parameterized route first.
 
   @Put('branding')
-  @ProFeatureRequired('white_label')
+  @ProFeatureRequired('whiteLabelBranding')
   @UseGuards(LicenseGuard)
   async putBranding(@Body() body: any) {
     const settings = await this.prisma.settings.upsert({
