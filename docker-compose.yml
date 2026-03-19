@@ -65,7 +65,7 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://unicore-kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     ports:
-      - "9092:9092"
+      - "127.0.0.1:9092:9092"
     profiles: [workflows]
     healthcheck:
       test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1"]
