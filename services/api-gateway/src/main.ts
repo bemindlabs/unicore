@@ -14,19 +14,11 @@ async function bootstrap() {
   }
 
   const jwtSecret = process.env.JWT_SECRET;
-  if (!jwtSecret) {
-    logger.error('JWT_SECRET environment variable is required');
-    process.exit(1);
+  if (!jwtSecret || jwtSecret.length < 32) {
+    throw new Error('JWT_SECRET must be at least 32 characters');
   }
-  if (jwtSecret === 'change-me-in-production') {
-    if (process.env.NODE_ENV === 'production') {
-      logger.error('JWT_SECRET must not be the placeholder value in production');
-      process.exit(1);
-    }
-    logger.warn('JWT_SECRET is set to placeholder value — change before deploying');
-  }
-  if (jwtSecret.length < 32) {
-    logger.warn(`JWT_SECRET is only ${jwtSecret.length} chars — 32+ recommended`);
+  if (jwtSecret.includes('change-me')) {
+    throw new Error('JWT_SECRET contains default placeholder — set a real secret');
   }
 
   const app = await NestFactory.create(AppModule);
