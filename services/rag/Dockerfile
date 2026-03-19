@@ -34,5 +34,7 @@ COPY --from=deps /app/services/rag/node_modules ./services/rag/node_modules
 COPY --from=build /app/services/rag/dist ./services/rag/dist
 COPY --from=build /app/services/rag/package.json ./services/rag/
 WORKDIR /app/services/rag
+RUN addgroup -g 1001 -S nodejs && adduser -S -u 1001 appuser
+USER appuser
 EXPOSE 4300
 CMD ["node", "dist/main"]
