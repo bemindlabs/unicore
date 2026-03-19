@@ -15,28 +15,36 @@ const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
  * Community tier has no Pro features.
  * Enterprise tier is a superset of Pro.
  */
+/**
+ * Features available per tier — camelCase names aligned with
+ * @unicore-license/license-types FeatureFlags.
+ */
 const TIER_FEATURES: Record<LicenseTier, ProFeature[]> = {
   community: [
-    'audit_log',
+    'auditLogs',
   ],
   pro: [
-    'advanced_agents',
-    'rbac',
+    'allAgents',
+    'customAgentBuilder',
+    'fullRbac',
+    'advancedWorkflows',
+    'allChannels',
+    'unlimitedRag',
     'sso',
-    'audit_log',
-    'multi_channel',
-    'priority_support',
-    'custom_integrations',
+    'auditLogs',
+    'prioritySupport',
   ],
   enterprise: [
-    'advanced_agents',
-    'rbac',
+    'allAgents',
+    'customAgentBuilder',
+    'fullRbac',
+    'advancedWorkflows',
+    'allChannels',
+    'unlimitedRag',
+    'whiteLabelBranding',
     'sso',
-    'audit_log',
-    'multi_channel',
-    'white_label',
-    'priority_support',
-    'custom_integrations',
+    'auditLogs',
+    'prioritySupport',
   ],
 };
 
