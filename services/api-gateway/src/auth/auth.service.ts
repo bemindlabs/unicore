@@ -201,8 +201,25 @@ export class AuthService implements OnModuleDestroy {
     return this.createTokens(session.user);
   }
 
-  async logout(refreshToken: string): Promise<void> {
+  async logout(refreshToken: string, accessToken?: string): Promise<void> {
     await this.prisma.session.deleteMany({ where: { refreshToken } });
+
+    // Blacklist the access token in Redis so it cannot be reused until expiry
+    if (accessToken) {
+      try {
+        const decoded = this.jwtService.decode(accessToken) as JwtPayload | null;
+        if (decoded?.jti) {
+          const now = Math.floor(Date.now() / 1000);
+          const ttl = decoded.exp ? decoded.exp - now : 900; // fallback 15m
+          if (ttl > 0) {
+            await this.tokenBlacklist.blacklist(decoded.jti, ttl);
+          }
+        }
+      } catch (err) {
+        this.logger.warn(`Failed to blacklist access token: ${(err as Error).message}`);
+      }
+    }
+
     this.logger.log('Session invalidated');
   }
 
