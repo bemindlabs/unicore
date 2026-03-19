@@ -7,6 +7,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
+import { TokenBlacklistService } from './token-blacklist.service';
 import { AuditModule } from '../audit/audit.module';
 
 @Module({
@@ -19,7 +20,7 @@ import { AuditModule } from '../audit/audit.module';
     AuditModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, LocalStrategy, JwtAuthGuard, RolesGuard],
-  exports: [AuthService, JwtAuthGuard, RolesGuard],
+  providers: [AuthService, JwtStrategy, LocalStrategy, JwtAuthGuard, RolesGuard, TokenBlacklistService],
+  exports: [AuthService, JwtAuthGuard, RolesGuard, TokenBlacklistService],
 })
 export class AuthModule {}

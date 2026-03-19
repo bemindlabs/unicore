@@ -74,7 +74,10 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   async logout(@CurrentUser() user: any, @Body() dto: RefreshTokenDto, @Req() req: Request) {
-    const result = await this.authService.logout(dto.refreshToken);
+    // Extract the access token from the Authorization header for blacklisting
+    const authHeader = req.headers.authorization;
+    const accessToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
+    const result = await this.authService.logout(dto.refreshToken, accessToken);
     await this.auditService.log({
       userId: user?.id,
       userEmail: user?.email,
