@@ -1,7 +1,7 @@
 /**
  * SendLineExecutor — sends a push message to a LINE user via the Messaging API.
  *
- * Reads the channel access token from the LINE_CHANNEL_ACCESS_TOKEN environment variable.
+ * The channel access token must be configured via dashboard Settings → Channels.
  * Action config requires a `to` (user/group ID) and either a `message` or `template`
  * (which supports {{field}} interpolation).
  */
