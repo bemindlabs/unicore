@@ -13,9 +13,7 @@ describe('AiEngine (e2e)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    // Set env so providers initialise without real keys
-    process.env.OPENAI_API_KEY = 'sk-test';
-    process.env.ANTHROPIC_API_KEY = 'sk-ant-test';
+    // Disable failover so tests don't require real provider keys
     process.env.LLM_FAILOVER_ENABLED = 'false';
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
