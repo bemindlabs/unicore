@@ -135,8 +135,6 @@ services:
       UNICORE_EDITION: community
       PORT: "4200"
       REDIS_URL: redis://unicore-redis:6379
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     depends_on:
       unicore-redis:
         condition: service_healthy
