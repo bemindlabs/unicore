@@ -12,7 +12,7 @@ COPY packages/config/package.json ./packages/config/
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY packages/ui/package.json ./packages/ui/
 COPY apps/dashboard/package.json ./apps/dashboard/
-RUN pnpm install --frozen-lockfile --filter @unicore/dashboard...
+RUN pnpm install --frozen-lockfile --filter @unicore/dashboard... --filter @unicore/shared-types...
 
 FROM base AS build
 ARG NEXT_PUBLIC_API_URL
