@@ -12,7 +12,7 @@ function buildValidProResponse(
   return {
     valid: true,
     tier: 'pro',
-    features: ['rbac', 'sso', 'audit_log'],
+    features: ['fullRbac', 'sso', 'auditLogs'],
     expiresAt: null,
     ...overrides,
   };
