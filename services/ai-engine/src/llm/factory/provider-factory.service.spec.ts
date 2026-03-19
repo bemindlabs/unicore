@@ -33,7 +33,6 @@ describe('ProviderFactoryService', () => {
     it('returns result from primary provider on success', async () => {
       const factory = new ProviderFactoryService(
         makeConfig({
-          OPENAI_API_KEY: 'sk-test',
           LLM_PRIMARY_PROVIDER: 'openai',
           LLM_FAILOVER_PROVIDERS: '',
           LLM_FAILOVER_ENABLED: 'false',
