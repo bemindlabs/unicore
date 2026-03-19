@@ -88,7 +88,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       NODE_ENV: development
       PORT: "4000"
-      BOOTSTRAP_SECRET: ${BOOTSTRAP_SECRET:-change-me-bootstrap-secret}
+      BOOTSTRAP_SECRET: ${BOOTSTRAP_SECRET}
       ERP_SERVICE_HOST: unicore-erp
       ERP_SERVICE_PORT: "4100"
       AI_ENGINE_SERVICE_HOST: unicore-ai-engine
