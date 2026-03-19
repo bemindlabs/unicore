@@ -91,21 +91,21 @@ describe('LicenseGuard', () => {
   });
 
   it('allows request when feature is included in active license', async () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue('rbac');
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue('fullRbac');
     licenseService.hasFeature.mockResolvedValue(true);
-    const ctx = mockExecutionContext('rbac');
+    const ctx = mockExecutionContext('fullRbac');
 
     const result = await guard.canActivate(ctx);
 
     expect(result).toBe(true);
-    expect(licenseService.hasFeature).toHaveBeenCalledWith('rbac');
+    expect(licenseService.hasFeature).toHaveBeenCalledWith('fullRbac');
   });
 
   it('throws ForbiddenException when feature is not in license', async () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue('white_label');
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue('whiteLabelBranding');
     licenseService.hasFeature.mockResolvedValue(false);
     licenseService.getLicenseStatus.mockResolvedValue(buildCommunityStatus());
-    const ctx = mockExecutionContext('white_label');
+    const ctx = mockExecutionContext('whiteLabelBranding');
 
     await expect(guard.canActivate(ctx)).rejects.toThrow(ForbiddenException);
     await expect(guard.canActivate(ctx)).rejects.toThrow(/Pro or Enterprise/);
