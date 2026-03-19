@@ -101,6 +101,8 @@ services:
       OPENCLAW_SERVICE_PORT: "18790"
       WORKFLOW_SERVICE_HOST: unicore-workflow
       WORKFLOW_SERVICE_PORT: "4400"
+      PLATFORM_URL: ${PLATFORM_URL:-https://unicore.bemind.tech}
+      PLATFORM_CALLBACK_SECRET: ${PLATFORM_CALLBACK_SECRET:-}
     depends_on:
       unicore-postgres:
         condition: service_healthy
