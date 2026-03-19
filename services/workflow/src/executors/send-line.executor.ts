@@ -23,12 +23,12 @@ export class SendLineExecutor implements IActionExecutor<SendLineAction> {
     action: SendLineAction,
     context: ActionExecutionContext,
   ): Promise<ActionExecutionResult> {
-    const accessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+    const accessToken = action.config.accessToken;
 
     if (!accessToken) {
       return {
         success: false,
-        error: 'LINE_CHANNEL_ACCESS_TOKEN environment variable is not set',
+        error: 'LINE channel access token is not configured. Please set it via dashboard Settings → Channels.',
       };
     }
 
