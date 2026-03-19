@@ -222,6 +222,7 @@ export class SettingsController {
 
   // ── Generic catch-all routes — MUST be last to avoid shadowing named routes ──
 
+  @Roles('OWNER')
   @Get(':key')
   async get(@Param('key') key: string) {
     const settings = await this.prisma.settings.findUnique({ where: { id: key } });
