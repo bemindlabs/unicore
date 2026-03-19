@@ -34,5 +34,7 @@ COPY --from=deps /app/services/ai-engine/node_modules ./services/ai-engine/node_
 COPY --from=build /app/services/ai-engine/dist ./services/ai-engine/dist
 COPY --from=build /app/services/ai-engine/package.json ./services/ai-engine/
 WORKDIR /app/services/ai-engine
+RUN addgroup -g 1001 -S nodejs && adduser -S -u 1001 appuser
+USER appuser
 EXPOSE 4200
 CMD ["node", "dist/main"]
