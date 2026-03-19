@@ -16,6 +16,7 @@ interface SidebarProps {
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { isPro } = useLicense();
   const sections = user ? filterSectionsByRole(user.role) : [];
 
   const initials =
