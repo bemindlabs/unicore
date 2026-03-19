@@ -17,7 +17,7 @@
     "@unicore/shared-types": "workspace:*",
     "@unicore/ui": "workspace:*",
     "lucide-react": "^0.400.0",
-    "next": "^14.2.0",
+    "next": "^14.2.35",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "zod": "^3.23.0"
