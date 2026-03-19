@@ -2,6 +2,8 @@
 
 import { useCallback, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useDemoMode } from '@/hooks/use-demo-mode';
+import { DemoGuard } from '@/components/demo/DemoGuard';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -147,6 +149,7 @@ function BillingToggle({
 }
 
 export default function SettingsLicensePage() {
+  const demoMode = useDemoMode();
   const [license, setLicense] = useState<LicenseInfo>(MOCK_LICENSE);
   const [isLoading, setIsLoading] = useState(true);
   const [upgradeKey, setUpgradeKey] = useState('');
@@ -281,6 +284,10 @@ export default function SettingsLicensePage() {
 
   if (isLoading) {
     return <div className="p-8 text-center text-muted-foreground animate-pulse">Loading license...</div>;
+  }
+
+  if (demoMode) {
+    return <DemoGuard />;
   }
 
   return (

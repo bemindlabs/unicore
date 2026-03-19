@@ -8,12 +8,16 @@ import { Header } from '@/components/layout/header';
 import { MobileNav } from '@/components/layout/mobile-nav';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { useAuth } from '@/hooks/use-auth';
+import { isDemoMode } from '@/lib/demo';
+import { DemoBanner } from '@/components/demo/DemoBanner';
+import { DeployButton } from '@/components/demo/DeployButton';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const { collapsed, toggle } = useSidebar();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const demoMode = isDemoMode(user?.email);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -39,15 +43,19 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-muted/30">
-      <Sidebar collapsed={collapsed} onToggle={toggle} />
-      <MobileNav open={mobileNavOpen} onOpenChange={setMobileNavOpen} />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Header onMobileMenuToggle={() => setMobileNavOpen(true)} />
-        <main className="flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-7xl p-4 lg:p-6">{children}</div>
-        </main>
+    <>
+      {demoMode && <DemoBanner />}
+      <div className={`flex h-screen overflow-hidden bg-muted/30${demoMode ? ' pt-9' : ''}`}>
+        <Sidebar collapsed={collapsed} onToggle={toggle} />
+        <MobileNav open={mobileNavOpen} onOpenChange={setMobileNavOpen} />
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <Header onMobileMenuToggle={() => setMobileNavOpen(true)} />
+          <main className="flex-1 overflow-y-auto">
+            <div className="mx-auto max-w-7xl p-4 lg:p-6">{children}</div>
+          </main>
+        </div>
       </div>
-    </div>
+      {demoMode && <DeployButton />}
+    </>
   );
 }
