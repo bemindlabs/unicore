@@ -87,7 +87,7 @@ export class SettingsController {
   // ── Pro-only: LINE channel configuration ──
 
   @Put('line')
-  @ProFeatureRequired('multi_channel')
+  @ProFeatureRequired('allChannels')
   @UseGuards(LicenseGuard)
   async putLine(@Body() body: any) {
     const settings = await this.prisma.settings.upsert({
