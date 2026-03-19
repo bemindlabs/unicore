@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { PanelLeftClose, PanelLeftOpen, LogOut } from 'lucide-react';
+import { Crown, PanelLeftClose, PanelLeftOpen, LogOut } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage, Button, cn, Separator } from '@unicore/ui';
 import { useAuth } from '@/hooks/use-auth';
+import { useLicense } from '@/hooks/use-license';
 import { filterSectionsByRole } from '@/lib/navigation';
 
 interface SidebarProps {
