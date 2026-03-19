@@ -20,6 +20,8 @@ COPY packages/shared-types/package.json ./packages/shared-types/
 COPY packages/ui/package.json ./packages/ui/
 COPY apps/dashboard/package.json ./apps/dashboard/
 RUN pnpm install --no-frozen-lockfile
+RUN echo "=== AFTER INSTALL ===" && ls packages/ui/node_modules/@radix-ui/ 2>/dev/null || echo "NO RADIX AFTER INSTALL" && \
+    ls packages/ui/node_modules/ 2>/dev/null | head -10 || echo "NO UI NODE_MODULES AT ALL"
 # Copy source
 COPY tsconfig.json ./
 COPY packages/config ./packages/config
