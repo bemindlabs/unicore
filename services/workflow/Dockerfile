@@ -36,5 +36,7 @@ COPY --from=deps /app/services/workflow/node_modules ./services/workflow/node_mo
 COPY --from=build /app/services/workflow/dist ./services/workflow/dist
 COPY --from=build /app/services/workflow/package.json ./services/workflow/
 WORKDIR /app/services/workflow
+RUN addgroup -g 1001 -S nodejs && adduser -S -u 1001 appuser
+USER appuser
 EXPOSE 4400
 CMD ["node", "dist/main"]
