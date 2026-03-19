@@ -38,5 +38,7 @@ COPY --from=build /app/services/bootstrap/dist ./services/bootstrap/dist
 COPY --from=build /app/services/bootstrap/package.json ./services/bootstrap/
 COPY --from=build /app/templates ./templates
 WORKDIR /app/services/bootstrap
+RUN addgroup -g 1001 -S nodejs && adduser -S -u 1001 appuser
+USER appuser
 EXPOSE 4500
 CMD ["node", "dist/main"]
