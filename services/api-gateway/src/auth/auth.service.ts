@@ -35,6 +35,7 @@ export class AuthService implements OnModuleDestroy {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly tokenBlacklist: TokenBlacklistService,
   ) {
     this.cleanupTimer = setInterval(() => this.purgeExpiredAttempts(), 10 * 60 * 1000);
   }
