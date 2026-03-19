@@ -97,6 +97,24 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         ))}
       </nav>
 
+      {/* Upgrade to Pro badge for Community users */}
+      {!isPro && (
+        <div className="shrink-0 px-2 pb-2">
+          <Link
+            href="/settings/license"
+            className={cn(
+              'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+              'bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 dark:text-amber-400',
+              collapsed && 'justify-center px-2',
+            )}
+            title="Upgrade to Pro"
+          >
+            <Crown className="h-4 w-4 shrink-0" />
+            {!collapsed && <span className="truncate">Upgrade to Pro</span>}
+          </Link>
+        </div>
+      )}
+
       <Separator className="shrink-0" />
 
       {/* User profile footer */}
