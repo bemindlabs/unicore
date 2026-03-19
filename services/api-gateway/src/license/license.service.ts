@@ -1,4 +1,5 @@
-import { Injectable, Logger, ForbiddenException } from '@nestjs/common';
+import { Injectable, Logger, ForbiddenException, OnModuleInit } from '@nestjs/common';
+import { MinimalRedisClient } from '../domains/redis-client';
 import type {
   LicenseStatus,
   LicenseTier,
