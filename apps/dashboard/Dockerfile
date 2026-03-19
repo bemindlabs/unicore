@@ -27,7 +27,7 @@ COPY packages/shared-types ./packages/shared-types
 COPY packages/ui ./packages/ui
 COPY apps/dashboard ./apps/dashboard
 RUN cd packages/shared-types && node ../../node_modules/typescript/bin/tsc
-RUN cd apps/dashboard && node ../../node_modules/.pnpm/next@14.2.35*/node_modules/next/dist/bin/next build
+RUN cd apps/dashboard && $(readlink -f node_modules/.bin/next) build
 
 ARG VERSION=0.0.0
 FROM --platform=$TARGETPLATFORM node:20-alpine AS runner
