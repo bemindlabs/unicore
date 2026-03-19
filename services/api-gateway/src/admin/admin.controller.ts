@@ -1,14 +1,18 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Patch, Param, Body, Query, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
+import { TokenBlacklistService } from '../auth/token-blacklist.service';
 import { Roles } from '../auth/decorators/roles.decorator';
 
 @Roles('OWNER')
 @Controller('api/v1/admin')
 export class AdminController {
+  private readonly logger = new Logger(AdminController.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
+    private readonly tokenBlacklist: TokenBlacklistService,
   ) {}
 
   @Get('users')
