@@ -229,6 +229,7 @@ export class SettingsController {
     return settings?.data ?? {};
   }
 
+  @Roles('OWNER')
   @Put(':key')
   async put(@Param('key') key: string, @Body() body: any) {
     const settings = await this.prisma.settings.upsert({

@@ -60,8 +60,6 @@ describe('ProviderFactoryService', () => {
     it('falls over to second provider when primary fails', async () => {
       const factory = new ProviderFactoryService(
         makeConfig({
-          OPENAI_API_KEY: 'sk-test',
-          ANTHROPIC_API_KEY: 'sk-ant-test',
           LLM_PRIMARY_PROVIDER: 'openai',
           LLM_FAILOVER_PROVIDERS: 'anthropic',
           LLM_FAILOVER_ENABLED: 'true',
