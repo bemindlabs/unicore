@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { LicenseGuard } from '../license/guards/license.guard';
 import { ProFeatureRequired } from '../license/decorators/pro-feature.decorator';
 import { Public } from '../auth/decorators/public.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { encrypt, decrypt, maskKey } from './crypto.util';
 
 function safeDecryptMask(encrypted: string): string {
