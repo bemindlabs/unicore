@@ -329,9 +329,11 @@ export class LicenseService implements OnModuleInit {
   /**
    * Calls the UniCore License Server REST API.
    *
-   * The license server base URL defaults to the well-known production endpoint
-   * but can be overridden via UNICORE_LICENSE_SERVER_URL for on-premise
-   * deployments or testing.
+   * SECURITY: The license server URL is hardcoded to prevent spoofing via
+   * environment variable override. An attacker who controls
+   * UNICORE_LICENSE_SERVER_URL could point it at a fake server that always
+   * returns valid=true, bypassing all license enforcement. Only allow
+   * override in NODE_ENV=development for local testing.
    *
    * @throws {Error} when the HTTP request fails or returns a non-2xx status.
    */
@@ -339,7 +341,9 @@ export class LicenseService implements OnModuleInit {
     key: string,
   ): Promise<LicenseValidationResponse> {
     const baseUrl =
-      process.env.UNICORE_LICENSE_SERVER_URL ?? 'https://license.unicore.io';
+      process.env.NODE_ENV === 'development' && process.env.UNICORE_LICENSE_SERVER_URL
+        ? process.env.UNICORE_LICENSE_SERVER_URL
+        : 'https://license.unicore.io';
 
     const url = `${baseUrl}/v1/validate`;
 
