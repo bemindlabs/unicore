@@ -109,8 +109,8 @@ export class ProviderFactoryService implements OnModuleInit {
       this.logger.debug('Could not fetch keys from API Gateway — using env vars');
     }
 
-    // 2. Env vars take precedence, DB keys as fallback
-    const openAiKey = this.config.get<string>('OPENAI_API_KEY') || dbKeys.openaiKey;
+    // 2. DB keys from dashboard settings
+    const openAiKey = dbKeys.openaiKey;
     const defaultModel = dbKeys.defaultModel || this.config.get<string>('OPENAI_DEFAULT_MODEL', 'gpt-4o');
 
     if (openAiKey) {
