@@ -37,5 +37,7 @@ COPY --from=build /app/services/api-gateway/dist ./services/api-gateway/dist
 COPY --from=build /app/services/api-gateway/package.json ./services/api-gateway/
 COPY --from=build /app/services/api-gateway/src/prisma ./services/api-gateway/prisma
 WORKDIR /app/services/api-gateway
+RUN addgroup -g 1001 -S nodejs && adduser -S -u 1001 appuser
+USER appuser
 EXPOSE 4000
 CMD ["node", "dist/main"]
