@@ -310,15 +310,26 @@ export class LicenseService implements OnModuleInit {
       return this.buildCommunityStatus(key);
     }
 
+    const responseTier = response.tier || response.edition;
     const tier: LicenseTier = (['pro', 'enterprise'] as LicenseTier[]).includes(
-      response.tier,
+      responseTier as LicenseTier,
     )
-      ? response.tier
+      ? (responseTier as LicenseTier)
       : 'community';
 
-    // Server may return a custom feature list; fall back to tier defaults.
-    const features: ProFeature[] =
-      response.features.length > 0 ? response.features : TIER_FEATURES[tier];
+    // License server returns features as object { allAgents: true, ... }
+    // Convert to ProFeature[] array for internal use, fall back to tier defaults.
+    let features: ProFeature[];
+    if (Array.isArray(response.features)) {
+      features = response.features.length > 0 ? response.features as ProFeature[] : TIER_FEATURES[tier];
+    } else if (response.features && typeof response.features === 'object') {
+      features = (Object.entries(response.features) as [string, boolean][])
+        .filter(([, enabled]) => enabled)
+        .map(([name]) => name as ProFeature);
+      if (features.length === 0) features = TIER_FEATURES[tier];
+    } else {
+      features = TIER_FEATURES[tier];
+    }
 
     return {
       valid: true,
