@@ -58,14 +58,14 @@ describe('LicenseService', () => {
 
       expect(status.tier).toBe('community');
       expect(status.valid).toBe(true);
-      expect(status.features).toEqual(['audit_log']);
+      expect(status.features).toEqual(['auditLogs']);
       expect(status.key).toBeNull();
     });
 
     it('hasFeature returns false for any pro feature', async () => {
       delete process.env.UNICORE_LICENSE_KEY;
 
-      expect(await service.hasFeature('rbac')).toBe(false);
+      expect(await service.hasFeature('fullRbac')).toBe(false);
       expect(await service.hasFeature('sso')).toBe(false);
     });
   });
