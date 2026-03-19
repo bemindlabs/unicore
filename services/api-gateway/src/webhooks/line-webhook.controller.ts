@@ -41,6 +41,8 @@ interface LineWebhookBody {
 export class LineWebhookController {
   private readonly logger = new Logger(LineWebhookController.name);
 
+  constructor(private readonly config: ConfigService) {}
+
   /**
    * Receives LINE webhook events.
    * Validates X-Line-Signature header using HMAC-SHA256 of request body with channel secret.
