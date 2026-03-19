@@ -26,10 +26,17 @@ export interface LicenseStatus {
   nextRevalidationAt: Date;
 }
 
+/**
+ * Response from the License Server POST /v1/validate.
+ * features is an object { allAgents: boolean, ... } from the server,
+ * which buildStatusFromResponse() converts to ProFeature[].
+ */
 export interface LicenseValidationResponse {
   valid: boolean;
-  tier: LicenseTier;
-  features: ProFeature[];
+  tier?: LicenseTier;
+  edition?: string;
+  features: Record<string, boolean> | ProFeature[];
   expiresAt: string | null;
+  cacheUntil?: string;
   message?: string;
 }
