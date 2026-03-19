@@ -126,7 +126,7 @@ export class LicenseController {
       );
     }
 
-    const data = await res.json();
+    const data = (await res.json()) as { url: string; sessionId: string };
     return { url: data.url, sessionId: data.sessionId };
   }
 
