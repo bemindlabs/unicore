@@ -226,7 +226,7 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-unicore}:${POSTGRES_PASSWORD:-password}@unicore-license-db:5432/${POSTGRES_DB_LICENSE:-unicore_license}?schema=public
       REDIS_URL: redis://unicore-license-redis:6379
-      ADMIN_SECRET: ${LICENSE_ADMIN_SECRET:-change-me-license-secret}
+      ADMIN_SECRET: ${LICENSE_ADMIN_SECRET}
       PORT: "4600"
     profiles: [apps]
 
