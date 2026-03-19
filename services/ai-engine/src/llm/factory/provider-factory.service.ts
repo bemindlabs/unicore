@@ -158,7 +158,7 @@ export class ProviderFactoryService implements OnModuleInit {
       );
     }
 
-    const anthropicKey = this.config.get<string>('ANTHROPIC_API_KEY') || dbKeys.anthropicKey;
+    const anthropicKey = dbKeys.anthropicKey;
     if (anthropicKey) {
       this.registry.set(
         'anthropic',
