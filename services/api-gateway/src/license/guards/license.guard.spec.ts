@@ -135,7 +135,7 @@ describe('LicenseGuard', () => {
   });
 
   it('allows all pro features when license is pro tier', async () => {
-    const proFeatures = ['advanced_agents', 'rbac', 'sso', 'audit_log'] as const;
+    const proFeatures = ['allAgents', 'fullRbac', 'sso', 'auditLogs'] as const;
 
     for (const feature of proFeatures) {
       jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(feature);
