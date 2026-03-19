@@ -31,7 +31,7 @@ COPY packages/shared-types ./packages/shared-types
 COPY packages/ui ./packages/ui
 COPY apps/dashboard ./apps/dashboard
 COPY tsconfig.json ./
-RUN cd packages/shared-types && node /app/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/bin/tsc
+RUN pnpm rebuild && cd packages/shared-types && pnpm run build
 RUN cd apps/dashboard && pnpm run build
 
 ARG VERSION=0.0.0
