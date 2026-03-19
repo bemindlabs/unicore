@@ -85,7 +85,7 @@ services:
       UNICORE_EDITION: community
       DATABASE_URL: postgresql://${POSTGRES_USER:-unicore}:${POSTGRES_PASSWORD:-password}@unicore-postgres:5432/${POSTGRES_DB:-unicore}?schema=public
       REDIS_URL: redis://unicore-redis:6379
-      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-min-32-chars}
+      JWT_SECRET: ${JWT_SECRET}
       NODE_ENV: development
       PORT: "4000"
       BOOTSTRAP_SECRET: ${BOOTSTRAP_SECRET:-change-me-bootstrap-secret}
