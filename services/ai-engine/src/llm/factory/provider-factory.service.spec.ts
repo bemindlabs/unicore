@@ -94,7 +94,6 @@ describe('ProviderFactoryService', () => {
     it('throws ProviderUnavailableError when all providers fail', async () => {
       const factory = new ProviderFactoryService(
         makeConfig({
-          OPENAI_API_KEY: 'sk-test',
           LLM_PRIMARY_PROVIDER: 'openai',
           LLM_FAILOVER_PROVIDERS: '',
           LLM_FAILOVER_ENABLED: 'false',
