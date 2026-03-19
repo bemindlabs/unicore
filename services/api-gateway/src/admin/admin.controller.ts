@@ -1,8 +1,10 @@
-import { Controller, Get, Patch, Param, Body, Query, Logger } from '@nestjs/common';
+import { Controller, Get, Patch, Param, Body, Query, Logger, UseGuards } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { TokenBlacklistService } from '../auth/token-blacklist.service';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { LicenseGuard } from '../license/guards/license.guard';
+import { ProFeatureRequired } from '../license/decorators/pro-feature.decorator';
 
 @Roles('OWNER')
 @Controller('api/v1/admin')
@@ -74,6 +76,8 @@ export class AdminController {
   }
 
   @Get('audit-logs')
+  @ProFeatureRequired('auditLogs')
+  @UseGuards(LicenseGuard)
   async auditLogs(@Query() query: any) {
     return this.auditService.query({
       page: query.page ? parseInt(query.page) : 1,

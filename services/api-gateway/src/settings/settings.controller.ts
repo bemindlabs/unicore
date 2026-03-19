@@ -231,6 +231,8 @@ export class SettingsController {
   }
 
   @Roles('OWNER')
+  @ProFeatureRequired('allAgents')
+  @UseGuards(LicenseGuard)
   @Put(':key')
   async put(@Param('key') key: string, @Body() body: any) {
     const settings = await this.prisma.settings.upsert({

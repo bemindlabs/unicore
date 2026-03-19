@@ -6,9 +6,12 @@ import {
   HttpCode,
   Logger,
   ForbiddenException,
+  UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Public } from '../auth/decorators/public.decorator';
+import { LicenseGuard } from '../license/guards/license.guard';
+import { ProFeatureRequired } from '../license/decorators/pro-feature.decorator';
 
 /**
  * Minimal Telegram Update shape — only the fields we inspect.
@@ -39,6 +42,8 @@ interface TelegramUpdate {
 }
 
 @Controller('webhooks/telegram')
+@ProFeatureRequired('allChannels')
+@UseGuards(LicenseGuard)
 export class TelegramWebhookController {
   private readonly logger = new Logger(TelegramWebhookController.name);
 

@@ -155,9 +155,11 @@ export class LicenseService implements OnModuleInit {
 
     // Validate license on startup if a key is available
     const key = this.getKey();
+    let startupTier: LicenseTier = 'community';
     if (key) {
       try {
         const status = await this.getLicenseStatus();
+        startupTier = status.tier;
         this.logger.log(
           `Startup license check: tier=${status.tier} valid=${status.valid}`,
         );
@@ -177,7 +179,7 @@ export class LicenseService implements OnModuleInit {
     // If UNICORE_EDITION claims 'full'/'pro' but the license says 'community',
     // override to 'community' to prevent env-only bypass.
     const envEdition = process.env.UNICORE_EDITION ?? 'community';
-    const licenseTier = this.localCache?.tier ?? 'community';
+    const licenseTier = startupTier;
     this.effectiveEdition = licenseTier;
 
     const envClaimedTier = EDITION_TO_TIER[envEdition] ?? 'community';

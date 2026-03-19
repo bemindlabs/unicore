@@ -6,10 +6,13 @@ import {
   HttpCode,
   Logger,
   ForbiddenException,
+  UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { Public } from '../auth/decorators/public.decorator';
+import { LicenseGuard } from '../license/guards/license.guard';
+import { ProFeatureRequired } from '../license/decorators/pro-feature.decorator';
 
 /**
  * Minimal LINE webhook event shape.
@@ -38,6 +41,8 @@ interface LineWebhookBody {
 }
 
 @Controller('webhooks/line')
+@ProFeatureRequired('allChannels')
+@UseGuards(LicenseGuard)
 export class LineWebhookController {
   private readonly logger = new Logger(LineWebhookController.name);
 

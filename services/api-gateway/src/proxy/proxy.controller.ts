@@ -6,12 +6,17 @@ import {
   Logger,
   HttpException,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ProxyService } from './proxy.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { LicenseGuard } from '../license/guards/license.guard';
+import { ProFeatureRequired } from '../license/decorators/pro-feature.decorator';
 
 @Controller('api/proxy')
+@ProFeatureRequired('allAgents')
+@UseGuards(LicenseGuard)
 export class ProxyController {
   private readonly logger = new Logger(ProxyController.name);
 
