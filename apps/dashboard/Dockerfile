@@ -32,7 +32,7 @@ COPY packages/config ./packages/config
 COPY packages/shared-types ./packages/shared-types
 COPY packages/ui ./packages/ui
 COPY apps/dashboard ./apps/dashboard
-RUN ls packages/ui/node_modules/@radix-ui/ 2>/dev/null || echo "NO RADIX IN UI NODE_MODULES" && \
+RUN echo "=== AFTER SOURCE COPY ===" && ls -la packages/ui/node_modules/@radix-ui/ 2>/dev/null || echo "NO RADIX IN UI NODE_MODULES" && \
     ls node_modules/.pnpm | grep radix | head -5 || echo "NO RADIX IN PNPM STORE" && \
     ls node_modules/@radix-ui/ 2>/dev/null || echo "NO RADIX IN ROOT NODE_MODULES"
 RUN cd packages/shared-types && node $(ls /app/node_modules/.pnpm/typescript@*/node_modules/typescript/bin/tsc)
