@@ -65,7 +65,7 @@ export class SettingsController {
   // ── Pro-only: Custom domains ──
 
   @Get('domains')
-  @ProFeatureRequired('custom_integrations')
+  @ProFeatureRequired('allChannels')
   @UseGuards(LicenseGuard)
   async getDomains() {
     const settings = await this.prisma.settings.findUnique({ where: { id: 'domains' } });
