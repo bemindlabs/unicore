@@ -4,7 +4,7 @@ import { InvoicesController } from './invoices.controller';
 import { KafkaModule } from '../kafka/kafka.module';
 
 @Module({
-  imports: [KafkaModule],
+  imports: [KafkaModule.register()],
   providers: [InvoicesService],
   controllers: [InvoicesController],
   exports: [InvoicesService],

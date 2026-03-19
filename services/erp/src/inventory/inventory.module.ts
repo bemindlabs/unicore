@@ -4,7 +4,7 @@ import { InventoryController } from './inventory.controller';
 import { InventoryService } from './inventory.service';
 
 @Module({
-  imports: [KafkaModule],
+  imports: [KafkaModule.register()],
   controllers: [InventoryController],
   providers: [InventoryService],
   exports: [InventoryService],

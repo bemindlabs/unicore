@@ -17,7 +17,7 @@ import { ErpEventInterceptor } from './kafka/erp-event.interceptor';
 @Module({
   imports: [
     PrismaModule,
-    KafkaModule,
+    KafkaModule.register(),
     HealthModule,
     ContactsModule,
     OrdersModule,

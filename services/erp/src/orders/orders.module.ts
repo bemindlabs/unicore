@@ -4,7 +4,7 @@ import { OrdersController } from './orders.controller';
 import { OrdersService } from './orders.service';
 
 @Module({
-  imports: [KafkaModule],
+  imports: [KafkaModule.register()],
   controllers: [OrdersController],
   providers: [OrdersService],
   exports: [OrdersService],
