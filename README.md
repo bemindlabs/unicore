@@ -225,12 +225,8 @@ See [`.env.example`](.env.example) for the full list. Key variables:
 | `POSTGRES_PASSWORD` | Yes | PostgreSQL password (strong) |
 | `JWT_SECRET` | Yes | Auth token signing (min 32 chars) |
 | `BOOTSTRAP_SECRET` | Yes | Wizard provisioning secret |
-| `OPENAI_API_KEY` | No | OpenAI API key |
-| `ANTHROPIC_API_KEY` | No | Anthropic API key |
 | `OLLAMA_BASE_URL` | No | Ollama local endpoint (`http://localhost:11434`) |
 | `LLM_PRIMARY_PROVIDER` | No | `openai`, `anthropic`, or `ollama` |
-| `TELEGRAM_BOT_TOKEN` | No | Telegram bot integration |
-| `LINE_CHANNEL_SECRET` | No | LINE messaging integration |
 
 ## Development
 

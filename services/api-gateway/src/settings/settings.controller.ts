@@ -197,10 +197,12 @@ export class SettingsController {
   }
 
   // Internal endpoint for services to fetch decrypted keys (not exposed externally)
+  private static readonly ALLOWED_INTERNAL_SERVICES = ['ai-engine', 'rag', 'openclaw-gateway', 'workflow'];
+
   @Public()
   @Get('ai-config/keys')
   async getAiConfigKeys(@Headers('x-internal-service') internalService: string) {
-    if (!internalService) {
+    if (!internalService || !SettingsController.ALLOWED_INTERNAL_SERVICES.includes(internalService)) {
       return { defaultProvider: 'openai', defaultModel: '' };
     }
     const settings = await this.prisma.settings.findUnique({ where: { id: 'ai-config' } });
