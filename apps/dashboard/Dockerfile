@@ -23,21 +23,14 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_BOOTSTRAP_SECRET=$NEXT_PUBLIC_BOOTSTRAP_SECRET
 ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
 ENV NEXT_PUBLIC_EDITION=$NEXT_PUBLIC_EDITION
-# Copy source first
+# Copy installed deps (preserves pnpm store + symlinks)
+COPY --from=deps /app ./
+# Copy source over package.json-only dirs
 COPY packages/config ./packages/config
 COPY packages/shared-types ./packages/shared-types
 COPY packages/ui ./packages/ui
 COPY apps/dashboard ./apps/dashboard
 COPY tsconfig.json ./
-# Then overlay deps
-# Overlay all deps from pnpm install
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages/ ./packages/
-COPY --from=deps /app/apps/dashboard/node_modules ./apps/dashboard/node_modules
-# Re-copy source (overwrite package.json-only dirs from deps)
-COPY packages/config ./packages/config
-COPY packages/shared-types ./packages/shared-types
-COPY packages/ui ./packages/ui
 RUN cd packages/shared-types && pnpm run build
 RUN cd apps/dashboard && pnpm run build
 
