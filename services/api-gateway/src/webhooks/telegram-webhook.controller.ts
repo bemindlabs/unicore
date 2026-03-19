@@ -56,8 +56,8 @@ export class TelegramWebhookController {
     @Body() update: TelegramUpdate,
     @Headers('x-telegram-bot-api-secret-token') secretToken?: string,
   ): { ok: true } {
-    // Validate webhook secret if configured
-    const expectedSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
+    // Validate webhook secret if configured (set via dashboard Settings → Channels)
+    const expectedSecret = this.config.get<string>('TELEGRAM_WEBHOOK_SECRET');
     if (expectedSecret && secretToken !== expectedSecret) {
       this.logger.warn(
         `Telegram webhook received with invalid secret token (update_id=${update.update_id})`,
