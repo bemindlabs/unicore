@@ -101,11 +101,6 @@ services:
       OPENCLAW_SERVICE_PORT: "18790"
       WORKFLOW_SERVICE_HOST: unicore-workflow
       WORKFLOW_SERVICE_PORT: "4400"
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
-      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:-unicore-telegram-secret}
-      LINE_CHANNEL_ID: ${LINE_CHANNEL_ID:-}
-      LINE_CHANNEL_SECRET: ${LINE_CHANNEL_SECRET:-}
-      LINE_CHANNEL_ACCESS_TOKEN: ${LINE_CHANNEL_ACCESS_TOKEN:-}
     depends_on:
       unicore-postgres:
         condition: service_healthy
