@@ -58,6 +58,11 @@ export class ProxyService {
         ...(originalHost ? { 'x-forwarded-host': originalHost } : {}),
       };
 
+      // SEC-H12: Always strip any client-supplied x-user-id to prevent spoofing.
+      // The userId MUST only come from the authenticated JWT payload (req.user),
+      // never from an incoming request header.
+      delete forwardHeaders['x-user-id'];
+
       if (options.userId) {
         forwardHeaders['x-user-id'] = options.userId;
       }
