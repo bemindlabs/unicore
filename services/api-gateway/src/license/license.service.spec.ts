@@ -94,16 +94,16 @@ describe('LicenseService', () => {
     it('populates features from server response', async () => {
       const status = await service.getLicenseStatus();
 
-      expect(status.features).toEqual(['rbac', 'sso', 'audit_log']);
+      expect(status.features).toEqual(['fullRbac', 'sso', 'auditLogs']);
     });
 
     it('hasFeature returns true for granted features', async () => {
-      expect(await service.hasFeature('rbac')).toBe(true);
+      expect(await service.hasFeature('fullRbac')).toBe(true);
       expect(await service.hasFeature('sso')).toBe(true);
     });
 
     it('hasFeature returns false for features not in response', async () => {
-      expect(await service.hasFeature('white_label')).toBe(false);
+      expect(await service.hasFeature('whiteLabelBranding')).toBe(false);
     });
 
     it('sets nextRevalidationAt approximately one week in the future', async () => {
