@@ -100,6 +100,11 @@ export class MinimalRedisClient {
     return result as number;
   }
 
+  async exists(key: string): Promise<number> {
+    const result = await this.sendCommand(['EXISTS', key]);
+    return result as number;
+  }
+
   async keys(pattern: string): Promise<string[]> {
     const result = await this.sendCommand(['KEYS', pattern]);
     return result as string[];
