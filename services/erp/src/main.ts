@@ -12,20 +12,6 @@ async function bootstrap(): Promise<void> {
   // Global prefix for all ERP routes
   app.setGlobalPrefix('api/v1');
 
-  // Connect Kafka microservice consumer (optional — workflows profile)
-  const kafkaBrokers = process.env['KAFKA_BROKERS'];
-  if (kafkaBrokers) {
-    try {
-      app.connectMicroservice(getKafkaConfig());
-      await app.startAllMicroservices();
-      logger.log('Kafka microservice connected');
-    } catch (err) {
-      logger.warn(`Kafka unavailable — running without workflow events: ${(err as Error).message}`);
-    }
-  } else {
-    logger.log('KAFKA_BROKERS not set — running without Kafka');
-  }
-
   // Global validation pipe — strip unknown properties, whitelist known ones
   app.useGlobalPipes(
     new ValidationPipe({
@@ -39,9 +25,24 @@ async function bootstrap(): Promise<void> {
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new LoggingInterceptor());
 
+  // Start HTTP server first — ERP must be available even without Kafka
   const port = process.env['PORT'] ?? 4100;
   await app.listen(port);
   logger.log(`ERP service listening on port ${port}`);
+
+  // Connect Kafka microservice consumer in background (optional — workflows profile)
+  const kafkaEnabled = process.env['ENABLE_KAFKA'] === 'true';
+  if (kafkaEnabled) {
+    try {
+      app.connectMicroservice(getKafkaConfig());
+      await app.startAllMicroservices();
+      logger.log('Kafka microservice connected');
+    } catch (err) {
+      logger.warn(`Kafka unavailable — running without workflow events: ${(err as Error).message}`);
+    }
+  } else {
+    logger.log('Kafka disabled (set ENABLE_KAFKA=true to enable)');
+  }
 }
 
 void bootstrap();
