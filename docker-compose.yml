@@ -210,8 +210,6 @@ services:
       REDIS_URL: redis://unicore-redis:6379
       ERP_SERVICE_URL: http://unicore-erp:4100
       OPENCLAW_GATEWAY_URL: ws://unicore-openclaw-gateway:18789
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
-      LINE_CHANNEL_ACCESS_TOKEN: ${LINE_CHANNEL_ACCESS_TOKEN:-}
     depends_on:
       unicore-kafka:
         condition: service_healthy
