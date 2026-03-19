@@ -131,6 +131,8 @@ export interface SendNotificationAction extends BaseAction {
 export interface SendTelegramAction extends BaseAction {
   type: 'send_telegram';
   config: {
+    /** Telegram bot token — resolved from settings at runtime. */
+    botToken?: string;
     /** Telegram chat ID — supports `{{field}}` interpolation. */
     chatId: string;
     /** Direct message text — supports `{{field}}` interpolation. */
