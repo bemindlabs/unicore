@@ -24,6 +24,55 @@ export class AdminController {
     return users;
   }
 
+  @Patch('users/:id/role')
+  async updateUserRole(
+    @Param('id') userId: string,
+    @Body('role') newRole: string,
+  ) {
+    const validRoles = ['OWNER', 'OPERATOR', 'MARKETER', 'FINANCE', 'VIEWER'];
+    if (!validRoles.includes(newRole)) {
+      throw new Error(`Invalid role. Must be one of: ${validRoles.join(', ')}`);
+    }
+
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { role: newRole },
+      select: { id: true, email: true, name: true, role: true },
+    });
+
+    // Invalidate all active sessions for this user so their JWT (with old role) cannot be reused
+    const sessions = await this.prisma.session.findMany({
+      where: { userId },
+      select: { id: true, token: true },
+    });
+
+    for (const session of sessions) {
+      try {
+        // Decode the access token to extract jti for blacklisting
+        const tokenParts = session.token.split('.');
+        if (tokenParts.length === 3) {
+          const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64url').toString());
+          if (payload.jti) {
+            const now = Math.floor(Date.now() / 1000);
+            const ttl = payload.exp ? payload.exp - now : 900;
+            if (ttl > 0) {
+              await this.tokenBlacklist.blacklist(payload.jti, ttl);
+            }
+          }
+        }
+      } catch {
+        // Token may be malformed; continue to delete the session anyway
+      }
+    }
+
+    // Delete all sessions to force re-login
+    await this.prisma.session.deleteMany({ where: { userId } });
+
+    this.logger.log(`Role updated for user ${user.email}: ${newRole} — ${sessions.length} session(s) invalidated`);
+
+    return user;
+  }
+
   @Get('audit-logs')
   async auditLogs(@Query() query: any) {
     return this.auditService.query({
