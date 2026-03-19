@@ -23,12 +23,12 @@ export class SendTelegramExecutor implements IActionExecutor<SendTelegramAction>
     action: SendTelegramAction,
     context: ActionExecutionContext,
   ): Promise<ActionExecutionResult> {
-    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    const botToken = action.config.botToken;
 
     if (!botToken) {
       return {
         success: false,
-        error: 'TELEGRAM_BOT_TOKEN environment variable is not set',
+        error: 'Telegram bot token is not configured. Please set it via dashboard Settings → Channels.',
       };
     }
 
