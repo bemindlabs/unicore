@@ -31,11 +31,7 @@ COPY packages/shared-types ./packages/shared-types
 COPY packages/ui ./packages/ui
 COPY apps/dashboard ./apps/dashboard
 COPY tsconfig.json ./
-RUN ls -la node_modules/.pnpm/typescript*/node_modules/typescript/bin/ 2>/dev/null || echo "NO TSC FOUND" && \
-    which tsc 2>/dev/null || echo "NO TSC IN PATH" && \
-    ls packages/shared-types/node_modules/.bin/ 2>/dev/null || echo "NO SHARED-TYPES BINS" && \
-    ls node_modules/.bin/tsc 2>/dev/null || echo "NO ROOT TSC BIN"
-RUN cd packages/shared-types && pnpm run build
+RUN cd packages/shared-types && node ./node_modules/.pnpm/typescript@*/node_modules/typescript/bin/tsc 2>/dev/null || npx -y typescript tsc
 RUN cd apps/dashboard && pnpm run build
 
 ARG VERSION=0.0.0
