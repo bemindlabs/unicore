@@ -1,6 +1,6 @@
 {
   "name": "@unicore/shared-types",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "private": true,
   "type": "module",
   "exports": {
@@ -13,7 +13,9 @@
   "main": "./dist/cjs/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc && tsc -p tsconfig.cjs.json",
     "typecheck": "tsc --noEmit",
