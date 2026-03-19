@@ -2,19 +2,9 @@
 ARG BUILDPLATFORM=linux/amd64
 ARG TARGETPLATFORM=linux/amd64
 
-FROM --platform=$BUILDPLATFORM node:20-alpine AS base
+FROM --platform=$BUILDPLATFORM node:20-alpine AS build
 RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
 WORKDIR /app
-
-FROM base AS deps
-COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
-COPY packages/config/package.json ./packages/config/
-COPY packages/shared-types/package.json ./packages/shared-types/
-COPY packages/ui/package.json ./packages/ui/
-COPY apps/dashboard/package.json ./apps/dashboard/
-RUN pnpm install --frozen-lockfile --filter @unicore/dashboard... --filter @unicore/shared-types...
-
-FROM base AS build
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_BOOTSTRAP_SECRET
 ARG NEXT_PUBLIC_WS_URL
@@ -23,16 +13,21 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_BOOTSTRAP_SECRET=$NEXT_PUBLIC_BOOTSTRAP_SECRET
 ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
 ENV NEXT_PUBLIC_EDITION=$NEXT_PUBLIC_EDITION
-# Copy installed deps (preserves pnpm store + symlinks)
-COPY --from=deps /app ./
-# Copy source over package.json-only dirs
+# Copy workspace config + package.jsons for install
+COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
+COPY packages/config/package.json ./packages/config/
+COPY packages/shared-types/package.json ./packages/shared-types/
+COPY packages/ui/package.json ./packages/ui/
+COPY apps/dashboard/package.json ./apps/dashboard/
+RUN pnpm install --frozen-lockfile --filter @unicore/dashboard...
+# Copy source
+COPY tsconfig.json ./
 COPY packages/config ./packages/config
 COPY packages/shared-types ./packages/shared-types
 COPY packages/ui ./packages/ui
 COPY apps/dashboard ./apps/dashboard
-COPY tsconfig.json ./
-RUN pnpm rebuild && cd packages/shared-types && pnpm run build
-RUN cd apps/dashboard && pnpm run build
+RUN cd packages/shared-types && node ../../node_modules/typescript/bin/tsc
+RUN cd apps/dashboard && npx next build
 
 ARG VERSION=0.0.0
 FROM --platform=$TARGETPLATFORM node:20-alpine AS runner
@@ -44,8 +39,8 @@ LABEL org.opencontainers.image.vendor="BeMind Technology"
 LABEL org.opencontainers.image.title="unicore-dashboard"
 LABEL org.opencontainers.image.description="Next.js 14 frontend dashboard for UniCore"
 LABEL org.opencontainers.image.version="${VERSION}"
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/dashboard/node_modules ./apps/dashboard/node_modules
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/apps/dashboard/node_modules ./apps/dashboard/node_modules
 COPY --from=build /app/apps/dashboard/.next ./apps/dashboard/.next
 COPY --from=build /app/apps/dashboard/public ./apps/dashboard/public
 COPY --from=build /app/apps/dashboard/package.json ./apps/dashboard/

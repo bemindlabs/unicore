@@ -22,8 +22,6 @@ RUN cd services/openclaw-gateway && pnpm run build
 
 ARG VERSION=0.0.0
 FROM --platform=$TARGETPLATFORM node:20-alpine AS runner
-# gcompat provides glibc compatibility for host-mounted binaries (e.g. Claude Code)
-RUN apk add --no-cache gcompat libstdc++ tmux
 WORKDIR /app
 ENV NODE_ENV=production
 LABEL org.opencontainers.image.source="https://github.com/bemindlabs/unicore"
@@ -35,11 +33,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/services/openclaw-gateway/node_modules ./services/openclaw-gateway/node_modules
 COPY --from=build /app/services/openclaw-gateway/dist ./services/openclaw-gateway/dist
 COPY --from=build /app/services/openclaw-gateway/package.json ./services/openclaw-gateway/
-# AI Coding CLI tools setup script (runs on startup to link mounted host tools)
-COPY services/openclaw-gateway/tools/setup-cli-tools.sh /usr/local/bin/setup-cli-tools.sh
-RUN chmod +x /usr/local/bin/setup-cli-tools.sh
 WORKDIR /app/services/openclaw-gateway
 RUN addgroup -g 1001 -S nodejs && adduser -S -u 1001 appuser
 USER appuser
 EXPOSE 18789 18790
-CMD ["sh", "-c", "setup-cli-tools.sh && exec node dist/main"]
+CMD ["node", "dist/main"]
