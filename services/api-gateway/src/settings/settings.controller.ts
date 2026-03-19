@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { LicenseGuard } from '../license/guards/license.guard';
 import { ProFeatureRequired } from '../license/decorators/pro-feature.decorator';
 import { Public } from '../auth/decorators/public.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { encrypt, decrypt, maskKey } from './crypto.util';
 
 function safeDecryptMask(encrypted: string): string {
@@ -145,6 +146,7 @@ export class SettingsController {
     return result;
   }
 
+  @Roles('OWNER')
   @Put('ai-config')
   async putAiConfig(@Body() body: Record<string, string>) {
     // Read existing config
@@ -221,12 +223,14 @@ export class SettingsController {
 
   // ── Generic catch-all routes — MUST be last to avoid shadowing named routes ──
 
+  @Roles('OWNER')
   @Get(':key')
   async get(@Param('key') key: string) {
     const settings = await this.prisma.settings.findUnique({ where: { id: key } });
     return settings?.data ?? {};
   }
 
+  @Roles('OWNER')
   @Put(':key')
   async put(@Param('key') key: string, @Body() body: any) {
     const settings = await this.prisma.settings.upsert({
