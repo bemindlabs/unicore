@@ -243,10 +243,12 @@ export class AuthService implements OnModuleDestroy {
     name: string;
     role: string;
   }): Promise<AuthResponseDto> {
+    const jti = randomBytes(16).toString('hex');
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
       role: user.role,
+      jti,
     };
 
     const accessToken = this.jwtService.sign(payload, {
