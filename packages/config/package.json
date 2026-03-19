@@ -2,6 +2,7 @@
   "name": "@unicore/config",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "exports": {
     "./eslint/base": "./src/eslint/base.js",
     "./eslint/next": "./src/eslint/next.js",
