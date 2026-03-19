@@ -38,7 +38,7 @@ export class AdminController {
 
     const user = await this.prisma.user.update({
       where: { id: userId },
-      data: { role: newRole },
+      data: { role: newRole as any },
       select: { id: true, email: true, name: true, role: true },
     });
 
