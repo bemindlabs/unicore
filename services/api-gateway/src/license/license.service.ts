@@ -189,6 +189,19 @@ export class LicenseService implements OnModuleInit {
   async activate(key: string): Promise<LicenseStatus> {
     this.licenseKey = key;
     this.cachedStatus = null;
+
+    // Persist to Redis so the key survives gateway restarts
+    if (this.redis && this.redisConnected) {
+      try {
+        await this.redis.set(REDIS_LICENSE_KEY, key);
+        this.logger.log('License key persisted to Redis');
+      } catch (err) {
+        this.logger.warn(
+          `Failed to persist license key to Redis: ${(err as Error).message}`,
+        );
+      }
+    }
+
     return this.getLicenseStatus();
   }
 
