@@ -62,6 +62,13 @@ const TIER_FEATURES: Record<LicenseTier, ProFeature[]> = {
  */
 const REDIS_LICENSE_KEY = 'unicore:license:active_key';
 
+/** Map env-var edition names to license tiers. */
+const EDITION_TO_TIER: Record<string, LicenseTier> = {
+  full: 'enterprise',
+  pro: 'pro',
+  community: 'community',
+};
+
 @Injectable()
 export class LicenseService implements OnModuleInit {
   private readonly logger = new Logger(LicenseService.name);
@@ -78,6 +85,13 @@ export class LicenseService implements OnModuleInit {
 
   /** Promise guard to avoid concurrent validation races on startup. */
   private validationInFlight: Promise<LicenseStatus> | null = null;
+
+  /**
+   * The license-validated effective edition. All feature flag checks must use
+   * this instead of reading UNICORE_EDITION from the environment directly.
+   * Prevents bypassing license enforcement by setting env vars alone.
+   */
+  private effectiveEdition: LicenseTier = 'community';
 
   /**
    * Lifecycle hook — runs once when the module is initialised.
@@ -131,6 +145,23 @@ export class LicenseService implements OnModuleInit {
         'No UNICORE_LICENSE_KEY configured — starting in Community tier',
       );
     }
+
+    // Enforce: env-claimed edition must match license tier.
+    // If UNICORE_EDITION claims 'full'/'pro' but the license says 'community',
+    // override to 'community' to prevent env-only bypass.
+    const envEdition = process.env.UNICORE_EDITION ?? 'community';
+    const licenseTier = this.cachedStatus?.tier ?? 'community';
+    this.effectiveEdition = licenseTier;
+
+    const envClaimedTier = EDITION_TO_TIER[envEdition] ?? 'community';
+    if (envClaimedTier !== licenseTier) {
+      this.logger.warn(
+        `Edition mismatch: env claimed "${envEdition}" (${envClaimedTier}) but license tier is "${licenseTier}". ` +
+          `Overriding to "${licenseTier}".`,
+      );
+    }
+
+    this.logger.log(`License tier: ${licenseTier} (env claimed: ${envEdition})`);
   }
 
   /**
@@ -168,6 +199,36 @@ export class LicenseService implements OnModuleInit {
   async hasFeature(feature: ProFeature): Promise<boolean> {
     const status = await this.getLicenseStatus();
     return status.valid && status.features.includes(feature);
+  }
+
+  /**
+   * Returns the license-validated effective edition.
+   * All feature flag checks must go through this method, not read
+   * UNICORE_EDITION from the environment directly.
+   */
+  getEffectiveEdition(): LicenseTier {
+    return this.effectiveEdition;
+  }
+
+  /**
+   * Checks whether a specific ENABLE_* feature flag is allowed by the license.
+   * Maps env-var style feature names to ProFeature checks.
+   */
+  async isFeatureEnabled(envFlag: string): Promise<boolean> {
+    const flagToFeature: Record<string, ProFeature> = {
+      ENABLE_SSO: 'sso',
+      ENABLE_WHITE_LABEL: 'whiteLabelBranding',
+      ENABLE_ADVANCED_WORKFLOWS: 'advancedWorkflows',
+      ENABLE_ALL_CHANNELS: 'allChannels',
+      ENABLE_CUSTOM_DOMAINS: 'allChannels',
+      ENABLE_ADVANCED_ANALYTICS: 'auditLogs',
+      ENABLE_PRIORITY_SUPPORT: 'prioritySupport',
+    };
+
+    const feature = flagToFeature[envFlag];
+    if (!feature) return true; // Unknown flags pass through
+
+    return this.hasFeature(feature);
   }
 
   /**
@@ -242,6 +303,7 @@ export class LicenseService implements OnModuleInit {
       const result = await this.callLicenseServer(key);
       const status = this.buildStatusFromResponse(key, result);
       this.cachedStatus = status;
+      this.effectiveEdition = status.tier;
 
       this.logger.log(
         `License validated: tier=${status.tier} features=[${status.features.join(', ')}]`,
