@@ -38,5 +38,7 @@ COPY --from=build /app/services/erp/src/generated ./services/erp/dist/generated
 COPY --from=build /app/services/erp/package.json ./services/erp/
 COPY --from=build /app/services/erp/src/prisma ./services/erp/prisma
 WORKDIR /app/services/erp
+RUN addgroup -g 1001 -S nodejs && adduser -S -u 1001 appuser
+USER appuser
 EXPOSE 4100
 CMD ["node", "dist/main"]
