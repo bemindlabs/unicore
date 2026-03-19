@@ -7,6 +7,7 @@ import {
   Logger,
   ForbiddenException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Public } from '../auth/decorators/public.decorator';
 
 /**
