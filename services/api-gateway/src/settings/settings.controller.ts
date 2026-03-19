@@ -146,6 +146,7 @@ export class SettingsController {
     return result;
   }
 
+  @Roles('OWNER')
   @Put('ai-config')
   async putAiConfig(@Body() body: Record<string, string>) {
     // Read existing config
