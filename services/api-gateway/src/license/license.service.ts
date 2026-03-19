@@ -52,9 +52,15 @@ const TIER_FEATURES: Record<LicenseTier, ProFeature[]> = {
  * Cache is in-memory; for multi-replica deployments a Redis-backed cache
  * should replace it (tracked as a follow-up task).
  */
+const REDIS_LICENSE_KEY = 'unicore:license:active_key';
+
 @Injectable()
-export class LicenseService {
+export class LicenseService implements OnModuleInit {
   private readonly logger = new Logger(LicenseService.name);
+
+  /** Redis client for persisting the activated license key across restarts. */
+  private redis: MinimalRedisClient | null = null;
+  private redisConnected = false;
 
   /** The active license key. Falls back to env var when null. */
   private licenseKey: string | null = null;
