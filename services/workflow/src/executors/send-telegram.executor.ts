@@ -1,7 +1,7 @@
 /**
  * SendTelegramExecutor — sends a message to a Telegram chat via the Bot API.
  *
- * Reads the bot token from the TELEGRAM_BOT_TOKEN environment variable.
+ * The bot token must be configured via dashboard Settings → Channels.
  * Action config requires a chatId and either a message or a template
  * (which supports {{field}} interpolation).
  */
