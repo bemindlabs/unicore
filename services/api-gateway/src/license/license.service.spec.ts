@@ -141,11 +141,11 @@ describe('LicenseService', () => {
 
       expect(status.valid).toBe(false);
       expect(status.tier).toBe('community');
-      expect(status.features).toEqual(['audit_log']);
+      expect(status.features).toEqual(['auditLogs']);
     });
 
     it('hasFeature returns false', async () => {
-      expect(await service.hasFeature('rbac')).toBe(false);
+      expect(await service.hasFeature('fullRbac')).toBe(false);
     });
   });
 
