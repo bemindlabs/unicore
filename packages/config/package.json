@@ -2,6 +2,11 @@
   "name": "@unicore/config",
   "version": "0.1.0",
   "private": true,
+  "scripts": {
+    "test": "jest --passWithNoTests",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
   "exports": {
     "./eslint/base": "./src/eslint/base.js",
     "./eslint/next": "./src/eslint/next.js",
