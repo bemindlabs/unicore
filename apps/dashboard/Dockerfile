@@ -26,8 +26,8 @@ COPY packages/config ./packages/config
 COPY packages/shared-types ./packages/shared-types
 COPY packages/ui ./packages/ui
 COPY apps/dashboard ./apps/dashboard
-RUN pnpm --filter @unicore/shared-types run build
-RUN pnpm --filter @unicore/dashboard run build
+RUN cd packages/shared-types && node $(ls /app/node_modules/.pnpm/typescript@*/node_modules/typescript/bin/tsc)
+RUN cd apps/dashboard && node $(ls /app/node_modules/.pnpm/next@*/node_modules/next/dist/bin/next) build
 
 ARG VERSION=0.0.0
 FROM --platform=$TARGETPLATFORM node:20-alpine AS runner
