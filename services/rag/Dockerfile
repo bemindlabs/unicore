@@ -37,4 +37,6 @@ WORKDIR /app/services/rag
 RUN addgroup -g 1001 -S nodejs && adduser -S -u 1001 appuser
 USER appuser
 EXPOSE 4300
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD node -e "const http = require('http'); http.get('http://localhost:4300/health', (r) => { if (r.statusCode !== 200) process.exit(1) }).on('error', () => process.exit(1))"
 CMD ["node", "dist/main"]
