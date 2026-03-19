@@ -27,6 +27,11 @@ COPY packages/shared-types ./packages/shared-types
 COPY packages/ui ./packages/ui
 COPY apps/dashboard ./apps/dashboard
 RUN cd packages/shared-types && node ../../node_modules/typescript/bin/tsc
+RUN ls node_modules/.pnpm/next*/node_modules/next/dist/bin/next 2>/dev/null && \
+    ls apps/dashboard/node_modules/.pnpm/next*/node_modules/next/dist/bin/next 2>/dev/null; \
+    ls apps/dashboard/node_modules/next/dist/bin/next 2>/dev/null; \
+    ls apps/dashboard/node_modules/.bin/next 2>/dev/null; \
+    find . -path "*/next/dist/bin/next" -maxdepth 6 2>/dev/null || true
 RUN cd apps/dashboard && npx next build
 
 ARG VERSION=0.0.0
