@@ -1,14 +1,20 @@
 export type LicenseTier = 'community' | 'pro' | 'enterprise';
 
+/**
+ * Pro feature flag names — camelCase, aligned with
+ * @unicore-license/license-types FeatureFlags keys.
+ */
 export type ProFeature =
-  | 'advanced_agents'
-  | 'rbac'
+  | 'allAgents'
+  | 'customAgentBuilder'
+  | 'fullRbac'
+  | 'advancedWorkflows'
+  | 'allChannels'
+  | 'unlimitedRag'
+  | 'whiteLabelBranding'
   | 'sso'
-  | 'audit_log'
-  | 'multi_channel'
-  | 'white_label'
-  | 'priority_support'
-  | 'custom_integrations';
+  | 'auditLogs'
+  | 'prioritySupport';
 
 export interface LicenseStatus {
   valid: boolean;
