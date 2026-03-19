@@ -7,8 +7,8 @@ import type {
   LicenseValidationResponse,
 } from './interfaces/license.interface';
 
-/** One week in milliseconds — cache TTL for license status. */
-const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+/** 24 hours in milliseconds — offline grace period for license status cache. */
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 /**
  * Features available per tier.
@@ -125,6 +125,11 @@ export class LicenseService implements OnModuleInit {
           'Activated keys will not survive restarts.',
       );
     }
+
+    // Clear in-memory cache on startup to force fresh validation before
+    // serving any Pro features. Prevents stale cache from a previous run
+    // granting access after license revocation.
+    this.cachedStatus = null;
 
     // Validate license on startup if a key is available
     const key = this.getKey();
