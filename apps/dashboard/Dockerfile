@@ -14,7 +14,9 @@ ENV NEXT_PUBLIC_BOOTSTRAP_SECRET=$NEXT_PUBLIC_BOOTSTRAP_SECRET
 ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
 ENV NEXT_PUBLIC_EDITION=$NEXT_PUBLIC_EDITION
 # Copy workspace config + all package.jsons for install
-COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml .npmrc ./
+COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
+# Use hoisted node-linker to avoid pnpm symlink issues in Docker
+RUN echo "node-linker=hoisted" > .npmrc && echo "ignore-scripts=true" >> .npmrc
 COPY packages/config/package.json ./packages/config/
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY packages/ui/package.json ./packages/ui/
