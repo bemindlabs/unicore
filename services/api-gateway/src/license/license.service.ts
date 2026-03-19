@@ -72,8 +72,62 @@ export class LicenseService implements OnModuleInit {
   private validationInFlight: Promise<LicenseStatus> | null = null;
 
   /**
-   * Returns the current license key, preferring the in-memory value
-   * and falling back to the environment variable.
+   * Lifecycle hook — runs once when the module is initialised.
+   *
+   * 1. Connects to Redis and restores any previously-activated license key.
+   * 2. If UNICORE_LICENSE_KEY is set (or a key was restored from Redis),
+   *    validates it eagerly so tier/features are known before the first
+   *    request arrives.
+   *
+   * Failures are logged as warnings — the service still starts so the
+   * community edition keeps working without a license server.
+   */
+  async onModuleInit(): Promise<void> {
+    // Connect to Redis for license key persistence
+    try {
+      const redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379';
+      this.redis = new MinimalRedisClient(redisUrl);
+      await this.redis.connect();
+      this.redisConnected = true;
+      this.logger.log('Redis connected for license key persistence');
+
+      // Restore previously-activated key from Redis
+      const storedKey = await this.redis.get(REDIS_LICENSE_KEY);
+      if (storedKey) {
+        this.licenseKey = storedKey;
+        this.logger.log('Restored activated license key from Redis');
+      }
+    } catch (err) {
+      this.logger.warn(
+        `Could not connect to Redis for license persistence: ${(err as Error).message}. ` +
+          'Activated keys will not survive restarts.',
+      );
+    }
+
+    // Validate license on startup if a key is available
+    const key = this.getKey();
+    if (key) {
+      try {
+        const status = await this.getLicenseStatus();
+        this.logger.log(
+          `Startup license check: tier=${status.tier} valid=${status.valid}`,
+        );
+      } catch (err) {
+        this.logger.warn(
+          `Startup license validation failed: ${(err as Error).message}. ` +
+            'Continuing with community defaults.',
+        );
+      }
+    } else {
+      this.logger.log(
+        'No UNICORE_LICENSE_KEY configured — starting in Community tier',
+      );
+    }
+  }
+
+  /**
+   * Returns the current license key, preferring the in-memory value,
+   * then falling back to the environment variable.
    */
   private getKey(): string | null {
     return this.licenseKey ?? process.env.UNICORE_LICENSE_KEY ?? null;
