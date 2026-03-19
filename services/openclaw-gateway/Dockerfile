@@ -39,5 +39,7 @@ COPY --from=build /app/services/openclaw-gateway/package.json ./services/opencla
 COPY services/openclaw-gateway/tools/setup-cli-tools.sh /usr/local/bin/setup-cli-tools.sh
 RUN chmod +x /usr/local/bin/setup-cli-tools.sh
 WORKDIR /app/services/openclaw-gateway
+RUN addgroup -g 1001 -S nodejs && adduser -S -u 1001 appuser
+USER appuser
 EXPOSE 18789 18790
 CMD ["sh", "-c", "setup-cli-tools.sh && exec node dist/main"]
