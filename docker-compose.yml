@@ -168,10 +168,10 @@ services:
       UNICORE_EDITION: community
       DATABASE_URL: postgresql://${POSTGRES_USER:-unicore}:${POSTGRES_PASSWORD:-password}@unicore-postgres:5432/${POSTGRES_DB:-unicore}?schema=public
       PORT: "4500"
-      BOOTSTRAP_SECRET: ${BOOTSTRAP_SECRET:-change-me-bootstrap-secret}
+      BOOTSTRAP_SECRET: ${BOOTSTRAP_SECRET}
       API_GATEWAY_URL: http://unicore-api-gateway:4000
       LICENSE_API_URL: http://unicore-license-api:4600
-      LICENSE_ADMIN_SECRET: ${LICENSE_ADMIN_SECRET:-change-me-license-secret}
+      LICENSE_ADMIN_SECRET: ${LICENSE_ADMIN_SECRET}
     depends_on:
       unicore-postgres:
         condition: service_healthy
