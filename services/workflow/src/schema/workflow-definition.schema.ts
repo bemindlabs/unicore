@@ -148,6 +148,8 @@ export interface SendTelegramAction extends BaseAction {
 export interface SendLineAction extends BaseAction {
   type: 'send_line';
   config: {
+    /** LINE channel access token — resolved from settings at runtime. */
+    accessToken?: string;
     /** LINE user or group ID — supports `{{field}}` interpolation. */
     to: string;
     /** Direct message text — supports `{{field}}` interpolation. */
