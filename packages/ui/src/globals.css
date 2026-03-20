@@ -49,6 +49,66 @@
   }
 }
 
+/* Backoffice default theme (non-RetroDesk) — light/dark aware */
+:root {
+  --bo-bg-deep: #ffffff;
+  --bo-bg: #f8fafc;
+  --bo-bg-raised: #ffffff;
+  --bo-bg-elevated: #f1f5f9;
+  --bo-bg-input: #ffffff;
+  --bo-bg-bubble: #f1f5f9;
+  --bo-bg-glass: rgba(248, 250, 252, 0.8);
+  --bo-text-bright: #0f172a;
+  --bo-text-accent: #0e7490;
+  --bo-text-accent-2: #0891b2;
+  --bo-text-body: #1e293b;
+  --bo-text-body-soft: #334155;
+  --bo-text-info: #0891b2;
+  --bo-text-muted: #64748b;
+  --bo-text-dim: #94a3b8;
+  --bo-text-dimmer: #cbd5e1;
+  --bo-border: #e2e8f0;
+  --bo-border-subtle: #f1f5f9;
+  --bo-border-strong: #cbd5e1;
+  --bo-border-accent: rgba(14, 116, 144, 0.3);
+  --bo-border-accent-hover: rgba(14, 116, 144, 0.5);
+  --bo-accent-5: rgba(14, 116, 144, 0.05);
+  --bo-accent-10: rgba(14, 116, 144, 0.08);
+  --bo-accent-15: rgba(14, 116, 144, 0.12);
+  --bo-accent-20: rgba(14, 116, 144, 0.15);
+  --bo-accent-30: rgba(14, 116, 144, 0.25);
+  --bo-glow: none;
+}
+.dark {
+  --bo-bg-deep: #060a14;
+  --bo-bg: #0a0e1a;
+  --bo-bg-raised: #0b1120;
+  --bo-bg-elevated: #0d1225;
+  --bo-bg-input: #060a14;
+  --bo-bg-bubble: #0d1220;
+  --bo-bg-glass: rgba(10, 14, 26, 0.8);
+  --bo-text-bright: #e2e8f0;
+  --bo-text-accent: #22d3ee;
+  --bo-text-accent-2: #67e8f9;
+  --bo-text-body: #a5f3fc;
+  --bo-text-body-soft: rgba(165, 243, 252, 0.8);
+  --bo-text-info: #06b6d4;
+  --bo-text-muted: rgba(8, 145, 178, 0.5);
+  --bo-text-dim: rgba(8, 145, 178, 0.4);
+  --bo-text-dimmer: rgba(8, 145, 178, 0.3);
+  --bo-border: rgba(22, 78, 99, 0.3);
+  --bo-border-subtle: rgba(22, 78, 99, 0.2);
+  --bo-border-strong: rgba(22, 78, 99, 0.4);
+  --bo-border-accent: rgba(6, 182, 212, 0.3);
+  --bo-border-accent-hover: rgba(34, 211, 238, 0.5);
+  --bo-accent-5: rgba(6, 182, 212, 0.05);
+  --bo-accent-10: rgba(6, 182, 212, 0.1);
+  --bo-accent-15: rgba(6, 182, 212, 0.15);
+  --bo-accent-20: rgba(6, 182, 212, 0.2);
+  --bo-accent-30: rgba(6, 182, 212, 0.3);
+  --bo-glow: 0 0 15px rgba(0, 229, 255, 0.1);
+}
+
 @layer base {
   * {
     @apply border-border;

@@ -118,12 +118,12 @@ function OptionRow({
         selected
           ? isRetroDesk
             ? ''
-            : 'bg-cyan-500/15 text-cyan-300'
+            : 'bg-[var(--bo-accent-15)] text-[var(--bo-text-accent-2)]'
           : isRetroDesk
             ? ''
             : focused
-              ? 'bg-cyan-500/10 text-cyan-300'
-              : 'text-cyan-400/70 hover:bg-cyan-500/10 hover:text-cyan-300',
+              ? 'bg-[var(--bo-accent-10)] text-[var(--bo-text-accent-2)]'
+              : 'text-[var(--bo-text-accent)] hover:bg-[var(--bo-accent-10)] hover:text-[var(--bo-text-accent-2)]',
       ].filter(Boolean).join(' ')}
       style={{
         ...selectedStyle,
@@ -147,7 +147,7 @@ function OptionRow({
         <span className="block text-[11px] tracking-wider uppercase">{option.label}</span>
         <span
           className={`block text-[9px] ${
-            isRetroDesk ? '' : 'text-cyan-600/50'
+            isRetroDesk ? '' : 'text-[var(--bo-text-muted)]'
           }`}
           style={isRetroDesk ? { color: 'var(--retrodesk-muted)' } : undefined}
         >
@@ -264,13 +264,13 @@ export function ThemeSelector() {
   const btnRetro =
     'border-[var(--retrodesk-border)] hover:border-[var(--retrodesk-pink)] retrodesk-mono';
   const btnDefault =
-    'bg-cyan-500/10 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-400/50 font-mono';
+    'bg-[var(--bo-accent-10)] border-[var(--bo-border-accent)] text-[var(--bo-text-accent)] hover:bg-[var(--bo-accent-20)] hover:border-[var(--bo-border-accent-hover)] font-mono';
 
   // Panel styling
   const panelBase =
     'fixed sm:absolute right-2 sm:right-0 top-auto sm:top-full mt-1 z-50 min-w-[200px] max-w-[calc(100vw-1rem)] border overflow-hidden shadow-lg';
   const panelDefault =
-    'border-cyan-900/40 bg-[#0a0e1a]/95 backdrop-blur-md';
+    'border-[var(--bo-border-strong)] bg-[var(--bo-bg)] backdrop-blur-md';
 
   const focusedOptionId = THEME_OPTIONS[focusedIndex]?.id;
 

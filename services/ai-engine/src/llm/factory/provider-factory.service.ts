@@ -191,9 +191,10 @@ export class ProviderFactoryService implements OnModuleInit {
       const key = this.config.get<string>(p.envKey) || db[p.dbKey];
       if (key) {
         const model = db[`${p.id}Model`] || this.config.get<string>(`${p.envKey.replace('_API_KEY', '_DEFAULT_MODEL')}`, p.defaultModel);
+        const customBaseUrl = db[`${p.id}BaseUrl`] || p.baseUrl;
         this.registry.set(
           p.id,
-          new OpenAiProvider(key, model, 'text-embedding-3-small', p.baseUrl, 'api-key', p.id),
+          new OpenAiProvider(key, model, 'text-embedding-3-small', customBaseUrl, 'api-key', p.id),
         );
       }
     }
@@ -204,12 +205,16 @@ export class ProviderFactoryService implements OnModuleInit {
     }
 
     // Ollama is always registered — it's local and requires no key
+    const ollamaUrl = db['ollamaBaseUrl'] || this.config.get<string>('OLLAMA_BASE_URL', 'http://localhost:11434');
+    const ollamaModel = db['ollamaModel'] || this.config.get<string>('OLLAMA_DEFAULT_MODEL', 'llama3.2');
+    const ollamaToken = db['ollamaToken'] || this.config.get<string>('OLLAMA_AUTH_TOKEN', '');
     this.registry.set(
       'ollama',
       new OllamaProvider(
-        this.config.get<string>('OLLAMA_BASE_URL', 'http://localhost:11434'),
-        this.config.get<string>('OLLAMA_DEFAULT_MODEL', 'llama3.2'),
+        ollamaUrl,
+        ollamaModel,
         this.config.get<number>('LLM_REQUEST_TIMEOUT_MS', 120_000),
+        ollamaToken || undefined,
       ),
     );
   }

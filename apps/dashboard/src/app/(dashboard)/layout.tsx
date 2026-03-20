@@ -8,16 +8,16 @@ import { Header } from '@/components/layout/header';
 import { MobileNav } from '@/components/layout/mobile-nav';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { useAuth } from '@/hooks/use-auth';
-import { isDemoMode } from '@/lib/demo';
+import { useDemoMode } from '@/hooks/use-demo-mode';
 import { DemoBanner } from '@/components/demo/DemoBanner';
 import { DeployButton } from '@/components/demo/DeployButton';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const { collapsed, toggle } = useSidebar();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const demoMode = isDemoMode(user?.email);
+  const demoMode = useDemoMode();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {

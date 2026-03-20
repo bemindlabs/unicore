@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Crown, PanelLeftClose, PanelLeftOpen, LogOut } from 'lucide-react';
+import { Crown, PanelLeftClose, PanelLeftOpen, LogOut, Monitor } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage, Button, cn, Separator } from '@unicore/ui';
 import { useAuth } from '@/hooks/use-auth';
 import { useLicense } from '@/hooks/use-license';
@@ -56,7 +56,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <Separator className="shrink-0" />
 
       {/* Navigation sections — scrollable */}
-      <nav className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2 py-3 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+      <nav className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2 py-3 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
         {sections.map((section, idx) => (
           <div key={section.label} className={cn(idx > 0 && 'mt-4')}>
             {!collapsed && (
@@ -97,51 +97,91 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         ))}
       </nav>
 
-      {/* Upgrade to Pro badge for Community users */}
-      {!isPro && (
-        <div className="shrink-0 px-2 pb-2">
+      {/* Bottom section — pinned, never overflows */}
+      <div className="shrink-0 overflow-hidden">
+        {/* Backoffice + Upgrade links */}
+        <div className="px-2 pb-1 space-y-0.5">
           <Link
-            href="/settings/license"
+            href="/backoffice"
             className={cn(
-              'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-              'bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 dark:text-amber-400',
+              'flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+              pathname.startsWith('/backoffice')
+                ? 'bg-primary/10 text-primary'
+                : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
               collapsed && 'justify-center px-2',
             )}
-            title="Upgrade to Pro"
+            title="Backoffice"
           >
-            <Crown className="h-4 w-4 shrink-0" />
-            {!collapsed && <span className="truncate">Upgrade to Pro</span>}
+            <Monitor className="h-4 w-4 shrink-0" />
+            {!collapsed && <span className="truncate">Backoffice</span>}
           </Link>
+
+          {!isPro && (
+            <Link
+              href="/settings/license"
+              className={cn(
+                'flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                'bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 dark:bg-amber-500/15 dark:text-amber-400 dark:hover:bg-amber-500/25',
+                collapsed && 'justify-center px-2',
+              )}
+              title="Upgrade to Pro"
+            >
+              <Crown className="h-4 w-4 shrink-0" />
+              {!collapsed && <span className="truncate">Upgrade to Pro</span>}
+            </Link>
+          )}
         </div>
-      )}
 
-      <Separator className="shrink-0" />
+        <Separator />
 
-      {/* User profile footer */}
-      <div className={cn('p-2 shrink-0', collapsed ? 'flex flex-col items-center gap-1' : 'px-3 py-3')}>
-        {collapsed ? (
-          <>
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={user?.avatarUrl} alt={user?.name} />
-              <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-            </Avatar>
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={logout} title="Sign out">
-              <LogOut className="h-3.5 w-3.5" />
-            </Button>
-          </>
+        {/* User profile footer */}
+        {user ? (
+          <div className={cn('p-2', collapsed ? 'flex flex-col items-center gap-1' : 'px-3 py-2')}>
+            {collapsed ? (
+              <>
+                <Link href="/profile" title={user.name ?? 'Profile'}>
+                  <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-primary/30 transition-all">
+                    <AvatarImage src={user.avatarUrl} alt={user.name} />
+                    <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+                  </Avatar>
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  onClick={logout}
+                  title="Sign out"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link href="/profile" className="shrink-0" title="Edit profile">
+                  <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-primary/30 transition-all">
+                    <AvatarImage src={user.avatarUrl} alt={user.name} />
+                    <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+                  </Avatar>
+                </Link>
+                <Link href="/profile" className="min-w-0 flex-1 overflow-hidden hover:opacity-80 transition-opacity">
+                  <p className="truncate text-sm font-medium leading-tight">{user.name}</p>
+                  <p className="truncate text-xs text-muted-foreground leading-tight">{user.email}</p>
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                  onClick={logout}
+                  title="Sign out"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            )}
+          </div>
         ) : (
-          <div className="flex items-center gap-3">
-            <Avatar className="h-8 w-8 shrink-0">
-              <AvatarImage src={user?.avatarUrl} alt={user?.name} />
-              <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-            </Avatar>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{user?.name}</p>
-              <p className="truncate text-xs text-muted-foreground">{user?.email}</p>
-            </div>
-            <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-muted-foreground" onClick={logout} title="Sign out">
-              <LogOut className="h-3.5 w-3.5" />
-            </Button>
+          <div className={cn('p-2', collapsed ? 'flex justify-center' : 'px-3 py-2')}>
+            <div className="h-8 w-8 animate-pulse rounded-full bg-muted" />
           </div>
         )}
       </div>

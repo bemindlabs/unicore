@@ -119,4 +119,67 @@ describe('TokenTrackingService', () => {
       expect(page).toHaveLength(2);
     });
   });
+
+  describe('getAggregatedUsage()', () => {
+    it('aggregates records by daily period', () => {
+      service.track({ provider: 'openai', model: 'gpt-4o', usage: sampleUsage, operation: 'complete' });
+      service.track({ provider: 'openai', model: 'gpt-4o', usage: sampleUsage, operation: 'complete' });
+      service.track({ provider: 'anthropic', model: 'claude-sonnet-4-20250514', usage: sampleUsage, operation: 'stream' });
+
+      const result = service.getAggregatedUsage({ period: 'daily' });
+
+      expect(result.period).toBe('daily');
+      expect(result.totals.requestCount).toBe(3);
+      expect(result.totals.totalTokens).toBe(450);
+      // Should have 2 rows: one for openai/gpt-4o and one for anthropic/claude
+      expect(result.data.length).toBe(2);
+    });
+
+    it('aggregates records by monthly period', () => {
+      service.track({ provider: 'openai', model: 'gpt-4o', usage: sampleUsage, operation: 'complete' });
+      service.track({ provider: 'openai', model: 'gpt-4o', usage: sampleUsage, operation: 'complete' });
+
+      const result = service.getAggregatedUsage({ period: 'monthly' });
+
+      expect(result.period).toBe('monthly');
+      expect(result.data.length).toBe(1);
+      expect(result.data[0].requestCount).toBe(2);
+      expect(result.data[0].totalTokens).toBe(300);
+    });
+
+    it('filters by date range', () => {
+      service.track({ provider: 'openai', model: 'gpt-4o', usage: sampleUsage, operation: 'complete' });
+
+      const future = new Date(Date.now() + 60_000);
+      const result = service.getAggregatedUsage({ period: 'daily', from: future });
+
+      expect(result.totals.requestCount).toBe(0);
+      expect(result.data.length).toBe(0);
+    });
+
+    it('filters by provider', () => {
+      service.track({ provider: 'openai', model: 'gpt-4o', usage: sampleUsage, operation: 'complete' });
+      service.track({ provider: 'ollama', model: 'llama3.2', usage: sampleUsage, operation: 'complete' });
+
+      const result = service.getAggregatedUsage({ period: 'daily', provider: 'openai' });
+
+      expect(result.totals.requestCount).toBe(1);
+      expect(result.data.length).toBe(1);
+      expect(result.data[0].provider).toBe('openai');
+    });
+
+    it('includes cost estimation for deepseek', () => {
+      service.track({
+        provider: 'deepseek',
+        model: 'deepseek-chat',
+        usage: { promptTokens: 1_000_000, completionTokens: 1_000_000, totalTokens: 2_000_000 },
+        operation: 'complete',
+      });
+
+      const result = service.getAggregatedUsage({ period: 'daily' });
+
+      // deepseek-chat: $0.14 input + $0.28 output per 1M → $0.42 total
+      expect(result.data[0].estimatedCost).toBeCloseTo(0.42, 2);
+    });
+  });
 });

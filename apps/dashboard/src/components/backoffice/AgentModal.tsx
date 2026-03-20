@@ -96,7 +96,7 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
 
   const inputCls = isRetroDesk
     ? "w-full border-2 px-3 py-2 text-sm retrodesk-mono focus:outline-none"
-    : "w-full bg-[#060a14] border border-cyan-900/40 text-cyan-300 px-3 py-2 text-sm font-mono focus:outline-none focus:border-cyan-500/40 uppercase";
+    : "w-full bg-[var(--bo-bg-input)] border border-[var(--bo-border-strong)] text-[var(--bo-text-accent-2)] px-3 py-2 text-sm font-mono focus:outline-none focus:border-[var(--bo-border-accent-hover)] uppercase";
 
   const inputStyle = isRetroDesk
     ? { background: 'var(--retrodesk-bg)', borderColor: 'var(--retrodesk-border)', color: 'var(--retrodesk-text)' }
@@ -104,7 +104,7 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
 
   const labelCls = isRetroDesk
     ? "retrodesk-mono text-xs block mb-1.5 uppercase tracking-wider"
-    : "font-mono text-[9px] text-cyan-600/60 block mb-1.5 uppercase tracking-wider";
+    : "font-mono text-[9px] text-[var(--bo-text-muted)] block mb-1.5 uppercase tracking-wider";
 
   const labelStyle = isRetroDesk
     ? { color: 'var(--retrodesk-muted)' }
@@ -118,10 +118,10 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
     >
       <div className={`absolute inset-0 backdrop-blur-sm ${isRetroDesk ? 'bg-black/30' : 'bg-black/60'}`} />
       <div
-        className={`relative w-full max-w-md mx-0 sm:mx-4 h-full sm:h-auto max-h-full sm:max-h-[90vh] overflow-y-auto overflow-x-hidden ${isRetroDesk ? 'border-0 sm:border-2' : 'border-0 sm:border border-cyan-900/50'}`}
+        className={`relative w-full max-w-md mx-0 sm:mx-4 h-full sm:h-auto max-h-full sm:max-h-[90vh] overflow-y-auto overflow-x-hidden ${isRetroDesk ? 'border-0 sm:border-2' : 'border-0 sm:border border-[var(--bo-border-strong)]'}`}
         style={isRetroDesk
           ? { borderColor: 'var(--retrodesk-border)', background: 'var(--retrodesk-surface)' }
-          : { background: '#0a0e1a' }}
+          : { background: 'var(--bo-bg)' }}
         role="dialog"
         aria-modal="true"
         aria-labelledby="agent-modal-title"
@@ -131,14 +131,14 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
       >
         <div
           className={`flex items-center justify-between px-4 py-3 border-b ${
-            isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-cyan-900/30 bg-[#0d1225]'
+            isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-[var(--bo-border)] bg-[var(--bo-bg-elevated)]'
           }`}
         >
           <span
             id="agent-modal-title"
             className={isRetroDesk
               ? 'retrodesk-heading text-[9px] tracking-wider uppercase'
-              : 'font-mono text-[11px] text-cyan-400 tracking-wider uppercase'}
+              : 'font-mono text-[11px] text-[var(--bo-text-accent)] tracking-wider uppercase'}
             style={isRetroDesk ? { color: 'var(--retrodesk-pink)' } : undefined}
           >
             {mode === "edit" ? `Edit: ${agent?.name}` : "New Agent"}
@@ -146,7 +146,7 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
           <button
             onClick={onClose}
             aria-label="Close"
-            className={`text-lg ${isRetroDesk ? '' : 'text-cyan-600/50 hover:text-cyan-400'}`}
+            className={`text-lg ${isRetroDesk ? '' : 'text-[var(--bo-text-muted)] hover:text-[var(--bo-text-accent)]'}`}
             style={isRetroDesk ? { color: 'var(--retrodesk-muted)' } : undefined}
           >
             &times;
@@ -206,7 +206,7 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
                     : `font-mono text-[9px] px-3 py-1.5 border transition-all tracking-wider ${
                         form.status === s.value
                           ? `${s.cls} border-current bg-current/10`
-                          : "text-cyan-700/40 border-cyan-900/30 hover:border-cyan-700/40"
+                          : "text-[var(--bo-text-dimmer)] border-[var(--bo-border)] hover:border-[var(--bo-border-accent)]"
                       }`}
                   style={isRetroDesk
                     ? {
@@ -275,7 +275,7 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
               disabled={!form.name.trim() || isSaving}
               className={isRetroDesk
                 ? 'flex-1 retrodesk-mono text-sm border-2 py-2.5 transition-all disabled:opacity-40 uppercase tracking-wider'
-                : 'flex-1 font-mono text-[10px] bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 py-2.5 hover:bg-cyan-500/25 transition-all disabled:opacity-40 uppercase tracking-wider'}
+                : 'flex-1 font-mono text-[10px] bg-[var(--bo-accent-15)] border border-[var(--bo-border-accent)] text-[var(--bo-text-accent)] py-2.5 hover:bg-[var(--bo-accent-20)] transition-all disabled:opacity-40 uppercase tracking-wider'}
               style={isRetroDesk ? { borderColor: 'var(--retrodesk-pink)', color: 'var(--retrodesk-pink)', background: 'color-mix(in srgb, var(--retrodesk-pink) 10%, transparent)' } : undefined}
             >
               {isSaving

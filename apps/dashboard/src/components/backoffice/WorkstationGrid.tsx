@@ -19,7 +19,7 @@ export function WorkstationGrid({ agents, onSelectAgent }: Props) {
       <h3
         className={isRetroDesk
           ? 'retrodesk-heading text-[8px] tracking-widest mb-3 px-1 uppercase'
-          : 'font-mono text-[10px] text-cyan-600/50 tracking-widest mb-3 px-1 uppercase'}
+          : 'font-mono text-[10px] text-[var(--bo-text-muted)] tracking-widest mb-3 px-1 uppercase'}
         style={isRetroDesk ? { color: 'var(--retrodesk-blue)' } : undefined}
       >
         Workstations

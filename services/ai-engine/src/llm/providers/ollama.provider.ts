@@ -49,8 +49,13 @@ export class OllamaProvider implements ILlmProvider {
     baseURL = 'http://localhost:11434',
     defaultModel = 'llama3.2',
     timeoutMs = 120_000,
+    authToken?: string,
   ) {
-    this.http = axios.create({ baseURL, timeout: timeoutMs });
+    this.http = axios.create({
+      baseURL,
+      timeout: timeoutMs,
+      ...(authToken ? { headers: { Authorization: `Bearer ${authToken}` } } : {}),
+    });
     this.defaultModel = defaultModel;
   }
 

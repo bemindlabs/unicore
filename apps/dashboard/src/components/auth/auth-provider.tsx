@@ -24,6 +24,7 @@ export interface AuthState {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  updateUser: (updates: Partial<AuthUser>) => void;
 }
 
 export const AuthContext = createContext<AuthState | null>(null);
@@ -143,6 +144,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [scheduleRefresh],
   );
 
+  const updateUser = useCallback((updates: Partial<AuthUser>) => {
+    setUser((prev) => (prev ? { ...prev, ...updates } : prev));
+  }, []);
+
   const logout = useCallback(() => {
     clearTimer();
     const rt = localStorage.getItem('refresh_token');
@@ -154,8 +159,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [clearTimer]);
 
   const value = useMemo(
-    () => ({ user, isLoading, isAuthenticated: !!user, login, logout }),
-    [user, isLoading, login, logout],
+    () => ({ user, isLoading, isAuthenticated: !!user, login, logout, updateUser }),
+    [user, isLoading, login, logout, updateUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,15 +1,19 @@
 import {
   Controller,
   All,
+  Get,
   Req,
   Res,
   Logger,
   HttpException,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ProxyService } from './proxy.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { LicenseGuard } from '../license/guards/license.guard';
+import { ProFeatureRequired } from '../license/decorators/pro-feature.decorator';
 
 /**
  * Dedicated proxy for the AI Engine service.
@@ -23,6 +27,21 @@ export class AiProxyController {
   private readonly logger = new Logger(AiProxyController.name);
 
   constructor(private readonly proxyService: ProxyService) {}
+
+  /**
+   * Usage analytics — Pro+ only.
+   * Must be declared before the catch-all @All('*') route.
+   */
+  @Get('usage/analytics')
+  @ProFeatureRequired('auditLogs')
+  @UseGuards(LicenseGuard)
+  async proxyUsageAnalytics(
+    @Req() req: Request,
+    @Res() res: Response,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.proxyAi(req, res, userId);
+  }
 
   @All('*')
   async proxyAi(

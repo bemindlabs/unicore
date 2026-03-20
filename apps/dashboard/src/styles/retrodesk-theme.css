@@ -5,25 +5,33 @@
 [data-character-theme="retrodesk"] {
   --pixel-size: 3px;
   --pixel-border-width: 2px;
-  --retrodesk-pink: #ff6b9d;
-  --retrodesk-blue: #7ec8e3;
-  --retrodesk-yellow: #ffd93d;
-  --retrodesk-green: #a8e6cf;
-  --retrodesk-orange: #ffb347;
+  /* Darker, higher-contrast colors for Light Mode (surface: #ffffff) */
+  --retrodesk-pink: #d81e5b;
+  --retrodesk-blue: #2563eb;
+  --retrodesk-yellow: #d97706; /* Ambers/golds show up better on white */
+  --retrodesk-green: #059669;
+  --retrodesk-orange: #ea580c;
   --retrodesk-bg: #faf8f5;
   --retrodesk-surface: #ffffff;
   --retrodesk-text: #2d2d2d;
-  --retrodesk-muted: #9ca3af;
+  --retrodesk-muted: #6b7280; /* Darker muted text for legibility */
   --retrodesk-border: #e5e1dc;
   --radius: 0px;
 }
 
-[data-character-theme="retrodesk"].dark {
+[data-character-theme="retrodesk"].dark,
+.dark [data-character-theme="retrodesk"] {
+  /* Restoring bright pastel neon colors for Dark Mode (surface: #251f35) */
   --retrodesk-bg: #1a1525;
   --retrodesk-surface: #251f35;
   --retrodesk-text: #f0e8ff;
   --retrodesk-muted: #8b7faa;
   --retrodesk-border: #3d3555;
+  --retrodesk-pink: #ff6b9d;
+  --retrodesk-blue: #7ec8e3;
+  --retrodesk-yellow: #ffd93d;
+  --retrodesk-green: #a8e6cf;
+  --retrodesk-orange: #ffb347;
 }
 
 /* Pixel grid background pattern */

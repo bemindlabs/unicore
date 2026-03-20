@@ -140,30 +140,30 @@ export function Header({ agentCount, workingCount, onAddAgent, activeTab, onTabC
   }
 
   return (
-    <header className="relative z-20 flex flex-wrap items-center justify-between px-4 lg:px-6 py-3 border-b border-cyan-900/30 bg-[#0a0e1a]/80 backdrop-blur-sm">
+    <header className="relative z-20 flex flex-wrap items-center justify-between px-4 lg:px-6 py-3 border-b border-[var(--bo-border)] bg-[var(--bo-bg-glass)] backdrop-blur-sm">
       <div className="flex items-center gap-2 sm:gap-4">
         {activeTab === 'overview' && onToggleMobileSidebar && (
           <button
             onClick={onToggleMobileSidebar}
-            className="md:hidden p-1.5 border border-cyan-900/30 text-cyan-500/60 hover:text-cyan-400 transition-colors"
+            className="md:hidden p-1.5 border border-[var(--bo-border)] text-[var(--bo-text-muted)] hover:text-[var(--bo-text-accent)] transition-colors"
             aria-label="Toggle sidebar"
           >
             <Menu className="w-4 h-4" />
           </button>
         )}
-        <Link href="/" className="text-cyan-600/40 hover:text-cyan-400 text-xs mr-2 transition-colors hidden sm:inline">
+        <Link href="/" className="text-[var(--bo-text-dim)] hover:text-[var(--bo-text-accent)] text-xs mr-2 transition-colors hidden sm:inline">
           &larr; Dashboard
         </Link>
-        <h1 className="font-mono text-sm lg:text-base text-cyan-400 font-bold tracking-wider uppercase">
+        <h1 className="font-mono text-sm lg:text-base text-[var(--bo-text-accent)] font-bold tracking-wider uppercase">
           Backoffice{' '}
-          <span className="text-cyan-600/60 text-[10px]">v3.2</span>
+          <span className="text-[var(--bo-text-muted)] text-[10px]">v0.0.2</span>
         </h1>
-        <div className="hidden sm:flex items-center gap-2 ml-2 text-[10px] font-mono text-cyan-600/50">
+        <div className="hidden sm:flex items-center gap-2 ml-2 text-[10px] font-mono text-[var(--bo-text-muted)]">
           <span className="flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
             {workingCount} ACTIVE
           </span>
-          <span className="text-cyan-900">|</span>
+          <span className="text-[var(--bo-text-dimmer)]">|</span>
           <span>{agentCount} TOTAL</span>
         </div>
         {/* Tab buttons */}
@@ -174,8 +174,8 @@ export function Header({ agentCount, workingCount, onAddAgent, activeTab, onTabC
               onClick={() => onTabChange(key)}
               className={`font-mono text-[10px] sm:text-xs px-2 sm:px-3 py-1 sm:py-1.5 border transition-all tracking-wider uppercase flex items-center gap-1 sm:gap-1.5 ${
                 activeTab === key
-                  ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-300'
-                  : 'bg-cyan-500/5 border-cyan-500/20 text-cyan-500/50 hover:bg-cyan-500/10 hover:text-cyan-400 hover:border-cyan-500/40'
+                  ? 'bg-[var(--bo-accent-20)] border-[var(--bo-border-accent-hover)] text-[var(--bo-text-accent-2)]'
+                  : 'bg-[var(--bo-accent-5)] border-[var(--bo-border-accent)] text-[var(--bo-text-muted)] hover:bg-[var(--bo-accent-10)] hover:text-[var(--bo-text-accent)] hover:border-[var(--bo-border-accent-hover)]'
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -192,8 +192,8 @@ export function Header({ agentCount, workingCount, onAddAgent, activeTab, onTabC
             onClick={onToggleChat}
             className={`p-1.5 border transition-all ${
               chatOpen
-                ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-300'
-                : 'border-cyan-900/30 text-cyan-500/60 hover:text-cyan-400 hover:border-cyan-500/40'
+                ? 'bg-[var(--bo-accent-20)] border-[var(--bo-border-accent-hover)] text-[var(--bo-text-accent-2)]'
+                : 'border-[var(--bo-border)] text-[var(--bo-text-muted)] hover:text-[var(--bo-text-accent)] hover:border-[var(--bo-border-accent-hover)]'
             }`}
             title="Team Chat"
           >
@@ -203,14 +203,14 @@ export function Header({ agentCount, workingCount, onAddAgent, activeTab, onTabC
         {activeTab === 'overview' && (
           <button
             onClick={onAddAgent}
-            className="font-mono text-[10px] bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 px-2 sm:px-4 py-1.5 sm:py-2 hover:bg-cyan-500/20 hover:border-cyan-400/50 hover:shadow-[0_0_15px_rgba(0,229,255,0.1)] transition-all tracking-wider uppercase"
+            className="font-mono text-[10px] bg-[var(--bo-accent-10)] border border-[var(--bo-border-accent)] text-[var(--bo-text-accent)] px-2 sm:px-4 py-1.5 sm:py-2 hover:bg-[var(--bo-accent-20)] hover:border-[var(--bo-border-accent-hover)] hover:shadow-[var(--bo-glow)] transition-all tracking-wider uppercase"
           >
             + <span className="hidden sm:inline">Add Agent</span><span className="sm:hidden">Add</span>
           </button>
         )}
         <div className="font-mono text-xs lg:text-sm">
-          <span className="text-cyan-600/40 text-[10px] mr-2 hidden sm:inline uppercase">Time:</span>
-          <span className="text-cyan-300 tabular-nums">{time}</span>
+          <span className="text-[var(--bo-text-dim)] text-[10px] mr-2 hidden sm:inline uppercase">Time:</span>
+          <span className="text-[var(--bo-text-accent-2)] tabular-nums">{time}</span>
         </div>
       </div>
     </header>

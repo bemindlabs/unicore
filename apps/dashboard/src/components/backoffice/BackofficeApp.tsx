@@ -6,7 +6,6 @@ import type { BackofficeAgent } from "@/lib/backoffice/types";
 import { Header, type BackofficeTab } from "./Header";
 import { TeamSidebar } from "./TeamSidebar";
 import { OfficeFloor } from "./OfficeFloor";
-import { WorkstationGrid } from "./WorkstationGrid";
 import { AgentModal } from "./AgentModal";
 import { CommandCenter } from "./CommandCenter";
 import { AgentSettings } from "./AgentSettings";
@@ -69,10 +68,6 @@ export function BackofficeApp({
       ? agents
       : agents.filter((a) => a.status === sidebarFilter);
 
-  const conferenceAgents = agents.filter((a) => a.room === "conference");
-  const mainOfficeAgents = agents.filter((a) => a.room === "main-office");
-  const standaloneAgents = agents.filter((a) => a.room === "standalone");
-
   return (
     <div className="min-h-screen relative">
       {/* Background */}
@@ -81,10 +76,10 @@ export function BackofficeApp({
           className="fixed inset-0 pointer-events-none"
           style={{
             background: `
-              linear-gradient(90deg, transparent 49.5%, #0a162815 49.5%, #0a162815 50.5%, transparent 50.5%) 0 0 / 60px 60px,
-              linear-gradient(0deg, transparent 49.5%, #0a162815 49.5%, #0a162815 50.5%, transparent 50.5%) 0 0 / 60px 60px,
-              radial-gradient(circle 1.5px, #0d1f3a44 100%, transparent 100%) 0 0 / 60px 60px,
-              #060a14
+              linear-gradient(90deg, transparent 49.5%, var(--bo-border-subtle) 49.5%, var(--bo-border-subtle) 50.5%, transparent 50.5%) 0 0 / 60px 60px,
+              linear-gradient(0deg, transparent 49.5%, var(--bo-border-subtle) 49.5%, var(--bo-border-subtle) 50.5%, transparent 50.5%) 0 0 / 60px 60px,
+              radial-gradient(circle 1.5px, var(--bo-border) 100%, transparent 100%) 0 0 / 60px 60px,
+              var(--bo-bg-deep)
             `,
           }}
         />
@@ -105,8 +100,8 @@ export function BackofficeApp({
         {apiError && (
           <>
             <DefaultOnly>
-              <div className="flex items-center justify-center gap-2 px-4 py-1.5 bg-yellow-500/10 border-b border-yellow-500/20">
-                <span className="font-mono text-[9px] text-yellow-400/80 tracking-wider uppercase">
+              <div className="flex items-center justify-center gap-2 px-4 py-1.5 bg-amber-100 dark:bg-yellow-500/10 border-b border-amber-200 dark:border-yellow-500/20">
+                <span className="font-mono text-[9px] text-amber-700 dark:text-yellow-400/80 tracking-wider uppercase">
                   ⚠ API unreachable — showing cached data
                 </span>
               </div>
@@ -152,12 +147,7 @@ export function BackofficeApp({
 
             <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6">
               <OfficeFloor
-                conferenceAgents={conferenceAgents}
-                mainOfficeAgents={mainOfficeAgents}
-                onSelectAgent={setSelectedAgent}
-              />
-              <WorkstationGrid
-                agents={standaloneAgents}
+                agents={agents}
                 onSelectAgent={setSelectedAgent}
               />
             </div>

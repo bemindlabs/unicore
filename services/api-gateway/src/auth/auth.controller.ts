@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Patch,
   Body,
   Headers,
   UseGuards,
@@ -17,6 +18,8 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Public } from './decorators/public.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { RegisterDto } from './dto/register.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { LoginDto } from './dto/login.dto';
 import { AuditService } from '../audit/audit.service';
@@ -93,6 +96,54 @@ export class AuthController {
   @Get('me')
   getMe(@CurrentUser('id') userId: string) {
     return this.authService.getMe(userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  getProfile(@CurrentUser('id') userId: string) {
+    return this.authService.getMe(userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('profile')
+  async updateProfile(
+    @CurrentUser('id') userId: string,
+    @CurrentUser() user: any,
+    @Body() dto: UpdateProfileDto,
+    @Req() req: Request,
+  ) {
+    const result = await this.authService.updateProfile(userId, dto);
+    await this.auditService.log({
+      userId,
+      userEmail: user?.email,
+      action: 'update',
+      resource: 'users',
+      resourceId: userId,
+      detail: `Profile updated`,
+      ip: req.ip,
+    });
+    return result;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('password')
+  async changePassword(
+    @CurrentUser('id') userId: string,
+    @CurrentUser() user: any,
+    @Body() dto: ChangePasswordDto,
+    @Req() req: Request,
+  ) {
+    const result = await this.authService.changePassword(userId, dto);
+    await this.auditService.log({
+      userId,
+      userEmail: user?.email,
+      action: 'update',
+      resource: 'users',
+      resourceId: userId,
+      detail: 'Password changed',
+      ip: req.ip,
+    });
+    return result;
   }
 
   @Public()

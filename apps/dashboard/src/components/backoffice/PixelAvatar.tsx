@@ -40,8 +40,9 @@ export function PixelAvatar({ color, status, size = 'md', className = '' }: Prop
     .join(', ');
 
   return (
-    <div className={`relative ${className}`} style={{ width: 8 * px, height: 10 * px }}>
+    <div className={`relative ${className} group`} style={{ width: 8 * px, height: 10 * px }}>
       <div
+        className="transition-transform group-hover:-translate-y-2 group-hover:scale-110"
         style={{
           width: px,
           height: px,
@@ -49,7 +50,7 @@ export function PixelAvatar({ color, status, size = 'md', className = '' }: Prop
           position: 'absolute',
           top: 0,
           left: 0,
-          animation: status === 'working' ? 'pixelBob 3s ease-in-out infinite' : undefined,
+          animation: status === 'working' ? 'pixelBob 1s ease-in-out infinite alternate' : 'pixelFloat 4s ease-in-out infinite',
         }}
       />
       {status === 'working' && (
@@ -58,7 +59,7 @@ export function PixelAvatar({ color, status, size = 'md', className = '' }: Prop
           style={{
             width: 6 * px,
             height: 2,
-            background: `radial-gradient(ellipse, ${color}40, transparent)`,
+            background: `radial-gradient(ellipse, ${color}60, transparent)`,
           }}
         />
       )}

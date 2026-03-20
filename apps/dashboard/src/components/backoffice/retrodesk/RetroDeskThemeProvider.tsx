@@ -10,9 +10,9 @@ interface RetroDeskThemeContext {
 
 const RetroDeskCtx = createContext<RetroDeskThemeContext>({ isActive: false, animationLevel: 'full' });
 
-export function RetroDeskThemeProvider({ children }: { children: ReactNode }) {
+export function RetroDeskThemeProvider({ children, forceTheme }: { children: ReactNode; forceTheme?: string }) {
   const { characterTheme } = useTheme();
-  const isActive = characterTheme === 'retrodesk';
+  const isActive = forceTheme === 'retrodesk' || characterTheme === 'retrodesk';
   const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {

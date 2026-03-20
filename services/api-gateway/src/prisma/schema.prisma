@@ -13,7 +13,8 @@ model User {
   name      String
   password  String
   role      Role     @default(VIEWER)
-  sessions  Session[]
+  sessions      Session[]
+  notifications Notification[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -141,4 +142,25 @@ model ChatHistory {
   @@index([agentId, createdAt])
   @@index([userId, createdAt])
   @@map("chat_histories")
+}
+
+// ---------------------------------------------------------------------------
+// Notifications
+// ---------------------------------------------------------------------------
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // 'info' | 'warning' | 'success' | 'error'
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  link      String?  // optional link to navigate to
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+  @@map("notifications")
 }

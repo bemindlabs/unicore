@@ -45,8 +45,8 @@ export default function BackofficePage() {
       return <RetroDeskLoadingState />;
     }
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#060a14]">
-        <div className="font-mono text-xs text-cyan-500 animate-pulse">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bo-bg-deep)]">
+        <div className="font-mono text-xs text-[var(--bo-text-info)] animate-pulse">
           LOADING SYSTEMS...
         </div>
       </div>

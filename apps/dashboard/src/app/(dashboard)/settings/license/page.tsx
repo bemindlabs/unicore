@@ -6,12 +6,14 @@ import { useDemoMode } from '@/hooks/use-demo-mode';
 import { DemoGuard } from '@/components/demo/DemoGuard';
 import {
   AlertTriangle,
+  ArrowDownCircle,
   CheckCircle2,
   Crown,
   KeyRound,
   Loader2,
   RefreshCcw,
   ShieldCheck,
+  XCircle,
   Zap,
 } from 'lucide-react';
 import {
@@ -25,6 +27,12 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
   Input,
   Label,
   Progress,
@@ -158,6 +166,8 @@ export default function SettingsLicensePage() {
   const [usersUsed, setUsersUsed] = useState(0);
   const [isAnnual, setIsAnnual] = useState(true);
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [showDowngrade, setShowDowngrade] = useState(false);
+  const [downgrading, setDowngrading] = useState(false);
 
   const { user } = useAuth();
   const searchParams = useSearchParams();
@@ -273,6 +283,29 @@ export default function SettingsLicensePage() {
       setIsUpgrading(false);
     }
   }, [isAnnual, user?.email]);
+
+  const handleDowngrade = useCallback(async () => {
+    setDowngrading(true);
+    try {
+      const res = await api.post<{ effectiveDate?: string }>('/api/v1/license/downgrade', {
+        email: user?.email ?? '',
+      });
+      setShowDowngrade(false);
+      toast({
+        title: 'Downgrade confirmed',
+        description: res.effectiveDate
+          ? `Your plan will switch to Community on ${new Date(res.effectiveDate).toLocaleDateString()}. Pro features remain active until then.`
+          : 'Your plan will switch to Community at the end of the current billing period.',
+      });
+    } catch (err: any) {
+      toast({
+        title: 'Downgrade failed',
+        description: err?.message ?? 'Could not process downgrade. Please try again or contact support.',
+      });
+    } finally {
+      setDowngrading(false);
+    }
+  }, [user?.email]);
 
   const daysUntilExpiry = (() => {
     const expiry = new Date(license.expiresAt);
@@ -544,6 +577,79 @@ export default function SettingsLicensePage() {
           </CardContent>
         </Card>
       )}
+
+      {/* UNC-478: Downgrade option for Pro users */}
+      {license.edition === 'pro' && (
+        <div className="flex justify-center pt-2">
+          <button
+            type="button"
+            className="text-sm text-muted-foreground underline-offset-4 hover:underline hover:text-foreground transition-colors"
+            onClick={() => setShowDowngrade(true)}
+          >
+            <ArrowDownCircle className="mr-1 inline h-3.5 w-3.5" />
+            Downgrade to Community
+          </button>
+        </div>
+      )}
+
+      {/* UNC-478: Downgrade confirmation dialog */}
+      <Dialog open={showDowngrade} onOpenChange={setShowDowngrade}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Downgrade to Community?</DialogTitle>
+            <DialogDescription>
+              Your Pro subscription will be cancelled at the end of the current billing period.
+              You will lose access to the following features:
+            </DialogDescription>
+          </DialogHeader>
+
+          <ul className="space-y-2 py-2 text-sm">
+            {[
+              ['All Pro agents', 'Limited to 2 custom agents'],
+              ['Advanced workflows', 'Basic workflows only'],
+              ['All channels', 'Slack + Email only'],
+              ['Full RBAC', 'Basic roles only (3 max)'],
+              ['SSO integration', 'Standard login only'],
+              ['White-label branding', 'UniCore branding'],
+              ['Priority support', 'Community support only'],
+            ].map(([feature, fallback]) => (
+              <li key={feature} className="flex items-start gap-2">
+                <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                <div>
+                  <span className="font-medium">{feature}</span>
+                  <span className="text-muted-foreground"> — {fallback}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          <DialogFooter className="flex-col gap-2 sm:flex-col">
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={handleDowngrade}
+              disabled={downgrading}
+            >
+              {downgrading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                'Confirm Downgrade'
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full"
+              onClick={() => setShowDowngrade(false)}
+              disabled={downgrading}
+            >
+              Keep Pro
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -23,8 +23,11 @@ export default function BackofficeLayout({ children }: { children: ReactNode }) 
 
   if (isLoading) {
     return (
-      <div className={`flex h-screen items-center justify-center ${isRetroDesk ? '' : 'bg-[#060a14]'}`} style={isRetroDesk ? { background: 'var(--retrodesk-bg, #faf8f5)' } : undefined}>
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
+      <div
+        className={`flex h-screen items-center justify-center ${isRetroDesk ? '' : 'bg-[var(--bo-bg-deep)]'}`}
+        style={isRetroDesk ? { background: 'var(--retrodesk-bg, #faf8f5)' } : undefined}
+      >
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
   }
@@ -35,7 +38,10 @@ export default function BackofficeLayout({ children }: { children: ReactNode }) 
 
   return (
     <RetroDeskThemeProvider>
-      <div className={`min-h-screen ${isRetroDesk ? 'retrodesk-body' : 'bg-[#060a14] text-white'}`} style={isRetroDesk ? { background: 'var(--retrodesk-bg, #faf8f5)', color: 'var(--retrodesk-text, #2d2d2d)' } : undefined}>
+      <div
+        className={`min-h-screen ${isRetroDesk ? 'retrodesk-body' : 'bg-[var(--bo-bg-deep)] text-[var(--bo-text-bright)]'}`}
+        style={isRetroDesk ? { background: 'var(--retrodesk-bg, #faf8f5)', color: 'var(--retrodesk-text, #2d2d2d)' } : undefined}
+      >
         {children}
       </div>
     </RetroDeskThemeProvider>

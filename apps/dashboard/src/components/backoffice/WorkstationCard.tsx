@@ -85,18 +85,18 @@ export function WorkstationCard({ agent, onClick }: { agent: BackofficeAgent; on
       onClick={onClick}
       className={isRetroDesk
         ? 'border-2 overflow-hidden hover:shadow-md transition-all group text-left w-full'
-        : 'border border-cyan-900/30 bg-[#0b1120]/60 overflow-hidden hover:border-cyan-500/30 hover:shadow-[0_0_20px_rgba(0,229,255,0.08)] transition-all group text-left w-full'}
+        : 'border border-[var(--bo-border)] bg-[var(--bo-bg-raised)] overflow-hidden hover:border-[var(--bo-border-accent)] hover:shadow-[var(--bo-glow)] transition-all group text-left w-full'}
       style={isRetroDesk ? { borderColor: 'var(--retrodesk-border)', background: 'var(--retrodesk-surface)' } : undefined}
     >
       <div
         className={`flex items-center justify-between px-3 py-1.5 border-b ${
-          isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-cyan-900/20'
+          isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-[var(--bo-border-subtle)]'
         }`}
       >
         <span
           className={isRetroDesk
             ? 'retrodesk-mono text-sm tracking-wider uppercase'
-            : 'font-mono text-[10px] text-cyan-400/80 tracking-wider uppercase'}
+            : 'font-mono text-[10px] text-[var(--bo-text-accent)] tracking-wider uppercase'}
           style={isRetroDesk ? { color: 'var(--retrodesk-text)' } : undefined}
         >
           {agent.name}
@@ -125,7 +125,7 @@ export function WorkstationCard({ agent, onClick }: { agent: BackofficeAgent; on
           <p
             className={isRetroDesk
               ? 'retrodesk-mono text-xs truncate'
-              : 'text-[10px] font-mono text-cyan-600/40 truncate'}
+              : 'text-[10px] font-mono text-[var(--bo-text-dim)] truncate'}
             style={isRetroDesk ? { color: 'var(--retrodesk-muted)' } : undefined}
           >
             {'> '}{agent.activity}

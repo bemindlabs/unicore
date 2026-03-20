@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Bot, Eye, EyeOff, Save, CheckCircle, AlertCircle, Loader2, RefreshCw, ExternalLink, Trash2 } from 'lucide-react';
+import { Bot, Eye, EyeOff, Save, CheckCircle, AlertCircle, Loader2, RefreshCw, ExternalLink, Trash2, BarChart3 } from 'lucide-react';
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
   Button, Input, Label,
 } from '@unicore/ui';
 import { api } from '@/lib/api';
+import Link from 'next/link';
 
 // ── Provider definitions ──────────────────────────────────────────────────
 
@@ -17,22 +18,24 @@ interface ProviderDef {
   getKeyUrl: string;
   models: string[];
   description?: string;
+  defaultBaseUrl: string;
+  keyOptional?: boolean;
 }
 
 const PROVIDERS: ProviderDef[] = [
-  { id: 'openai',     name: 'OpenAI',              keyField: 'openaiKey',     getKeyUrl: 'https://platform.openai.com/api-keys',          models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'o3-mini', 'o4-mini'] },
-  { id: 'anthropic',  name: 'Anthropic',           keyField: 'anthropicKey',  getKeyUrl: 'https://console.anthropic.com/settings/keys',   models: ['claude-sonnet-4-20250514', 'claude-opus-4-20250514', 'claude-haiku-4-5-20251001'] },
-  { id: 'deepseek',   name: 'DeepSeek',            keyField: 'deepseekKey',   getKeyUrl: 'https://platform.deepseek.com/api_keys',        models: ['deepseek-chat', 'deepseek-reasoner'] },
-  { id: 'groq',       name: 'Groq',                keyField: 'groqKey',       getKeyUrl: 'https://console.groq.com/keys',                 models: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'], description: 'Ultra-fast inference' },
-  { id: 'gemini',     name: 'Google Gemini',        keyField: 'geminiKey',     getKeyUrl: 'https://aistudio.google.com/apikey',             models: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash'] },
-  { id: 'moonshot',   name: 'Moonshot AI / Kimi',   keyField: 'moonshotKey',   getKeyUrl: 'https://platform.moonshot.cn/console/api-keys',  models: ['kimi-k2', 'moonshot-v1-128k', 'moonshot-v1-32k'] },
-  { id: 'mistral',    name: 'Mistral AI',           keyField: 'mistralKey',    getKeyUrl: 'https://console.mistral.ai/api-keys/',           models: ['mistral-large-latest', 'mistral-small-latest', 'codestral-latest'] },
-  { id: 'xai',        name: 'xAI (Grok)',           keyField: 'xaiKey',        getKeyUrl: 'https://console.x.ai/',                         models: ['grok-3', 'grok-3-mini', 'grok-3-fast'] },
-  { id: 'openrouter', name: 'OpenRouter',           keyField: 'openrouterKey', getKeyUrl: 'https://openrouter.ai/keys',                    models: ['openai/gpt-4o', 'anthropic/claude-sonnet-4-20250514', 'google/gemini-2.5-flash', 'meta-llama/llama-3.3-70b-instruct'], description: '200+ models, free tier' },
-  { id: 'together',   name: 'Together AI',          keyField: 'togetherKey',   getKeyUrl: 'https://api.together.xyz/settings/api-keys',     models: ['meta-llama/Llama-3.3-70B-Instruct-Turbo', 'mistralai/Mixtral-8x7B-Instruct-v0.1'] },
-  { id: 'fireworks',  name: 'Fireworks AI',         keyField: 'fireworksKey',  getKeyUrl: 'https://fireworks.ai/api-keys',                  models: ['accounts/fireworks/models/llama-v3p1-70b-instruct'] },
-  { id: 'cohere',     name: 'Cohere',               keyField: 'cohereKey',     getKeyUrl: 'https://dashboard.cohere.com/api-keys',          models: ['command-r-plus', 'command-r', 'command-light'] },
-  { id: 'ollama',     name: 'Ollama (local)',        keyField: '',              getKeyUrl: '',                                              models: ['llama3.2', 'llama3.1', 'mistral', 'codellama', 'phi3'], description: 'Free, runs locally' },
+  { id: 'openai',     name: 'OpenAI',              keyField: 'openaiKey',     getKeyUrl: 'https://platform.openai.com/api-keys',          models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'o3-mini', 'o4-mini'],                                                         defaultBaseUrl: 'https://api.openai.com/v1' },
+  { id: 'anthropic',  name: 'Anthropic',           keyField: 'anthropicKey',  getKeyUrl: 'https://console.anthropic.com/settings/keys',   models: ['claude-sonnet-4-20250514', 'claude-opus-4-20250514', 'claude-haiku-4-5-20251001'],                                       defaultBaseUrl: 'https://api.anthropic.com' },
+  { id: 'deepseek',   name: 'DeepSeek',            keyField: 'deepseekKey',   getKeyUrl: 'https://platform.deepseek.com/api_keys',        models: ['deepseek-chat', 'deepseek-reasoner'],                                                                                  defaultBaseUrl: 'https://api.deepseek.com/v1' },
+  { id: 'groq',       name: 'Groq',                keyField: 'groqKey',       getKeyUrl: 'https://console.groq.com/keys',                 models: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'], description: 'Ultra-fast inference',            defaultBaseUrl: 'https://api.groq.com/openai/v1' },
+  { id: 'gemini',     name: 'Google Gemini',        keyField: 'geminiKey',     getKeyUrl: 'https://aistudio.google.com/apikey',             models: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash'],                                                              defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai' },
+  { id: 'moonshot',   name: 'Moonshot AI / Kimi',   keyField: 'moonshotKey',   getKeyUrl: 'https://platform.moonshot.cn/console/api-keys',  models: ['kimi-k2', 'moonshot-v1-128k', 'moonshot-v1-32k'],                                                                      defaultBaseUrl: 'https://api.moonshot.cn/v1' },
+  { id: 'mistral',    name: 'Mistral AI',           keyField: 'mistralKey',    getKeyUrl: 'https://console.mistral.ai/api-keys/',           models: ['mistral-large-latest', 'mistral-small-latest', 'codestral-latest'],                                                    defaultBaseUrl: 'https://api.mistral.ai/v1' },
+  { id: 'xai',        name: 'xAI (Grok)',           keyField: 'xaiKey',        getKeyUrl: 'https://console.x.ai/',                         models: ['grok-3', 'grok-3-mini', 'grok-3-fast'],                                                                                defaultBaseUrl: 'https://api.x.ai/v1' },
+  { id: 'openrouter', name: 'OpenRouter',           keyField: 'openrouterKey', getKeyUrl: 'https://openrouter.ai/keys',                    models: ['openai/gpt-4o', 'anthropic/claude-sonnet-4-20250514', 'google/gemini-2.5-flash', 'meta-llama/llama-3.3-70b-instruct'], description: '200+ models, free tier', defaultBaseUrl: 'https://openrouter.ai/api/v1' },
+  { id: 'together',   name: 'Together AI',          keyField: 'togetherKey',   getKeyUrl: 'https://api.together.xyz/settings/api-keys',     models: ['meta-llama/Llama-3.3-70B-Instruct-Turbo', 'mistralai/Mixtral-8x7B-Instruct-v0.1'],                                     defaultBaseUrl: 'https://api.together.xyz/v1' },
+  { id: 'fireworks',  name: 'Fireworks AI',         keyField: 'fireworksKey',  getKeyUrl: 'https://fireworks.ai/api-keys',                  models: ['accounts/fireworks/models/llama-v3p1-70b-instruct'],                                                                   defaultBaseUrl: 'https://api.fireworks.ai/inference/v1' },
+  { id: 'cohere',     name: 'Cohere',               keyField: 'cohereKey',     getKeyUrl: 'https://dashboard.cohere.com/api-keys',          models: ['command-r-plus', 'command-r', 'command-light'],                                                                        defaultBaseUrl: 'https://api.cohere.com/v1' },
+  { id: 'ollama',     name: 'Ollama (local)',        keyField: 'ollamaToken',   getKeyUrl: '',                                              models: ['llama3.2', 'llama3.1', 'mistral', 'codellama', 'phi3'], description: 'Free, runs locally',                               defaultBaseUrl: 'http://localhost:11434', keyOptional: true },
 ];
 
 // ── Searchable Model Selector ─────────────────────────────────────────────
@@ -104,11 +107,12 @@ function ModelSearch({ models, value, onChange, placeholder }: {
 export default function AiSettingsPage() {
   const [config, setConfig] = useState<Record<string, any> | null>(null);
   const [keys, setKeys] = useState<Record<string, string>>({});
+  const [baseUrls, setBaseUrls] = useState<Record<string, string>>({});
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
+  const [showUrls, setShowUrls] = useState<Record<string, boolean>>({});
   const [defaultProvider, setDefaultProvider] = useState('openai');
   const [defaultModel, setDefaultModel] = useState('');
   const [openaiAuthType, setOpenaiAuthType] = useState('api-key');
-  const [openaiBaseUrl, setOpenaiBaseUrl] = useState('');
   const [saving, setSaving] = useState(false);
   const [loadingModels, setLoadingModels] = useState(false);
   const [liveModels, setLiveModels] = useState<string[]>([]);
@@ -125,10 +129,14 @@ export default function AiSettingsPage() {
         if (p.keyField) newKeys[p.keyField] = data[p.keyField] || '';
       }
       setKeys(newKeys);
+      const urls: Record<string, string> = {};
+      for (const p of PROVIDERS) {
+        urls[p.id] = data[`${p.id}BaseUrl`] || '';
+      }
+      setBaseUrls(urls);
       setDefaultProvider(data.defaultProvider || 'openai');
       setDefaultModel(data.defaultModel || '');
       setOpenaiAuthType(data.openaiAuthType || 'api-key');
-      setOpenaiBaseUrl(data.openaiBaseUrl || '');
     } catch { /* ignore */ }
   }, []);
 
@@ -179,17 +187,23 @@ export default function AiSettingsPage() {
     setSaving(true);
     setStatus(null);
     try {
-      const body: Record<string, string> = { defaultProvider, defaultModel, openaiAuthType, openaiBaseUrl };
+      const body: Record<string, string> = { defaultProvider, defaultModel, openaiAuthType };
       for (const [field, value] of Object.entries(keys)) {
         if (value && !value.includes('••')) body[field] = value;
+      }
+      for (const [id, url] of Object.entries(baseUrls)) {
+        body[`${id}BaseUrl`] = url;
       }
       const data = await api.put<Record<string, any>>('/api/v1/settings/ai-config', body);
       setConfig(data);
       const newKeys: Record<string, string> = {};
+      const newUrls: Record<string, string> = {};
       for (const p of PROVIDERS) {
         if (p.keyField) newKeys[p.keyField] = data[p.keyField] || '';
+        newUrls[p.id] = data[`${p.id}BaseUrl`] || '';
       }
       setKeys(newKeys);
+      setBaseUrls(newUrls);
       try { await api.post('/api/proxy/ai/llm/reload'); } catch { /* ignore */ }
       setStatus({ type: 'success', message: 'AI configuration saved and providers reloaded.' });
       fetchModels();
@@ -202,12 +216,20 @@ export default function AiSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Bot className="h-6 w-6 text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold">AI Configuration</h1>
-          <p className="text-muted-foreground">{configuredCount} provider{configuredCount !== 1 ? 's' : ''} configured &middot; {PROVIDERS.length - 1} available</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Bot className="h-6 w-6 text-primary" />
+          <div>
+            <h1 className="text-2xl font-bold">AI Configuration</h1>
+            <p className="text-muted-foreground">{configuredCount} provider{configuredCount !== 1 ? 's' : ''} configured &middot; {PROVIDERS.length - 1} available</p>
+          </div>
         </div>
+        <Link href="/settings/ai/usage">
+          <Button variant="outline" size="sm">
+            <BarChart3 className="mr-2 h-4 w-4" />
+            Usage Analytics
+          </Button>
+        </Link>
       </div>
 
       {status && (
@@ -290,7 +312,7 @@ export default function AiSettingsPage() {
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Proxy URL (optional)</Label>
-                  <Input value={openaiBaseUrl} onChange={(e) => setOpenaiBaseUrl(e.target.value)} placeholder="Auto (built-in proxy)" className="font-mono text-xs h-8" />
+                  <Input value={baseUrls['openai'] || ''} onChange={(e) => setBaseUrls((prev) => ({ ...prev, openai: e.target.value }))} placeholder="Auto (built-in proxy)" className="font-mono text-xs h-8" />
                 </div>
               </>
             )}
@@ -298,15 +320,16 @@ export default function AiSettingsPage() {
         </Card>
       )}
 
-      {/* API Keys — all providers */}
+      {/* API Keys & Base URLs — all providers */}
       <Card>
         <CardHeader>
-          <CardTitle>API Keys</CardTitle>
-          <CardDescription>Keys are encrypted (AES-256-GCM) before storage. Configure one or more providers.</CardDescription>
+          <CardTitle>API Keys & Endpoints</CardTitle>
+          <CardDescription>Keys are encrypted (AES-256-GCM). Custom base URLs let you use proxies or self-hosted instances.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-5">
           {PROVIDERS.filter((p) => p.keyField).map((p) => {
             const hasKey = config?.[`has${p.keyField[0].toUpperCase()}${p.keyField.slice(1)}`];
+            const hasCustomUrl = !!baseUrls[p.id]?.trim();
             return (
               <div key={p.id} className="space-y-1.5">
                 <div className="flex items-center justify-between">
@@ -315,9 +338,19 @@ export default function AiSettingsPage() {
                     {hasKey && <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500" title="Configured" />}
                     {p.description && <span className="text-[10px] text-muted-foreground font-normal">({p.description})</span>}
                   </Label>
-                  <Button variant="link" size="sm" className="h-auto p-0 text-xs gap-1" onClick={() => window.open(p.getKeyUrl, '_blank')}>
-                    Get Key <ExternalLink className="h-2.5 w-2.5" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      className={`text-[10px] ${showUrls[p.id] || hasCustomUrl ? 'text-primary font-medium' : 'text-muted-foreground hover:text-foreground'}`}
+                      onClick={() => setShowUrls((prev) => ({ ...prev, [p.id]: !prev[p.id] }))}
+                    >
+                      {hasCustomUrl ? 'Custom URL' : 'Base URL'}
+                    </button>
+                    {p.getKeyUrl && (
+                      <Button variant="link" size="sm" className="h-auto p-0 text-xs gap-1" onClick={() => window.open(p.getKeyUrl, '_blank')}>
+                        Get Key <ExternalLink className="h-2.5 w-2.5" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <div className="flex gap-1.5">
                   <Input
@@ -325,7 +358,7 @@ export default function AiSettingsPage() {
                     type={showKeys[p.keyField] ? 'text' : 'password'}
                     value={keys[p.keyField] || ''}
                     onChange={(e) => setKeys((prev) => ({ ...prev, [p.keyField]: e.target.value }))}
-                    placeholder={hasKey ? 'Saved (enter new to replace)' : 'sk-...'}
+                    placeholder={p.keyOptional ? (hasKey ? 'Saved (optional)' : 'Optional — for authenticated servers') : (hasKey ? 'Saved (enter new to replace)' : 'sk-...')}
                     className="font-mono text-xs h-9"
                   />
                   <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => setShowKeys((prev) => ({ ...prev, [p.keyField]: !prev[p.keyField] }))}>
@@ -349,6 +382,25 @@ export default function AiSettingsPage() {
                     </Button>
                   )}
                 </div>
+                {(showUrls[p.id] || hasCustomUrl) && (
+                  <div className="flex gap-1.5">
+                    <Input
+                      value={baseUrls[p.id] || ''}
+                      onChange={(e) => setBaseUrls((prev) => ({ ...prev, [p.id]: e.target.value }))}
+                      placeholder={p.defaultBaseUrl}
+                      className="font-mono text-[11px] h-8 text-muted-foreground"
+                    />
+                    {hasCustomUrl && (
+                      <Button
+                        variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
+                        title="Reset to default"
+                        onClick={() => setBaseUrls((prev) => ({ ...prev, [p.id]: '' }))}
+                      >
+                        <RefreshCw className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })}

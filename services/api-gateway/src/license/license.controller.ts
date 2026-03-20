@@ -161,6 +161,46 @@ export class LicenseController {
   }
 
   /**
+   * POST /api/v1/license/downgrade
+   * Initiates a subscription downgrade from Pro to Community via the platform API.
+   * Requires JWT authentication. Only allowed when current tier is Pro.
+   */
+  @Post('downgrade')
+  @HttpCode(HttpStatus.OK)
+  async downgrade(
+    @Body() body: { email?: string },
+    @Req() req: any,
+  ) {
+    // 1. Check current tier — only allow downgrade from Pro
+    const status = await this.licenseService.getLicenseStatus();
+    if (status.tier !== 'pro') {
+      throw new ConflictException('Downgrade is only available for Pro tier');
+    }
+
+    // 2. Call platform downgrade API
+    const platformUrl =
+      process.env.PLATFORM_URL || 'https://unicore.bemind.tech';
+    const res = await fetch(
+      `${platformUrl}/api/customer/billing/downgrade`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerEmail: body.email || req.user?.email,
+        }),
+      },
+    );
+
+    if (!res.ok) {
+      throw new InternalServerErrorException(
+        'Failed to process downgrade request',
+      );
+    }
+
+    return res.json();
+  }
+
+  /**
    * POST /api/v1/license/revalidate
    * Forces an immediate re-validation against the license server.
    * Useful after updating the license key without restarting.

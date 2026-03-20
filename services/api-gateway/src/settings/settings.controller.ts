@@ -112,6 +112,13 @@ export class SettingsController {
     return settings.data;
   }
 
+  /** Public: demo mode status (no auth required) */
+  @Public()
+  @Get('demo-status')
+  getDemoStatus() {
+    return { demoMode: process.env.DEMO_MODE === 'true' };
+  }
+
   // ── Team member count (used by license settings page) ──
 
   @Get('team/count')

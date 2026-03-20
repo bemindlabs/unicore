@@ -77,9 +77,9 @@ function formatMessageText(text: string): React.ReactNode[] {
     parts.push(
       <pre
         key={`cb-${parts.length}`}
-        className="my-2 rounded bg-[#0a0e1a] border border-cyan-900/30 p-3 overflow-x-auto"
+        className="my-2 rounded bg-[var(--bo-bg)] border border-[var(--bo-border)] p-3 overflow-x-auto"
       >
-        <code className="text-xs text-cyan-200/90 font-mono">{match[1].trim()}</code>
+        <code className="text-xs text-[var(--bo-text-body)] font-mono">{match[1].trim()}</code>
       </pre>
     );
     lastIndex = match.index + match[0].length;
@@ -109,7 +109,7 @@ function formatInlineText(text: string, keyOffset: number): React.ReactNode[] {
       parts.push(
         <code
           key={`ic-${keyOffset}-${parts.length}`}
-          className="px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-300 text-[12px] font-mono"
+          className="px-1.5 py-0.5 rounded bg-[var(--bo-accent-10)] text-[var(--bo-text-accent-2)] text-[12px] font-mono"
         >
           {match[1].slice(1, -1)}
         </code>
@@ -117,7 +117,7 @@ function formatInlineText(text: string, keyOffset: number): React.ReactNode[] {
     } else if (match[2]) {
       // Bold
       parts.push(
-        <strong key={`b-${keyOffset}-${parts.length}`} className="font-bold text-cyan-200">
+        <strong key={`b-${keyOffset}-${parts.length}`} className="font-bold text-[var(--bo-text-body)]">
           {match[2].slice(2, -2)}
         </strong>
       );
@@ -149,7 +149,7 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="opacity-0 group-hover:opacity-100 transition-opacity ml-2 p-1 rounded hover:bg-cyan-500/10 text-cyan-600/40 hover:text-cyan-400"
+      className="opacity-0 group-hover:opacity-100 transition-opacity ml-2 p-1 rounded hover:bg-[var(--bo-accent-10)] text-[var(--bo-text-dim)] hover:text-[var(--bo-text-accent)]"
       title="Copy message"
     >
       {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -422,19 +422,19 @@ export function CommandCenter() {
     <div className={`flex flex-col md:flex-row h-full min-h-0 border backdrop-blur-sm rounded-lg overflow-hidden ${
       isRetroDesk
         ? 'border-[var(--retrodesk-border)] bg-[var(--retrodesk-bg)]'
-        : 'border-cyan-900/30 bg-[#0a0e1a]/60'
+        : 'border-[var(--bo-border)] bg-[var(--bo-bg)]'
     }`}>
       {/* ---- Top (mobile) / Left (desktop): Agent Selector ---- */}
       <aside className={`md:w-64 flex-shrink-0 border-b md:border-b-0 md:border-r overflow-x-auto md:overflow-x-hidden md:overflow-y-auto ${
         isRetroDesk
           ? 'border-[var(--retrodesk-border)] bg-[var(--retrodesk-surface)]'
-          : 'border-cyan-900/30 bg-[#080c16]/80'
+          : 'border-[var(--bo-border)] bg-[var(--bo-bg)]'
       }`}>
         <div className={`px-4 py-3 border-b hidden md:block ${
-          isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-cyan-900/30'
+          isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-[var(--bo-border)]'
         }`}>
           <h2 className={`text-[10px] uppercase tracking-wider ${
-            isRetroDesk ? 'retrodesk-heading text-[var(--retrodesk-pink)]' : 'font-mono text-cyan-600/60'
+            isRetroDesk ? 'retrodesk-heading text-[var(--retrodesk-pink)]' : 'font-mono text-[var(--bo-text-muted)]'
           }`}>
             Select Agent
           </h2>
@@ -452,8 +452,8 @@ export function CommandCenter() {
                       ? 'bg-[color-mix(in_srgb,var(--retrodesk-pink)_10%,transparent)] border-2 border-[var(--retrodesk-pink)]'
                       : 'hover:bg-[color-mix(in_srgb,var(--retrodesk-pink)_5%,transparent)] border-2 border-transparent'
                     : active
-                      ? 'bg-cyan-500/15 border border-cyan-500/30'
-                      : 'hover:bg-cyan-500/5 border border-transparent'
+                      ? 'bg-[var(--bo-accent-15)] border border-[var(--bo-border-accent)]'
+                      : 'hover:bg-[var(--bo-accent-5)] border border-transparent'
                 }`}
               >
                 <div className="flex items-center gap-2">
@@ -465,7 +465,7 @@ export function CommandCenter() {
                     className={`text-xs font-bold tracking-wider whitespace-nowrap ${
                       isRetroDesk
                         ? active ? 'retrodesk-mono text-[var(--retrodesk-text)]' : 'retrodesk-mono text-[var(--retrodesk-muted)]'
-                        : active ? 'font-mono text-cyan-300' : 'font-mono text-cyan-500/80'
+                        : active ? 'font-mono text-[var(--bo-text-accent-2)]' : 'font-mono text-[var(--bo-text-info)]'
                     }`}
                   >
                     {agent.name}
@@ -473,7 +473,7 @@ export function CommandCenter() {
                 </div>
                 <div className="flex items-center justify-between mt-1 ml-[18px]">
                   <span className={`text-[10px] font-mono truncate ${
-                    isRetroDesk ? 'text-[var(--retrodesk-muted)]' : 'text-cyan-600/50'
+                    isRetroDesk ? 'text-[var(--retrodesk-muted)]' : 'text-[var(--bo-text-muted)]'
                   }`}>
                     {agent.role}
                   </span>
@@ -489,7 +489,7 @@ export function CommandCenter() {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Conversation header */}
         <div className={`flex items-center gap-3 px-5 py-3 border-b ${
-          isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-cyan-900/30'
+          isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-[var(--bo-border)]'
         }`}>
           {selectedAgent && (
             <>
@@ -499,12 +499,12 @@ export function CommandCenter() {
               />
               <div>
                 <span className={`text-sm font-bold tracking-wider ${
-                  isRetroDesk ? 'retrodesk-mono text-[var(--retrodesk-text)]' : 'font-mono text-cyan-300'
+                  isRetroDesk ? 'retrodesk-mono text-[var(--retrodesk-text)]' : 'font-mono text-[var(--bo-text-accent-2)]'
                 }`}>
                   {selectedAgent.name}
                 </span>
                 <span className={`text-[10px] ml-2 ${
-                  isRetroDesk ? 'retrodesk-mono text-[var(--retrodesk-muted)]' : 'font-mono text-cyan-600/50'
+                  isRetroDesk ? 'retrodesk-mono text-[var(--retrodesk-muted)]' : 'font-mono text-[var(--bo-text-muted)]'
                 }`}>
                   {selectedAgent.role}
                 </span>
@@ -515,7 +515,7 @@ export function CommandCenter() {
                     <button
                       onClick={handleManualSave}
                       disabled={isSaving}
-                      className="font-mono text-[9px] text-cyan-600/40 hover:text-cyan-400 transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-cyan-500/10 disabled:opacity-40"
+                      className="font-mono text-[9px] text-[var(--bo-text-dim)] hover:text-[var(--bo-text-accent)] transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-[var(--bo-accent-10)] disabled:opacity-40"
                       title="Save conversation to history"
                     >
                       {savedFeedback ? (
@@ -527,7 +527,7 @@ export function CommandCenter() {
                     </button>
                     <button
                       onClick={handleClearMessages}
-                      className="font-mono text-[9px] text-cyan-600/40 hover:text-red-400 transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-red-500/10"
+                      className="font-mono text-[9px] text-[var(--bo-text-dim)] hover:text-red-400 transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-red-500/10"
                       title="Clear conversation (auto-saves first)"
                     >
                       <Trash2 className="w-3 h-3" />
@@ -543,7 +543,7 @@ export function CommandCenter() {
                   }`}
                 />
                 <span className={`font-mono text-[9px] uppercase ${
-                  isRetroDesk ? 'text-[var(--retrodesk-muted)]' : 'text-cyan-600/40'
+                  isRetroDesk ? 'text-[var(--retrodesk-muted)]' : 'text-[var(--bo-text-dim)]'
                 }`}>
                   {connected ? 'Connected' : 'Disconnected'}
                 </span>
@@ -560,10 +560,10 @@ export function CommandCenter() {
                 className="w-10 h-10 rounded-full mb-4"
                 style={{ background: selectedAgent.color, opacity: 0.3 }}
               />
-              <p className="font-mono text-xs text-cyan-600/50">
+              <p className="font-mono text-xs text-[var(--bo-text-muted)]">
                 Start a conversation with {selectedAgent.name}
               </p>
-              <p className="font-mono text-[10px] text-cyan-600/30 mt-1">
+              <p className="font-mono text-[10px] text-[var(--bo-text-dimmer)] mt-1">
                 Type a prompt below or pick a suggestion
               </p>
             </div>
@@ -583,10 +583,10 @@ export function CommandCenter() {
                         style={{ background: msg.authorColor }}
                       />
                     )}
-                    <span className="font-mono text-[10px] text-cyan-600/50">
+                    <span className="font-mono text-[10px] text-[var(--bo-text-muted)]">
                       {isMe ? 'You' : msg.author}
                     </span>
-                    <span className="font-mono text-[9px] text-cyan-600/30">
+                    <span className="font-mono text-[9px] text-[var(--bo-text-dimmer)]">
                       {formatTimestamp(msg.timestamp)}
                     </span>
                     {!isMe && <CopyButton text={msg.text} />}
@@ -594,8 +594,8 @@ export function CommandCenter() {
                   <div
                     className={`rounded-lg px-4 py-2.5 text-sm font-mono leading-relaxed ${
                       isMe
-                        ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-500/20 whitespace-pre-wrap'
-                        : 'bg-[#0d1220] text-cyan-100/80 border border-cyan-900/20'
+                        ? 'bg-[var(--bo-accent-20)] text-[var(--bo-text-body)] border border-[var(--bo-border-accent)] whitespace-pre-wrap'
+                        : 'bg-[var(--bo-bg-bubble)] text-[var(--bo-text-body-soft)] border border-[var(--bo-border-subtle)]'
                     }`}
                   >
                     {isMe ? msg.text : formatMessageText(msg.text)}
@@ -607,8 +607,8 @@ export function CommandCenter() {
           {isWaiting && (
             <div className="flex justify-start">
               <div className="max-w-[70%] flex flex-col items-start">
-                <div className="rounded-lg px-4 py-2.5 text-sm font-mono bg-[#0d1220] text-cyan-100/80 border border-cyan-900/20">
-                  <span className="text-cyan-500/60">
+                <div className="rounded-lg px-4 py-2.5 text-sm font-mono bg-[var(--bo-bg-bubble)] text-[var(--bo-text-body-soft)] border border-[var(--bo-border-subtle)]">
+                  <span className="text-[var(--bo-text-muted)]">
                     Agent is thinking
                     <span className="inline-flex w-6">
                       <span className="animate-[bounce_1.4s_ease-in-out_infinite]">.</span>
@@ -629,7 +629,7 @@ export function CommandCenter() {
               key={prompt}
               onClick={() => handleSend(prompt)}
               disabled={!connected}
-              className="font-mono text-[10px] px-3 py-1.5 rounded-full border border-cyan-500/20 text-cyan-500/60 hover:bg-cyan-500/10 hover:text-cyan-400 hover:border-cyan-500/40 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              className="font-mono text-[10px] px-3 py-1.5 rounded-full border border-[var(--bo-border-accent)] text-[var(--bo-text-muted)] hover:bg-[var(--bo-accent-10)] hover:text-[var(--bo-text-accent)] hover:border-[var(--bo-border-accent-hover)] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
             >
               {prompt}
             </button>
@@ -638,7 +638,7 @@ export function CommandCenter() {
 
         {/* Input Area */}
         <div className={`p-4 border-t ${
-          isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-cyan-900/30'
+          isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-[var(--bo-border)]'
         }`}>
           <div className="flex gap-3 items-end">
             <textarea
@@ -656,7 +656,7 @@ export function CommandCenter() {
               className={`flex-1 resize-none rounded-md border px-4 py-3 text-sm focus:outline-none disabled:opacity-40 ${
                 isRetroDesk
                   ? 'border-[var(--retrodesk-border)] bg-[var(--retrodesk-surface)] retrodesk-mono text-[var(--retrodesk-text)] placeholder:text-[var(--retrodesk-muted)] focus:border-[var(--retrodesk-pink)] focus:ring-1 focus:ring-[var(--retrodesk-pink)]'
-                  : 'border-cyan-900/40 bg-[#080c16] font-mono text-cyan-200 placeholder:text-cyan-600/30 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20'
+                  : 'border-[var(--bo-border-strong)] bg-[var(--bo-bg)] font-mono text-[var(--bo-text-body)] placeholder:text-[var(--bo-text-dimmer)] focus:border-[var(--bo-border-accent-hover)] focus:ring-1 focus:ring-[var(--bo-accent-20)]'
               }`}
             />
             <button
@@ -665,7 +665,7 @@ export function CommandCenter() {
               className={`flex-shrink-0 rounded-md border p-3 disabled:opacity-30 disabled:cursor-not-allowed transition-all ${
                 isRetroDesk
                   ? 'bg-[color-mix(in_srgb,var(--retrodesk-pink)_15%,transparent)] border-[var(--retrodesk-pink)] text-[var(--retrodesk-pink)] hover:bg-[color-mix(in_srgb,var(--retrodesk-pink)_25%,transparent)]'
-                  : 'bg-cyan-500/20 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/30 hover:border-cyan-400/50'
+                  : 'bg-[var(--bo-accent-20)] border-[var(--bo-border-accent)] text-[var(--bo-text-accent)] hover:bg-[var(--bo-accent-30)] hover:border-[var(--bo-border-accent-hover)]'
               }`}
               aria-label="Send message"
               title="Send (Ctrl+Enter)"
@@ -674,7 +674,7 @@ export function CommandCenter() {
             </button>
           </div>
           <p className={`font-mono text-[9px] mt-1.5 text-right ${
-            isRetroDesk ? 'text-[var(--retrodesk-muted)]' : 'text-cyan-600/30'
+            isRetroDesk ? 'text-[var(--retrodesk-muted)]' : 'text-[var(--bo-text-dimmer)]'
           }`}>
             Press Ctrl+Enter to send
           </p>

@@ -111,13 +111,13 @@ export function AgentSettings() {
   const stateColor = (status: string) => {
     switch (status) {
       case 'working':
-        return 'text-green-400 bg-green-500/10 border-green-500/30';
+        return 'text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-500/10 border-green-200 dark:border-green-500/30';
       case 'idle':
-        return 'text-yellow-400 bg-yellow-500/10 border-yellow-500/30';
+        return 'text-amber-600 dark:text-yellow-400 bg-amber-100 dark:bg-yellow-500/10 border-amber-200 dark:border-yellow-500/30';
       case 'offline':
-        return 'text-red-400 bg-red-500/10 border-red-500/30';
+        return 'text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-500/10 border-red-200 dark:border-red-500/30';
       default:
-        return 'text-slate-400 bg-slate-500/10 border-slate-500/30';
+        return 'text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-500/10 border-slate-200 dark:border-slate-500/30';
     }
   };
 
@@ -171,7 +171,7 @@ export function AgentSettings() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className={`text-xs uppercase tracking-wider ${
-          isRetroDesk ? 'retrodesk-heading text-[var(--retrodesk-pink)]' : 'font-mono text-cyan-400'
+          isRetroDesk ? 'retrodesk-heading text-[var(--retrodesk-pink)]' : 'font-mono text-[var(--bo-text-accent)]'
         }`}>
           OpenClaw Gateway Agents
         </h3>
@@ -181,7 +181,7 @@ export function AgentSettings() {
           className={`text-[9px] px-3 py-1.5 transition-all uppercase tracking-wider border ${
             isRetroDesk
               ? 'retrodesk-mono text-[var(--retrodesk-text)] hover:text-[var(--retrodesk-pink)] border-[var(--retrodesk-border)] hover:border-[var(--retrodesk-pink)] disabled:text-[var(--retrodesk-muted)] disabled:border-[var(--retrodesk-border)]'
-              : 'font-mono text-cyan-500 hover:text-cyan-300 disabled:text-cyan-800 border-cyan-500/30 hover:border-cyan-400/50 disabled:border-cyan-900/30'
+              : 'font-mono text-[var(--bo-text-info)] hover:text-[var(--bo-text-accent-2)] disabled:text-[var(--bo-text-dimmer)] border-[var(--bo-border-accent)] hover:border-[var(--bo-border-accent-hover)] disabled:border-[var(--bo-border)]'
           }`}
         >
           {loading ? 'Loading...' : 'Refresh'}
@@ -190,7 +190,7 @@ export function AgentSettings() {
 
       {/* Error */}
       {error && (
-        <div className="font-mono text-[10px] text-red-400/80 bg-red-500/10 border border-red-500/20 px-3 py-2">
+        <div className="font-mono text-[10px] text-red-700 bg-red-100 border-red-200 dark:text-red-400/80 dark:bg-red-500/10 border dark:border-red-500/20 px-3 py-2">
           Error: {error}
         </div>
       )}
@@ -198,7 +198,7 @@ export function AgentSettings() {
       {/* Empty state */}
       {!loading && !error && agents.length === 0 && (
         <div className={`text-[10px] text-center py-8 uppercase tracking-wider ${
-          isRetroDesk ? 'retrodesk-mono text-[var(--retrodesk-muted)]' : 'font-mono text-cyan-600/40'
+          isRetroDesk ? 'retrodesk-mono text-[var(--retrodesk-muted)]' : 'font-mono text-[var(--bo-text-dim)]'
         }`}>
           No agents registered
         </div>
@@ -218,7 +218,7 @@ export function AgentSettings() {
               className={`border overflow-hidden transition-all ${
                 isRetroDesk
                   ? 'border-[var(--retrodesk-border)] bg-[var(--retrodesk-surface)]'
-                  : 'border-cyan-900/30 bg-[#0a0e1a]/60'
+                  : 'border-[var(--bo-border)] bg-[var(--bo-bg)]'
               }`}
             >
               {/* Collapsed row - always visible */}
@@ -228,28 +228,28 @@ export function AgentSettings() {
                 className={`w-full px-4 py-3 flex items-center justify-between transition-colors text-left ${
                   isRetroDesk
                     ? 'hover:bg-[color-mix(in_srgb,var(--retrodesk-pink)_5%,transparent)]'
-                    : 'hover:bg-cyan-500/5'
+                    : 'hover:bg-[var(--bo-accent-5)]'
                 }`}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <span className={`text-xs uppercase tracking-wider truncate ${
-                    isRetroDesk ? 'retrodesk-mono text-[var(--retrodesk-text)]' : 'font-mono text-cyan-300'
+                    isRetroDesk ? 'retrodesk-mono text-[var(--retrodesk-text)]' : 'font-mono text-[var(--bo-text-accent-2)]'
                   }`}>
                     {agent.name}
                   </span>
                   <span className={`text-[9px] ${
-                    isRetroDesk ? 'retrodesk-mono text-[var(--retrodesk-muted)]' : 'font-mono text-cyan-600/50'
+                    isRetroDesk ? 'retrodesk-mono text-[var(--retrodesk-muted)]' : 'font-mono text-[var(--bo-text-muted)]'
                   }`}>
                     {agent.type}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0">
                   {/* Health: uptime badge */}
-                  <span className="font-mono text-[9px] text-cyan-500/60 bg-cyan-500/5 border border-cyan-900/20 px-1.5 py-0.5">
+                  <span className="font-mono text-[9px] text-[var(--bo-text-muted)] bg-[var(--bo-accent-5)] border border-[var(--bo-border-subtle)] px-1.5 py-0.5">
                     up {uptimeLabel(agent.lastHeartbeat)}
                   </span>
                   {/* Messages count */}
-                  <span className="font-mono text-[9px] text-cyan-500/60 bg-cyan-500/5 border border-cyan-900/20 px-1.5 py-0.5">
+                  <span className="font-mono text-[9px] text-[var(--bo-text-muted)] bg-[var(--bo-accent-5)] border border-[var(--bo-border-subtle)] px-1.5 py-0.5">
                     {agent.messagesCount ?? 0} msgs
                   </span>
                   {/* Status badge */}
@@ -260,7 +260,7 @@ export function AgentSettings() {
                   </span>
                   {/* Expand indicator */}
                   <svg
-                    className={`w-3.5 h-3.5 text-cyan-600/50 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                    className={`w-3.5 h-3.5 text-[var(--bo-text-muted)] transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -273,11 +273,11 @@ export function AgentSettings() {
 
               {/* Expanded panel */}
               {isExpanded && config && (
-                <div className="border-t border-cyan-900/20 px-4 py-4 space-y-4">
+                <div className="border-t border-[var(--bo-border-subtle)] px-4 py-4 space-y-4">
                   {/* Capabilities */}
                   {agent.capabilities && agent.capabilities.length > 0 && (
                     <div className="space-y-1.5">
-                      <label className="font-mono text-[9px] text-cyan-600/60 uppercase tracking-wider">
+                      <label className="font-mono text-[9px] text-[var(--bo-text-muted)] uppercase tracking-wider">
                         Capabilities
                       </label>
                       <div className="flex flex-wrap gap-1.5">
@@ -294,34 +294,34 @@ export function AgentSettings() {
                   )}
 
                   {/* Separator */}
-                  <div className="border-t border-cyan-900/15" />
+                  <div className="border-t border-[var(--bo-border-subtle)]" />
 
                   {/* Edit fields: Name, Role, Status */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="space-y-1">
-                      <label className="font-mono text-[9px] text-cyan-600/60 uppercase tracking-wider">
+                      <label className="font-mono text-[9px] text-[var(--bo-text-muted)] uppercase tracking-wider">
                         Name
                       </label>
                       <input
                         type="text"
                         value={config.name}
                         onChange={(e) => updateConfig(i, { name: e.target.value })}
-                        className="w-full font-mono text-[10px] text-cyan-300 bg-[#060a14] border border-cyan-900/30 px-2 py-1.5 focus:outline-none focus:border-cyan-500/50 transition-colors"
+                        className="w-full font-mono text-[10px] text-[var(--bo-text-accent-2)] bg-[var(--bo-bg-input)] border border-[var(--bo-border)] px-2 py-1.5 focus:outline-none focus:border-[var(--bo-border-accent-hover)] transition-colors"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-mono text-[9px] text-cyan-600/60 uppercase tracking-wider">
+                      <label className="font-mono text-[9px] text-[var(--bo-text-muted)] uppercase tracking-wider">
                         Role
                       </label>
                       <input
                         type="text"
                         value={config.role}
                         onChange={(e) => updateConfig(i, { role: e.target.value })}
-                        className="w-full font-mono text-[10px] text-cyan-300 bg-[#060a14] border border-cyan-900/30 px-2 py-1.5 focus:outline-none focus:border-cyan-500/50 transition-colors"
+                        className="w-full font-mono text-[10px] text-[var(--bo-text-accent-2)] bg-[var(--bo-bg-input)] border border-[var(--bo-border)] px-2 py-1.5 focus:outline-none focus:border-[var(--bo-border-accent-hover)] transition-colors"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-mono text-[9px] text-cyan-600/60 uppercase tracking-wider">
+                      <label className="font-mono text-[9px] text-[var(--bo-text-muted)] uppercase tracking-wider">
                         Status
                       </label>
                       <select
@@ -331,7 +331,7 @@ export function AgentSettings() {
                             status: e.target.value as 'working' | 'idle' | 'offline',
                           })
                         }
-                        className="w-full font-mono text-[10px] text-cyan-300 bg-[#060a14] border border-cyan-900/30 px-2 py-1.5 focus:outline-none focus:border-cyan-500/50 transition-colors appearance-none cursor-pointer"
+                        className="w-full font-mono text-[10px] text-[var(--bo-text-accent-2)] bg-[var(--bo-bg-input)] border border-[var(--bo-border)] px-2 py-1.5 focus:outline-none focus:border-[var(--bo-border-accent-hover)] transition-colors appearance-none cursor-pointer"
                       >
                         <option value="working">Working</option>
                         <option value="idle">Idle</option>
@@ -341,11 +341,11 @@ export function AgentSettings() {
                   </div>
 
                   {/* Separator */}
-                  <div className="border-t border-cyan-900/15" />
+                  <div className="border-t border-[var(--bo-border-subtle)]" />
 
                   {/* Autonomy Level */}
                   <div className="space-y-1.5">
-                    <label className="font-mono text-[9px] text-cyan-600/60 uppercase tracking-wider">
+                    <label className="font-mono text-[9px] text-[var(--bo-text-muted)] uppercase tracking-wider">
                       Autonomy Level
                     </label>
                     <select
@@ -353,7 +353,7 @@ export function AgentSettings() {
                       onChange={(e) =>
                         updateConfig(i, { autonomy: e.target.value as AutonomyLevel })
                       }
-                      className="w-full font-mono text-[10px] text-cyan-300 bg-[#060a14] border border-cyan-900/30 px-2 py-1.5 focus:outline-none focus:border-cyan-500/50 transition-colors appearance-none cursor-pointer"
+                      className="w-full font-mono text-[10px] text-[var(--bo-text-accent-2)] bg-[var(--bo-bg-input)] border border-[var(--bo-border)] px-2 py-1.5 focus:outline-none focus:border-[var(--bo-border-accent-hover)] transition-colors appearance-none cursor-pointer"
                     >
                       <option value="suggest">Suggest</option>
                       <option value="approval">Approval</option>
@@ -363,7 +363,7 @@ export function AgentSettings() {
 
                   {/* Channel Assignment */}
                   <div className="space-y-1.5">
-                    <label className="font-mono text-[9px] text-cyan-600/60 uppercase tracking-wider">
+                    <label className="font-mono text-[9px] text-[var(--bo-text-muted)] uppercase tracking-wider">
                       Channel Assignment
                     </label>
                     <div className="flex flex-wrap gap-2">
@@ -374,8 +374,8 @@ export function AgentSettings() {
                             key={ch}
                             className={`flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-wider px-2 py-1 border cursor-pointer transition-colors ${
                               active
-                                ? 'border-cyan-500/50 text-cyan-300 bg-cyan-500/10'
-                                : 'border-cyan-900/30 text-cyan-600/40 bg-transparent hover:border-cyan-900/50'
+                                ? 'border-[var(--bo-border-accent-hover)] text-[var(--bo-text-accent-2)] bg-[var(--bo-accent-10)]'
+                                : 'border-[var(--bo-border)] text-[var(--bo-text-dim)] bg-transparent hover:border-[var(--bo-border-strong)]'
                             }`}
                           >
                             <input
@@ -387,12 +387,12 @@ export function AgentSettings() {
                             <span
                               className={`w-2.5 h-2.5 border flex items-center justify-center ${
                                 active
-                                  ? 'border-cyan-400 bg-cyan-500/30'
-                                  : 'border-cyan-900/40'
+                                  ? 'border-[var(--bo-text-accent)] bg-[var(--bo-accent-30)]'
+                                  : 'border-[var(--bo-border-strong)]'
                               }`}
                             >
                               {active && (
-                                <svg className="w-1.5 h-1.5 text-cyan-300" viewBox="0 0 12 12" fill="currentColor">
+                                <svg className="w-1.5 h-1.5 text-[var(--bo-text-accent-2)]" viewBox="0 0 12 12" fill="currentColor">
                                   <path d="M10 3L4.5 8.5 2 6" stroke="currentColor" strokeWidth="2" fill="none" />
                                 </svg>
                               )}
@@ -405,7 +405,7 @@ export function AgentSettings() {
                   </div>
 
                   {/* Separator */}
-                  <div className="border-t border-cyan-900/15" />
+                  <div className="border-t border-[var(--bo-border-subtle)]" />
 
                   {/* Save button */}
                   <div className="flex items-center justify-end gap-2">
@@ -417,7 +417,7 @@ export function AgentSettings() {
                     <button
                       onClick={() => saveAgent(i)}
                       disabled={isSaving}
-                      className="font-mono text-[9px] text-cyan-300 hover:text-cyan-100 disabled:text-cyan-800 bg-cyan-500/10 hover:bg-cyan-500/20 disabled:bg-cyan-500/5 border border-cyan-500/30 hover:border-cyan-400/50 disabled:border-cyan-900/30 px-4 py-1.5 transition-all uppercase tracking-wider"
+                      className="font-mono text-[9px] text-[var(--bo-text-accent-2)] hover:text-[var(--bo-text-bright)] disabled:text-[var(--bo-text-dimmer)] bg-[var(--bo-accent-10)] hover:bg-[var(--bo-accent-20)] disabled:bg-[var(--bo-accent-5)] border border-[var(--bo-border-accent)] hover:border-[var(--bo-border-accent-hover)] disabled:border-[var(--bo-border)] px-4 py-1.5 transition-all uppercase tracking-wider"
                     >
                       {isSaving ? 'Saving...' : 'Save Changes'}
                     </button>

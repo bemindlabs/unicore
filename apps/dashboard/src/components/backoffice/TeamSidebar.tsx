@@ -37,22 +37,22 @@ export function TeamSidebar({ agents, filter, onFilterChange, onSelectAgent, onO
           ? 'fixed inset-y-0 left-0 z-50 flex'
           : 'hidden md:flex'
       } ${
-        isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-cyan-900/30 bg-[#0a0e1a]/60'
+        isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-[var(--bo-border)] bg-[var(--bo-bg)]'
       }`}
-      style={isRetroDesk ? { background: 'var(--retrodesk-surface)', borderColor: 'var(--retrodesk-border)' } : !isRetroDesk && mobileOpen ? { background: '#0a0e1a' } : undefined}
+      style={isRetroDesk ? { background: 'var(--retrodesk-surface)', borderColor: 'var(--retrodesk-border)' } : !isRetroDesk && mobileOpen ? { background: 'var(--bo-bg)' } : undefined}
     >
-      <div className={`px-4 py-3 border-b ${isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-cyan-900/20'}`}>
+      <div className={`px-4 py-3 border-b ${isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-[var(--bo-border-subtle)]'}`}>
         <h2
           className={isRetroDesk
             ? 'retrodesk-heading text-[8px] tracking-widest uppercase'
-            : 'font-mono text-[10px] text-cyan-500/70 tracking-widest uppercase'}
+            : 'font-mono text-[10px] text-[var(--bo-text-info)] tracking-widest uppercase'}
           style={isRetroDesk ? { color: 'var(--retrodesk-pink)' } : undefined}
         >
           Team Status Overview
         </h2>
       </div>
 
-      <div className={`flex gap-1 px-3 py-2 border-b ${isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-cyan-900/20'}`}>
+      <div className={`flex gap-1 px-3 py-2 border-b ${isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-[var(--bo-border-subtle)]'}`}>
         {filters.map(f => (
           <button
             key={f.key}
@@ -65,8 +65,8 @@ export function TeamSidebar({ agents, filter, onFilterChange, onSelectAgent, onO
                 }`
               : `font-mono text-[9px] px-2 py-1 transition-all tracking-wider ${
                   filter === f.key
-                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
-                    : 'text-cyan-600/40 hover:text-cyan-400/60 border border-transparent'
+                    ? 'bg-[var(--bo-accent-20)] text-[var(--bo-text-accent-2)] border border-[var(--bo-border-accent)]'
+                    : 'text-[var(--bo-text-dim)] hover:text-[var(--bo-text-accent)] border border-transparent'
                 }`
             }
             style={isRetroDesk && filter === f.key ? { background: 'color-mix(in srgb, var(--retrodesk-pink) 10%, transparent)' } : undefined}
@@ -84,7 +84,7 @@ export function TeamSidebar({ agents, filter, onFilterChange, onSelectAgent, onO
             className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-left group ${
               isRetroDesk
                 ? 'hover:bg-[color-mix(in_srgb,var(--retrodesk-pink)_5%,transparent)]'
-                : 'hover:bg-cyan-500/5'
+                : 'hover:bg-[var(--bo-accent-5)]'
             }`}
           >
             <PixelAvatar color={agent.color} status={agent.status} size="sm" />
@@ -92,7 +92,7 @@ export function TeamSidebar({ agents, filter, onFilterChange, onSelectAgent, onO
               <div
                 className={isRetroDesk
                   ? 'retrodesk-mono text-sm truncate uppercase tracking-wider'
-                  : 'font-mono text-[10px] text-cyan-300 group-hover:text-cyan-200 truncate uppercase tracking-wider'}
+                  : 'font-mono text-[10px] text-[var(--bo-text-accent-2)] group-hover:text-[var(--bo-text-accent)] truncate uppercase tracking-wider'}
                 style={isRetroDesk ? { color: 'var(--retrodesk-text)' } : undefined}
               >
                 {agent.name}
@@ -124,7 +124,7 @@ export function TeamSidebar({ agents, filter, onFilterChange, onSelectAgent, onO
               <RetroDeskEmptyState message="No agents found" />
             </RetroDeskOnly>
             {!isRetroDesk && (
-              <p className="text-center text-cyan-600/30 font-mono text-[9px] py-8 uppercase">
+              <p className="text-center text-[var(--bo-text-dimmer)] font-mono text-[9px] py-8 uppercase">
                 No agents found
               </p>
             )}
