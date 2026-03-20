@@ -201,6 +201,70 @@ export class LicenseController {
   }
 
   /**
+   * GET /api/v1/license/billing
+   * Returns current subscription billing details via the platform API.
+   */
+  @Get('billing')
+  async getBilling(@Req() req: any) {
+    const platformUrl =
+      process.env.PLATFORM_URL || 'https://unicore.bemind.tech';
+    const res = await fetch(`${platformUrl}/api/customer/billing/info`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customerEmail: req.user?.email }),
+    });
+
+    if (!res.ok) {
+      return {
+        plan: null,
+        interval: null,
+        amount: 0,
+        currency: 'usd',
+        currentPeriodEnd: null,
+        cancelAtPeriodEnd: false,
+        paymentMethod: null,
+      };
+    }
+
+    return res.json();
+  }
+
+  /**
+   * GET /api/v1/license/invoices
+   * Returns recent invoices from Stripe via the platform API.
+   * Maps the platform response format to the dashboard's expected format.
+   */
+  @Get('invoices')
+  async getInvoices(@Req() req: any) {
+    const platformUrl =
+      process.env.PLATFORM_URL || 'https://unicore.bemind.tech';
+    const res = await fetch(`${platformUrl}/api/customer/billing/invoices`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customerEmail: req.user?.email }),
+    });
+
+    if (!res.ok) {
+      return { invoices: [] };
+    }
+
+    const data = (await res.json()) as { invoices?: any[] };
+    // Map platform format to dashboard format
+    const invoices = (data.invoices ?? []).map((inv: any) => ({
+      id: inv.id,
+      date: inv.created
+        ? new Date(inv.created * 1000).toISOString()
+        : new Date().toISOString(),
+      amount: inv.amountPaid ?? inv.amountDue ?? 0,
+      currency: inv.currency ?? 'usd',
+      status: inv.status ?? 'unknown',
+      pdfUrl: inv.pdfUrl ?? null,
+    }));
+
+    return { invoices };
+  }
+
+  /**
    * POST /api/v1/license/revalidate
    * Forces an immediate re-validation against the license server.
    * Useful after updating the license key without restarting.

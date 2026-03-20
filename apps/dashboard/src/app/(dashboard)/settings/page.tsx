@@ -3,6 +3,7 @@ import {
   BookOpen,
   Bot,
   ChevronRight,
+  CreditCard,
   Crown,
   Globe,
   Settings,
@@ -46,6 +47,12 @@ const SETTINGS_LINKS = [
     icon: Crown,
     title: 'License',
     description: 'View your edition, usage limits, and upgrade to Pro',
+  },
+  {
+    href: '/settings/billing',
+    icon: CreditCard,
+    title: 'Billing & Payments',
+    description: 'Manage subscription, payment methods, invoices, and Web3 wallet',
   },
   {
     href: '/wizard',
