@@ -1,6 +1,4 @@
-import React from 'react';
 import { UserRole } from '@unicore/shared-types';
-import { AuthContext } from '../auth-provider';
 import type { AuthUser } from '../auth-provider';
 
 // ---------- mocks ----------
