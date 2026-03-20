@@ -23,7 +23,7 @@
     "jsx": "react-jsx",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "types": ["jest", "node"],
+    "types": ["jest", "node", "multer", "express"],
     "baseUrl": ".",
     "paths": {
       "@unicore/*": ["packages/*/src"],
