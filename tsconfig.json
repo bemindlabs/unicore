@@ -25,7 +25,8 @@
     "types": ["jest", "node"],
     "baseUrl": ".",
     "paths": {
-      "@unicore/*": ["packages/*/src"]
+      "@unicore/*": ["packages/*/src"],
+      "@/*": ["apps/dashboard/src/*"]
     }
   },
   "exclude": ["node_modules", "dist", ".next", ".turbo"]
