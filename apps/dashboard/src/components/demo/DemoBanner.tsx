@@ -25,7 +25,7 @@ export function DemoBanner() {
   return (
     <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-3 bg-amber-400 px-4 py-2 text-sm font-medium text-amber-950 shadow-sm">
       <span>
-        Demo Mode — data resets every 24h. Deploy your own →{' '}
+        Demo Mode — data resets every 24h. Get your own instance →{' '}
         <a
           href="https://unicore.bemind.tech/get-started"
           target="_blank"
