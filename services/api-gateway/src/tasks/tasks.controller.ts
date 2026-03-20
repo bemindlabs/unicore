@@ -81,10 +81,23 @@ export class TasksController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param('id') id: string) {
+  async remove(@Param('id') id: string, @CurrentUser() currentUser: any) {
     const existing = await this.prisma.task.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException(`Task ${id} not found`);
+    if (existing.creatorId !== currentUser.id && currentUser.role !== 'OWNER') {
+      throw new ForbiddenException(
+        'Only the task creator or an owner can delete this task',
+      );
+    }
     await this.prisma.task.delete({ where: { id } });
+    await this.auditService.log({
+      userId: currentUser.id,
+      userEmail: currentUser.email,
+      action: 'delete',
+      resource: 'tasks',
+      resourceId: id,
+      detail: `Deleted task: ${existing.title}`,
+    });
   }
 
   @Post(':id/comments')
