@@ -10,8 +10,11 @@ import {
   HttpCode,
   HttpStatus,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { AuditService } from '../audit/audit.service';
 
 @Controller('api/v1/tasks')
 export class TasksController {
