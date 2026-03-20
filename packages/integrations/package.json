@@ -23,6 +23,11 @@
       "types": "./dist/adapters/email/index.d.ts",
       "import": "./dist/adapters/email/index.js",
       "require": "./dist/cjs/adapters/email/index.js"
+    },
+    "./adapters/tiktok": {
+      "types": "./dist/adapters/tiktok/index.d.ts",
+      "import": "./dist/adapters/tiktok/index.js",
+      "require": "./dist/cjs/adapters/tiktok/index.js"
     }
   },
   "main": "./dist/cjs/index.js",
