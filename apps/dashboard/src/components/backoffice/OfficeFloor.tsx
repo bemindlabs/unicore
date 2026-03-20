@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import type { BackofficeAgent } from '@/lib/backoffice/types';
 import { PixelAvatar } from './PixelAvatar';
 
@@ -138,6 +138,22 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
   const [selectedAgentToMove, setSelectedAgentToMove] = useState<string | null>(null);
   const [manualPosLocks, setManualPosLocks] = useState<Record<string, number>>({});
   
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      const { width, height } = entries[0].contentRect;
+      // Calculate scale to fit exactly within container minus small gap
+      const s = Math.min(width / MAP_WIDTH, height / MAP_HEIGHT);
+      setScale(s);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   // Clear selection if switching floors
   useEffect(() => {
     setSelectedAgentToMove(null);
@@ -180,8 +196,8 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
   const handleFloorClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!selectedAgentToMove) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left - 24;
-    const y = e.clientY - rect.top - 40;
+    const x = (e.clientX - rect.left) / scale - 24;
+    const y = (e.clientY - rect.top) / scale - 40;
     
     setPositions(prev => ({ ...prev, [selectedAgentToMove]: { x, y } }));
     setManualPosLocks(prev => ({ ...prev, [selectedAgentToMove]: Date.now() + 30000 }));
@@ -195,7 +211,7 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
   ];
 
   return (
-    <div data-character-theme="retrodesk" className="w-full relative p-4 lg:p-8 flex justify-center">
+    <div data-character-theme="retrodesk" className="w-full h-full relative flex items-center justify-center bg-[var(--retrodesk-bg)] overflow-hidden" ref={containerRef}>
       
       {/* Elevator Panel */}
       <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 p-3 border-l-4 border-y-4 shadow-2xl z-50 rounded-l-xl" style={{ background: 'var(--retrodesk-surface)', borderColor: 'var(--retrodesk-border)' }}>
@@ -222,7 +238,7 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
         </div>
       )}
       
-      <div className="overflow-x-auto max-w-full">
+      <div className="absolute flex justify-center items-center" style={{ width: MAP_WIDTH, height: MAP_HEIGHT, transform: `scale(${scale})`, transformOrigin: 'center' }}>
         <div 
           className={`relative border-8 shadow-2xl overflow-hidden retrodesk-grid-bg shrink-0 transition-colors ${selectedAgentToMove ? 'cursor-crosshair' : ''}`}
           onClick={handleFloorClick}

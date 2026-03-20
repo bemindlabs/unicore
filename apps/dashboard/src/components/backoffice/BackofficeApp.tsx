@@ -145,7 +145,7 @@ export function BackofficeApp({
               onCloseMobile={() => setMobileSidebarOpen(false)}
             />
 
-            <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6">
+            <div className="flex-1 overflow-hidden relative">
               <OfficeFloor
                 agents={agents}
                 onSelectAgent={setSelectedAgent}
