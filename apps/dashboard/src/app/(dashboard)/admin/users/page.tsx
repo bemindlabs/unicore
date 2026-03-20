@@ -50,6 +50,9 @@ const ROLE_VARIANT: Record<string, 'default' | 'secondary' | 'outline'> = {
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState<UserRecord | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     api
@@ -64,6 +67,25 @@ export default function AdminUsersPage() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    api.get<{ id: string }>('/auth/me').then((res) => setCurrentUserId(res.id)).catch(() => {});
+  }, []);
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await api.delete(`/api/v1/admin/users/${deleteTarget.id}`);
+      setUsers((prev) => prev.filter((u) => u.id !== deleteTarget.id));
+      toast({ title: 'User deleted', description: `${deleteTarget.email} has been removed.` });
+      setDeleteTarget(null);
+    } catch (err) {
+      toast({ title: 'Failed to delete user', description: err instanceof Error ? err.message : 'Unknown error', variant: 'destructive' });
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   return (
     <div className="space-y-6">
