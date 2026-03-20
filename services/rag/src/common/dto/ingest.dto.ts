@@ -7,6 +7,9 @@ import {
   MinLength,
   MaxLength,
   IsEnum,
+  IsNumber,
+  Min,
+  Max,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -67,6 +70,39 @@ export enum DeleteScopeType {
   DOCUMENT = 'document',
   WORKSPACE = 'workspace',
   AGENT = 'agent',
+}
+
+export class IngestGitRepoDto {
+  @IsString()
+  @IsNotEmpty()
+  url!: string;
+
+  @IsOptional()
+  @IsString()
+  branch?: string;
+
+  @IsOptional()
+  @IsString()
+  authToken?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  workspaceId!: string;
+
+  @IsOptional()
+  @IsString()
+  agentId?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  filters?: string[];
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1024)
+  @Max(10 * 1024 * 1024)
+  maxFileSize?: number;
 }
 
 export class DeleteDocumentsDto {

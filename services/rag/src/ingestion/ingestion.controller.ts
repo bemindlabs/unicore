@@ -10,13 +10,17 @@ import {
   Logger,
 } from '@nestjs/common';
 import { IngestionService } from './ingestion.service';
-import { IngestDocumentDto, IngestBatchDto, DeleteDocumentsDto, DeleteScopeType } from '../common/dto/ingest.dto';
+import { IngestDocumentDto, IngestBatchDto, DeleteDocumentsDto, DeleteScopeType, IngestGitRepoDto } from '../common/dto/ingest.dto';
+import { GitRepoIngestor } from '../ingest/git-repo.ingestor';
 
 @Controller('ingest')
 export class IngestionController {
   private readonly logger = new Logger(IngestionController.name);
 
-  constructor(private readonly ingestion: IngestionService) {}
+  constructor(
+    private readonly ingestion: IngestionService,
+    private readonly gitRepoIngestor: GitRepoIngestor,
+  ) {}
 
   /**
    * POST /ingest
@@ -61,6 +65,27 @@ export class IngestionController {
       scope: DeleteScopeType.DOCUMENT,
       workspaceId: 'default',
       documentId,
+    });
+  }
+
+  /**
+   * POST /ingest/git-repo
+   * Ingest a Git repository: clone, walk files with glob filters and max file
+   * size, chunk code, create embeddings, and store in Qdrant.
+   * Returns immediately with PENDING status; ingestion runs in the background.
+   */
+  @Post('git-repo')
+  @HttpCode(HttpStatus.ACCEPTED)
+  async ingestGitRepo(@Body() dto: IngestGitRepoDto) {
+    this.logger.log(`Git repo ingest: ${dto.url} (branch: ${dto.branch ?? 'main'})`);
+    return this.gitRepoIngestor.ingest({
+      url: dto.url,
+      branch: dto.branch,
+      authToken: dto.authToken,
+      workspaceId: dto.workspaceId,
+      agentId: dto.agentId,
+      filters: dto.filters,
+      maxFileSize: dto.maxFileSize,
     });
   }
 
