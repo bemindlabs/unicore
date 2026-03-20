@@ -64,6 +64,23 @@ export type { IPlaidClient } from './adapters/plaid/index.js';
 export { EmailAdapter } from './adapters/email/index.js';
 export type { IEmailTransport } from './adapters/email/index.js';
 
+// TikTok
+export type {
+  TiktokConfig,
+  TiktokCampaign,
+  TiktokCampaignObjective,
+  TiktokCampaignStatus,
+  TiktokAdGroup,
+  TiktokAdGroupStatus,
+  TiktokAd,
+  TiktokAdStatus,
+  TiktokAdInsights,
+  TiktokSyncData,
+} from './types/tiktok.js';
+
+export { TiktokAdapter } from './adapters/tiktok/index.js';
+export type { ITiktokClient } from './adapters/tiktok/index.js';
+
 // Telegram channel adapter
 export { TelegramAdapter } from './channels/telegram.js';
 export type {

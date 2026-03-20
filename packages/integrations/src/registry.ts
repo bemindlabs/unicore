@@ -5,6 +5,7 @@ import type { IAdapter, AdapterMeta } from './types/adapter.js';
 import { StripeAdapter } from './adapters/stripe/index.js';
 import { PlaidAdapter } from './adapters/plaid/index.js';
 import { EmailAdapter } from './adapters/email/index.js';
+import { TiktokAdapter } from './adapters/tiktok/index.js';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyAdapter = IAdapter<any, any>;
@@ -22,6 +23,7 @@ export class AdapterRegistry {
     ['stripe', () => new StripeAdapter()],
     ['plaid', () => new PlaidAdapter()],
     ['email', () => new EmailAdapter()],
+    ['tiktok', () => new TiktokAdapter()],
   ]);
 
   /**
