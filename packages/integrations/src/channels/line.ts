@@ -66,7 +66,7 @@ export class LineAdapter {
   readonly #channelSecret: string;
   readonly #channelAccessToken: string;
 
-  constructor(private _config: LineAdapterConfig) {
+  constructor(config: LineAdapterConfig) {
     this.#channelSecret = config.channelSecret;
     this.#channelAccessToken = config.channelAccessToken;
   }
