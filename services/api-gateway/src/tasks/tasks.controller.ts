@@ -18,7 +18,10 @@ import { AuditService } from '../audit/audit.service';
 
 @Controller('api/v1/tasks')
 export class TasksController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditService: AuditService,
+  ) {}
 
   @Get()
   async list(@Query('status') status?: string) {

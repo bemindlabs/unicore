@@ -165,6 +165,25 @@ export default function AdminUsersPage() {
                         <TableCell className="text-sm text-muted-foreground">
                           {new Date(u.createdAt).toLocaleDateString()}
                         </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                disabled={u.id === currentUserId}
+                                onClick={() => setDeleteTarget(u)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete user
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
                       </TableRow>
                     );
                   })}
