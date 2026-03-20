@@ -51,6 +51,7 @@ describe('AdminController', () => {
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: AuditService, useValue: mockAuditService },
         { provide: TokenBlacklistService, useValue: mockTokenBlacklist },
+        { provide: LicenseService, useValue: mockLicenseService },
       ],
     }).compile();
 
