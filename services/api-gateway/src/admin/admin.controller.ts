@@ -31,10 +31,25 @@ export class AdminController {
   async updateUserRole(
     @Param('id') userId: string,
     @Body('role') newRole: string,
+    @CurrentUser() currentUser: any,
   ) {
     const validRoles = ['OWNER', 'OPERATOR', 'MARKETER', 'FINANCE', 'VIEWER'];
     if (!validRoles.includes(newRole)) {
-      throw new Error(`Invalid role. Must be one of: ${validRoles.join(', ')}`);
+      throw new BadRequestException(`Invalid role. Must be one of: ${validRoles.join(', ')}`);
+    }
+
+    // Prevent self-demotion
+    if (userId === currentUser.id) {
+      throw new BadRequestException('Cannot change your own role');
+    }
+
+    // Prevent removing last OWNER
+    const targetUser = await this.prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
+    if (targetUser?.role === 'OWNER' && newRole !== 'OWNER') {
+      const ownerCount = await this.prisma.user.count({ where: { role: 'OWNER' } });
+      if (ownerCount <= 1) {
+        throw new BadRequestException('Cannot demote the last owner account');
+      }
     }
 
     const user = await this.prisma.user.update({
