@@ -4,9 +4,15 @@ import { AdminController } from './admin.controller';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { TokenBlacklistService } from '../auth/token-blacklist.service';
+import { LicenseService } from '../license/license.service';
 
 describe('AdminController', () => {
   let controller: AdminController;
+
+  const mockLicenseService = {
+    hasFeature: jest.fn().mockResolvedValue(true),
+    getLicenseStatus: jest.fn().mockResolvedValue({ tier: 'pro' }),
+  };
 
   const mockPrismaService = {
     user: {
