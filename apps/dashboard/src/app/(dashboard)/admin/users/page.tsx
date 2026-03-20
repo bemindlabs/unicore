@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { UsersRound } from 'lucide-react';
+import { MoreHorizontal, Trash2, UsersRound } from 'lucide-react';
 import {
   Avatar,
   AvatarFallback,
@@ -11,6 +11,16 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   Table,
   TableBody,
   TableCell,
