@@ -65,7 +65,7 @@ describe('LicenseController', () => {
 
   describe('activate', () => {
     it('calls licenseService.activate with the provided key', async () => {
-      const result = await controller.activate({ key: 'UC-NEW-KEY' });
+      const result = await controller.activate({ key: 'UC-NEW-KEY' }, undefined as any, { user: { email: 'test@test.com' } } as any);
 
       expect(mockLicenseService.activate).toHaveBeenCalledTimes(1);
       expect(mockLicenseService.activate).toHaveBeenCalledWith('UC-NEW-KEY');
@@ -74,7 +74,7 @@ describe('LicenseController', () => {
     });
 
     it('returns status with validatedAt but without the raw key', async () => {
-      const result = await controller.activate({ key: 'UC-NEW-KEY' });
+      const result = await controller.activate({ key: 'UC-NEW-KEY' }, undefined as any, { user: { email: 'test@test.com' } } as any);
 
       expect(result).toHaveProperty('validatedAt');
       expect(result).not.toHaveProperty('key');
