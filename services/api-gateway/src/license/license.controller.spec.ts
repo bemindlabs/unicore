@@ -10,7 +10,7 @@ const mockProStatus: LicenseStatus = {
   valid: true,
   tier: 'pro',
   key: 'UC-PRO-KEY',
-  features: ['rbac', 'sso'],
+  features: ['fullRbac', 'sso'],
   expiresAt: null,
   validatedAt: now,
   nextRevalidationAt: nextWeek,
@@ -49,7 +49,7 @@ describe('LicenseController', () => {
       expect(result).toEqual({
         valid: true,
         tier: 'pro',
-        features: ['rbac', 'sso'],
+        features: ['fullRbac', 'sso'],
         expiresAt: null,
         nextRevalidationAt: nextWeek,
       });
