@@ -91,6 +91,57 @@ export class AdminController {
     return user;
   }
 
+  @Delete('users/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteUser(
+    @Param('id') userId: string,
+    @CurrentUser() currentUser: any,
+  ) {
+    // Prevent self-deletion
+    if (userId === currentUser.id) {
+      throw new BadRequestException('Cannot delete your own account');
+    }
+
+    // Check user exists
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, role: true },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Prevent deleting last OWNER
+    if (user.role === 'OWNER') {
+      const ownerCount = await this.prisma.user.count({ where: { role: 'OWNER' } });
+      if (ownerCount <= 1) {
+        throw new BadRequestException('Cannot delete the last owner account');
+      }
+    }
+
+    // Clean up orphaned data
+    await this.prisma.chatHistory.deleteMany({ where: { userId } });
+    await this.prisma.task.updateMany({
+      where: { assigneeId: userId },
+      data: { assigneeId: null, assigneeName: null, assigneeType: null, assigneeColor: null },
+    });
+
+    // Delete user (sessions cascade automatically via Prisma)
+    await this.prisma.user.delete({ where: { id: userId } });
+
+    // Audit log
+    await this.auditService.log({
+      userId: currentUser.id,
+      userEmail: currentUser.email,
+      action: 'delete',
+      resource: 'users',
+      resourceId: userId,
+      detail: `Deleted user ${user.email}`,
+    });
+
+    this.logger.log(`User ${user.email} deleted by ${currentUser.email}`);
+  }
+
   @Get('audit-logs')
   @ProFeatureRequired('auditLogs')
   @UseGuards(LicenseGuard)
