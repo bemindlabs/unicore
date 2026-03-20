@@ -321,8 +321,6 @@ class DefaultTiktokClient implements ITiktokClient {
 
   async #request<T>(path: string, params?: Record<string, unknown>): Promise<T> {
     const url = new URL(`${this.#baseUrl}${path}`);
-    const _body = { advertiser_id: this.#advertiserId, ...params };
-
     const response = await fetch(url.toString(), {
       method: 'GET',
       headers: {
