@@ -19,6 +19,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const { isPro } = useLicense();
+  const { config } = useBranding();
+  const appName = config?.appName ?? 'UniCore';
   const t = useTranslations('common');
   const sections = user ? filterSectionsByRole(user.role) : [];
 
