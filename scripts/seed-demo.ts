@@ -659,25 +659,7 @@ async function seedExpenses(userId: string) {
 
     const res = await api('POST', `${ERP}/expenses`, data);
     if (res) {
-      // Vary expense statuses
-      const action = pick(['approve', 'approve', 'approve', 'approve', 'reject', 'leave', 'reimburse']);
-
-      if (action === 'approve' || action === 'reimburse') {
-        await api('POST', `${ERP}/expenses/${res.id}/approve`, {
-          approvedBy: userId,
-          notes: 'Approved per policy',
-        });
-        if (action === 'reimburse') {
-          await api('POST', `${ERP}/expenses/${res.id}/reimburse`, {});
-        }
-      } else if (action === 'reject') {
-        await api('POST', `${ERP}/expenses/${res.id}/reject`, {
-          approvedBy: userId,
-          reason: 'Exceeds department budget. Please resubmit with manager approval.',
-        });
-      }
-
-      console.log(`  ✓ ${action.padEnd(10)} $${data.amount.toFixed(0).padStart(6)} ${exp.title.substring(0, 40)}`);
+      console.log(`  ✓ $${data.amount.toFixed(0).padStart(6)} ${exp.title.substring(0, 50)}`);
     }
   }
 }
