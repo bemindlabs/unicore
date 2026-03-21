@@ -103,7 +103,7 @@ export class SettingsController {
   @Public()
   @Put('wizard-status')
   async setWizardStatus(@Body() body: WizardStatusDto) {
-    const data = { ...body } as Record<string, unknown>;
+    const data = JSON.parse(JSON.stringify(body));
     const settings = await this.prisma.settings.upsert({
       where: { id: 'wizard-status' },
       create: { id: 'wizard-status', data },
