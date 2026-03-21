@@ -19,6 +19,8 @@ import { AGENT_DEFINITIONS, ERP_MODULES } from "@/types/wizard";
 
 export function StepReview() {
   const { state, prevStep, goToStep } = useWizardState();
+  const { config } = useBranding();
+  const appName = config?.appName ?? 'UniCore';
   const [provisioning, setProvisioning] = useState(false);
   const [result, setResult] = useState<ProvisionResult | null>(null);
 
@@ -102,7 +104,7 @@ export function StepReview() {
         <div className="text-5xl">🚀</div>
         <h2 className="text-2xl font-bold">Workspace Provisioned!</h2>
         <p className="text-muted-foreground max-w-md">
-          Your UniCore workspace is ready. Sign in with{" "}
+          Your {appName} workspace is ready. Sign in with{" "}
           <strong>{result.admin?.email}</strong> to get started.
         </p>
         {result.licenseKey ? (
