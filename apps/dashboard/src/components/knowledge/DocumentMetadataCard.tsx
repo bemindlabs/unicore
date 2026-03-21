@@ -2,6 +2,7 @@
 
 import { FileText, Link, File, Hash, HardDrive, BookOpen, User, Calendar } from 'lucide-react';
 import { Badge } from '@unicore/ui';
+import { useBusinessTimezone, formatDateTimeTz } from '@/hooks/use-business-timezone';
 
 export interface DocumentMeta {
   id: string;
@@ -36,6 +37,7 @@ function formatBytes(bytes: number): string {
 }
 
 export function DocumentMetadataCard({ doc }: DocumentMetadataCardProps) {
+  const tz = useBusinessTimezone();
   const rows: { icon: React.ReactNode; label: string; value: string }[] = [];
 
   if (doc.source) {
@@ -58,7 +60,7 @@ export function DocumentMetadataCard({ doc }: DocumentMetadataCardProps) {
     rows.push({
       icon: <Calendar className="h-3.5 w-3.5" />,
       label: 'Ingested',
-      value: new Date(doc.createdAt).toLocaleString(),
+      value: formatDateTimeTz(doc.createdAt, tz),
     });
   }
   if (doc.workspaceId) {

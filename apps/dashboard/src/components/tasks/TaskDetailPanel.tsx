@@ -5,6 +5,7 @@ import type { BoardTask, TaskStatus, TaskPriority, TaskComment } from '@/lib/tas
 import { KANBAN_COLUMNS, PRIORITY_CONFIG } from '@/lib/tasks/types';
 import { ActivityFeed } from './ActivityFeed';
 import { AssigneePicker } from './AssigneePicker';
+import { useBusinessTimezone, formatDateTimeTz } from '@/hooks/use-business-timezone';
 
 interface Props {
   task: BoardTask;
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export function TaskDetailPanel({ task, agents, onUpdate, onAddComment, onDelete, onClose }: Props) {
+  const tz = useBusinessTimezone();
   const dialogRef = useRef<HTMLDivElement>(null);
   useEffect(() => { dialogRef.current?.focus(); }, []);
 
@@ -180,7 +182,7 @@ export function TaskDetailPanel({ task, agents, onUpdate, onAddComment, onDelete
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-medium">{c.authorName}</span>
                           <span className="text-[10px] text-muted-foreground">
-                            {new Date(c.createdAt).toLocaleString()}
+                            {formatDateTimeTz(c.createdAt, tz)}
                           </span>
                         </div>
                         <p className="text-sm mt-0.5">{c.content}</p>
