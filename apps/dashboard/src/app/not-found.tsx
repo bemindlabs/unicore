@@ -23,7 +23,7 @@ export default function NotFound() {
             Login
           </Link>
         </div>
-        <p className="text-xs text-muted-foreground/60">
+        <p className="text-xs text-muted-foreground/60" data-unicore-branding>
           UniCore by BeMind Technology
         </p>
       </div>
