@@ -169,23 +169,24 @@ export class DashboardService {
   async getOrdersWidget() {
     try {
       const ordersData = await this.erpFetch<{
-        data: Array<{ id: string; status: string; created_at: string }>;
+        data: Array<{ id: string; status: string; created_at?: string; createdAt?: string }>;
         meta: { total: number };
-      }>('/orders');
+      }>('/orders?limit=100');
 
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
       const orders = ordersData.data;
-      const currentCount = orders.filter(o => new Date(o.created_at) >= startOfMonth).length;
+      const getDate = (o: { created_at?: string; createdAt?: string }) => new Date(o.createdAt ?? o.created_at ?? 0);
+      const currentCount = orders.filter(o => getDate(o) >= startOfMonth).length;
       const previousCount = orders.filter(o => {
-        const d = new Date(o.created_at);
+        const d = getDate(o);
         return d >= startOfLastMonth && d < startOfMonth;
       }).length;
-      const pendingCount = orders.filter(o => o.status === 'pending').length;
-      const processingCount = orders.filter(o => o.status === 'processing').length;
-      const completedCount = orders.filter(o => o.status === 'completed').length;
+      const pendingCount = orders.filter(o => ['DRAFT', 'QUOTED', 'CONFIRMED'].includes(o.status)).length;
+      const processingCount = orders.filter(o => ['PROCESSING', 'PARTIALLY_FULFILLED', 'FULFILLED'].includes(o.status)).length;
+      const completedCount = orders.filter(o => ['SHIPPED', 'DELIVERED'].includes(o.status)).length;
 
       const trend = trendValue(currentCount, previousCount);
 
@@ -211,9 +212,9 @@ export class DashboardService {
     const [currentCount, previousCount, pendingCount, processingCount, completedCount] = await Promise.all([
       this.safeCount('orders', '"created_at" >= $1', [startOfMonth]),
       this.safeCount('orders', '"created_at" >= $1 AND "created_at" < $2', [startOfLastMonth, startOfMonth]),
-      this.safeCount('orders', '"status" = $1', ['pending']),
-      this.safeCount('orders', '"status" = $1', ['processing']),
-      this.safeCount('orders', '"status" = $1', ['completed']),
+      this.safeCount('orders', 'status IN ($1, $2, $3)', ['DRAFT', 'QUOTED', 'CONFIRMED']),
+      this.safeCount('orders', 'status IN ($1, $2, $3)', ['PROCESSING', 'PARTIALLY_FULFILLED', 'FULFILLED']),
+      this.safeCount('orders', 'status IN ($1, $2)', ['SHIPPED', 'DELIVERED']),
     ]);
 
     const trend = trendValue(currentCount, previousCount);

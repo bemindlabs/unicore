@@ -4,9 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import {
   CheckCircle2,
   Clock,
+  FileText,
+  Package,
   PackageCheck,
   Plus,
   RefreshCw,
+  RotateCcw,
   ShoppingCart,
   Truck,
   XCircle,
@@ -41,11 +44,15 @@ import { api } from "@/lib/api";
 // ---------------------------------------------------------------------------
 
 type OrderStatus =
-  | "PENDING"
+  | "DRAFT"
+  | "QUOTED"
   | "CONFIRMED"
   | "PROCESSING"
-  | "SHIPPED"
+  | "PARTIALLY_FULFILLED"
   | "FULFILLED"
+  | "SHIPPED"
+  | "DELIVERED"
+  | "RETURNED"
   | "CANCELLED"
   | "REFUNDED";
 
@@ -54,7 +61,7 @@ interface Order {
   orderNumber?: string;
   status: OrderStatus;
   contactId: string;
-  contact?: { firstName: string; lastName: string };
+  contact?: { id: string; name: string; email?: string };
   currency: string;
   total: number;
   createdAt: string;
@@ -85,8 +92,13 @@ const STATUS_CONFIG: Record<
     icon: React.ComponentType<{ className?: string }>;
   }
 > = {
-  PENDING: {
-    label: "Pending",
+  DRAFT: {
+    label: "Draft",
+    className: "bg-slate-100 text-slate-700 border-slate-300",
+    icon: FileText,
+  },
+  QUOTED: {
+    label: "Quoted",
     className: "bg-yellow-100 text-yellow-800 border-yellow-300",
     icon: Clock,
   },
@@ -100,15 +112,30 @@ const STATUS_CONFIG: Record<
     className: "bg-indigo-100 text-indigo-800 border-indigo-300",
     icon: RefreshCw,
   },
-  SHIPPED: {
-    label: "Shipped",
-    className: "bg-purple-100 text-purple-800 border-purple-300",
-    icon: Truck,
+  PARTIALLY_FULFILLED: {
+    label: "Partial",
+    className: "bg-amber-100 text-amber-800 border-amber-300",
+    icon: Package,
   },
   FULFILLED: {
     label: "Fulfilled",
     className: "bg-emerald-100 text-emerald-800 border-emerald-300",
     icon: PackageCheck,
+  },
+  SHIPPED: {
+    label: "Shipped",
+    className: "bg-purple-100 text-purple-800 border-purple-300",
+    icon: Truck,
+  },
+  DELIVERED: {
+    label: "Delivered",
+    className: "bg-green-100 text-green-800 border-green-300",
+    icon: CheckCircle2,
+  },
+  RETURNED: {
+    label: "Returned",
+    className: "bg-orange-100 text-orange-800 border-orange-300",
+    icon: RotateCcw,
   },
   CANCELLED: {
     label: "Cancelled",
@@ -144,10 +171,13 @@ function StatusBadge({ status }: { status: OrderStatus }) {
 const TRANSITIONS: Partial<
   Record<OrderStatus, { label: string; action: string }>
 > = {
-  PENDING: { label: "Confirm", action: "confirm" },
-  CONFIRMED: { label: "Start Processing", action: "start-processing" },
-  PROCESSING: { label: "Mark Shipped", action: "ship" },
-  SHIPPED: { label: "Mark Fulfilled", action: "fulfill" },
+  DRAFT: { label: "Confirm", action: "confirm" },
+  QUOTED: { label: "Confirm", action: "confirm" },
+  CONFIRMED: { label: "Start Processing", action: "process" },
+  PROCESSING: { label: "Fulfill", action: "fulfill" },
+  PARTIALLY_FULFILLED: { label: "Fulfill All", action: "fulfill" },
+  FULFILLED: { label: "Ship", action: "ship" },
+  SHIPPED: { label: "Deliver", action: "deliver" },
 };
 
 // ---------------------------------------------------------------------------
@@ -489,9 +519,7 @@ export default function OrdersPage() {
                         ? TRANSITIONS[order.status]
                         : null;
                     const busy = transitioning.has(order.id);
-                    const contactName = order.contact
-                      ? `${order.contact.firstName} ${order.contact.lastName}`
-                      : order.contactId;
+                    const contactName = order.contact?.name ?? order.contactId;
                     return (
                       <TableRow key={order.id}>
                         <TableCell className="font-mono text-sm">
@@ -521,9 +549,17 @@ export default function OrdersPage() {
                                 {busy ? "…" : transition.label}
                               </Button>
                             )}
-                            {order.status !== "CANCELLED" &&
-                              order.status !== "REFUNDED" &&
-                              order.status !== "FULFILLED" && (
+                            {["DELIVERED", "SHIPPED", "FULFILLED"].includes(order.status) && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  disabled={busy}
+                                  onClick={() => handleTransition(order, "refund")}
+                                >
+                                  Refund
+                                </Button>
+                            )}
+                            {!["CANCELLED", "REFUNDED", "DELIVERED", "RETURNED", "FULFILLED", "SHIPPED"].includes(order.status) && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
