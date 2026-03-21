@@ -10,15 +10,22 @@ export class MessageRouterService {
   /** channel -> Set of agentIds */
   private readonly subscriptions = new Map<string, Set<string>>();
 
+  /** agentId -> socketId for non-registry clients (dashboard UI, external) */
+  private readonly clientSockets = new Map<string, string>();
+
   constructor(private readonly registry: AgentRegistryService) {}
 
-  subscribe(agentId: string, channel: string): void {
+  subscribe(agentId: string, channel: string, socketId?: string): void {
     let subscribers = this.subscriptions.get(channel);
     if (!subscribers) {
       subscribers = new Set<string>();
       this.subscriptions.set(channel, subscribers);
     }
     subscribers.add(agentId);
+    // Track socket for non-agent clients so routePublish can reach them
+    if (socketId) {
+      this.clientSockets.set(agentId, socketId);
+    }
     this.logger.debug(`Agent ${agentId} subscribed to channel "${channel}"`);
   }
 
