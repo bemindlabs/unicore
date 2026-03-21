@@ -307,7 +307,6 @@ export class OpenClawGateway
     sessionId: string,
     userId: string,
     channel: string,
-    senderSocketId: string,
   ): Promise<void> {
     const result = await this.routerAgent.process(text, sessionId, userId);
 
