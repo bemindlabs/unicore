@@ -77,7 +77,7 @@ export function StepReview() {
           await fetch('/api/v1/settings/wizard-status', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ completed: true, completedAt: new Date().toISOString() }),
+            body: JSON.stringify({ completed: true, completedAt: new Date().toISOString(), timezone: state.business.timezone }),
           });
         } catch {
           // Server save failed — localStorage is fallback

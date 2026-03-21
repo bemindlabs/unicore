@@ -38,6 +38,7 @@ import {
 } from "@unicore/ui";
 import { api } from "@/lib/api";
 import { formatCurrency } from "@/lib/format-currency";
+import { useBusinessTimezone, formatDateTz } from "@/hooks/use-business-timezone";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -443,6 +444,7 @@ function RecordPaymentDialog({
 // ---------------------------------------------------------------------------
 
 export default function InvoicingPage() {
+  const tz = useBusinessTimezone();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "ALL">("ALL");
@@ -614,7 +616,7 @@ export default function InvoicingPage() {
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {invoice.dueDate
-                            ? new Date(invoice.dueDate).toLocaleDateString()
+                            ? formatDateTz(invoice.dueDate, tz)
                             : "—"}
                         </TableCell>
                         <TableCell>

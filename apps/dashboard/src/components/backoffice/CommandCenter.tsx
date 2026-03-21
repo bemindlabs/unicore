@@ -8,6 +8,7 @@ import { api } from '@/lib/api';
 import type { BackofficeAgent } from '@/lib/backoffice/types';
 import { StatusIndicator } from './StatusIndicator';
 import { useRetroDeskTheme } from './retrodesk/RetroDeskThemeProvider';
+import { useBusinessTimezone } from '@/hooks/use-business-timezone';
 
 /* ------------------------------------------------------------------ */
 /*  Quick prompts per agent type                                       */
@@ -45,13 +46,13 @@ function commandChannel(agentId: string): string {
   return `command-${agentId}`;
 }
 
-function formatTimestamp(iso: string): string {
+function formatTimestamp(iso: string, timeZone: string): string {
   try {
-    const d = new Date(iso);
-    const h = d.getHours();
-    const m = String(d.getMinutes()).padStart(2, '0');
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    return `${h % 12 || 12}:${m} ${ampm}`;
+    return new Intl.DateTimeFormat('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZone,
+    }).format(new Date(iso));
   } catch {
     return '';
   }
@@ -225,6 +226,7 @@ function saveChatHistory(agent: BackofficeAgent, msgs: ChatMessage[], summary?: 
 
 export function CommandCenter() {
   const { isActive: isRetroDesk } = useRetroDeskTheme();
+  const tz = useBusinessTimezone();
 
   /* --- agents --- */
   const [agents, setAgents] = useState<BackofficeAgent[]>([]);
@@ -587,7 +589,7 @@ export function CommandCenter() {
                       {isMe ? 'You' : msg.author}
                     </span>
                     <span className="font-mono text-[9px] text-[var(--bo-text-dimmer)]">
-                      {formatTimestamp(msg.timestamp)}
+                      {formatTimestamp(msg.timestamp, tz)}
                     </span>
                     {!isMe && <CopyButton text={msg.text} />}
                   </div>

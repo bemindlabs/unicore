@@ -1,10 +1,43 @@
-import { Controller, Get, Put, Param, Body, Headers, UseGuards } from '@nestjs/common';
+import {
+  Controller, Get, Put, Post, Param, Body, Headers, Query,
+  UseGuards, UseInterceptors, UploadedFile,
+  BadRequestException, NotFoundException,
+  Res, StreamableFile,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Response } from 'express';
+import { diskStorage } from 'multer';
+import * as path from 'path';
+import * as fs from 'fs';
 import { PrismaService } from '../prisma/prisma.service';
 import { LicenseGuard } from '../license/guards/license.guard';
 import { ProFeatureRequired } from '../license/decorators/pro-feature.decorator';
 import { Public } from '../auth/decorators/public.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { encrypt, decrypt, maskKey } from './crypto.util';
+
+const ALLOWED_MIME_TYPES: Record<string, string[]> = {
+  'image/svg+xml': ['.svg'],
+  'image/png': ['.png'],
+  'image/x-icon': ['.ico'],
+  'image/vnd.microsoft.icon': ['.ico'],
+  'image/jpeg': ['.jpg', '.jpeg'],
+  'image/webp': ['.webp'],
+};
+
+const BRANDING_UPLOAD_DIR = path.join(process.cwd(), 'uploads', 'branding');
+
+const brandingStorage = diskStorage({
+  destination: (_req, _file, cb) => {
+    fs.mkdirSync(BRANDING_UPLOAD_DIR, { recursive: true });
+    cb(null, BRANDING_UPLOAD_DIR);
+  },
+  filename: (req, file, cb) => {
+    const type = (req.query as any).type ?? 'logo';
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, `${type}-${Date.now()}${ext}`);
+  },
+});
 
 function safeDecryptMask(encrypted: string): string {
   try {
