@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn, Separator, Sheet, SheetContent, SheetHeader, SheetTitle } from '@unicore/ui';
 import { useAuth } from '@/hooks/use-auth';
+import { useBranding } from '@/components/BrandingProvider';
 import { filterSectionsByRole } from '@/lib/navigation';
 
 interface MobileNavProps {
