@@ -39,11 +39,15 @@ export class HealthController implements OnModuleInit, OnModuleDestroy {
           { id: d.id, name: d.name, type: d.type, version: '1.0.0', capabilities, tags: [] },
           `default-${d.id}`,
         );
+        // Only ROUTER is active; other agents are idle (not yet implemented)
+        if (d.id !== 'router') {
+          this.registry.updateState(d.id, 'idle');
+        }
       } catch {
         /* already registered */
       }
     }
-    this.logger.log(`Registered ${DEFAULT_AGENTS.length} default agents on startup`);
+    this.logger.log(`Registered ${DEFAULT_AGENTS.length} default agents (ROUTER active, others idle)`);
 
     // Keep built-in agents alive by sending periodic heartbeats
     this.heartbeatInterval = setInterval(() => {
