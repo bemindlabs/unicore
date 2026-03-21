@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import {
   Card,
   CardContent,
@@ -28,6 +29,7 @@ import {
 export function StepBusiness() {
   const { state, dispatch } = useWizardState();
   const { business } = state;
+  const t = useTranslations('wizard.business');
 
   function updateField<K extends keyof typeof business>(key: K, value: (typeof business)[K]) {
     dispatch({ type: 'UPDATE_BUSINESS', data: { [key]: value } });
@@ -36,15 +38,15 @@ export function StepBusiness() {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Business Profile</h2>
+        <h2 className="text-2xl font-bold tracking-tight">{t('title')}</h2>
         <p className="text-muted-foreground mt-1">
-          Choose your business type and configure basic settings.
+          {t('description')}
         </p>
       </div>
 
       {/* Business Type Cards */}
       <div>
-        <Label className="text-sm font-medium mb-3 block">Business Type</Label>
+        <Label className="text-sm font-medium mb-3 block">{t('businessType')}</Label>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {BUSINESS_TEMPLATES.map((tmpl) => (
             <Card
@@ -68,10 +70,10 @@ export function StepBusiness() {
 
       {/* Business Name */}
       <div className="space-y-2">
-        <Label htmlFor="business-name">Business Name</Label>
+        <Label htmlFor="business-name">{t('businessName')}</Label>
         <Input
           id="business-name"
-          placeholder="My Awesome Business"
+          placeholder={t('businessNamePlaceholder')}
           value={business.name}
           onChange={(e) => updateField('name', e.target.value)}
           maxLength={100}
@@ -81,10 +83,10 @@ export function StepBusiness() {
       {/* Selectors Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="space-y-2">
-          <Label>Currency</Label>
+          <Label>{t('currency')}</Label>
           <Select value={business.currency} onValueChange={(v) => updateField('currency', v)}>
             <SelectTrigger>
-              <SelectValue placeholder="Select currency" />
+              <SelectValue placeholder={t('currencyPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
               {AVAILABLE_CURRENCIES.map((c) => (
@@ -95,10 +97,10 @@ export function StepBusiness() {
         </div>
 
         <div className="space-y-2">
-          <Label>Language</Label>
+          <Label>{t('language')}</Label>
           <Select value={business.locale} onValueChange={(v) => updateField('locale', v)}>
             <SelectTrigger>
-              <SelectValue placeholder="Select language" />
+              <SelectValue placeholder={t('languagePlaceholder')} />
             </SelectTrigger>
             <SelectContent>
               {AVAILABLE_LANGUAGES.map((l) => (
@@ -109,10 +111,10 @@ export function StepBusiness() {
         </div>
 
         <div className="space-y-2">
-          <Label>Timezone</Label>
+          <Label>{t('timezone')}</Label>
           <Select value={business.timezone} onValueChange={(v) => updateField('timezone', v)}>
             <SelectTrigger>
-              <SelectValue placeholder="Select timezone" />
+              <SelectValue placeholder={t('timezonePlaceholder')} />
             </SelectTrigger>
             <SelectContent>
               {AVAILABLE_TIMEZONES.map((tz) => (
