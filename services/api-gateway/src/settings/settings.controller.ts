@@ -2,7 +2,7 @@ import {
   Controller, Get, Put, Post, Param, Body, Headers, Query,
   UseGuards, UseInterceptors, UploadedFile,
   BadRequestException, NotFoundException,
-  Res, StreamableFile,
+  Res, StreamableFile, UsePipes, ValidationPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
