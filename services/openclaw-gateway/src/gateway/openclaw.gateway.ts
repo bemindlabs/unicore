@@ -15,6 +15,7 @@ import * as jwt from 'jsonwebtoken';
 import { AgentRegistryService } from '../registry/agent-registry.service';
 import { MessageRouterService } from '../routing/message-router.service';
 import { HeartbeatService } from '../health/heartbeat.service';
+import { RouterAgent } from '../router/router.agent';
 import {
   IncomingMessage,
   OutgoingMessage,
