@@ -87,12 +87,19 @@ export function ChatBox() {
     }
   }, [soundEnabled]);
 
-  // Fetch agents when chat opens
+  // Fetch agents when chat opens — auto-select ROUTER
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
     getAgents().then(({ agents: list }) => {
-      if (!cancelled) setAgents(list);
+      if (!cancelled) {
+        setAgents(list);
+        // Auto-select ROUTER if no agent selected
+        if (!selectedAgent) {
+          const router = list.find((a) => a.id === 'router');
+          if (router) setSelectedAgent(router);
+        }
+      }
     });
     return () => { cancelled = true; };
   }, [open]);
