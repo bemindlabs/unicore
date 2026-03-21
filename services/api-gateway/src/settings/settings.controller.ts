@@ -107,6 +107,62 @@ export class SettingsController {
     return settings.data;
   }
 
+  @Post('branding/upload')
+  @Roles('OWNER')
+  @ProFeatureRequired('whiteLabelBranding')
+  @UseGuards(LicenseGuard)
+  @UseInterceptors(FileInterceptor('file', {
+    storage: brandingStorage,
+    limits: { fileSize: 2 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+      if (ALLOWED_MIME_TYPES[file.mimetype]) {
+        cb(null, true);
+      } else {
+        cb(new BadRequestException(`Unsupported file type: ${file.mimetype}`), false);
+      }
+    },
+  }))
+  async uploadBrandingFile(
+    @UploadedFile() file: Express.Multer.File,
+    @Query('type') type: string,
+  ) {
+    if (!file) throw new BadRequestException('No file uploaded');
+    const validTypes = ['logo', 'logoIcon', 'favicon'];
+    if (!validTypes.includes(type)) {
+      throw new BadRequestException('type must be logo, logoIcon, or favicon');
+    }
+    // Validate MIME type matches extension
+    const ext = path.extname(file.originalname).toLowerCase();
+    const allowedExts = ALLOWED_MIME_TYPES[file.mimetype];
+    if (!allowedExts || !allowedExts.includes(ext)) {
+      fs.unlinkSync(file.path);
+      throw new BadRequestException('File MIME type does not match extension');
+    }
+    return { url: `/api/v1/settings/branding/uploads/${file.filename}` };
+  }
+
+  @Public()
+  @Get('branding/uploads/:filename')
+  serveBrandingFile(@Param('filename') filename: string, @Res() res: Response) {
+    // Prevent path traversal
+    if (filename.includes('/') || filename.includes('..')) {
+      throw new BadRequestException('Invalid filename');
+    }
+    const filePath = path.join(BRANDING_UPLOAD_DIR, filename);
+    if (!fs.existsSync(filePath)) throw new NotFoundException('File not found');
+    const ext = path.extname(filename).toLowerCase();
+    const mimeMap: Record<string, string> = {
+      '.svg': 'image/svg+xml',
+      '.png': 'image/png',
+      '.ico': 'image/x-icon',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.webp': 'image/webp',
+    };
+    res.setHeader('Content-Type', mimeMap[ext] ?? 'application/octet-stream');
+    return new StreamableFile(fs.createReadStream(filePath));
+  }
+
   // ── Pro-only: Custom domains ──
 
   @Get('domains')
