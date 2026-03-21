@@ -681,7 +681,6 @@ export default function SettingsLicensePage() {
               ['All channels', 'Slack + Email only'],
               ['Full RBAC', 'Basic roles only (3 max)'],
               ['SSO integration', 'Standard login only'],
-              ['White-label branding', 'UniCore branding'],
               ['Priority support', 'Community support only'],
             ].map(([feature, fallback]) => (
               <li key={feature} className="flex items-start gap-2">
