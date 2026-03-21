@@ -653,7 +653,7 @@ async function seedExpenses(userId: string) {
       currency: 'USD',
       vendor: exp.vendor,
       paidAt: pastDate(daysAgo),
-      submittedBy: 'admin@unicore.dev',
+      submittedBy: userId,
       notes: `Vendor: ${exp.vendor}. Regular business expense.`,
       tags: [exp.cat.toLowerCase().replace(/_/g, '-')],
     };
