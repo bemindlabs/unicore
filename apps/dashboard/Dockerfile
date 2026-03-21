@@ -2,7 +2,7 @@
 ARG BUILDPLATFORM=linux/amd64
 ARG TARGETPLATFORM=linux/amd64
 
-FROM --platform=$BUILDPLATFORM node:20-alpine AS build
+FROM --platform=$BUILDPLATFORM node:20.20.1-alpine AS build
 RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
 WORKDIR /app
 ARG NEXT_PUBLIC_API_URL
@@ -34,7 +34,7 @@ RUN cd packages/shared-types && node /app/node_modules/typescript/bin/tsc
 RUN cd apps/dashboard && node /app/node_modules/next/dist/bin/next build
 
 ARG VERSION=0.0.0
-FROM --platform=$TARGETPLATFORM node:20-alpine AS runner
+FROM --platform=$TARGETPLATFORM node:20.20.1-alpine AS runner
 RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
 WORKDIR /app
 ENV NODE_ENV=production
