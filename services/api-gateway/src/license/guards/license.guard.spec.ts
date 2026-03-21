@@ -16,7 +16,7 @@ export function buildProStatus(): LicenseStatus {
   const now = new Date();
   return {
     valid: true,
-    tier: 'pro',
+    edition: 'pro',
     key: 'UC-PRO-KEY',
     features: ['fullRbac', 'sso', 'auditLogs', 'allAgents'],
     expiresAt: null,
@@ -29,7 +29,7 @@ function buildCommunityStatus(): LicenseStatus {
   const now = new Date();
   return {
     valid: true,
-    tier: 'community',
+    edition: 'community',
     key: null,
     features: [],
     expiresAt: null,
