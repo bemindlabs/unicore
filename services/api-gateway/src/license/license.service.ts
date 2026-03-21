@@ -438,6 +438,17 @@ export class LicenseService implements OnModuleInit {
 
     const url = `${baseUrl}/v1/validate`;
 
+    // Build machine fingerprint from container environment
+    const cpuId = cpus()[0]?.model || hostname();
+    const ifaces = networkInterfaces();
+    const macAddress = Object.values(ifaces)
+      .flat()
+      .find((i) => i && !i.internal && i.mac !== '00:00:00:00:00:00')?.mac || '02:42:ac:11:00:02';
+    const diskId = hostname(); // container ID as stable disk identifier
+    const fingerprintHash = createHash('sha256')
+      .update(`${cpuId}:${macAddress}:${diskId}`)
+      .digest('hex');
+
     // Using the native fetch available in Node 18+ (ES2022 target).
     const response = await fetch(url, {
       method: 'POST',
@@ -445,7 +456,15 @@ export class LicenseService implements OnModuleInit {
         'Content-Type': 'application/json',
         'User-Agent': 'unicore-api-gateway/1.0',
       },
-      body: JSON.stringify({ key }),
+      body: JSON.stringify({
+        key,
+        machineFingerprint: {
+          cpuId,
+          macAddress,
+          diskId,
+          hash: fingerprintHash,
+        },
+      }),
       signal: AbortSignal.timeout(10_000), // 10-second timeout
     });
 
