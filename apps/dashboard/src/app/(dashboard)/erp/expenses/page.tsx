@@ -28,103 +28,144 @@ import {
 import { api } from "@/lib/api";
 
 // ---------------------------------------------------------------------------
-// Types
+// Types — aligned with Prisma ExpenseStatus & ExpenseCategory enums
 // ---------------------------------------------------------------------------
 
-type ExpenseStatus = "PENDING" | "APPROVED" | "REJECTED" | "REIMBURSED";
+type ExpenseStatus = "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED" | "REIMBURSED";
 
 type ExpenseCategory =
-  | "TRAVEL"
-  | "OFFICE_SUPPLIES"
-  | "SOFTWARE"
-  | "MARKETING"
-  | "MEALS"
+  | "ADVERTISING"
+  | "BANK_FEES"
+  | "CONSULTING"
+  | "DEPRECIATION"
+  | "EDUCATION"
   | "EQUIPMENT"
+  | "INSURANCE"
+  | "LEGAL"
+  | "MEALS_ENTERTAINMENT"
+  | "OFFICE_SUPPLIES"
+  | "PAYROLL"
+  | "RENT"
+  | "RESEARCH"
+  | "SHIPPING"
+  | "SOFTWARE"
+  | "TAXES"
+  | "TRAVEL"
+  | "UTILITIES"
   | "OTHER";
 
 interface Expense {
   id: string;
-  date: string;
-  description: string;
+  title: string;
+  description?: string;
   category: ExpenseCategory;
-  amount: number;
   status: ExpenseStatus;
+  amount: string | number;
+  currency: string;
+  expenseDate: string;
+  notes?: string;
+  tags?: string[];
   createdAt: string;
 }
 
 interface ExpenseForm {
-  date: string;
+  title: string;
   description: string;
-  category: ExpenseCategory;
+  category: string;
   amount: string;
-  status: ExpenseStatus;
+  paidAt: string;
 }
 
 const EMPTY_FORM: ExpenseForm = {
-  date: new Date().toISOString().slice(0, 10),
+  title: "",
   description: "",
   category: "OTHER",
   amount: "",
-  status: "PENDING",
+  paidAt: new Date().toISOString().slice(0, 10),
 };
 
-const CATEGORY_LABELS: Record<ExpenseCategory, string> = {
-  TRAVEL: "Travel",
-  OFFICE_SUPPLIES: "Office Supplies",
-  SOFTWARE: "Software",
-  MARKETING: "Marketing",
-  MEALS: "Meals",
+const CATEGORY_LABELS: Record<string, string> = {
+  ADVERTISING: "Advertising",
+  BANK_FEES: "Bank Fees",
+  CONSULTING: "Consulting",
+  DEPRECIATION: "Depreciation",
+  EDUCATION: "Education",
   EQUIPMENT: "Equipment",
+  INSURANCE: "Insurance",
+  LEGAL: "Legal",
+  MEALS_ENTERTAINMENT: "Meals",
+  OFFICE_SUPPLIES: "Office Supplies",
+  PAYROLL: "Payroll",
+  RENT: "Rent",
+  RESEARCH: "Research",
+  SHIPPING: "Shipping",
+  SOFTWARE: "Software",
+  TAXES: "Taxes",
+  TRAVEL: "Travel",
+  UTILITIES: "Utilities",
   OTHER: "Other",
 };
 
-const ALL_CATEGORIES: ExpenseCategory[] = [
-  "TRAVEL",
-  "OFFICE_SUPPLIES",
-  "SOFTWARE",
-  "MARKETING",
-  "MEALS",
-  "EQUIPMENT",
-  "OTHER",
-];
+const ALL_CATEGORIES = Object.keys(CATEGORY_LABELS);
 
 // ---------------------------------------------------------------------------
 // Badge helpers
 // ---------------------------------------------------------------------------
 
 const STATUS_COLORS: Record<ExpenseStatus, string> = {
-  PENDING: "bg-yellow-100 text-yellow-800 border-yellow-300",
+  DRAFT: "bg-slate-100 text-slate-700 border-slate-300",
+  SUBMITTED: "bg-yellow-100 text-yellow-800 border-yellow-300",
   APPROVED: "bg-emerald-100 text-emerald-800 border-emerald-300",
   REJECTED: "bg-red-100 text-red-800 border-red-300",
   REIMBURSED: "bg-blue-100 text-blue-800 border-blue-300",
 };
 
+const STATUS_LABELS: Record<ExpenseStatus, string> = {
+  DRAFT: "Draft",
+  SUBMITTED: "Submitted",
+  APPROVED: "Approved",
+  REJECTED: "Rejected",
+  REIMBURSED: "Reimbursed",
+};
+
 function StatusBadge({ status }: { status: ExpenseStatus }) {
+  const colors = STATUS_COLORS[status] ?? STATUS_COLORS.DRAFT;
+  const label = STATUS_LABELS[status] ?? status;
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[status]}`}
+      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${colors}`}
     >
-      {status}
+      {label}
     </span>
   );
 }
 
-const CATEGORY_COLORS: Record<ExpenseCategory, string> = {
+const CATEGORY_COLORS: Record<string, string> = {
   TRAVEL: "bg-sky-100 text-sky-800 border-sky-300",
   OFFICE_SUPPLIES: "bg-slate-100 text-slate-800 border-slate-300",
   SOFTWARE: "bg-violet-100 text-violet-800 border-violet-300",
-  MARKETING: "bg-pink-100 text-pink-800 border-pink-300",
-  MEALS: "bg-orange-100 text-orange-800 border-orange-300",
+  ADVERTISING: "bg-pink-100 text-pink-800 border-pink-300",
+  MEALS_ENTERTAINMENT: "bg-orange-100 text-orange-800 border-orange-300",
   EQUIPMENT: "bg-teal-100 text-teal-800 border-teal-300",
+  CONSULTING: "bg-indigo-100 text-indigo-800 border-indigo-300",
+  LEGAL: "bg-amber-100 text-amber-800 border-amber-300",
+  INSURANCE: "bg-cyan-100 text-cyan-800 border-cyan-300",
+  RENT: "bg-purple-100 text-purple-800 border-purple-300",
+  RESEARCH: "bg-lime-100 text-lime-800 border-lime-300",
+  TAXES: "bg-rose-100 text-rose-800 border-rose-300",
+  UTILITIES: "bg-emerald-100 text-emerald-800 border-emerald-300",
+  PAYROLL: "bg-blue-100 text-blue-800 border-blue-300",
   OTHER: "bg-gray-100 text-gray-800 border-gray-300",
 };
 
-function CategoryBadge({ category }: { category: ExpenseCategory }) {
+function CategoryBadge({ category }: { category: string }) {
+  const colors = CATEGORY_COLORS[category] ?? CATEGORY_COLORS.OTHER;
+  const label = CATEGORY_LABELS[category] ?? category;
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${CATEGORY_COLORS[category]}`}
+      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${colors}`}
     >
-      {CATEGORY_LABELS[category]}
+      {label}
     </span>
   );
 }
@@ -137,9 +178,11 @@ type StatusFilter = "ALL" | ExpenseStatus;
 
 const STATUS_TABS: { value: StatusFilter; label: string }[] = [
   { value: "ALL", label: "All" },
-  { value: "PENDING", label: "Pending" },
+  { value: "DRAFT", label: "Draft" },
+  { value: "SUBMITTED", label: "Submitted" },
   { value: "APPROVED", label: "Approved" },
   { value: "REJECTED", label: "Rejected" },
+  { value: "REIMBURSED", label: "Reimbursed" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -167,11 +210,11 @@ function ExpenseDialog({
       setForm(
         initial
           ? {
-              date: initial.date.slice(0, 10),
-              description: initial.description,
+              title: initial.title,
+              description: initial.description ?? "",
               category: initial.category,
-              amount: String(initial.amount),
-              status: initial.status,
+              amount: String(Number(initial.amount) || ""),
+              paidAt: initial.expenseDate?.slice(0, 10) ?? new Date().toISOString().slice(0, 10),
             }
           : EMPTY_FORM,
       );
@@ -182,17 +225,17 @@ function ExpenseDialog({
     setForm((prev) => ({ ...prev, [field]: value }));
 
   const handleSave = useCallback(async () => {
-    if (!form.description.trim() || !form.amount.trim()) return;
+    if (!form.title.trim() || !form.amount.trim()) return;
     const parsedAmount = parseFloat(form.amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) return;
     setSaving(true);
     try {
       const payload = {
-        date: form.date,
-        description: form.description.trim(),
+        title: form.title.trim(),
+        description: form.description.trim() || undefined,
         category: form.category,
         amount: parsedAmount,
-        status: form.status,
+        paidAt: form.paidAt || undefined,
       };
       const saved = initial
         ? await api.put<Expense>(
@@ -227,14 +270,24 @@ function ExpenseDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-2">
+          <div className="space-y-1">
+            <Label htmlFor="e-title">Title *</Label>
+            <Input
+              id="e-title"
+              value={form.title}
+              onChange={(e) => set("title", e.target.value)}
+              placeholder="AWS Infrastructure - March"
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label htmlFor="e-date">Date *</Label>
+              <Label htmlFor="e-date">Date</Label>
               <Input
                 id="e-date"
                 type="date"
-                value={form.date}
-                onChange={(e) => set("date", e.target.value)}
+                value={form.paidAt}
+                onChange={(e) => set("paidAt", e.target.value)}
               />
             </div>
             <div className="space-y-1">
@@ -252,53 +305,29 @@ function ExpenseDialog({
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="e-description">Description *</Label>
+            <Label htmlFor="e-description">Description</Label>
             <Input
               id="e-description"
               value={form.description}
               onChange={(e) => set("description", e.target.value)}
-              placeholder="Flight to NYC for client meeting"
+              placeholder="Optional details"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label htmlFor="e-category">Category</Label>
-              <select
-                id="e-category"
-                value={form.category}
-                onChange={(e) => set("category", e.target.value)}
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
-              >
-                {ALL_CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {CATEGORY_LABELS[cat]}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="e-status">Status</Label>
-              <select
-                id="e-status"
-                value={form.status}
-                onChange={(e) => set("status", e.target.value)}
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
-              >
-                {(
-                  [
-                    "PENDING",
-                    "APPROVED",
-                    "REJECTED",
-                    "REIMBURSED",
-                  ] as ExpenseStatus[]
-                ).map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div className="space-y-1">
+            <Label htmlFor="e-category">Category</Label>
+            <select
+              id="e-category"
+              value={form.category}
+              onChange={(e) => set("category", e.target.value)}
+              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+            >
+              {ALL_CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>
+                  {CATEGORY_LABELS[cat]}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -309,7 +338,7 @@ function ExpenseDialog({
           <Button
             onClick={handleSave}
             disabled={
-              !form.description.trim() || !form.amount.trim() || saving
+              !form.title.trim() || !form.amount.trim() || saving
             }
           >
             {saving ? "Saving..." : "Save"}
@@ -359,7 +388,7 @@ function DeleteDialog({ expense, onClose, onDeleted }: DeleteDialogProps) {
           <DialogTitle>Delete Expense</DialogTitle>
           <DialogDescription>
             Are you sure you want to delete{" "}
-            <strong>{expense?.description}</strong>? This action cannot be
+            <strong>{expense?.title}</strong>? This action cannot be
             undone.
           </DialogDescription>
         </DialogHeader>
@@ -384,11 +413,11 @@ function DeleteDialog({ expense, onClose, onDeleted }: DeleteDialogProps) {
 // Currency formatter
 // ---------------------------------------------------------------------------
 
-function formatCurrency(amount: number): string {
+function formatCurrency(amount: string | number, currency = "USD"): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "USD",
-  }).format(amount);
+    currency,
+  }).format(Number(amount) || 0);
 }
 
 // ---------------------------------------------------------------------------
@@ -405,8 +434,11 @@ export default function ExpensesPage() {
   const [deleteTarget, setDeleteTarget] = useState<Expense | null>(null);
 
   useEffect(() => {
+    const params = new URLSearchParams();
+    if (statusFilter !== "ALL") params.set("status", statusFilter);
+    const query = params.toString() ? `?${params}` : "";
     api
-      .get<Expense[]>("/api/proxy/erp/expenses")
+      .get<Expense[]>(`/api/proxy/erp/expenses${query}`)
       .then((res) => setExpenses(Array.isArray(res) ? res : (res as any).data ?? []))
       .catch((err) =>
         toast({
@@ -416,14 +448,15 @@ export default function ExpensesPage() {
         }),
       )
       .finally(() => setLoading(false));
-  }, []);
+  }, [statusFilter]);
 
   const filtered = expenses.filter((e) => {
-    if (statusFilter !== "ALL" && e.status !== statusFilter) return false;
     const q = search.toLowerCase();
+    if (!q) return true;
     return (
-      e.description.toLowerCase().includes(q) ||
-      CATEGORY_LABELS[e.category].toLowerCase().includes(q) ||
+      (e.title ?? "").toLowerCase().includes(q) ||
+      (e.description ?? "").toLowerCase().includes(q) ||
+      (CATEGORY_LABELS[e.category] ?? "").toLowerCase().includes(q) ||
       e.status.toLowerCase().includes(q)
     );
   });
@@ -470,7 +503,7 @@ export default function ExpensesPage() {
 
         <CardContent className="space-y-4">
           {/* Status filter tabs */}
-          <div className="flex items-center gap-1 rounded-lg border bg-muted/40 p-1">
+          <div className="flex flex-wrap items-center gap-1 rounded-lg border bg-muted/40 p-1">
             {STATUS_TABS.map((tab) => (
               <button
                 key={tab.value}
@@ -509,11 +542,11 @@ export default function ExpensesPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <Table className="min-w-[600px]">
+              <Table className="min-w-[700px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Date</TableHead>
-                    <TableHead>Description</TableHead>
+                    <TableHead>Title</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
                     <TableHead>Status</TableHead>
@@ -523,40 +556,46 @@ export default function ExpensesPage() {
                 <TableBody>
                   {filtered.map((expense) => (
                     <TableRow key={expense.id}>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {new Date(expense.date).toLocaleDateString()}
+                      <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                        {expense.expenseDate
+                          ? new Date(expense.expenseDate).toLocaleDateString()
+                          : new Date(expense.createdAt).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="font-medium">
-                        {expense.description}
+                        {expense.title}
                       </TableCell>
                       <TableCell>
                         <CategoryBadge category={expense.category} />
                       </TableCell>
-                      <TableCell className="text-right text-sm font-medium">
-                        {formatCurrency(expense.amount)}
+                      <TableCell className="text-right text-sm font-medium whitespace-nowrap">
+                        {formatCurrency(expense.amount, expense.currency)}
                       </TableCell>
                       <TableCell>
                         <StatusBadge status={expense.status} />
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openEdit(expense)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                            <span className="sr-only">Edit</span>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => setDeleteTarget(expense)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Delete</span>
-                          </Button>
+                          {expense.status === "DRAFT" && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openEdit(expense)}
+                              >
+                                <Pencil className="h-4 w-4" />
+                                <span className="sr-only">Edit</span>
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => setDeleteTarget(expense)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                <span className="sr-only">Delete</span>
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

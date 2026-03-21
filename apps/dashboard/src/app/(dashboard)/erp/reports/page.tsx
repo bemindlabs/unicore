@@ -22,17 +22,17 @@ import { api } from "@/lib/api";
 // ---------------------------------------------------------------------------
 
 interface DashboardSummary {
-  totalRevenue?: number;
-  totalOrders?: number;
-  totalContacts?: number;
-  totalProducts?: number;
+  contacts?: { total?: number };
+  orders?: { total?: number; pending?: number };
+  inventory?: { totalProducts?: number; lowStockCount?: number };
+  invoices?: { total?: number; unpaid?: number; totalRevenue?: string | number };
+  expenses?: { total?: number; pending?: number; totalAmount?: string | number };
   [key: string]: unknown;
 }
 
 interface RevenueData {
-  total?: number;
-  currency?: string;
-  byMonth?: { month: string; amount: number }[];
+  invoices?: number;
+  byCurrency?: Record<string, number>;
   [key: string]: unknown;
 }
 
@@ -43,6 +43,14 @@ interface InventorySummary {
   [key: string]: unknown;
 }
 
+interface ExpenseCategoryRaw {
+  category: string;
+  status?: string;
+  total?: number | string;
+  _sum?: { amount?: string | number };
+  _count?: number;
+}
+
 interface ExpenseCategory {
   category: string;
   total: number;
@@ -50,27 +58,40 @@ interface ExpenseCategory {
 
 interface TopProduct {
   name: string;
+  sku?: string;
   quantity?: number;
-  revenue?: number;
+  revenue?: number | string;
+  _sum?: { quantity?: number; lineTotal?: string | number };
+  _count?: number;
 }
 
 interface TopContact {
-  firstName?: string;
-  lastName?: string;
   name?: string;
-  totalSpent?: number;
+  company?: string;
+  leadScore?: number;
+  totalSpent?: number | string;
   orderCount?: number;
+  _count?: { orders?: number; invoices?: number };
 }
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function fmt(amount: number, currency = "USD") {
+function fmt(amount: number | string | undefined | null, currency = "USD") {
   return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(
-    amount,
+    Number(amount) || 0,
   );
 }
+
+const CATEGORY_LABELS: Record<string, string> = {
+  ADVERTISING: "Advertising", BANK_FEES: "Bank Fees", CONSULTING: "Consulting",
+  DEPRECIATION: "Depreciation", EDUCATION: "Education", EQUIPMENT: "Equipment",
+  INSURANCE: "Insurance", LEGAL: "Legal", MEALS_ENTERTAINMENT: "Meals & Entertainment",
+  OFFICE_SUPPLIES: "Office Supplies", PAYROLL: "Payroll", RENT: "Rent",
+  RESEARCH: "Research", SHIPPING: "Shipping", SOFTWARE: "Software",
+  TAXES: "Taxes", TRAVEL: "Travel", UTILITIES: "Utilities", OTHER: "Other",
+};
 
 function EmptyState({ message }: { message: string }) {
   return (
@@ -107,7 +128,7 @@ export default function ReportsPage() {
       safeFetch<DashboardSummary>("/api/proxy/erp/reports/dashboard"),
       safeFetch<RevenueData>("/api/proxy/erp/reports/revenue"),
       safeFetch<InventorySummary>("/api/proxy/erp/reports/inventory"),
-      safeFetch<ExpenseCategory[]>("/api/proxy/erp/reports/expenses/categories"),
+      safeFetch<ExpenseCategoryRaw[]>("/api/proxy/erp/reports/expenses/categories"),
       safeFetch<TopProduct[]>("/api/proxy/erp/reports/products/top"),
       safeFetch<TopContact[]>("/api/proxy/erp/reports/contacts/top"),
     ])
@@ -115,9 +136,19 @@ export default function ReportsPage() {
         setDashboard(dash);
         setRevenue(rev);
         setInventory(inv);
-        setExpenseCategories(
-          Array.isArray(exp) ? exp : (exp as any)?.data ?? [],
-        );
+        {
+          const raw: ExpenseCategoryRaw[] = Array.isArray(exp) ? exp : (exp as any)?.data ?? [];
+          // Aggregate by category (API returns per-status rows with _sum.amount)
+          const map = new Map<string, number>();
+          for (const r of raw) {
+            const amt = Number(r._sum?.amount ?? r.total ?? 0);
+            map.set(r.category, (map.get(r.category) ?? 0) + amt);
+          }
+          setExpenseCategories(
+            Array.from(map, ([category, total]) => ({ category, total }))
+              .sort((a, b) => b.total - a.total),
+          );
+        }
         setTopProducts(
           Array.isArray(prod) ? prod : (prod as any)?.data ?? [],
         );
@@ -160,10 +191,10 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {revenue?.total != null
-                ? fmt(revenue.total, revenue.currency)
-                : dashboard?.totalRevenue != null
-                  ? fmt(dashboard.totalRevenue)
+              {dashboard?.invoices?.totalRevenue != null
+                ? fmt(dashboard.invoices.totalRevenue)
+                : revenue?.byCurrency
+                  ? fmt(Object.values(revenue.byCurrency)[0] ?? 0)
                   : "No data yet"}
             </p>
           </CardContent>
@@ -176,7 +207,7 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {dashboard?.totalOrders ?? "No data yet"}
+              {dashboard?.orders?.total ?? "No data yet"}
             </p>
           </CardContent>
         </Card>
@@ -188,7 +219,7 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {inventory?.totalProducts ?? dashboard?.totalProducts ?? "No data yet"}
+              {inventory?.totalProducts ?? dashboard?.inventory?.totalProducts ?? "No data yet"}
             </p>
           </CardContent>
         </Card>
@@ -200,7 +231,7 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {dashboard?.totalContacts ?? "No data yet"}
+              {dashboard?.contacts?.total ?? "No data yet"}
             </p>
           </CardContent>
         </Card>
@@ -253,7 +284,7 @@ export default function ReportsPage() {
                     key={ec.category}
                     className="flex items-center justify-between"
                   >
-                    <span className="text-sm">{ec.category}</span>
+                    <span className="text-sm">{CATEGORY_LABELS[ec.category] ?? ec.category}</span>
                     <span className="text-sm font-medium">
                       {fmt(ec.total)}
                     </span>
@@ -278,11 +309,13 @@ export default function ReportsPage() {
                   <div key={i} className="flex items-center justify-between">
                     <span className="text-sm">{p.name}</span>
                     <span className="text-sm font-medium">
-                      {p.revenue != null
-                        ? fmt(p.revenue)
-                        : p.quantity != null
-                          ? `${p.quantity} sold`
-                          : "—"}
+                      {p._sum?.lineTotal != null
+                        ? fmt(p._sum.lineTotal)
+                        : p.revenue != null
+                          ? fmt(p.revenue)
+                          : p._sum?.quantity != null
+                            ? `${p._sum.quantity} sold`
+                            : "—"}
                     </span>
                   </div>
                 ))}
@@ -303,17 +336,23 @@ export default function ReportsPage() {
               <div className="space-y-3">
                 {topContacts.map((c, i) => (
                   <div key={i} className="flex items-center justify-between">
-                    <span className="text-sm">
-                      {c.name ?? "Unknown"}
-                    </span>
+                    <div className="text-sm">
+                      <span>{c.name ?? "Unknown"}</span>
+                      {c.company && (
+                        <span className="text-muted-foreground ml-1">({c.company})</span>
+                      )}
+                    </div>
                     <div className="text-sm text-right">
                       {c.totalSpent != null && (
                         <span className="font-medium">{fmt(c.totalSpent)}</span>
                       )}
-                      {c.orderCount != null && (
+                      {(c._count?.orders ?? c.orderCount) != null && (
                         <span className="text-muted-foreground ml-2">
-                          ({c.orderCount} orders)
+                          ({c._count?.orders ?? c.orderCount} orders)
                         </span>
+                      )}
+                      {c.leadScore != null && !c.totalSpent && !c._count?.orders && (
+                        <span className="text-muted-foreground">Score: {c.leadScore}</span>
                       )}
                     </div>
                   </div>
@@ -323,27 +362,31 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
 
-        {/* Revenue by month */}
+        {/* Revenue by currency */}
         <Card>
           <CardHeader>
-            <CardTitle>Revenue by Month</CardTitle>
+            <CardTitle>Revenue Summary</CardTitle>
           </CardHeader>
           <CardContent>
-            {!revenue?.byMonth || revenue.byMonth.length === 0 ? (
+            {!revenue?.byCurrency || Object.keys(revenue.byCurrency).length === 0 ? (
               <EmptyState message="No data yet" />
             ) : (
               <div className="space-y-3">
-                {revenue.byMonth.map((m) => (
+                {Object.entries(revenue.byCurrency).map(([currency, amount]) => (
                   <div
-                    key={m.month}
+                    key={currency}
                     className="flex items-center justify-between"
                   >
-                    <span className="text-sm">{m.month}</span>
+                    <span className="text-sm">Paid Invoices ({currency})</span>
                     <span className="text-sm font-medium">
-                      {fmt(m.amount, revenue.currency)}
+                      {fmt(amount, currency)}
                     </span>
                   </div>
                 ))}
+                <div className="flex items-center justify-between border-t pt-2">
+                  <span className="text-sm text-muted-foreground">Total Paid Invoices</span>
+                  <span className="text-sm font-medium">{revenue.invoices ?? 0}</span>
+                </div>
               </div>
             )}
           </CardContent>
