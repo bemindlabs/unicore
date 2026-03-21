@@ -46,8 +46,13 @@ describe('LicenseService', () => {
     service = module.get<LicenseService>(LicenseService);
 
     // Reset internal cache between tests
-    (service as any).cachedStatus = null;
+    (service as any).localCache = null;
+    (service as any).localCacheSetAt = 0;
     (service as any).validationInFlight = null;
+
+    // Mock Redis cache methods (no Redis in unit tests)
+    jest.spyOn(service as any, 'getFromRedisCache').mockResolvedValue(null);
+    jest.spyOn(service as any, 'setRedisCache').mockResolvedValue(undefined);
   });
 
   afterEach(() => {
