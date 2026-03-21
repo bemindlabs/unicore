@@ -51,7 +51,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <div className="flex flex-1 flex-col overflow-hidden">
           <Header onMobileMenuToggle={() => setMobileNavOpen(true)} />
           <main className="flex-1 overflow-y-auto">
-            <div className="mx-auto max-w-7xl p-4 lg:p-6">{children}</div>
+            <div className="w-full p-4 lg:p-6">{children}</div>
           </main>
         </div>
       </div>
