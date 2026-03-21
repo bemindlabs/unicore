@@ -438,15 +438,16 @@ export class LicenseService implements OnModuleInit {
 
     const url = `${baseUrl}/v1/validate`;
 
-    // Build machine fingerprint from container environment
+    // Build machine fingerprint from container environment (v1 scheme)
     const cpuId = cpus()[0]?.model || hostname();
     const ifaces = networkInterfaces();
     const macAddress = Object.values(ifaces)
       .flat()
       .find((i) => i && !i.internal && i.mac !== '00:00:00:00:00:00')?.mac || '02:42:ac:11:00:02';
     const diskId = hostname(); // container ID as stable disk identifier
+    // v1 hash: SHA-256 of "cpuId|macAddress|diskId" (pipe-separated)
     const fingerprintHash = createHash('sha256')
-      .update(`${cpuId}:${macAddress}:${diskId}`)
+      .update(`${cpuId}|${macAddress}|${diskId}`)
       .digest('hex');
 
     // Using the native fetch available in Node 18+ (ES2022 target).
