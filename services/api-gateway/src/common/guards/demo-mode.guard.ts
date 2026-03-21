@@ -34,6 +34,10 @@ export class DemoModeGuard implements CanActivate {
     // Public endpoints always pass (login, register, webhooks, health, demo-status)
     if (PUBLIC_PATHS.some((p) => path.includes(p))) return true;
 
+    // Internal service requests always pass (ai-engine, rag, etc.)
+    const internalService = request.headers?.['x-internal-service'];
+    if (internalService) return true;
+
     // Always blocked in demo mode (wizard/bootstrap — no exceptions)
     if (ALWAYS_BLOCKED_PATHS.some((p) => path.includes(p))) {
       throw new ForbiddenException('This action is not available in demo mode');
