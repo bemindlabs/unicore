@@ -15,6 +15,7 @@ import { ProFeatureRequired } from '../license/decorators/pro-feature.decorator'
 import { Public } from '../auth/decorators/public.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { encrypt, decrypt, maskKey } from './crypto.util';
+import { BrandingConfigDto } from './dto/branding-config.dto';
 
 const ALLOWED_MIME_TYPES: Record<string, string[]> = {
   'image/svg+xml': ['.svg'],
