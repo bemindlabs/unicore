@@ -241,7 +241,7 @@ describe('LicenseService', () => {
 
       // First call succeeds
       const first = await service.getLicenseStatus();
-      expect(first.tier).toBe('pro');
+      expect(first.edition).toBe('pro');
 
       // Expire cache
       (service as any).localCache.validatedAt = new Date(
@@ -250,7 +250,7 @@ describe('LicenseService', () => {
 
       // Second call — server fails but cached value is preserved
       const second = await service.getLicenseStatus();
-      expect(second.tier).toBe('pro');
+      expect(second.edition).toBe('pro');
       expect(spy).toHaveBeenCalledTimes(2);
     });
   });
