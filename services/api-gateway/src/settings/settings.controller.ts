@@ -87,7 +87,9 @@ export class SettingsController {
   @Put('branding')
   @ProFeatureRequired('whiteLabelBranding')
   @UseGuards(LicenseGuard)
-  async putBranding(@Body() body: any) {
+  @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: false, transform: true }))
+  async putBranding(@Body() dto: BrandingConfigDto) {
+    const body = dto;
     const settings = await this.prisma.settings.upsert({
       where: { id: 'branding' },
       create: { id: 'branding', data: body },
