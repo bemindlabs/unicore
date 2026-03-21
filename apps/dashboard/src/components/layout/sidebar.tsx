@@ -40,11 +40,11 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     >
       {/* Brand + collapse toggle */}
       <div className="flex h-14 items-center gap-2 px-4 shrink-0">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-bold">
-          U
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-bold" data-unicore-branding>
+          {appName[0] ?? 'U'}
         </div>
         {!collapsed && (
-          <span className="text-base font-semibold tracking-tight">UniCore</span>
+          <span className="text-base font-semibold tracking-tight" data-unicore-branding>{appName}</span>
         )}
         <div className="flex-1" />
         <Button
