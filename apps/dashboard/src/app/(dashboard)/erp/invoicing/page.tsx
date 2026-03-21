@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Pagination, type PaginationMeta } from "@/components/Pagination";
+import { type PaginationMeta } from "@/components/Pagination";
 import {
   AlertTriangle,
   Ban,
