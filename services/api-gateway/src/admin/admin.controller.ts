@@ -174,7 +174,7 @@ export class AdminController {
     const erpPort = process.env.ERP_SERVICE_PORT ?? '4100';
     try {
       const erpStart = Date.now();
-      const res = await fetch(`http://${erpHost}:${erpPort}/health`, { signal: AbortSignal.timeout(3000) });
+      const res = await fetch(`http://${erpHost}:${erpPort}/api/v1/health`, { signal: AbortSignal.timeout(3000) });
       services.push({ name: 'ERP Service', status: res.ok ? 'healthy' : 'degraded', latencyMs: Date.now() - erpStart });
     } catch {
       services.push({ name: 'ERP Service', status: 'down' });
