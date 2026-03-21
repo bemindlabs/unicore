@@ -1,10 +1,7 @@
+import * as fs from 'fs';
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { TemplatesService } from './templates.service';
-
-jest.mock('fs');
-
-import * as fs from 'fs';
 
 const mockTemplateData = {
   name: 'E-Commerce',
@@ -56,21 +53,42 @@ const saasTemplateData = {
   workflows: ['trial_expiry', 'churn_risk'],
 };
 
+async function buildService(
+  existsResult: boolean,
+  files: string[],
+  readContents: string | string[],
+): Promise<TemplatesService> {
+  jest.spyOn(fs, 'existsSync').mockReturnValue(existsResult as unknown as boolean);
+  jest.spyOn(fs, 'readdirSync').mockReturnValue(files as unknown as fs.Dirent[]);
+
+  if (Array.isArray(readContents)) {
+    const spy = jest.spyOn(fs, 'readFileSync') as jest.SpyInstance;
+    readContents.forEach((content, i) => {
+      if (i === 0) spy.mockReturnValueOnce(content);
+      else spy.mockReturnValueOnce(content);
+    });
+    // fallback
+    spy.mockReturnValue(readContents[readContents.length - 1]);
+  } else {
+    jest.spyOn(fs, 'readFileSync').mockReturnValue(readContents as unknown as Buffer);
+  }
+
+  const module: TestingModule = await Test.createTestingModule({
+    providers: [TemplatesService],
+  }).compile();
+
+  return module.get<TemplatesService>(TemplatesService);
+}
+
 describe('TemplatesService', () => {
   let service: TemplatesService;
 
   beforeEach(async () => {
-    jest.clearAllMocks();
-    (fs.existsSync as jest.Mock).mockReturnValue(true);
-    (fs.readdirSync as jest.Mock).mockReturnValue(['ecommerce.json']);
-    (fs.readFileSync as jest.Mock).mockReturnValue(JSON.stringify(mockTemplateData));
-
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [TemplatesService],
-    }).compile();
-
-    service = module.get<TemplatesService>(TemplatesService);
+    jest.restoreAllMocks();
+    service = await buildService(true, ['ecommerce.json'], JSON.stringify(mockTemplateData));
   });
+
+  afterEach(() => jest.restoreAllMocks());
 
   it('should be defined', () => expect(service).toBeDefined());
 
@@ -92,19 +110,17 @@ describe('TemplatesService', () => {
     });
 
     it('returns empty array when templates directory does not exist', async () => {
-      (fs.existsSync as jest.Mock).mockReturnValue(false);
-      const module: TestingModule = await Test.createTestingModule({
-        providers: [TemplatesService],
-      }).compile();
-      const emptyService = module.get<TemplatesService>(TemplatesService);
+      const emptyService = await buildService(false, [], '');
       expect(emptyService.findAll()).toEqual([]);
     });
 
     it('returns multiple templates when multiple files exist', async () => {
-      (fs.readdirSync as jest.Mock).mockReturnValue(['ecommerce.json', 'saas.json']);
-      (fs.readFileSync as jest.Mock)
-        .mockReturnValueOnce(JSON.stringify(mockTemplateData))
-        .mockReturnValueOnce(JSON.stringify(saasTemplateData));
+      jest.restoreAllMocks();
+      jest.spyOn(fs, 'existsSync').mockReturnValue(true as unknown as boolean);
+      jest.spyOn(fs, 'readdirSync').mockReturnValue(['ecommerce.json', 'saas.json'] as unknown as fs.Dirent[]);
+      jest.spyOn(fs, 'readFileSync')
+        .mockReturnValueOnce(JSON.stringify(mockTemplateData) as unknown as Buffer)
+        .mockReturnValueOnce(JSON.stringify(saasTemplateData) as unknown as Buffer);
 
       const module: TestingModule = await Test.createTestingModule({
         providers: [TemplatesService],
@@ -140,7 +156,12 @@ describe('TemplatesService', () => {
 
   describe('template loading from filesystem', () => {
     it('skips non-JSON files in the templates directory', async () => {
-      (fs.readdirSync as jest.Mock).mockReturnValue(['ecommerce.json', 'README.md', '.gitkeep', 'notes.txt']);
+      jest.restoreAllMocks();
+      jest.spyOn(fs, 'existsSync').mockReturnValue(true as unknown as boolean);
+      jest.spyOn(fs, 'readdirSync').mockReturnValue(
+        ['ecommerce.json', 'README.md', '.gitkeep', 'notes.txt'] as unknown as fs.Dirent[],
+      );
+      jest.spyOn(fs, 'readFileSync').mockReturnValue(JSON.stringify(mockTemplateData) as unknown as Buffer);
 
       const module: TestingModule = await Test.createTestingModule({
         providers: [TemplatesService],
@@ -150,32 +171,25 @@ describe('TemplatesService', () => {
     });
 
     it('handles malformed JSON gracefully and skips the file', async () => {
-      (fs.readFileSync as jest.Mock).mockReturnValue('{ invalid json content {');
-
-      const module: TestingModule = await Test.createTestingModule({
-        providers: [TemplatesService],
-      }).compile();
-      const s = module.get<TemplatesService>(TemplatesService);
+      const s = await buildService(true, ['ecommerce.json'], '{ invalid json content {');
       expect(s.findAll()).toEqual([]);
     });
 
     it('loads templates with id stripped from .json extension', async () => {
-      (fs.readdirSync as jest.Mock).mockReturnValue(['professional_services.json']);
-      (fs.readFileSync as jest.Mock).mockReturnValue(JSON.stringify(mockTemplateData));
-
-      const module: TestingModule = await Test.createTestingModule({
-        providers: [TemplatesService],
-      }).compile();
-      const s = module.get<TemplatesService>(TemplatesService);
+      const s = await buildService(true, ['professional_services.json'], JSON.stringify(mockTemplateData));
       const templates = s.findAll();
       expect(templates[0].id).toBe('professional_services');
     });
 
     it('continues loading remaining templates if one file fails to parse', async () => {
-      (fs.readdirSync as jest.Mock).mockReturnValue(['broken.json', 'ecommerce.json']);
-      (fs.readFileSync as jest.Mock)
-        .mockReturnValueOnce('not valid json')
-        .mockReturnValueOnce(JSON.stringify(mockTemplateData));
+      jest.restoreAllMocks();
+      jest.spyOn(fs, 'existsSync').mockReturnValue(true as unknown as boolean);
+      jest.spyOn(fs, 'readdirSync').mockReturnValue(
+        ['broken.json', 'ecommerce.json'] as unknown as fs.Dirent[],
+      );
+      jest.spyOn(fs, 'readFileSync')
+        .mockReturnValueOnce('not valid json {{{{' as unknown as Buffer)
+        .mockReturnValueOnce(JSON.stringify(mockTemplateData) as unknown as Buffer);
 
       const module: TestingModule = await Test.createTestingModule({
         providers: [TemplatesService],
