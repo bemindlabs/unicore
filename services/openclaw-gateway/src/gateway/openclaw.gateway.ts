@@ -112,6 +112,36 @@ export class OpenClawGateway
       tracked.authenticated = false;
       socket.close(4401, 'Authentication required');
     });
+
+    // Raw message handler — the NestJS WsAdapter expects { event, data } format
+    // but our protocol uses { type, ... }. Wire up manual dispatch.
+    server.on('connection', (socket: WebSocket) => {
+      socket.on('message', (raw: Buffer | string) => {
+        try {
+          const msg = JSON.parse(typeof raw === 'string' ? raw : raw.toString()) as IncomingMessage;
+          if (!msg?.type) return;
+          switch (msg.type) {
+            case 'agent:register':     this.handleRegister(socket, msg); break;
+            case 'agent:unregister':   this.handleUnregister(socket, msg); break;
+            case 'agent:heartbeat':    this.handleHeartbeat(socket, msg); break;
+            case 'agent:state':        this.handleStateChange(socket, msg); break;
+            case 'message:direct':     this.handleDirect(socket, msg); break;
+            case 'message:broadcast':  this.handleBroadcast(socket, msg); break;
+            case 'message:publish':    this.handlePublish(socket, msg); break;
+            case 'message:subscribe':  this.handleSubscribe(socket, msg); break;
+            case 'message:unsubscribe': this.handleUnsubscribe(socket, msg); break;
+            case 'system:ping':        this.handlePing(socket, msg); break;
+            default:
+              this.send(socket, JSON.stringify({
+                type: 'system:error',
+                payload: { code: 'UNKNOWN_TYPE', message: `Unknown message type: ${msg.type}` },
+              }));
+          }
+        } catch {
+          // Ignore malformed messages
+        }
+      });
+    });
   }
 
   handleConnection(client: WebSocket): void {
