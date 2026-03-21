@@ -121,17 +121,36 @@ function PixelBed() {
   );
 }
 
+function PixelCoffeeShop() {
+  return (
+    <div className="w-48 h-32 border-[6px] shadow-2xl z-10 flex flex-col items-center justify-end p-2 relative" style={{ background: '#fef3c7', borderColor: 'var(--retrodesk-border)' }}>
+      {/* Awning */}
+      <div className="absolute top-0 left-0 right-0 h-6 flex">
+         {Array.from({ length: 6 }).map((_, i) => (
+           <div key={i} className={`flex-1 h-full shadow-sm rounded-b-sm ${i % 2 === 0 ? 'bg-[var(--retrodesk-orange)]' : 'bg-yellow-100'}`} />
+         ))}
+      </div>
+      {/* Front Counter */}
+      <div className="w-full h-10 border-t-4 border-l-4 border-r-4 shadow-inner flex justify-center items-center gap-4" style={{ background: '#d97706', borderColor: '#b45309' }}>
+         <div className="w-8 h-6 bg-white/20 border-2 border-white/50 animate-pulse" />
+         <div className="w-4 h-6 bg-black/20" />
+      </div>
+    </div>
+  );
+}
+
 export function OfficeFloor({ agents, onSelectAgent }: Props) {
   const [currentFloor, setCurrentFloor] = useState<number>(1);
 
   // Redefine zones to take up whole maps based on floor
   const zones = useMemo(() => ({
-    'conference': { x: 40, y: 40, w: 440, h: 520, floor: 3 },
-    'bedroom': { x: 520, y: 40, w: 440, h: 520, floor: 3 },
+    'conference': { x: 40, y: 40, w: 400, h: 520, floor: 3 },
+    'bedroom': { x: 460, y: 40, w: 380, h: 520, floor: 3 },
     
-    'main-office': { x: 40, y: 40, w: 920, h: 520, floor: 2 },
+    'main-office': { x: 40, y: 40, w: 800, h: 520, floor: 2 },
     
-    'standalone': { x: 40, y: 40, w: 920, h: 520, floor: 1 },
+    'standalone': { x: 40, y: 40, w: 460, h: 520, floor: 1 },
+    'shop': { x: 520, y: 40, w: 320, h: 520, floor: 1 },
   }), []);
 
   const [positions, setPositions] = useState<Record<string, { x: number, y: number }>>({});
@@ -162,23 +181,33 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
   // Use a ref so the setInterval doesn't stagger/re-trigger on every select toggle
   const selectedRef = useRef(selectedAgentToMove);
   useEffect(() => { selectedRef.current = selectedAgentToMove; }, [selectedAgentToMove]);
+
+  const manualLocksRef = useRef(manualPosLocks);
+  useEffect(() => { manualLocksRef.current = manualPosLocks; }, [manualPosLocks]);
   
   useEffect(() => {
-    const p: Record<string, { x: number, y: number }> = {};
-    agents.forEach(a => {
-      let zoneName = a.room || 'standalone';
-      if (a.status === 'offline') zoneName = 'bedroom';
-      const zone = zones[zoneName as keyof typeof zones] || zones['standalone'];
-      p[a.id] = getRandomPos(zone);
+    setPositions(prev => {
+      const p = { ...prev };
+      let changed = false;
+      agents.forEach(a => {
+        if (!p[a.id]) {
+          let zoneName = a.room || 'standalone';
+          if (a.status === 'offline') zoneName = 'bedroom';
+          const zone = zones[zoneName as keyof typeof zones] || zones['standalone'];
+          p[a.id] = getRandomPos(zone);
+          changed = true;
+        }
+      });
+      return changed ? p : prev;
     });
-    setPositions(p);
 
     const id = setInterval(() => {
       setPositions(prev => {
         const next = { ...prev };
         agents.forEach(a => {
           const isSelected = selectedRef.current === a.id;
-          const isManualLocked = manualPosLocks[a.id] && manualPosLocks[a.id] > Date.now();
+          const locks = manualLocksRef.current;
+          const isManualLocked = locks[a.id] && locks[a.id] > Date.now();
           if (!isSelected && !isManualLocked && (Math.random() > 0.4 || a.status === 'offline')) {
             let zoneName = a.room || 'standalone';
             if (a.status === 'offline') zoneName = 'bedroom';
@@ -191,7 +220,59 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
     }, 4500);
 
     return () => clearInterval(id);
-  }, [agents, zones, manualPosLocks]);
+  }, [agents, zones]);
+
+  // WASD Manual Driving Control
+  useEffect(() => {
+    if (!selectedAgentToMove) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
+
+      setPositions(prev => {
+        const current = prev[selectedAgentToMove];
+        if (!current) return prev;
+        
+        let { x, y } = current;
+        const step = 40; // Pixels per key press
+
+        switch(e.key.toLowerCase()) {
+          case 'w':
+          case 'arrowup':
+             y -= step; break;
+          case 's':
+          case 'arrowdown':
+             y += step; break;
+          case 'a':
+          case 'arrowleft':
+             x -= step; break;
+          case 'd':
+          case 'arrowright':
+             x += step; break;
+          case 'escape':
+             setSelectedAgentToMove(null);
+             return prev;
+          default:
+             return prev;
+        }
+
+        // Clamp to map boundaries
+        x = Math.max(20, Math.min(x, MAP_WIDTH - 60));
+        y = Math.max(20, Math.min(y, MAP_HEIGHT - 80));
+
+        // Extend their manual lock timer to suppress AI wander logic while being driven
+        setManualPosLocks(locks => ({ ...locks, [selectedAgentToMove]: Date.now() + 30000 }));
+        return { ...prev, [selectedAgentToMove]: { x, y } };
+      });
+      
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd'].includes(e.key) || e.key.toLowerCase() === 'w') {
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedAgentToMove]);
 
   const handleFloorClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!selectedAgentToMove) return;
@@ -213,31 +294,6 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
   return (
     <div data-character-theme="retrodesk" className="w-full h-full relative flex items-center justify-center bg-[var(--retrodesk-bg)] overflow-hidden" ref={containerRef}>
       
-      {/* Elevator Panel */}
-      <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 p-3 border-l-4 border-y-4 shadow-2xl z-50 rounded-l-xl" style={{ background: 'var(--retrodesk-surface)', borderColor: 'var(--retrodesk-border)' }}>
-        <div className="text-[10px] font-mono font-bold text-center border-b-2 pb-2 mb-2" style={{ borderColor: 'var(--retrodesk-border)', color: 'var(--retrodesk-text)' }}>ELEVATOR</div>
-        {floors.map(f => (
-          <button 
-            key={f.id} 
-            onClick={() => setCurrentFloor(f.id)}
-            className={`px-4 py-3 font-mono text-xs font-bold transition-transform ${currentFloor === f.id ? 'scale-110 shadow-lg' : 'hover:scale-105 opacity-60'}`}
-            style={{
-              background: currentFloor === f.id ? 'var(--retrodesk-blue)' : 'var(--retrodesk-bg)',
-              color: currentFloor === f.id ? 'var(--retrodesk-surface)' : 'var(--retrodesk-text)',
-              border: `2px solid var(--retrodesk-border)`
-            }}
-          >
-            {f.name}
-          </button>
-        ))}
-      </div>
-
-      {selectedAgentToMove && (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 bg-[var(--retrodesk-blue)] text-[var(--retrodesk-surface)] px-6 py-3 font-mono text-sm z-50 animate-bounce border-4 border-[var(--retrodesk-surface)] shadow-2xl tracking-widest font-bold">
-          [ CLICK ANYWHERE ON FLOOR TO RELOCATE ]
-        </div>
-      )}
-      
       <div className="absolute flex justify-center items-center" style={{ width: MAP_WIDTH, height: MAP_HEIGHT, transform: `scale(${scale})`, transformOrigin: 'center' }}>
         <div 
           className={`relative border-8 shadow-2xl overflow-hidden retrodesk-grid-bg shrink-0 transition-colors ${selectedAgentToMove ? 'cursor-crosshair' : ''}`}
@@ -251,7 +307,39 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
             backgroundSize: '40px 40px',
           }}
         >
-          <div className="absolute bottom-4 right-4 px-3 py-1 bg-[var(--retrodesk-surface)] border-2 border-[var(--retrodesk-border)] text-xs font-mono tracking-widest uppercase font-bold text-[var(--retrodesk-text)] shadow-sm z-20">
+          {/* Elevator Panel securely nested inside rendering context */}
+          <div 
+            className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 p-3 border-4 shadow-2xl z-50 rounded-xl" 
+            style={{ background: 'var(--retrodesk-surface)', borderColor: 'var(--retrodesk-border)', width: 130 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-[10px] font-mono font-bold text-center border-b-2 pb-2 mb-2" style={{ borderColor: 'var(--retrodesk-border)', color: 'var(--retrodesk-text)' }}>ELEVATOR</div>
+            {floors.map(f => (
+              <button 
+                key={f.id} 
+                onClick={(e) => { e.stopPropagation(); setCurrentFloor(f.id); }}
+                className={`px-4 py-3 font-mono text-xs font-bold transition-transform ${currentFloor === f.id ? 'scale-110 shadow-lg' : 'hover:scale-105 opacity-60'}`}
+                style={{
+                  background: currentFloor === f.id ? 'var(--retrodesk-blue)' : 'var(--retrodesk-bg)',
+                  color: currentFloor === f.id ? 'var(--retrodesk-surface)' : 'var(--retrodesk-text)',
+                  border: `2px solid var(--retrodesk-border)`
+                }}
+              >
+                {f.name}
+              </button>
+            ))}
+          </div>
+
+          {selectedAgentToMove && (
+            <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-[var(--retrodesk-blue)] text-[var(--retrodesk-surface)] px-8 py-3 z-50 animate-bounce border-[6px] border-[var(--retrodesk-surface)] shadow-2xl text-center">
+              <div className="font-mono text-[16px] tracking-widest font-bold">[ CLICK TO RELOCATE ]</div>
+              <div className="font-mono text-[10px] mt-1.5 opacity-90 uppercase tracking-widest font-bold border-t-2 border-[var(--retrodesk-surface)] pt-1.5">
+                ✦ OR USE W A S D / ARROWS TO DRIVE AGENT ✦
+              </div>
+            </div>
+          )}
+
+          <div className="absolute bottom-4 right-44 px-3 py-1 bg-[var(--retrodesk-surface)] border-2 border-[var(--retrodesk-border)] text-xs font-mono tracking-widest uppercase font-bold text-[var(--retrodesk-text)] shadow-sm z-20">
             {floors.find(f => f.id === currentFloor)?.name ?? ''} : OPENCLAW HQ
           </div>
 
@@ -334,14 +422,23 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
                 <div className="absolute -top-4 left-6 px-3 py-0.5 border-[3px] text-[10px] text-[var(--retrodesk-green)] font-bold tracking-widest uppercase font-mono shadow-sm" style={{ background: 'var(--retrodesk-surface)', borderColor: 'var(--retrodesk-green)' }}>Workstations</div>
                 
                 {/* Desks grid massive */}
-                <div className="grid grid-cols-4 grid-rows-3 gap-x-16 gap-y-20 py-16 px-16 h-full w-full items-center justify-items-center z-10">
-                  {Array.from({ length: 12 }).map((_, i) => (
+                <div className="grid grid-cols-2 grid-rows-3 gap-x-12 gap-y-16 py-16 px-12 h-full w-full items-center justify-items-center z-10">
+                  {Array.from({ length: 6 }).map((_, i) => (
                     <PixelComputerDesk key={i} />
                   ))}
                 </div>
                 
-                <div className="absolute right-12 top-12"><PixelBookshelf /></div>
-                <div className="absolute right-12 bottom-12"><PixelBookshelf /></div>
+                <div className="absolute right-8 top-8"><PixelBookshelf /></div>
+              </div>
+
+              {/* Shop / Cafe Zone */}
+              <div className="absolute border-[6px] animate-in fade-in duration-500" style={{ background: 'var(--retrodesk-surface)', left: zones['shop'].x, top: zones['shop'].y, width: zones['shop'].w, height: zones['shop'].h, borderColor: 'var(--retrodesk-orange)' }}>
+                <div className="absolute inset-4 border-2 border-[var(--retrodesk-border)] opacity-20 mix-blend-multiply" style={{ background: 'repeating-linear-gradient(90deg, transparent, transparent 10px, var(--retrodesk-orange) 10px, var(--retrodesk-orange) 20px)' }} />
+                <div className="absolute -top-4 left-6 px-3 py-0.5 border-[3px] text-[10px] text-[var(--retrodesk-orange)] font-bold tracking-widest uppercase font-mono shadow-sm" style={{ background: 'var(--retrodesk-surface)', borderColor: 'var(--retrodesk-orange)' }}>Coffee Shop</div>
+                
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10"><PixelCoffeeShop /></div>
+                <div className="absolute bottom-8 left-8"><PixelVendingMachine /></div>
+                <div className="absolute top-12 right-12"><PixelFlowerDeco /></div>
               </div>
             </>
           )}
@@ -370,8 +467,8 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
                 style={{
                   left: pos.x,
                   top: pos.y,
-                  transitionDuration: '2500ms',
-                  transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
+                  transitionDuration: isSelectedForMove ? '150ms' : '2500ms',
+                  transitionTimingFunction: isSelectedForMove ? 'linear' : 'cubic-bezier(0.4, 0, 0.2, 1)'
                 }}
               >
                 <div className="flex flex-col items-center gap-1 drop-shadow-xl relative">

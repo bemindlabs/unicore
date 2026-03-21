@@ -1,6 +1,6 @@
 export type AgentStatus = 'working' | 'idle' | 'offline';
 
-export type RoomId = 'conference' | 'main-office' | 'standalone' | 'bedroom';
+export type RoomId = 'conference' | 'main-office' | 'standalone' | 'bedroom' | 'shop';
 
 export interface BackofficeAgent {
   id: string;
