@@ -760,24 +760,47 @@ async function seedChatHistory(userId: string) {
 }
 
 async function seedNotifications(userId: string) {
-  console.log('\n🔔 Seeding notifications...');
+  console.log('\n🔔 Seeding notifications (via database)...');
 
-  for (const notif of NOTIFICATIONS) {
-    // Create notifications directly via Prisma since there's no public create endpoint
-    // We'll use the internal API or create them through the gateway
-    const data = {
-      userId,
-      type: notif.type,
-      title: notif.title,
-      message: notif.message,
-      link: notif.link,
-      read: rand(0, 1) > 0.6,
-    };
+  // No public POST endpoint - insert directly via psql
+  const values = NOTIFICATIONS.map((n) => {
+    const id = `notif_${Math.random().toString(36).substring(2, 15)}`;
+    const read = Math.random() > 0.6;
+    const createdAt = pastDate(rand(0, 14));
+    const escaped = (s: string) => s.replace(/'/g, "''");
+    return `('${id}', '${userId}', '${n.type}', '${escaped(n.title)}', '${escaped(n.message)}', ${read}, '${n.link || ''}', '${createdAt}', '${createdAt}')`;
+  }).join(',\n    ');
 
-    // Try to create via API - notifications may need internal creation
-    const res = await api('POST', `${GATEWAY}/notifications`, data);
-    if (res) {
-      console.log(`  ✓ [${notif.type.padEnd(8)}] ${notif.title}`);
+  const sql = `INSERT INTO "Notification" (id, "userId", type, title, message, read, link, "createdAt", "updatedAt") VALUES
+    ${values}
+  ON CONFLICT DO NOTHING;`;
+
+  const { execSync } = await import('child_process');
+  try {
+    execSync(`docker exec unicores-unicore-postgres-1 psql -U unicore -d unicore -c '${sql.replace(/'/g, "'\\''")}'`, { stdio: 'pipe' });
+    for (const n of NOTIFICATIONS) {
+      console.log(`  ✓ [${n.type.padEnd(8)}] ${n.title}`);
+    }
+  } catch (err: any) {
+    // Fallback: try generating via internal API header
+    console.log('  ℹ Direct DB insert failed, trying internal API...');
+    for (const notif of NOTIFICATIONS) {
+      const res = await fetch(`${API}/api/v1/notifications`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Internal-Service': 'seed-demo',
+          Authorization: `Bearer ${TOKEN}`,
+        },
+        body: JSON.stringify({
+          userId,
+          type: notif.type,
+          title: notif.title,
+          message: notif.message,
+          link: notif.link,
+        }),
+      });
+      if (res.ok) console.log(`  ✓ [${notif.type.padEnd(8)}] ${notif.title}`);
     }
   }
 }
