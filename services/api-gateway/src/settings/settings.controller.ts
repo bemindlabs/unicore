@@ -156,8 +156,8 @@ export class SettingsController {
     const key = this.getBrandingKey();
     const settings = await this.prisma.settings.upsert({
       where: { id: key },
-      create: { id: key, data: dto },
-      update: { data: dto },
+      create: { id: key, data: dto as any },
+      update: { data: dto as any },
     });
     return settings.data;
   }
