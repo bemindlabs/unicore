@@ -101,7 +101,7 @@ export class MessageRouterService {
     for (const agentId of subscribers) {
       if (agentId === fromAgentId) continue;
 
-      const socketId = this.registry.getSocketId(agentId);
+      const socketId = this.registry.getSocketId(agentId) ?? this.clientSockets.get(agentId);
       if (!socketId) continue;
 
       send(socketId, data);
