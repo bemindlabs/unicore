@@ -8,11 +8,12 @@ const mockProxyService = {
   forward: jest.fn(),
 };
 
-function makeReq(originalUrl = '/api/proxy/bootstrap/setup', body: any = undefined) {
+function makeReq(originalUrl = '/api/proxy/bootstrap/setup', body: any = null) {
   const emitter = new EventEmitter() as any;
   emitter.method = 'POST';
   emitter.originalUrl = originalUrl;
   emitter.headers = { 'x-bootstrap-secret': 'unicore-bootstrap-secret-local' };
+  // Default body to null (not undefined) so readBody doesn't wait for stream events
   emitter.body = body;
   return emitter;
 }
