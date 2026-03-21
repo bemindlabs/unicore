@@ -1,7 +1,17 @@
+jest.mock('fs', () => ({
+  existsSync: jest.fn(),
+  readdirSync: jest.fn(),
+  readFileSync: jest.fn(),
+}));
+
 import * as fs from 'fs';
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { TemplatesService } from './templates.service';
+
+const mockExistsSync = fs.existsSync as jest.Mock;
+const mockReaddirSync = fs.readdirSync as jest.Mock;
+const mockReadFileSync = fs.readFileSync as jest.Mock;
 
 const mockTemplateData = {
   name: 'E-Commerce',
@@ -54,53 +64,49 @@ const saasTemplateData = {
 };
 
 async function buildService(
-  existsResult: boolean,
-  files: string[],
-  readContents: string | string[],
+  opts: {
+    exists?: boolean;
+    files?: string[];
+    readImpl?: () => string;
+  } = {},
 ): Promise<TemplatesService> {
-  jest.spyOn(fs, 'existsSync').mockReturnValue(existsResult as unknown as boolean);
-  jest.spyOn(fs, 'readdirSync').mockReturnValue(files as unknown as fs.Dirent[]);
+  const { exists = true, files = ['ecommerce.json'], readImpl } = opts;
 
-  if (Array.isArray(readContents)) {
-    const spy = jest.spyOn(fs, 'readFileSync') as jest.SpyInstance;
-    readContents.forEach((content, i) => {
-      if (i === 0) spy.mockReturnValueOnce(content);
-      else spy.mockReturnValueOnce(content);
-    });
-    // fallback
-    spy.mockReturnValue(readContents[readContents.length - 1]);
+  jest.clearAllMocks();
+  mockExistsSync.mockReturnValue(exists);
+  mockReaddirSync.mockReturnValue(files);
+  if (readImpl) {
+    mockReadFileSync.mockImplementation(readImpl);
   } else {
-    jest.spyOn(fs, 'readFileSync').mockReturnValue(readContents as unknown as Buffer);
+    mockReadFileSync.mockReturnValue(JSON.stringify(mockTemplateData));
   }
 
   const module: TestingModule = await Test.createTestingModule({
     providers: [TemplatesService],
   }).compile();
 
-  return module.get<TemplatesService>(TemplatesService);
+  const svc = module.get<TemplatesService>(TemplatesService);
+  // Ensure lifecycle hook runs (compile() may or may not trigger it depending on NestJS version)
+  svc.onModuleInit();
+  return svc;
 }
 
 describe('TemplatesService', () => {
   let service: TemplatesService;
 
   beforeEach(async () => {
-    jest.restoreAllMocks();
-    service = await buildService(true, ['ecommerce.json'], JSON.stringify(mockTemplateData));
+    service = await buildService();
   });
-
-  afterEach(() => jest.restoreAllMocks());
 
   it('should be defined', () => expect(service).toBeDefined());
 
   describe('findAll', () => {
     it('returns all loaded templates', () => {
-      const templates = service.findAll();
-      expect(templates).toHaveLength(1);
+      expect(service.findAll()).toHaveLength(1);
     });
 
-    it('returns templates with id derived from filename', () => {
-      const templates = service.findAll();
-      expect(templates[0].id).toBe('ecommerce');
+    it('returns templates with id derived from filename (without .json extension)', () => {
+      expect(service.findAll()[0].id).toBe('ecommerce');
     });
 
     it('returns templates with correct data', () => {
@@ -110,23 +116,20 @@ describe('TemplatesService', () => {
     });
 
     it('returns empty array when templates directory does not exist', async () => {
-      const emptyService = await buildService(false, [], '');
-      expect(emptyService.findAll()).toEqual([]);
+      const s = await buildService({ exists: false, files: [] });
+      expect(s.findAll()).toEqual([]);
     });
 
     it('returns multiple templates when multiple files exist', async () => {
-      jest.restoreAllMocks();
-      jest.spyOn(fs, 'existsSync').mockReturnValue(true as unknown as boolean);
-      jest.spyOn(fs, 'readdirSync').mockReturnValue(['ecommerce.json', 'saas.json'] as unknown as fs.Dirent[]);
-      jest.spyOn(fs, 'readFileSync')
-        .mockReturnValueOnce(JSON.stringify(mockTemplateData) as unknown as Buffer)
-        .mockReturnValueOnce(JSON.stringify(saasTemplateData) as unknown as Buffer);
-
-      const module: TestingModule = await Test.createTestingModule({
-        providers: [TemplatesService],
-      }).compile();
-      const multiService = module.get<TemplatesService>(TemplatesService);
-      expect(multiService.findAll()).toHaveLength(2);
+      let callCount = 0;
+      const s = await buildService({
+        files: ['ecommerce.json', 'saas.json'],
+        readImpl: () => {
+          callCount++;
+          return callCount === 1 ? JSON.stringify(mockTemplateData) : JSON.stringify(saasTemplateData);
+        },
+      });
+      expect(s.findAll()).toHaveLength(2);
     });
   });
 
@@ -149,54 +152,48 @@ describe('TemplatesService', () => {
       expect(() => service.findById('unknown')).toThrow(NotFoundException);
     });
 
-    it('throws NotFoundException with descriptive message', () => {
+    it("throws NotFoundException with message containing the template id", () => {
       expect(() => service.findById('ghost')).toThrow("Template 'ghost' not found");
     });
   });
 
   describe('template loading from filesystem', () => {
     it('skips non-JSON files in the templates directory', async () => {
-      jest.restoreAllMocks();
-      jest.spyOn(fs, 'existsSync').mockReturnValue(true as unknown as boolean);
-      jest.spyOn(fs, 'readdirSync').mockReturnValue(
-        ['ecommerce.json', 'README.md', '.gitkeep', 'notes.txt'] as unknown as fs.Dirent[],
-      );
-      jest.spyOn(fs, 'readFileSync').mockReturnValue(JSON.stringify(mockTemplateData) as unknown as Buffer);
-
-      const module: TestingModule = await Test.createTestingModule({
-        providers: [TemplatesService],
-      }).compile();
-      const s = module.get<TemplatesService>(TemplatesService);
+      const s = await buildService({
+        files: ['ecommerce.json', 'README.md', '.gitkeep', 'notes.txt'],
+      });
       expect(s.findAll()).toHaveLength(1);
     });
 
     it('handles malformed JSON gracefully and skips the file', async () => {
-      const s = await buildService(true, ['ecommerce.json'], '{ invalid json content {');
+      const s = await buildService({
+        files: ['ecommerce.json'],
+        readImpl: () => '{ invalid json content {',
+      });
       expect(s.findAll()).toEqual([]);
     });
 
-    it('loads templates with id stripped from .json extension', async () => {
-      const s = await buildService(true, ['professional_services.json'], JSON.stringify(mockTemplateData));
-      const templates = s.findAll();
-      expect(templates[0].id).toBe('professional_services');
+    it('strips .json extension to produce the template id', async () => {
+      const s = await buildService({ files: ['professional_services.json'] });
+      expect(s.findAll()[0].id).toBe('professional_services');
     });
 
     it('continues loading remaining templates if one file fails to parse', async () => {
-      jest.restoreAllMocks();
-      jest.spyOn(fs, 'existsSync').mockReturnValue(true as unknown as boolean);
-      jest.spyOn(fs, 'readdirSync').mockReturnValue(
-        ['broken.json', 'ecommerce.json'] as unknown as fs.Dirent[],
-      );
-      jest.spyOn(fs, 'readFileSync')
-        .mockReturnValueOnce('not valid json {{{{' as unknown as Buffer)
-        .mockReturnValueOnce(JSON.stringify(mockTemplateData) as unknown as Buffer);
-
-      const module: TestingModule = await Test.createTestingModule({
-        providers: [TemplatesService],
-      }).compile();
-      const s = module.get<TemplatesService>(TemplatesService);
+      let callCount = 0;
+      const s = await buildService({
+        files: ['broken.json', 'ecommerce.json'],
+        readImpl: () => {
+          callCount++;
+          return callCount === 1 ? 'not valid json {{{{' : JSON.stringify(mockTemplateData);
+        },
+      });
       expect(s.findAll()).toHaveLength(1);
       expect(s.findById('ecommerce').name).toBe('E-Commerce');
+    });
+
+    it('attaches the id property to each loaded template', async () => {
+      const s = await buildService({ files: ['saas.json'], readImpl: () => JSON.stringify(saasTemplateData) });
+      expect(s.findAll()[0].id).toBe('saas');
     });
   });
 });
