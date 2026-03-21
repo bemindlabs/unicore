@@ -72,6 +72,10 @@ export function ChatBox() {
   // UNC-103: Reaction hover state
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
 
+  // Typing indicator — shown while waiting for agent response
+  const [isAgentTyping, setIsAgentTyping] = useState(false);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // UNC-103: @mention autocomplete
   const [mentionOpen, setMentionOpen] = useState(false);
   const [mentionFilter, setMentionFilter] = useState('');
@@ -123,6 +127,14 @@ export function ChatBox() {
   const handleMessage = useCallback((msg: ChatMessage) => {
     setMessages((prev) => [...prev.slice(-99), { ...msg, reactions: {} }]);
     if (!open) setUnread((n) => n + 1);
+    // Clear typing indicator when agent responds
+    if (msg.authorType === 'agent') {
+      setIsAgentTyping(false);
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
+      }
+    }
     // Play beep on incoming messages from others
     if (msg.authorId !== 'human-user' && soundEnabledRef.current) {
       playBeep();
@@ -130,6 +142,13 @@ export function ChatBox() {
   }, [open]);
 
   const { connected, send } = useChatWebSocket(channel, handleMessage);
+
+  // Clean up typing timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    };
+  }, []);
 
   // Clear messages when switching channels
   const prevChannelRef = useRef(channel);
@@ -239,16 +258,23 @@ export function ChatBox() {
     send(input.trim(), 'You', 'human-user', 'human');
     setInput('');
     setMentionOpen(false);
+    // Show typing indicator after sending
+    setIsAgentTyping(true);
+    // Auto-hide after 30s in case agent doesn't respond
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => setIsAgentTyping(false), 30_000);
   }
 
   function selectAgent(agent: BackofficeAgent) {
     setSelectedAgent(agent);
     setDropdownOpen(false);
+    setIsAgentTyping(false);
   }
 
   function backToGeneral() {
     setSelectedAgent(null);
     setDropdownOpen(false);
+    setIsAgentTyping(false);
   }
 
   // Render message text with @mentions styled bold
@@ -381,7 +407,7 @@ export function ChatBox() {
                 : 'No messages yet. Start the conversation!'}
           </p>
         )}
-        {visibleMessages.map((msg) => {
+        {visibleMessages.map((msg, _idx) => {
           const isMe = msg.authorId === 'human-user';
           const isHovered = hoveredMessageId === msg.id;
           return (
@@ -455,6 +481,28 @@ export function ChatBox() {
             </div>
           );
         })}
+
+        {/* Typing indicator */}
+        {isAgentTyping && (
+          <div className="flex justify-start">
+            <div className="max-w-[75%]">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                {selectedAgent?.color && (
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: selectedAgent.color }} />
+                )}
+                <span className="text-[10px] font-medium text-[var(--bo-text-muted)] font-mono">
+                  {selectedAgent?.name ?? 'Agent'}
+                </span>
+                <span className="text-[9px] px-1 rounded bg-[var(--bo-accent-10)] text-[var(--bo-text-accent)] font-mono">typing</span>
+              </div>
+              <div className="rounded-lg px-3 py-2.5 bg-[var(--bo-bg-bubble)] border border-[var(--bo-border-subtle)] inline-flex items-center gap-1">
+                <span className="typing-dot w-1.5 h-1.5 rounded-full bg-[var(--bo-text-muted)] animate-bounce" style={{ animationDelay: '0ms', animationDuration: '1.2s' }} />
+                <span className="typing-dot w-1.5 h-1.5 rounded-full bg-[var(--bo-text-muted)] animate-bounce" style={{ animationDelay: '200ms', animationDuration: '1.2s' }} />
+                <span className="typing-dot w-1.5 h-1.5 rounded-full bg-[var(--bo-text-muted)] animate-bounce" style={{ animationDelay: '400ms', animationDuration: '1.2s' }} />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Input */}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Pagination, type PaginationMeta } from "@/components/Pagination";
 import {
   AlertTriangle,
   Ban,
@@ -443,18 +444,23 @@ function RecordPaymentDialog({
 export default function InvoicingPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "ALL">(
-    "ALL",
-  );
+  const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "ALL">("ALL");
+  const [page, setPage] = useState(1);
+  const [meta, setMeta] = useState<PaginationMeta>({ page: 1, limit: 20, total: 0, totalPages: 1 });
   const [createOpen, setCreateOpen] = useState(false);
   const [paymentTarget, setPaymentTarget] = useState<Invoice | null>(null);
   const [sending, setSending] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const query = statusFilter !== "ALL" ? `?status=${statusFilter}` : "";
+    setLoading(true);
+    const params = new URLSearchParams({ page: String(page), limit: '20' });
+    if (statusFilter !== "ALL") params.set('status', statusFilter);
     api
-      .get<Invoice[]>(`/api/proxy/erp/invoices${query}`)
-      .then((res) => setInvoices(Array.isArray(res) ? res : (res as any).data ?? []))
+      .get<any>(`/api/proxy/erp/invoices?${params}`)
+      .then((res) => {
+        setInvoices(Array.isArray(res) ? res : res?.data ?? []);
+        if (res?.meta) setMeta(res.meta);
+      })
       .catch((err) =>
         toast({
           title: "Failed to load invoices",
@@ -463,7 +469,9 @@ export default function InvoicingPage() {
         }),
       )
       .finally(() => setLoading(false));
-  }, [statusFilter]);
+  }, [statusFilter, page]);
+
+  useEffect(() => { setPage(1); }, [statusFilter]);
 
   const handleSend = useCallback(async (invoice: Invoice) => {
     setSending((prev) => new Set(prev).add(invoice.id));
@@ -537,7 +545,7 @@ export default function InvoicingPage() {
               <CardTitle>Invoices</CardTitle>
             </div>
             <CardDescription>
-              {invoices.length} invoice{invoices.length !== 1 ? "s" : ""}
+              {meta.total} invoice{meta.total !== 1 ? "s" : ""}
             </CardDescription>
           </div>
           <Button size="sm" onClick={() => setCreateOpen(true)}>

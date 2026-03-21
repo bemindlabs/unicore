@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Pencil, Plus, Search, Trash2, Users } from "lucide-react";
+import { Pagination, type PaginationMeta } from "@/components/Pagination";
 import {
   Button,
   Card,
@@ -332,14 +333,22 @@ export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [meta, setMeta] = useState<PaginationMeta>({ page: 1, limit: 20, total: 0, totalPages: 1 });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Contact | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Contact | null>(null);
 
-  useEffect(() => {
+  const fetchContacts = useCallback(() => {
+    setLoading(true);
+    const params = new URLSearchParams({ page: String(page), limit: '20' });
+    if (search.trim()) params.set('search', search.trim());
     api
-      .get<Contact[]>("/api/proxy/erp/contacts")
-      .then((res) => setContacts(Array.isArray(res) ? res : (res as any).data ?? []))
+      .get<any>(`/api/proxy/erp/contacts?${params}`)
+      .then((res) => {
+        setContacts(Array.isArray(res) ? res : res?.data ?? []);
+        if (res?.meta) setMeta(res.meta);
+      })
       .catch((err) =>
         toast({
           title: "Failed to load contacts",
@@ -348,16 +357,12 @@ export default function ContactsPage() {
         }),
       )
       .finally(() => setLoading(false));
-  }, []);
+  }, [page, search]);
 
-  const filtered = contacts.filter((c) => {
-    const q = search.toLowerCase();
-    return (
-      c.name.toLowerCase().includes(q) ||
-      c.email.toLowerCase().includes(q) ||
-      (c.company ?? "").toLowerCase().includes(q)
-    );
-  });
+  useEffect(() => { fetchContacts(); }, [fetchContacts]);
+
+  // Reset to page 1 when search changes
+  useEffect(() => { setPage(1); }, [search]);
 
   const handleSaved = useCallback((saved: Contact) => {
     setContacts((prev) => {
@@ -390,7 +395,7 @@ export default function ContactsPage() {
               <CardTitle>Contacts</CardTitle>
             </div>
             <CardDescription>
-              {contacts.length} contact{contacts.length !== 1 ? "s" : ""}
+              {meta.total} contact{meta.total !== 1 ? "s" : ""}
             </CardDescription>
           </div>
           <Button size="sm" onClick={openCreate}>
@@ -414,7 +419,7 @@ export default function ContactsPage() {
             <div className="flex h-32 items-center justify-center text-muted-foreground text-sm">
               Loading…
             </div>
-          ) : filtered.length === 0 ? (
+          ) : contacts.length === 0 ? (
             <div className="flex h-32 items-center justify-center rounded-lg border border-dashed text-muted-foreground text-sm">
               {search
                 ? "No contacts match your search."
@@ -434,7 +439,7 @@ export default function ContactsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map((contact) => (
+                  {contacts.map((contact) => (
                     <TableRow key={contact.id}>
                       <TableCell className="font-medium">
                         {contact.name}
@@ -478,6 +483,7 @@ export default function ContactsPage() {
               </Table>
             </div>
           )}
+          <Pagination meta={meta} onPageChange={setPage} />
         </CardContent>
       </Card>
 

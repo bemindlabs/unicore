@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Pagination, type PaginationMeta } from "@/components/Pagination";
 import {
   CheckCircle2,
   Clock,
@@ -394,15 +395,22 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "ALL">("ALL");
+  const [page, setPage] = useState(1);
+  const [meta, setMeta] = useState<PaginationMeta>({ page: 1, limit: 20, total: 0, totalPages: 1 });
   const [createOpen, setCreateOpen] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
   const [transitioning, setTransitioning] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const query = statusFilter !== "ALL" ? `?status=${statusFilter}` : "";
+    setLoading(true);
+    const params = new URLSearchParams({ page: String(page), limit: '20' });
+    if (statusFilter !== "ALL") params.set('status', statusFilter);
     api
-      .get<Order[]>(`/api/proxy/erp/orders${query}`)
-      .then((res) => setOrders(Array.isArray(res) ? res : (res as any).data ?? []))
+      .get<any>(`/api/proxy/erp/orders?${params}`)
+      .then((res) => {
+        setOrders(Array.isArray(res) ? res : res?.data ?? []);
+        if (res?.meta) setMeta(res.meta);
+      })
       .catch((err) =>
         toast({
           title: "Failed to load orders",
@@ -411,7 +419,9 @@ export default function OrdersPage() {
         }),
       )
       .finally(() => setLoading(false));
-  }, [statusFilter]);
+  }, [statusFilter, page]);
+
+  useEffect(() => { setPage(1); }, [statusFilter]);
 
   const handleTransition = useCallback(async (order: Order, action: string) => {
     setTransitioning((prev) => new Set(prev).add(order.id));
@@ -464,7 +474,7 @@ export default function OrdersPage() {
               <CardTitle>Orders</CardTitle>
             </div>
             <CardDescription>
-              {orders.length} order{orders.length !== 1 ? "s" : ""}
+              {meta.total} order{meta.total !== 1 ? "s" : ""}
             </CardDescription>
           </div>
           <Button size="sm" onClick={() => setCreateOpen(true)}>
@@ -578,6 +588,7 @@ export default function OrdersPage() {
               </Table>
             </div>
           )}
+          <Pagination meta={meta} onPageChange={setPage} />
         </CardContent>
       </Card>
 

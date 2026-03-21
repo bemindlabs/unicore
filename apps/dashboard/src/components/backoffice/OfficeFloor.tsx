@@ -14,11 +14,69 @@ interface Props {
 const MAP_WIDTH = 1000;
 const MAP_HEIGHT = 600;
 
-function getRandomPos(rect: { x: number, y: number, w: number, h: number }) {
-  return {
-    x: rect.x + 20 + Math.random() * (rect.w - 40),
-    y: rect.y + 30 + Math.random() * (rect.h - 60),
-  };
+// --- Collision Engine --- //
+const COLLISION_RECTS: Record<number, {x: number, y: number, w: number, h: number}[]> = {
+  3: [
+    { x: 100, y: 220, w: 280, h: 150 }, // Conf table
+    { x: 480, y: 60, w: 320, h: 480 },  // Beds
+  ],
+  2: [
+    { x: 210, y: 216, w: 440, h: 168 }, // Console Desk
+    { x: 226, y: 68, w: 408, h: 136 },  // Servers
+    { x: 104, y: 412, w: 652, h: 128 }, // Showroom classes
+  ],
+  1: [
+    { x: 80, y: 100, w: 380, h: 80 },   // Desks Row 1
+    { x: 80, y: 260, w: 380, h: 80 },   // Desks Row 2
+    { x: 80, y: 420, w: 380, h: 80 },   // Desks Row 3
+    { x: 554, y: 216, w: 232, h: 168 }, // Coffee Shop Center
+  ]
+};
+
+function checkCollision(x: number, y: number, floor: number): boolean {
+  const rects = COLLISION_RECTS[floor] || [];
+  const padding = 15;
+  for (const r of rects) {
+    if (x + padding > r.x && x - padding < r.x + r.w &&
+        y + padding > r.y && y - padding < r.y + r.h) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function checkLineCollision(x1: number, y1: number, x2: number, y2: number, floor: number): boolean {
+  const rects = COLLISION_RECTS[floor] || [];
+  if (rects.length === 0) return false;
+  
+  const dist = Math.hypot(x2 - x1, y2 - y1);
+  const steps = Math.max(1, Math.floor(dist / 15));
+  for (let i = 0; i <= steps; i++) {
+     const t = i / steps;
+     const px = x1 + (x2 - x1) * t;
+     const py = y1 + (y2 - y1) * t;
+     if (checkCollision(px, py, floor)) return true;
+  }
+  return false;
+}
+
+function getValidRandomPos(zone: { x: number, y: number, w: number, h: number, floor: number }, startX?: number, startY?: number) {
+  for (let i = 0; i < 40; i++) {
+    const p = {
+      x: zone.x + 20 + Math.random() * (zone.w - 40),
+      y: zone.y + 30 + Math.random() * (zone.h - 60),
+    };
+    if (!checkCollision(p.x, p.y, zone.floor)) {
+      if (startX !== undefined && startY !== undefined) {
+         if (!checkLineCollision(startX, startY, p.x, p.y, zone.floor)) {
+            return p;
+         }
+      } else {
+         return p;
+      }
+    }
+  }
+  return { x: startX ?? zone.x + 20, y: startY ?? zone.y + 30 }; // Fallback to current pos
 }
 
 /* --- Pixel Art Decor Props --- */
@@ -213,20 +271,51 @@ function AgentCommandDialog({ agent, onClose }: { agent: BackofficeAgent, onClos
   );
 }
 
-function AgentSpeechBubble({ agent }: { agent: BackofficeAgent }) {
+function AgentSpeechBubble({ agent, autonomyEnabled, autonomyInterval, onMoveRequested }: { agent: BackofficeAgent, autonomyEnabled: boolean, autonomyInterval: number, onMoveRequested: (id: string, zone: string) => void }) {
   const [bubbleText, setBubbleText] = useState<string | null>(null);
   const channel = commandChannel(agent.id);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  useChatWebSocket(channel, (msg) => {
-    if (msg.authorId !== 'human-user') {
+  const { connected, send } = useChatWebSocket(channel, (msg) => {
+    if (msg.authorId !== 'human-user' && msg.authorId !== 'system') {
       let text = msg.text;
+      
+      // Phase 3: Spatial Autonomy Extraction
+      const lower = text.toLowerCase();
+      let targetZone: string | null = null;
+      if (lower.includes('coffee') || lower.includes('drink')) targetZone = 'shop';
+      else if (lower.includes('server') || lower.includes('data')) targetZone = 'main-office';
+      else if (lower.includes('meet') || lower.includes('conf')) targetZone = 'conference';
+      else if (lower.includes('sleep') || lower.includes('bed')) targetZone = 'bedroom';
+      else if (lower.includes('desk') || lower.includes('work')) targetZone = 'standalone';
+      
+      if (targetZone) {
+         onMoveRequested(agent.id, targetZone);
+      }
+      
       if (text.length > 45) text = text.slice(0, 42) + '...';
       setBubbleText(text);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => setBubbleText(null), 6000);
     }
   });
+
+  // LLM Autonomy Interval System Hook
+  useEffect(() => {
+    if (!autonomyEnabled || !connected) return;
+    const sysPrompt = "SYSTEM TASK: You have 60 seconds of free time in the 2D HQ limit 1 short sentence. Describe what you're doing. Mention if getting 'coffee', checking 'servers', joining 'meeting', going to 'sleep', or to 'desk'.";
+    
+    // Random stagger start to prevent API thundering herds
+    const staggerMs = Math.random() * 5000;
+    const id = setTimeout(() => {
+       send(sysPrompt, 'System', 'system', 'agent');
+       setInterval(() => {
+         send(sysPrompt, 'System', 'system', 'agent');
+       }, autonomyInterval * 1000);
+    }, staggerMs);
+    
+    return () => clearInterval(id as unknown as number);
+  }, [autonomyEnabled, connected, autonomyInterval, send]);
 
   if (!bubbleText) return null;
 
@@ -241,6 +330,9 @@ function AgentSpeechBubble({ agent }: { agent: BackofficeAgent }) {
 
 export function OfficeFloor({ agents, onSelectAgent }: Props) {
   const [currentFloor, setCurrentFloor] = useState<number>(1);
+  const [showSettings, setShowSettings] = useState(false);
+  const [autonomyEnabled, setAutonomyEnabled] = useState(false);
+  const [autonomyInterval, setAutonomyInterval] = useState(60);
 
   // Redefine zones to take up whole maps based on floor
   const zones = useMemo(() => ({
@@ -294,7 +386,7 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
           let zoneName = a.room || 'standalone';
           if (a.status === 'offline') zoneName = 'bedroom';
           const zone = zones[zoneName as keyof typeof zones] || zones['standalone'];
-          p[a.id] = getRandomPos(zone);
+          p[a.id] = getValidRandomPos(zone);
           changed = true;
         }
       });
@@ -302,6 +394,9 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
     });
 
     const id = setInterval(() => {
+      // If Autonomy is enabled, we pause the generic random walk and let the LLM dictate targets
+      if (autonomyEnabled) return;
+      
       setPositions(prev => {
         const next = { ...prev };
         agents.forEach(a => {
@@ -312,7 +407,9 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
             let zoneName = a.room || 'standalone';
             if (a.status === 'offline') zoneName = 'bedroom';
             const zone = zones[zoneName as keyof typeof zones] || zones['standalone'];
-            next[a.id] = getRandomPos(zone);
+            
+            const cur = prev[a.id];
+            next[a.id] = getValidRandomPos(zone, cur?.x, cur?.y);
           }
         });
         return next;
@@ -320,59 +417,125 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
     }, 4500);
 
     return () => clearInterval(id);
-  }, [agents, zones]);
+  }, [agents, zones, autonomyEnabled]);
 
-  // WASD Manual Driving Control
+  // Handler for LLM Autonomy assigning a new zone target
+  const handleLLMMovement = (agentId: string, targetZone: string) => {
+      const zone = zones[targetZone as keyof typeof zones] || zones['standalone'];
+      setPositions(prev => ({
+         ...prev,
+         [agentId]: getValidRandomPos(zone)
+      }));
+  };
+
+  // WASD Vector Physics Engine
+  const agentsRef = useRef(agents);
+  useEffect(() => { agentsRef.current = agents; }, [agents]);
+
+  const keys = useRef({ w: false, a: false, s: false, d: false });
+  const vel = useRef({ x: 0, y: 0 });
+
   useEffect(() => {
-    if (!selectedAgentToMove) return;
+    if (!selectedAgentToMove) {
+      keys.current = { w: false, a: false, s: false, d: false };
+      vel.current = { x: 0, y: 0 };
+      return;
+    }
+
+    const MAX_SPEED = 5;
+    const ACCEL = 0.6;
+    const FRICTION = 0.85;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
-
-      setPositions(prev => {
-        const current = prev[selectedAgentToMove];
-        if (!current) return prev;
-        
-        let { x, y } = current;
-        const step = 40; // Pixels per key press
-
-        switch(e.key.toLowerCase()) {
-          case 'w':
-          case 'arrowup':
-             y -= step; break;
-          case 's':
-          case 'arrowdown':
-             y += step; break;
-          case 'a':
-          case 'arrowleft':
-             x -= step; break;
-          case 'd':
-          case 'arrowright':
-             x += step; break;
-          case 'escape':
-             setSelectedAgentToMove(null);
-             return prev;
-          default:
-             return prev;
-        }
-
-        // Clamp to map boundaries
-        x = Math.max(20, Math.min(x, MAP_WIDTH - 60));
-        y = Math.max(20, Math.min(y, MAP_HEIGHT - 80));
-
-        // Extend their manual lock timer to suppress AI wander logic while being driven
-        setManualPosLocks(locks => ({ ...locks, [selectedAgentToMove]: Date.now() + 30000 }));
-        return { ...prev, [selectedAgentToMove]: { x, y } };
-      });
+      const key = e.key.toLowerCase();
+      if (key === 'w' || key === 'arrowup') keys.current.w = true;
+      if (key === 's' || key === 'arrowdown') keys.current.s = true;
+      if (key === 'a' || key === 'arrowleft') keys.current.a = true;
+      if (key === 'd' || key === 'arrowright') keys.current.d = true;
+      if (key === 'escape') setSelectedAgentToMove(null);
       
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd'].includes(e.key) || e.key.toLowerCase() === 'w') {
+      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd'].includes(key)) {
         e.preventDefault();
       }
+      setManualPosLocks(locks => ({ ...locks, [selectedAgentToMove]: Date.now() + 30000 }));
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      if (key === 'w' || key === 'arrowup') keys.current.w = false;
+      if (key === 's' || key === 'arrowdown') keys.current.s = false;
+      if (key === 'a' || key === 'arrowleft') keys.current.a = false;
+      if (key === 'd' || key === 'arrowright') keys.current.d = false;
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedAgentToMove]);
+    window.addEventListener('keyup', handleKeyUp);
+
+    let frameId: number;
+    const loop = () => {
+      if (keys.current.w) vel.current.y -= ACCEL;
+      if (keys.current.s) vel.current.y += ACCEL;
+      if (keys.current.a) vel.current.x -= ACCEL;
+      if (keys.current.d) vel.current.x += ACCEL;
+
+      const speed = Math.hypot(vel.current.x, vel.current.y);
+      if (speed > MAX_SPEED) {
+        vel.current.x = (vel.current.x / speed) * MAX_SPEED;
+        vel.current.y = (vel.current.y / speed) * MAX_SPEED;
+      }
+
+      if (!keys.current.w && !keys.current.s) vel.current.y *= FRICTION;
+      if (!keys.current.a && !keys.current.d) vel.current.x *= FRICTION;
+      
+      if (Math.abs(vel.current.x) < 0.1) vel.current.x = 0;
+      if (Math.abs(vel.current.y) < 0.1) vel.current.y = 0;
+
+      if (vel.current.x !== 0 || vel.current.y !== 0) {
+        setPositions(prev => {
+          const current = prev[selectedAgentToMove];
+          if (!current) return prev;
+          
+          let newX = current.x + vel.current.x;
+          let newY = current.y + vel.current.y;
+          
+          newX = Math.max(20, Math.min(newX, MAP_WIDTH - 60));
+          newY = Math.max(20, Math.min(newY, MAP_HEIGHT - 80));
+
+          const agentObj = agentsRef.current.find(a => a.id === selectedAgentToMove);
+          let zName = agentObj?.room || 'standalone';
+          if (agentObj?.status === 'offline') zName = 'bedroom';
+          const floorId = zones[zName as keyof typeof zones]?.floor || 1;
+
+          if (!checkCollision(newX, newY, floorId)) {
+             // Free to move
+          } else if (!checkCollision(newX, current.y, floorId)) {
+             newY = current.y;
+             vel.current.y = 0;
+          } else if (!checkCollision(current.x, newY, floorId)) {
+             newX = current.x;
+             vel.current.x = 0;
+          } else {
+             newX = current.x;
+             newY = current.y;
+             vel.current.x = 0;
+             vel.current.y = 0;
+          }
+
+          return { ...prev, [selectedAgentToMove]: { x: newX, y: newY } };
+        });
+      }
+      frameId = requestAnimationFrame(loop);
+    };
+    
+    frameId = requestAnimationFrame(loop);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      cancelAnimationFrame(frameId);
+    };
+  }, [selectedAgentToMove, zones]);
 
   const handleFloorClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!selectedAgentToMove) return;
@@ -468,15 +631,51 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
             {floors.find(f => f.id === currentFloor)?.name ?? ''} : OPENCLAW HQ
           </div>
 
+          {/* Configuration Settings Gear */}
+          <button 
+             onClick={() => setShowSettings(true)}
+             className="absolute bottom-4 left-4 w-10 h-10 border-2 shadow-md bg-[var(--retrodesk-surface)] hover:bg-[var(--retrodesk-blue)] hover:text-white transition-colors flex items-center justify-center z-20 pointer-events-auto"
+             style={{ borderColor: 'var(--retrodesk-border)', color: 'var(--retrodesk-border)' }}
+          >
+             <span className="text-[18px] font-mono leading-none">⚙</span>
+          </button>
+
+          {showSettings && (
+             <div className="absolute inset-x-0 bottom-0 top-auto mx-auto w-96 mb-20 bg-[var(--retrodesk-surface)] border-[6px] shadow-2xl p-6 z-[200] animate-in slide-in-from-bottom" style={{ borderColor: 'var(--retrodesk-border)' }}>
+               <div className="border-b-4 pb-2 mb-4 flex justify-between items-center" style={{ borderColor: 'var(--retrodesk-border)' }}>
+                 <h2 className="font-mono text-[14px] font-black tracking-widest uppercase text-[var(--retrodesk-text)]">Map Directives</h2>
+                 <button onClick={() => setShowSettings(false)} className="text-[14px] font-bold hover:text-red-500">X</button>
+               </div>
+               
+               <div className="flex flex-col gap-6">
+                 <div className="flex items-center justify-between">
+                   <div className="flex flex-col">
+                     <span className="font-mono text-[10px] font-bold uppercase" style={{ color: 'var(--retrodesk-blue)' }}>LLM Spatial Autonomy</span>
+                     <span className="font-mono text-[8px] opacity-70">Allow OpenClaw AI to drive characters.</span>
+                   </div>
+                   <input type="checkbox" checked={autonomyEnabled} onChange={(e) => setAutonomyEnabled(e.target.checked)} className="w-5 h-5 cursor-pointer accent-blue-500" />
+                 </div>
+                 
+                 <div className="flex flex-col gap-2">
+                   <div className="flex justify-between items-center">
+                      <span className="font-mono text-[10px] font-bold uppercase" style={{ color: 'var(--retrodesk-orange)' }}>Think Interval (Sec)</span>
+                      <span className="font-mono text-[12px] font-black">{autonomyInterval}s</span>
+                   </div>
+                   <input type="range" min={10} max={120} step={10} value={autonomyInterval} onChange={(e) => setAutonomyInterval(Number(e.target.value))} className="w-full cursor-pointer" disabled={!autonomyEnabled} />
+                 </div>
+               </div>
+             </div>
+          )}
+
           {/* === FLOOR 3 (Exec & Bedroom) === */}
           {currentFloor === 3 && (
             <>
               {/* Conference Room Zone */}
-              <div className="absolute border-[6px] animate-in fade-in duration-500" style={{ background: 'var(--retrodesk-surface)', left: zones['conference'].x, top: zones['conference'].y, width: zones['conference'].w, height: zones['conference'].h, borderColor: 'var(--retrodesk-blue)' }}>
+              <div className="absolute border-[6px]" style={{ background: 'var(--retrodesk-surface)', left: zones['conference'].x, top: zones['conference'].y, width: zones['conference'].w, height: zones['conference'].h, borderColor: 'var(--retrodesk-blue)' }}>
                 <div className="absolute inset-4 border-2 border-[var(--retrodesk-border)] opacity-40 mix-blend-multiply" style={{ background: 'repeating-radial-gradient(circle at 0 0, transparent 0, var(--retrodesk-blue) 10px), repeating-linear-gradient(var(--retrodesk-blue), var(--retrodesk-blue))' }} />
                 <div className="absolute -top-4 left-6 px-3 py-0.5 border-[3px] text-[10px] text-[var(--retrodesk-blue)] font-bold tracking-widest uppercase font-mono shadow-sm" style={{ background: 'var(--retrodesk-surface)', borderColor: 'var(--retrodesk-blue)' }}>Conference</div>
                 
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-32 rounded-full border-[6px] shadow-xl flex items-center justify-center" style={{ background: 'var(--retrodesk-yellow)', borderColor: 'var(--retrodesk-border)' }}>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-32 rounded-full border-[6px] shadow-xl flex items-center justify-center" style={{ background: 'var(--retrodesk-yellow)', borderColor: 'var(--retrodesk-border)', zIndex: 370 }}>
                   <div className="w-52 h-20 rounded-full border-2 border-dashed opacity-50" style={{ borderColor: 'var(--retrodesk-text)' }} />
                 </div>
                 
@@ -485,11 +684,11 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
               </div>
 
               {/* Bedroom Zone */}
-              <div className="absolute border-[6px] animate-in fade-in duration-500" style={{ background: 'var(--retrodesk-surface)', left: zones['bedroom'].x, top: zones['bedroom'].y, width: zones['bedroom'].w, height: zones['bedroom'].h, borderColor: 'var(--retrodesk-orange)' }}>
+              <div className="absolute border-[6px]" style={{ background: 'var(--retrodesk-surface)', left: zones['bedroom'].x, top: zones['bedroom'].y, width: zones['bedroom'].w, height: zones['bedroom'].h, borderColor: 'var(--retrodesk-orange)' }}>
                 <div className="absolute inset-3 border-2 border-[var(--retrodesk-border)] opacity-10 mix-blend-multiply" style={{ background: 'repeating-radial-gradient(circle at 10px 10px, var(--retrodesk-orange) 0, transparent 2px)', backgroundSize: '20px 20px' }} />
                 <div className="absolute -top-4 right-6 px-3 py-0.5 border-[3px] text-[10px] text-[var(--retrodesk-orange)] font-bold tracking-widest uppercase font-mono shadow-sm" style={{ background: 'var(--retrodesk-surface)', borderColor: 'var(--retrodesk-orange)' }}>Bedroom</div>
                 
-                <div className="grid grid-cols-2 grid-rows-2 gap-12 py-16 px-16 h-full w-full items-center justify-items-center z-10">
+                <div className="grid grid-cols-2 grid-rows-2 gap-12 py-16 px-16 h-full w-full items-center justify-items-center" style={{ zIndex: 400 }}>
                   {Array.from({ length: 4 }).map((_, i) => (
                     <PixelBed key={i} />
                   ))}
@@ -502,12 +701,12 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
           {currentFloor === 2 && (
             <>
               {/* Command Center Zone */}
-              <div className="absolute border-[6px] animate-in fade-in duration-500" style={{ background: 'var(--retrodesk-surface)', left: zones['main-office'].x, top: zones['main-office'].y, width: zones['main-office'].w, height: zones['main-office'].h, borderColor: 'var(--retrodesk-pink)' }}>
+              <div className="absolute border-[6px]" style={{ background: 'var(--retrodesk-surface)', left: zones['main-office'].x, top: zones['main-office'].y, width: zones['main-office'].w, height: zones['main-office'].h, borderColor: 'var(--retrodesk-pink)' }}>
                 <div className="absolute inset-4 border-2 border-[var(--retrodesk-border)] opacity-30 mix-blend-multiply" style={{ background: 'repeating-linear-gradient(45deg, transparent, transparent 10px, var(--retrodesk-pink) 10px, var(--retrodesk-pink) 20px)' }} />
                 <div className="absolute -top-4 left-6 px-3 py-0.5 border-[3px] text-[10px] text-[var(--retrodesk-pink)] font-bold tracking-widest uppercase font-mono shadow-sm" style={{ background: 'var(--retrodesk-surface)', borderColor: 'var(--retrodesk-pink)' }}>Command Center</div>
                 
                 {/* Giant Console Desk */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-32 border-[6px] flex justify-between px-8 py-4 shadow-2xl items-center" style={{ background: 'var(--retrodesk-blue)', borderColor: 'var(--retrodesk-border)' }}>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-32 border-[6px] flex justify-between px-8 py-4 shadow-2xl items-center" style={{ background: 'var(--retrodesk-blue)', borderColor: 'var(--retrodesk-border)', zIndex: 384 }}>
                   <div className="w-20 h-10 border-[3px] shadow-lg relative overflow-hidden" style={{ background: 'var(--retrodesk-bg)', borderColor: 'var(--retrodesk-border)' }}>
                     <div className="absolute inset-0.5 bg-[var(--retrodesk-text)] flex flex-col justify-between p-0.5 opacity-80">
                         <div className="w-full h-1.5 bg-green-400" /><div className="w-2/3 h-1.5 bg-cyan-400" /><div className="w-full h-1.5 bg-green-400" />
@@ -529,12 +728,12 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
                 </div>
                 
                 {/* Server Banks */}
-                <div className="absolute top-12 left-1/2 -translate-x-1/2 flex gap-4">
+                <div className="absolute top-12 left-1/2 -translate-x-1/2 flex gap-4" style={{ zIndex: 204 }}>
                   {Array.from({ length: 6 }).map((_, i) => <PixelServerRack key={i} />)}
                 </div>
                 
                 {/* Character Class Showroom */}
-                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-5 bg-black/10 p-4 pt-6 border-[4px] shadow-2xl" style={{ borderColor: 'var(--retrodesk-border)' }}>
+                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-5 bg-black/10 p-4 pt-6 border-[4px] shadow-2xl" style={{ borderColor: 'var(--retrodesk-border)', zIndex: 540 }}>
                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 border-[3px] shadow-sm uppercase font-mono text-[10px] tracking-widest font-bold" style={{ background: 'var(--retrodesk-surface)', borderColor: 'var(--retrodesk-border)', color: 'var(--retrodesk-text)' }}>AGENT CLASSES</div>
                    <PixelDisplayPodium label="Human" styleId={0} />
                    <PixelDisplayPodium label="Robot" styleId={1} />
@@ -544,8 +743,8 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
                    <PixelDisplayPodium label="Cyber" styleId={5} />
                 </div>
                 
-                <div className="absolute top-12 left-12"><PixelVendingMachine /></div>
-                <div className="absolute top-12 left-28"><PixelVendingMachine /></div>
+                <div className="absolute top-12 left-12" style={{ zIndex: 120 }}><PixelVendingMachine /></div>
+                <div className="absolute top-12 left-28" style={{ zIndex: 120 }}><PixelVendingMachine /></div>
               </div>
             </>
           )}
@@ -554,28 +753,28 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
           {currentFloor === 1 && (
             <>
               {/* Workstations Zone */}
-              <div className="absolute border-[6px] animate-in fade-in duration-500" style={{ background: 'var(--retrodesk-surface)', left: zones['standalone'].x, top: zones['standalone'].y, width: zones['standalone'].w, height: zones['standalone'].h, borderColor: 'var(--retrodesk-green)' }}>
+              <div className="absolute border-[6px]" style={{ background: 'var(--retrodesk-surface)', left: zones['standalone'].x, top: zones['standalone'].y, width: zones['standalone'].w, height: zones['standalone'].h, borderColor: 'var(--retrodesk-green)' }}>
                 <div className="absolute inset-4 border-2 border-[var(--retrodesk-border)] opacity-20 mix-blend-multiply" style={{ background: 'radial-gradient(circle, var(--retrodesk-green) 20%, transparent 20%), radial-gradient(circle, transparent 20%, var(--retrodesk-green) 20%, transparent 30%)', backgroundSize: '20px 20px' }} />
                 <div className="absolute -top-4 left-6 px-3 py-0.5 border-[3px] text-[10px] text-[var(--retrodesk-green)] font-bold tracking-widest uppercase font-mono shadow-sm" style={{ background: 'var(--retrodesk-surface)', borderColor: 'var(--retrodesk-green)' }}>Workstations</div>
                 
                 {/* Desks grid massive */}
-                <div className="grid grid-cols-2 grid-rows-3 gap-x-12 gap-y-16 py-16 px-12 h-full w-full items-center justify-items-center z-10">
+                <div className="grid grid-cols-2 grid-rows-3 gap-x-12 gap-y-16 py-16 px-12 h-full w-full items-center justify-items-center" style={{ zIndex: 500 }}>
                   {Array.from({ length: 6 }).map((_, i) => (
                     <PixelComputerDesk key={i} />
                   ))}
                 </div>
                 
-                <div className="absolute right-8 top-8"><PixelBookshelf /></div>
+                <div className="absolute right-8 top-8" style={{ zIndex: 120 }}><PixelBookshelf /></div>
               </div>
 
               {/* Shop / Cafe Zone */}
-              <div className="absolute border-[6px] animate-in fade-in duration-500" style={{ background: 'var(--retrodesk-surface)', left: zones['shop'].x, top: zones['shop'].y, width: zones['shop'].w, height: zones['shop'].h, borderColor: 'var(--retrodesk-orange)' }}>
+              <div className="absolute border-[6px]" style={{ background: 'var(--retrodesk-surface)', left: zones['shop'].x, top: zones['shop'].y, width: zones['shop'].w, height: zones['shop'].h, borderColor: 'var(--retrodesk-orange)' }}>
                 <div className="absolute inset-4 border-2 border-[var(--retrodesk-border)] opacity-20 mix-blend-multiply" style={{ background: 'repeating-linear-gradient(90deg, transparent, transparent 10px, var(--retrodesk-orange) 10px, var(--retrodesk-orange) 20px)' }} />
                 <div className="absolute -top-4 left-6 px-3 py-0.5 border-[3px] text-[10px] text-[var(--retrodesk-orange)] font-bold tracking-widest uppercase font-mono shadow-sm" style={{ background: 'var(--retrodesk-surface)', borderColor: 'var(--retrodesk-orange)' }}>Coffee Shop</div>
                 
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10"><PixelCoffeeShop /></div>
-                <div className="absolute bottom-8 left-8"><PixelVendingMachine /></div>
-                <div className="absolute top-12 right-12"><PixelFlowerDeco /></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style={{ zIndex: 384 }}><PixelCoffeeShop /></div>
+                <div className="absolute bottom-8 left-8" style={{ zIndex: 500 }}><PixelVendingMachine /></div>
+                <div className="absolute top-12 right-12" style={{ zIndex: 120 }}><PixelFlowerDeco /></div>
               </div>
             </>
           )}
@@ -600,16 +799,16 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
                   e.stopPropagation();
                   onSelectAgent(agent);
                 }}
-                className={`absolute group transition-all transform hover:scale-125 focus:outline-none z-30 animate-in zoom-in duration-300 ${isSelectedForMove ? 'scale-125 z-40' : ''}`}
+                className={`absolute group transition-transform focus:outline-none animate-in zoom-in duration-300 ${isSelectedForMove ? 'scale-125' : ''}`}
                 style={{
                   left: pos.x,
                   top: pos.y,
-                  transitionDuration: isSelectedForMove ? '150ms' : '2500ms',
-                  transitionTimingFunction: isSelectedForMove ? 'linear' : 'cubic-bezier(0.4, 0, 0.2, 1)'
+                  zIndex: Math.floor(pos.y + 60),
+                  transition: isSelectedForMove ? 'none' : 'left 2000ms cubic-bezier(0.4, 0, 0.2, 1), top 2000ms cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
               >
                 <div className="flex flex-col items-center gap-1 drop-shadow-xl relative">
-                  <AgentSpeechBubble agent={agent} />
+                  <AgentSpeechBubble agent={agent} autonomyEnabled={autonomyEnabled} autonomyInterval={autonomyInterval} onMoveRequested={handleLLMMovement} />
                   
                   {isSelectedForMove && (
                      <>
