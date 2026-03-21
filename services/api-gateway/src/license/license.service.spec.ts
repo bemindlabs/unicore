@@ -120,16 +120,16 @@ describe('LicenseService', () => {
       expect(await service.hasFeature('whiteLabelBranding')).toBe(false);
     });
 
-    it('sets nextRevalidationAt approximately one week in the future', async () => {
+    it('sets nextRevalidationAt approximately one day in the future', async () => {
       const before = Date.now();
       const status = await service.getLicenseStatus();
       const after = Date.now();
 
-      const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
+      const oneDayMs = 24 * 60 * 60 * 1000;
       const revalMs = status.nextRevalidationAt.getTime();
 
-      expect(revalMs).toBeGreaterThanOrEqual(before + oneWeekMs);
-      expect(revalMs).toBeLessThanOrEqual(after + oneWeekMs);
+      expect(revalMs).toBeGreaterThanOrEqual(before + oneDayMs);
+      expect(revalMs).toBeLessThanOrEqual(after + oneDayMs);
     });
   });
 
