@@ -24,10 +24,10 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
       <SheetContent side="left" className="w-64 p-0 flex flex-col h-full">
         <SheetHeader className="border-b px-4 py-3 shrink-0">
           <SheetTitle className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground text-xs font-bold">
-              U
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground text-xs font-bold" data-unicore-branding>
+              {appName[0] ?? 'U'}
             </div>
-            <span className="text-base font-semibold">UniCore</span>
+            <span className="text-base font-semibold" data-unicore-branding>{appName}</span>
           </SheetTitle>
         </SheetHeader>
         <nav className="flex-1 min-h-0 overflow-y-auto px-2 py-3">
