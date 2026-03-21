@@ -4,8 +4,14 @@ import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { TokenBlacklistService } from './token-blacklist.service';
 
 jest.mock('bcryptjs');
+
+const mockTokenBlacklistService = {
+  blacklist: jest.fn().mockResolvedValue(undefined),
+  isBlacklisted: jest.fn().mockResolvedValue(false),
+};
 
 const mockPrismaService = {
   user: {
@@ -33,6 +39,7 @@ describe('AuthService', () => {
         AuthService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: JwtService, useValue: mockJwtService },
+        { provide: TokenBlacklistService, useValue: mockTokenBlacklistService },
       ],
     }).compile();
 

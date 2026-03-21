@@ -35,7 +35,7 @@ export function decrypt(encoded: string): string {
   const tag = buf.subarray(SALT_LEN + IV_LEN, SALT_LEN + IV_LEN + TAG_LEN);
   const ciphertext = buf.subarray(SALT_LEN + IV_LEN + TAG_LEN);
   const key = deriveKey(salt);
-  const decipher = createDecipheriv(ALGO, key, iv);
+  const decipher = createDecipheriv(ALGO, key, iv, { authTagLength: TAG_LEN });
   decipher.setAuthTag(tag);
   return decipher.update(ciphertext) + decipher.final('utf8');
 }

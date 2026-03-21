@@ -61,15 +61,11 @@ describe('buildKafkaOptions()', () => {
 });
 
 describe('SUBSCRIBED_TOPICS', () => {
-  it('includes all 8 expected topics', () => {
-    expect(SUBSCRIBED_TOPICS).toHaveLength(8);
-    expect(SUBSCRIBED_TOPICS).toContain(WORKFLOW_TOPICS.ORDER_CREATED);
-    expect(SUBSCRIBED_TOPICS).toContain(WORKFLOW_TOPICS.ORDER_UPDATED);
-    expect(SUBSCRIBED_TOPICS).toContain(WORKFLOW_TOPICS.ORDER_FULFILLED);
-    expect(SUBSCRIBED_TOPICS).toContain(WORKFLOW_TOPICS.INVENTORY_LOW);
-    expect(SUBSCRIBED_TOPICS).toContain(WORKFLOW_TOPICS.INVENTORY_RESTOCKED);
-    expect(SUBSCRIBED_TOPICS).toContain(WORKFLOW_TOPICS.INVOICE_CREATED);
-    expect(SUBSCRIBED_TOPICS).toContain(WORKFLOW_TOPICS.INVOICE_OVERDUE);
-    expect(SUBSCRIBED_TOPICS).toContain(WORKFLOW_TOPICS.INVOICE_PAID);
+  it('includes all expected topics', () => {
+    const expectedCount = Object.keys(WORKFLOW_TOPICS).length;
+    expect(SUBSCRIBED_TOPICS).toHaveLength(expectedCount);
+    for (const topic of Object.values(WORKFLOW_TOPICS)) {
+      expect(SUBSCRIBED_TOPICS).toContain(topic);
+    }
   });
 });

@@ -12,7 +12,6 @@ const tsJestDir = resolve(
 const config = {
   testEnvironment: 'node',
   testMatch: ['**/__tests__/**/*.test.ts', '**/__tests__/**/*.test.tsx'],
-  extensionsToTreatAsEsm: ['.ts', '.tsx'],
   moduleNameMapper: {
     '^@/(.*)$': `${__dirname}/src/$1`,
     '^(\\.{1,2}/.*)\\.js$': '$1',
@@ -22,7 +21,7 @@ const config = {
     '^.+\\.tsx?$': [
       tsJestDir,
       {
-        useESM: true,
+        useESM: false,
         tsconfig: {
           module: 'ESNext',
           moduleResolution: 'bundler',

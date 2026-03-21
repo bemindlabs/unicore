@@ -1,14 +1,15 @@
 import React from 'react';
-
-// Mock the auth-provider module so we can control the context value
-const mockUseContext = jest.spyOn(React, 'useContext');
-
-// We need to import after setting up the spy
 import { useAuth, useRequireAuth } from '../use-auth';
 
+let mockUseContext: jest.SpyInstance;
+
 describe('useAuth', () => {
+  beforeEach(() => {
+    mockUseContext = jest.spyOn(React, 'useContext');
+  });
+
   afterEach(() => {
-    mockUseContext.mockReset();
+    mockUseContext.mockRestore();
   });
 
   it('should throw an error when used outside of AuthProvider', () => {
@@ -66,8 +67,12 @@ describe('useAuth', () => {
 });
 
 describe('useRequireAuth', () => {
+  beforeEach(() => {
+    mockUseContext = jest.spyOn(React, 'useContext');
+  });
+
   afterEach(() => {
-    mockUseContext.mockReset();
+    mockUseContext.mockRestore();
   });
 
   it('should throw when used outside of AuthProvider', () => {

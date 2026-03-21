@@ -80,7 +80,7 @@ describe('AuthController', () => {
       mockAuthService.logout.mockResolvedValue(undefined);
 
       const user = { id: '1', email: 'test@example.com' };
-      const req = { ip: '127.0.0.1' } as any;
+      const req = { ip: '127.0.0.1', headers: { authorization: 'Bearer test-access-token' } } as any;
       await controller.logout(user, { refreshToken: 'token' }, req);
       expect(mockAuthService.logout).toHaveBeenCalledWith('token');
     });

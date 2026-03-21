@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { LicenseService } from './license.service';
 import type { LicenseValidationResponse } from './interfaces/license.interface';
 
@@ -31,7 +32,15 @@ describe('LicenseService', () => {
     process.env = { ...originalEnv };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [LicenseService],
+      providers: [
+        LicenseService,
+        {
+          provide: ConfigService,
+          useValue: {
+            get: (key: string, defaultValue?: string) => process.env[key] ?? defaultValue,
+          },
+        },
+      ],
     }).compile();
 
     service = module.get<LicenseService>(LicenseService);
