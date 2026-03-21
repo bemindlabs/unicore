@@ -1,5 +1,18 @@
 # Changelog — @unicore (Community Edition)
 
+## [0.0.3] - 2026-03-21
+
+### Added
+- Enterprise edition pricing and UI support
+- Downgrade confirmation dialog in dashboard
+- Configurable license server URL via environment variable
+
+### Changed
+- Normalized edition/tier naming to use "edition" consistently across license module
+
+### Fixed
+- Backoffice theme variable references in dashboard
+
 ## [0.0.2] - 2026-03-20
 
 ### Added
