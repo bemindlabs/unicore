@@ -665,7 +665,7 @@ async function seedExpenses(userId: string) {
 
       if (action === 'approve' || action === 'reimburse') {
         await api('POST', `${ERP}/expenses/${res.id}/approve`, {
-          approvedBy: 'admin@unicore.dev',
+          approvedBy: userId,
           notes: 'Approved per policy',
         });
         if (action === 'reimburse') {
@@ -673,7 +673,7 @@ async function seedExpenses(userId: string) {
         }
       } else if (action === 'reject') {
         await api('POST', `${ERP}/expenses/${res.id}/reject`, {
-          approvedBy: 'admin@unicore.dev',
+          approvedBy: userId,
           reason: 'Exceeds department budget. Please resubmit with manager approval.',
         });
       }
