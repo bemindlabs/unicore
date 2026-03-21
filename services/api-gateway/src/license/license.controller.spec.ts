@@ -48,6 +48,7 @@ describe('LicenseController', () => {
 
       expect(result).toEqual({
         valid: true,
+        edition: 'pro',
         tier: 'pro',
         features: ['fullRbac', 'sso'],
         expiresAt: null,
