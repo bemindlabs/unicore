@@ -139,6 +139,20 @@ function PixelCoffeeShop() {
   );
 }
 
+function PixelDisplayPodium({ label, styleId }: { label: string, styleId: number }) {
+  return (
+    <div className="flex flex-col items-center transition-transform hover:-translate-y-2">
+       {/* Small glass case or base */}
+       <div className="relative w-16 h-16 flex items-center justify-center border-[4px] border-b-0 shadow-inner" style={{ borderColor: 'var(--retrodesk-border)', background: 'var(--retrodesk-bg)' }}>
+          <PixelAvatar color="#3b82f6" status="idle" size="md" forceStyle={styleId} className="z-10" />
+       </div>
+       <div className="w-20 h-6 border-[4px] shadow-lg flex items-center justify-center" style={{ background: 'var(--retrodesk-surface)', borderColor: 'var(--retrodesk-border)' }}>
+          <span className="font-mono text-[8px] tracking-widest uppercase font-bold" style={{ color: 'var(--retrodesk-text)' }}>{label}</span>
+       </div>
+    </div>
+  );
+}
+
 export function OfficeFloor({ agents, onSelectAgent }: Props) {
   const [currentFloor, setCurrentFloor] = useState<number>(1);
 
@@ -286,9 +300,9 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
   };
 
   const floors = [
-    { id: 3, name: 'F3: Executive & Quarters' },
-    { id: 2, name: 'F2: Operations' },
-    { id: 1, name: 'F1: Engineering' },
+    { id: 3, name: 'Executive' },
+    { id: 2, name: 'Operations' },
+    { id: 1, name: 'Engineering' },
   ];
 
   return (
@@ -309,25 +323,50 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
         >
           {/* Elevator Panel securely nested inside rendering context */}
           <div 
-            className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 p-3 border-4 shadow-2xl z-50 rounded-xl" 
-            style={{ background: 'var(--retrodesk-surface)', borderColor: 'var(--retrodesk-border)', width: 130 }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-3 p-4 border-[6px] shadow-[8px_8px_0px_#00000050] z-50 rounded-lg" 
+            style={{ background: 'var(--retrodesk-surface)', borderColor: 'var(--retrodesk-border)', width: 180 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="text-[10px] font-mono font-bold text-center border-b-2 pb-2 mb-2" style={{ borderColor: 'var(--retrodesk-border)', color: 'var(--retrodesk-text)' }}>ELEVATOR</div>
-            {floors.map(f => (
-              <button 
-                key={f.id} 
-                onClick={(e) => { e.stopPropagation(); setCurrentFloor(f.id); }}
-                className={`px-4 py-3 font-mono text-xs font-bold transition-transform ${currentFloor === f.id ? 'scale-110 shadow-lg' : 'hover:scale-105 opacity-60'}`}
-                style={{
-                  background: currentFloor === f.id ? 'var(--retrodesk-blue)' : 'var(--retrodesk-bg)',
-                  color: currentFloor === f.id ? 'var(--retrodesk-surface)' : 'var(--retrodesk-text)',
-                  border: `2px solid var(--retrodesk-border)`
-                }}
-              >
-                {f.name}
-              </button>
-            ))}
+            <div className="flex flex-col items-center border-b-4 pb-3 mb-1" style={{ borderColor: 'var(--retrodesk-border)' }}>
+               <div className="text-[14px] font-mono font-black tracking-widest text-center" style={{ color: 'var(--retrodesk-text)' }}>ELEVATOR</div>
+               <div className="flex gap-2 mt-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse border-2 border-[var(--retrodesk-bg)]" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-400 border-2 border-[var(--retrodesk-bg)]" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-400 border-2 border-[var(--retrodesk-bg)]" />
+               </div>
+            </div>
+            
+            <div className="flex flex-col gap-3 mt-1">
+              {floors.map(f => {
+                const isActive = currentFloor === f.id;
+                return (
+                  <button 
+                    key={f.id} 
+                    onClick={(e) => { e.stopPropagation(); setCurrentFloor(f.id); }}
+                    className={`px-3 py-3 w-full flex items-center justify-between font-mono text-[10px] leading-none font-black transition-all group ${isActive ? 'translate-x-1.5 shadow-[4px_4px_0px_rgba(0,0,0,0.4)]' : 'hover:translate-x-1 opacity-75 hover:opacity-100'}`}
+                    style={{
+                      background: isActive ? 'var(--retrodesk-blue)' : 'var(--retrodesk-bg)',
+                      color: isActive ? 'var(--retrodesk-surface)' : 'var(--retrodesk-text)',
+                      border: `3px solid var(--retrodesk-border)`
+                    }}
+                  >
+                    <span 
+                      className="text-[14px] px-1.5 py-0.5 border-2 transition-colors flex-shrink-0"
+                      style={{
+                        background: 'var(--retrodesk-surface)',
+                        color: 'var(--retrodesk-text)',
+                        borderColor: 'var(--retrodesk-border)'
+                      }}
+                    >
+                       {f.id}
+                    </span>
+                    <span className="text-right flex-1 tracking-wider uppercase ml-2 leading-tight">
+                      {f.name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {selectedAgentToMove && (
@@ -407,8 +446,20 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
                 <div className="absolute top-12 left-1/2 -translate-x-1/2 flex gap-4">
                   {Array.from({ length: 6 }).map((_, i) => <PixelServerRack key={i} />)}
                 </div>
-                <div className="absolute bottom-12 left-12"><PixelVendingMachine /></div>
-                <div className="absolute bottom-12 left-32"><PixelVendingMachine /></div>
+                
+                {/* Character Class Showroom */}
+                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-5 bg-black/10 p-4 pt-6 border-[4px] shadow-2xl" style={{ borderColor: 'var(--retrodesk-border)' }}>
+                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 border-[3px] shadow-sm uppercase font-mono text-[10px] tracking-widest font-bold" style={{ background: 'var(--retrodesk-surface)', borderColor: 'var(--retrodesk-border)', color: 'var(--retrodesk-text)' }}>AGENT CLASSES</div>
+                   <PixelDisplayPodium label="Human" styleId={0} />
+                   <PixelDisplayPodium label="Robot" styleId={1} />
+                   <PixelDisplayPodium label="Slime" styleId={2} />
+                   <PixelDisplayPodium label="Wizard" styleId={3} />
+                   <PixelDisplayPodium label="Ninja" styleId={4} />
+                   <PixelDisplayPodium label="Cyber" styleId={5} />
+                </div>
+                
+                <div className="absolute top-12 left-12"><PixelVendingMachine /></div>
+                <div className="absolute top-12 left-28"><PixelVendingMachine /></div>
               </div>
             </>
           )}

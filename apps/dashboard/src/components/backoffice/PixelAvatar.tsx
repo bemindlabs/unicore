@@ -9,6 +9,7 @@ interface Props {
   status: AgentStatus;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
+  forceStyle?: number;
 }
 
 type SpriteTemplate = { map: string[], palette: Record<string, (c: string) => string> };
@@ -156,14 +157,14 @@ const TEMPLATES: SpriteTemplate[] = [
   }
 ];
 
-export function PixelAvatar({ color, status, name = '', size = 'md', className = '' }: Props) {
+export function PixelAvatar({ color, status, name = '', size = 'md', className = '', forceStyle }: Props) {
   const scales = { sm: 2, md: 3, lg: 4 };
   const px = scales[size];
 
   // Derive template deterministically from name or color
   const seed = name || color;
   const hash = [...seed].reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const template = TEMPLATES[hash % TEMPLATES.length];
+  const template = forceStyle !== undefined ? TEMPLATES[forceStyle % TEMPLATES.length] : TEMPLATES[hash % TEMPLATES.length];
 
   const shadows = useMemo(() => {
     return template.map
