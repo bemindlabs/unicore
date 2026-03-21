@@ -26,6 +26,8 @@ import {
   toast,
 } from "@unicore/ui";
 import { api } from "@/lib/api";
+import { formatCurrency } from "@/lib/format-currency";
+import { useBusinessTimezone, formatDateTz } from "@/hooks/use-business-timezone";
 
 // ---------------------------------------------------------------------------
 // Types — aligned with Prisma ExpenseStatus & ExpenseCategory enums
@@ -410,21 +412,11 @@ function DeleteDialog({ expense, onClose, onDeleted }: DeleteDialogProps) {
 }
 
 // ---------------------------------------------------------------------------
-// Currency formatter
-// ---------------------------------------------------------------------------
-
-function formatCurrency(amount: string | number, currency = "USD"): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-  }).format(Number(amount) || 0);
-}
-
-// ---------------------------------------------------------------------------
 // Main Page
 // ---------------------------------------------------------------------------
 
 export default function ExpensesPage() {
+  const tz = useBusinessTimezone();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -557,9 +549,7 @@ export default function ExpensesPage() {
                   {filtered.map((expense) => (
                     <TableRow key={expense.id}>
                       <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                        {expense.expenseDate
-                          ? new Date(expense.expenseDate).toLocaleDateString()
-                          : new Date(expense.createdAt).toLocaleDateString()}
+                        {formatDateTz(expense.expenseDate ?? expense.createdAt, tz)}
                       </TableCell>
                       <TableCell className="font-medium">
                         {expense.title}

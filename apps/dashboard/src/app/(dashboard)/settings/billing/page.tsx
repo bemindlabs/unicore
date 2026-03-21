@@ -21,8 +21,10 @@ import {
   toast,
 } from '@unicore/ui';
 import { api } from '@/lib/api';
+import { formatCurrency as formatCurrencyBase } from '@/lib/format-currency';
 import { useLicense } from '@/hooks/use-license';
 import { useDemoMode } from '@/hooks/use-demo-mode';
+import { useBusinessTimezone } from '@/hooks/use-business-timezone';
 
 interface BillingInfo {
   plan: string;
@@ -49,23 +51,22 @@ interface Invoice {
 }
 
 function formatCurrency(amount: number, currency: string): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency.toUpperCase(),
-  }).format(amount / 100);
+  return formatCurrencyBase(amount / 100, currency.toUpperCase());
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', {
+function formatDate(iso: string, timeZone: string): string {
+  return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
-  });
+    timeZone,
+  }).format(new Date(iso));
 }
 
 export default function BillingSettingsPage() {
   const { isPro, edition } = useLicense();
   const isDemo = useDemoMode() as boolean;
+  const tz = useBusinessTimezone();
   const [billing, setBilling] = useState<BillingInfo | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -154,7 +155,7 @@ export default function BillingSettingsPage() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Next Billing Date</p>
-                    <p className="font-medium">{formatDate(billing.currentPeriodEnd)}</p>
+                    <p className="font-medium">{formatDate(billing.currentPeriodEnd, tz)}</p>
                   </div>
                 </div>
                 {billing.cancelAtPeriodEnd && (
@@ -288,7 +289,7 @@ export default function BillingSettingsPage() {
                     <div className="flex items-center gap-3">
                       <FileText className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <p className="text-sm font-medium">{formatDate(inv.date)}</p>
+                        <p className="text-sm font-medium">{formatDate(inv.date, tz)}</p>
                         <p className="text-xs text-muted-foreground capitalize">{inv.status}</p>
                       </div>
                     </div>

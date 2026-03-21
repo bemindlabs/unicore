@@ -33,6 +33,7 @@ import {
   toast,
 } from "@unicore/ui";
 import { api } from "@/lib/api";
+import { formatCurrency } from "@/lib/format-currency";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -474,11 +475,7 @@ export default function InventoryPage() {
 
   const isLow = (p: Product) => p.quantity <= (p.lowStockThreshold ?? 5);
 
-  const fmt = (n: number) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(n);
+  const fmt = (n: number) => formatCurrency(n);
 
   return (
     <div className="space-y-6">

@@ -39,6 +39,8 @@ import {
   toast,
 } from "@unicore/ui";
 import { api } from "@/lib/api";
+import { formatCurrency } from "@/lib/format-currency";
+import { useBusinessTimezone, formatDateTz } from "@/hooks/use-business-timezone";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -392,6 +394,7 @@ function CancelDialog({ order, onClose, onCancelled }: CancelDialogProps) {
 // ---------------------------------------------------------------------------
 
 export default function OrdersPage() {
+  const tz = useBusinessTimezone();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "ALL">("ALL");
@@ -460,9 +463,7 @@ export default function OrdersPage() {
   );
 
   const fmt = (amount: number, currency: string) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency }).format(
-      amount,
-    );
+    formatCurrency(amount, currency);
 
   return (
     <div className="space-y-6">
@@ -543,7 +544,7 @@ export default function OrdersPage() {
                           {fmt(order.total ?? 0, order.currency ?? "USD")}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {new Date(order.createdAt).toLocaleDateString()}
+                          {formatDateTz(order.createdAt, tz)}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
