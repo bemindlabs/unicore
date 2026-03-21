@@ -63,7 +63,7 @@ interface IntegrationDef {
   name: string;
   description: string;
   category: 'channels' | 'payments' | 'productivity' | 'e-commerce' | 'advertising';
-  tier: 'community' | 'pro';
+  edition: 'community' | 'pro';
   docsUrl: string;
   fields: IntegrationField[];
 }
@@ -75,7 +75,7 @@ const INTEGRATION_DEFS: IntegrationDef[] = [
     name: 'Telegram',
     description: 'Bot messaging and group automation',
     category: 'channels',
-    tier: 'pro',
+    edition: 'pro',
     docsUrl: 'https://core.telegram.org/bots/api',
     fields: [
       { key: 'botToken', label: 'Bot Token', type: 'password', placeholder: '123456:ABC-DEF…', hint: 'Get from @BotFather' },
@@ -86,7 +86,7 @@ const INTEGRATION_DEFS: IntegrationDef[] = [
     name: 'LINE',
     description: 'Official Account messaging and rich menus',
     category: 'channels',
-    tier: 'pro',
+    edition: 'pro',
     docsUrl: 'https://developers.line.biz',
     fields: [
       { key: 'channelId', label: 'Channel ID', type: 'text', placeholder: '1234567890' },
@@ -99,7 +99,7 @@ const INTEGRATION_DEFS: IntegrationDef[] = [
     name: 'WhatsApp',
     description: 'Business API for customer conversations',
     category: 'channels',
-    tier: 'pro',
+    edition: 'pro',
     docsUrl: 'https://developers.facebook.com/docs/whatsapp',
     fields: [
       { key: 'phoneNumberId', label: 'Phone Number ID', type: 'text' },
@@ -112,7 +112,7 @@ const INTEGRATION_DEFS: IntegrationDef[] = [
     name: 'Facebook Messenger',
     description: 'Page messaging and customer support',
     category: 'channels',
-    tier: 'pro',
+    edition: 'pro',
     docsUrl: 'https://developers.facebook.com/docs/messenger-platform',
     fields: [
       { key: 'pageId', label: 'Page ID', type: 'text' },
@@ -124,7 +124,7 @@ const INTEGRATION_DEFS: IntegrationDef[] = [
     name: 'Instagram',
     description: 'Direct messages and story replies',
     category: 'channels',
-    tier: 'pro',
+    edition: 'pro',
     docsUrl: 'https://developers.facebook.com/docs/instagram-api',
     fields: [
       { key: 'accountId', label: 'Instagram Business Account ID', type: 'text' },
@@ -136,7 +136,7 @@ const INTEGRATION_DEFS: IntegrationDef[] = [
     name: 'TikTok',
     description: 'Direct messages via TikTok for Developers',
     category: 'channels',
-    tier: 'pro',
+    edition: 'pro',
     docsUrl: 'https://developers.tiktok.com',
     fields: [
       { key: 'accessToken', label: 'Access Token', type: 'password' },
@@ -148,7 +148,7 @@ const INTEGRATION_DEFS: IntegrationDef[] = [
     name: 'Discord',
     description: 'Bot commands and server notifications',
     category: 'channels',
-    tier: 'pro',
+    edition: 'pro',
     docsUrl: 'https://discord.com/developers/docs',
     fields: [
       { key: 'botToken', label: 'Bot Token', type: 'password' },
@@ -160,7 +160,7 @@ const INTEGRATION_DEFS: IntegrationDef[] = [
     name: 'Slack',
     description: 'Workspace notifications and agent interaction',
     category: 'channels',
-    tier: 'community',
+    edition: 'community',
     docsUrl: 'https://api.slack.com',
     fields: [
       { key: 'botToken', label: 'Bot Token', type: 'password', placeholder: 'xoxb-…' },
@@ -172,7 +172,7 @@ const INTEGRATION_DEFS: IntegrationDef[] = [
     name: 'Email (SMTP)',
     description: 'Send and receive via custom mail server',
     category: 'channels',
-    tier: 'community',
+    edition: 'community',
     docsUrl: 'https://nodemailer.com',
     fields: [
       { key: 'host', label: 'SMTP Host', type: 'text', placeholder: 'smtp.gmail.com' },
@@ -188,7 +188,7 @@ const INTEGRATION_DEFS: IntegrationDef[] = [
     name: 'Stripe',
     description: 'Accept payments and sync financial data',
     category: 'payments',
-    tier: 'community',
+    edition: 'community',
     docsUrl: 'https://stripe.com/docs',
     fields: [
       { key: 'publishableKey', label: 'Publishable Key', type: 'text', placeholder: 'pk_live_…' },
@@ -203,7 +203,7 @@ const INTEGRATION_DEFS: IntegrationDef[] = [
     name: 'Google Workspace',
     description: 'Calendar, Drive, and Gmail integration',
     category: 'productivity',
-    tier: 'community',
+    edition: 'community',
     docsUrl: 'https://workspace.google.com',
     fields: [
       { key: 'clientId', label: 'OAuth Client ID', type: 'text' },
@@ -217,7 +217,7 @@ const INTEGRATION_DEFS: IntegrationDef[] = [
     name: 'Shopify',
     description: 'Sync products, orders, and customers',
     category: 'e-commerce',
-    tier: 'community',
+    edition: 'community',
     docsUrl: 'https://shopify.dev',
     fields: [
       { key: 'shopDomain', label: 'Shop Domain', type: 'text', placeholder: 'myshop.myshopify.com' },
@@ -231,7 +231,7 @@ const INTEGRATION_DEFS: IntegrationDef[] = [
     name: 'TikTok Ads',
     description: 'Sync campaigns, ad groups, and performance metrics',
     category: 'advertising',
-    tier: 'community',
+    edition: 'community',
     docsUrl: 'https://business-api.tiktok.com',
     fields: [
       { key: 'accessToken', label: 'Marketing API Access Token', type: 'password' },
@@ -243,7 +243,7 @@ const INTEGRATION_DEFS: IntegrationDef[] = [
     name: 'Meta Ads',
     description: 'Facebook and Instagram ad campaign data',
     category: 'advertising',
-    tier: 'community',
+    edition: 'community',
     docsUrl: 'https://developers.facebook.com/docs/marketing-apis',
     fields: [
       { key: 'accessToken', label: 'Access Token', type: 'password' },
@@ -255,7 +255,7 @@ const INTEGRATION_DEFS: IntegrationDef[] = [
     name: 'Google Ads',
     description: 'Search and display ad campaign syncing',
     category: 'advertising',
-    tier: 'community',
+    edition: 'community',
     docsUrl: 'https://developers.google.com/google-ads/api',
     fields: [
       { key: 'developerToken', label: 'Developer Token', type: 'password' },
@@ -394,7 +394,7 @@ export default function SettingsIntegrationsPage() {
     const state = integrations.find((i) => i.provider === def.provider);
     const isConfigured = state?.isConfigured ?? false;
     const isEnabled = state?.enabled ?? false;
-    const needsPro = def.tier === 'pro' && !isPro;
+    const needsPro = def.edition === 'pro' && !isPro;
 
     return (
       <div

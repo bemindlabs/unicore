@@ -64,7 +64,7 @@ function formatDate(iso: string): string {
 }
 
 export default function BillingSettingsPage() {
-  const { isPro, tier } = useLicense();
+  const { isPro, edition } = useLicense();
   const isDemo = useDemoMode() as boolean;
   const [billing, setBilling] = useState<BillingInfo | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -132,7 +132,7 @@ export default function BillingSettingsPage() {
                 <CardDescription>Your active subscription details</CardDescription>
               </div>
               <Badge variant={isPro ? 'default' : 'secondary'} className="text-sm">
-                {tier === 'pro' ? 'Pro' : tier === 'enterprise' ? 'Enterprise' : 'Community'}
+                {edition === 'pro' ? 'Pro' : edition === 'enterprise' ? 'Enterprise' : 'Community'}
               </Badge>
             </div>
           </CardHeader>

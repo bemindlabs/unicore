@@ -99,10 +99,10 @@ export class LicenseController {
     @Body() body: { plan: 'PRO_MONTHLY' | 'PRO_ANNUAL'; email: string },
     @Req() req: any,
   ) {
-    // 1. Check current tier — reject if already Pro or Enterprise
+    // 1. Check current edition — reject if already Pro or Enterprise
     const status = await this.licenseService.getLicenseStatus();
-    if (status.tier === 'pro' || status.tier === 'enterprise') {
-      throw new ConflictException('Already on Pro or Enterprise tier');
+    if (status.edition === 'pro' || status.edition === 'enterprise') {
+      throw new ConflictException('Already on Pro or Enterprise edition');
     }
 
     // 2. Determine instance URL from request or env
@@ -175,10 +175,10 @@ export class LicenseController {
     @Body() body: { email?: string },
     @Req() req: any,
   ) {
-    // 1. Check current tier — only allow downgrade from Pro
+    // 1. Check current edition — only allow downgrade from Pro
     const status = await this.licenseService.getLicenseStatus();
-    if (status.tier !== 'pro') {
-      throw new ConflictException('Downgrade is only available for Pro tier');
+    if (status.edition !== 'pro') {
+      throw new ConflictException('Downgrade is only available for Pro edition');
     }
 
     // 2. Call platform downgrade API
@@ -279,7 +279,9 @@ export class LicenseController {
     const status = await this.licenseService.revalidate();
     return {
       valid: status.valid,
-      tier: status.tier,
+      edition: status.edition,
+      /** @deprecated Use edition instead. */
+      tier: status.edition,
       features: status.features,
       expiresAt: status.expiresAt,
       validatedAt: status.validatedAt,

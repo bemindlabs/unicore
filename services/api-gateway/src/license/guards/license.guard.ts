@@ -48,11 +48,11 @@ export class LicenseGuard implements CanActivate {
     if (!allowed) {
       const status = await this.licenseService.getLicenseStatus();
       this.logger.warn(
-        `Access denied to Pro feature "${requiredFeature}" — current tier: ${status.tier}`,
+        `Access denied to Pro feature "${requiredFeature}" — current edition: ${status.edition}`,
       );
       throw new ForbiddenException(
         `This feature requires a Pro or Enterprise license. ` +
-          `Current tier: ${status.tier}. ` +
+          `Current edition: ${status.edition}. ` +
           `Set UNICORE_LICENSE_KEY to activate Pro features.`,
       );
     }

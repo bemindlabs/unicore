@@ -17,7 +17,7 @@ export interface LicenseFeatureFlags {
 
 export interface LicenseInfo {
   key: string;
-  edition: 'community' | 'pro';
+  edition: 'community' | 'pro' | 'enterprise';
   status: LicenseStatus;
   maxAgents: number;
   maxRoles: number;

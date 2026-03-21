@@ -7,18 +7,18 @@ import { toast } from '@unicore/ui';
 
 interface LicenseStatus {
   valid: boolean;
-  tier: string;
+  edition: string;
   features: string[];
   maxAgents: number;
   maxRoles: number;
 }
 
 interface UseLicenseOptions {
-  /** When true and URL has ?upgraded=true, poll for tier change */
+  /** When true and URL has ?upgraded=true, poll for edition change */
   pollOnUpgrade?: boolean;
 }
 
-const DEFAULT: LicenseStatus = { valid: true, tier: 'community', features: [], maxAgents: 2, maxRoles: 3 };
+const DEFAULT: LicenseStatus = { valid: true, edition: 'community', features: [], maxAgents: 2, maxRoles: 3 };
 
 const POLL_INTERVAL = 5000; // 5 seconds
 const POLL_TIMEOUT = 120000; // 2 minutes
@@ -36,12 +36,13 @@ export function useLicense(options: UseLicenseOptions = {}) {
   const fetchLicense = useCallback(async () => {
     try {
       const res = await api.get<any>('/api/v1/license/status');
+      const edition = res.edition ?? res.tier ?? 'community';
       const status: LicenseStatus = {
         valid: res.valid ?? true,
-        tier: res.tier ?? 'community',
+        edition,
         features: res.features ?? [],
-        maxAgents: res.maxAgents ?? (res.tier === 'pro' ? 50 : 2),
-        maxRoles: res.maxRoles ?? (res.tier === 'pro' ? 20 : 3),
+        maxAgents: res.maxAgents ?? (edition === 'pro' ? 50 : 2),
+        maxRoles: res.maxRoles ?? (edition === 'pro' ? 20 : 3),
       };
       setLicense(status);
       return status;
@@ -66,7 +67,7 @@ export function useLicense(options: UseLicenseOptions = {}) {
 
     pollRef.current = setInterval(async () => {
       const status = await fetchLicense();
-      if (status && (status.tier === 'pro' || status.tier === 'enterprise')) {
+      if (status && (status.edition === 'pro' || status.edition === 'enterprise')) {
         // Upgrade detected
         setIsPolling(false);
         setUpgradeDetected(true);
@@ -105,7 +106,7 @@ export function useLicense(options: UseLicenseOptions = {}) {
     };
   }, [pollOnUpgrade, searchParams, fetchLicense, router]);
 
-  const isPro = license.tier === 'pro' || license.tier === 'enterprise';
+  const isPro = license.edition === 'pro' || license.edition === 'enterprise';
   const hasFeature = (f: string) => isPro || license.features.includes(f);
 
   return { ...license, isPro, hasFeature, isPolling, upgradeDetected, refetch: fetchLicense };

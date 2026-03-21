@@ -208,11 +208,12 @@ export default function SettingsLicensePage() {
 
     interface LicenseStatusResponse {
       valid?: boolean;
+      edition?: string;
+      /** @deprecated Use edition instead. */
       tier?: string;
       features?: string[] | Record<string, boolean>;
       expiresAt?: string | null;
       key?: string;
-      edition?: string;
       status?: string;
       maxAgents?: number;
       maxRoles?: number;
