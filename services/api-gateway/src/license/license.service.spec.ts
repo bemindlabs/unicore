@@ -193,7 +193,7 @@ describe('LicenseService', () => {
 
       // Artificially expire the cache
       const oneWeekAgo = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000);
-      (service as any).cachedStatus.validatedAt = oneWeekAgo;
+      (service as any).localCache.validatedAt = oneWeekAgo;
 
       await service.getLicenseStatus();
 
@@ -244,7 +244,7 @@ describe('LicenseService', () => {
       expect(first.tier).toBe('pro');
 
       // Expire cache
-      (service as any).cachedStatus.validatedAt = new Date(
+      (service as any).localCache.validatedAt = new Date(
         Date.now() - 8 * 24 * 60 * 60 * 1000,
       );
 
