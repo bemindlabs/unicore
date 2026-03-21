@@ -17,7 +17,8 @@ export type ProFeature =
   | 'whiteLabelBranding'
   | 'sso'
   | 'auditLogs'
-  | 'prioritySupport';
+  | 'prioritySupport'
+  | 'aiDlc';
 
 export interface LicenseStatus {
   valid: boolean;

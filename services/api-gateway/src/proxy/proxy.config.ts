@@ -42,6 +42,12 @@ export const DOWNSTREAM_SERVICES: DownstreamService[] = [
     port: parseInt(process.env.WORKFLOW_SERVICE_PORT ?? '4400', 10),
     pathPrefix: '/workflow',
   },
+  {
+    name: 'dlc-gateway',
+    host: process.env.DLC_GATEWAY_HOST ?? 'localhost',
+    port: parseInt(process.env.DLC_GATEWAY_PORT ?? '19790', 10),
+    pathPrefix: '/dlc',
+  },
 ] as const;
 
 export function resolveDownstreamService(

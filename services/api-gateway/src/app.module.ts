@@ -24,8 +24,9 @@ import { TasksModule } from './tasks/tasks.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { ChatHistoryModule } from './chat-history/chat-history.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { GamificationModule } from './gamification/gamification.module';
 @Module({
-  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule, AdminModule, AuditModule, SettingsModule, TasksModule, WebhooksModule, ChatHistoryModule, NotificationsModule],
+  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule, AdminModule, AuditModule, SettingsModule, TasksModule, WebhooksModule, ChatHistoryModule, NotificationsModule, GamificationModule],
   controllers: [AppController],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },

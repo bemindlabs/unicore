@@ -145,6 +145,30 @@ model ChatHistory {
 }
 
 // ---------------------------------------------------------------------------
+// Gamification (UNC-523) — Geek CLI game stats synced from CLI clients
+// ---------------------------------------------------------------------------
+
+model Gamification {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  xp              Int      @default(0)
+  level           Int      @default(1)
+  tier            String   @default("Intern")
+  currentStreak   Int      @default(0)
+  longestStreak   Int      @default(0)
+  achievements    Json     @default("[]")
+  actionCounts    Json     @default("{}")
+  totalPlayTimeMs Int      @default(0)
+  lastSyncedAt    DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([xp])
+  @@index([level])
+  @@map("gamification")
+}
+
+// ---------------------------------------------------------------------------
 // Notifications
 // ---------------------------------------------------------------------------
 
