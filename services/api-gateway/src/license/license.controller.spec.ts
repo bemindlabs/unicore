@@ -71,7 +71,7 @@ describe('LicenseController', () => {
       expect(mockLicenseService.activate).toHaveBeenCalledTimes(1);
       expect(mockLicenseService.activate).toHaveBeenCalledWith('UC-NEW-KEY');
       expect(result.valid).toBe(true);
-      expect(result.tier).toBe('pro');
+      expect(result.edition).toBe('pro');
     });
 
     it('returns status with validatedAt but without the raw key', async () => {
@@ -88,7 +88,7 @@ describe('LicenseController', () => {
 
       expect(mockLicenseService.revalidate).toHaveBeenCalledTimes(1);
       expect(result.valid).toBe(true);
-      expect(result.tier).toBe('pro');
+      expect(result.edition).toBe('pro');
       expect(result.validatedAt).toEqual(now);
     });
 
