@@ -11,13 +11,21 @@ export class ReportsController {
   }
 
   @Get('revenue')
-  getRevenue(@Query('from') from?: string, @Query('to') to?: string) {
-    return this.reportsService.getRevenueSummary(from, to);
+  getRevenue(
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('timezone') timezone?: string,
+  ) {
+    return this.reportsService.getRevenueSummary(from, to, timezone);
   }
 
   @Get('expenses/categories')
-  getExpensesByCategory(@Query('from') from?: string, @Query('to') to?: string) {
-    return this.reportsService.getExpenseSummaryByCategory(from, to);
+  getExpensesByCategory(
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('timezone') timezone?: string,
+  ) {
+    return this.reportsService.getExpenseSummaryByCategory(from, to, timezone);
   }
 
   @Get('inventory')
@@ -33,5 +41,15 @@ export class ReportsController {
   @Get('contacts/top')
   getTopContacts(@Query('limit') limit?: string) {
     return this.reportsService.getTopContacts(limit ? parseInt(limit, 10) : 10);
+  }
+
+  @Get('pnl/monthly')
+  getMonthlyPnl(@Query('timezone') timezone?: string) {
+    return this.reportsService.getMonthlyPnl(timezone);
+  }
+
+  @Get('ar/aging')
+  getArAging(@Query('timezone') timezone?: string) {
+    return this.reportsService.getArAging(timezone);
   }
 }
