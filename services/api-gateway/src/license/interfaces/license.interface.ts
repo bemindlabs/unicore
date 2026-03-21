@@ -1,4 +1,7 @@
-export type LicenseTier = 'community' | 'pro' | 'enterprise';
+export type LicenseEdition = 'community' | 'pro' | 'enterprise';
+
+/** @deprecated Use LicenseEdition instead. */
+export type LicenseTier = LicenseEdition;
 
 /**
  * Pro feature flag names — camelCase, aligned with
@@ -18,7 +21,7 @@ export type ProFeature =
 
 export interface LicenseStatus {
   valid: boolean;
-  tier: LicenseTier;
+  edition: LicenseEdition;
   key: string | null;
   features: ProFeature[];
   expiresAt: Date | null;
@@ -33,8 +36,9 @@ export interface LicenseStatus {
  */
 export interface LicenseValidationResponse {
   valid: boolean;
-  tier?: LicenseTier;
   edition?: string;
+  /** @deprecated Use edition instead. */
+  tier?: string;
   features: Record<string, boolean> | ProFeature[];
   expiresAt: string | null;
   cacheUntil?: string;

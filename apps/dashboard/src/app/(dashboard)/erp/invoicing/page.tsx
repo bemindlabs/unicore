@@ -1,7 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { CheckCircle2, Clock, FileText, Plus, XCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  Ban,
+  CheckCircle2,
+  Clock,
+  DollarSign,
+  Eye,
+  FileText,
+  Plus,
+  XCircle,
+} from "lucide-react";
 import {
   Button,
   Card,
@@ -31,12 +41,25 @@ import { api } from "@/lib/api";
 // Types
 // ---------------------------------------------------------------------------
 
-type InvoiceStatus = "DRAFT" | "SENT" | "PAID" | "OVERDUE" | "CANCELLED";
+type InvoiceStatus =
+  | "DRAFT"
+  | "SENT"
+  | "VIEWED"
+  | "PARTIALLY_PAID"
+  | "PAID"
+  | "OVERDUE"
+  | "VOID"
+  | "WRITTEN_OFF";
+
 type PaymentMethod =
   | "CASH"
   | "BANK_TRANSFER"
   | "CREDIT_CARD"
   | "DEBIT_CARD"
+  | "STRIPE"
+  | "PAYPAL"
+  | "PROMPTPAY"
+  | "QR_CODE"
   | "CRYPTO"
   | "OTHER";
 
@@ -45,9 +68,11 @@ interface Invoice {
   invoiceNumber?: string;
   status: InvoiceStatus;
   contactId: string;
-  contact?: { firstName: string; lastName: string };
+  contact?: { id: string; name: string; email?: string };
   currency: string;
-  total: number;
+  total: string | number;
+  amountPaid?: string | number;
+  amountDue?: string | number;
   dueDate?: string;
   createdAt: string;
   notes?: string;
@@ -81,13 +106,23 @@ const STATUS_CONFIG: Record<
 > = {
   DRAFT: {
     label: "Draft",
-    className: "bg-gray-100 text-gray-700 border-gray-300",
+    className: "bg-slate-100 text-slate-700 border-slate-300",
     icon: FileText,
   },
   SENT: {
     label: "Sent",
     className: "bg-blue-100 text-blue-800 border-blue-300",
     icon: Clock,
+  },
+  VIEWED: {
+    label: "Viewed",
+    className: "bg-cyan-100 text-cyan-800 border-cyan-300",
+    icon: Eye,
+  },
+  PARTIALLY_PAID: {
+    label: "Partial",
+    className: "bg-amber-100 text-amber-800 border-amber-300",
+    icon: DollarSign,
   },
   PAID: {
     label: "Paid",
@@ -97,10 +132,15 @@ const STATUS_CONFIG: Record<
   OVERDUE: {
     label: "Overdue",
     className: "bg-red-100 text-red-800 border-red-300",
-    icon: Clock,
+    icon: AlertTriangle,
   },
-  CANCELLED: {
-    label: "Cancelled",
+  VOID: {
+    label: "Void",
+    className: "bg-gray-100 text-gray-500 border-gray-200",
+    icon: Ban,
+  },
+  WRITTEN_OFF: {
+    label: "Written Off",
     className: "bg-gray-100 text-gray-500 border-gray-200",
     icon: XCircle,
   },
@@ -109,7 +149,7 @@ const STATUS_CONFIG: Record<
 const ALL_STATUSES = Object.keys(STATUS_CONFIG) as InvoiceStatus[];
 
 function StatusBadge({ status }: { status: InvoiceStatus }) {
-  const cfg = STATUS_CONFIG[status];
+  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.DRAFT;
   const Icon = cfg.icon;
   return (
     <span
@@ -127,8 +167,7 @@ function StatusBadge({ status }: { status: InvoiceStatus }) {
 
 interface Contact {
   id: string;
-  firstName: string;
-  lastName: string;
+  name: string;
 }
 
 interface CreateInvoiceDialogProps {
@@ -214,7 +253,7 @@ function CreateInvoiceDialog({
               <option value="">{contactsLoading ? "Loading contacts…" : "Select a contact"}</option>
               {contacts.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.firstName} {c.lastName}
+                  {c.name}
                 </option>
               ))}
             </select>
@@ -288,7 +327,7 @@ function RecordPaymentDialog({
 
   useEffect(() => {
     if (invoice) {
-      setAmount(String(invoice.total ?? ""));
+      setAmount(String(Number(invoice.amountDue ?? invoice.total) || ""));
       setMethod("BANK_TRANSFER");
       setReference("");
     }
@@ -326,6 +365,10 @@ function RecordPaymentDialog({
     "BANK_TRANSFER",
     "CREDIT_CARD",
     "DEBIT_CARD",
+    "STRIPE",
+    "PAYPAL",
+    "PROMPTPAY",
+    "QR_CODE",
     "CRYPTO",
     "OTHER",
   ];
@@ -365,7 +408,7 @@ function RecordPaymentDialog({
             >
               {METHODS.map((m) => (
                 <option key={m} value={m}>
-                  {m.replace("_", " ")}
+                  {m.replace(/_/g, " ")}
                 </option>
               ))}
             </select>
@@ -448,6 +491,25 @@ export default function InvoicingPage() {
     }
   }, []);
 
+  const handleCancel = useCallback(async (invoice: Invoice) => {
+    try {
+      const updated = await api.post<Invoice>(
+        `/api/proxy/erp/invoices/${invoice.id}/cancel`,
+        {},
+      );
+      setInvoices((prev) =>
+        prev.map((i) => (i.id === updated.id ? updated : i)),
+      );
+      toast({ title: "Invoice voided" });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: (err as Error).message,
+        variant: "destructive",
+      });
+    }
+  }, []);
+
   const handleCreated = useCallback(
     (invoice: Invoice) => setInvoices((prev) => [invoice, ...prev]),
     [],
@@ -460,9 +522,9 @@ export default function InvoicingPage() {
     [],
   );
 
-  const fmt = (amount: number, currency: string) =>
+  const fmt = (amount: string | number, currency: string) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency }).format(
-      amount,
+      Number(amount) || 0,
     );
 
   return (
@@ -512,22 +574,21 @@ export default function InvoicingPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <Table className="min-w-[600px]">
+              <Table className="min-w-[700px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Invoice</TableHead>
                     <TableHead>Contact</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Total</TableHead>
+                    <TableHead>Paid</TableHead>
                     <TableHead>Due Date</TableHead>
                     <TableHead className="w-48" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {invoices.map((invoice) => {
-                    const contactName = invoice.contact
-                      ? `${invoice.contact.firstName} ${invoice.contact.lastName}`
-                      : invoice.contactId;
+                    const contactName = invoice.contact?.name ?? invoice.contactId;
                     const busy = sending.has(invoice.id);
                     return (
                       <TableRow key={invoice.id}>
@@ -539,7 +600,10 @@ export default function InvoicingPage() {
                           <StatusBadge status={invoice.status} />
                         </TableCell>
                         <TableCell className="text-sm">
-                          {fmt(invoice.total ?? 0, invoice.currency ?? "USD")}
+                          {fmt(invoice.total, invoice.currency ?? "USD")}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {fmt(invoice.amountPaid ?? 0, invoice.currency ?? "USD")}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {invoice.dueDate
@@ -558,14 +622,23 @@ export default function InvoicingPage() {
                                 {busy ? "…" : "Send"}
                               </Button>
                             )}
-                            {(invoice.status === "SENT" ||
-                              invoice.status === "OVERDUE") && (
+                            {["SENT", "VIEWED", "PARTIALLY_PAID", "OVERDUE"].includes(invoice.status) && (
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => setPaymentTarget(invoice)}
                               >
                                 Record Payment
+                              </Button>
+                            )}
+                            {["DRAFT", "SENT", "VIEWED"].includes(invoice.status) && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => handleCancel(invoice)}
+                              >
+                                Void
                               </Button>
                             )}
                           </div>

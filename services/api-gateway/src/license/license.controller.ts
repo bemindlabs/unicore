@@ -37,7 +37,9 @@ export class LicenseController {
     const status = await this.licenseService.getLicenseStatus();
     return {
       valid: status.valid,
-      tier: status.tier,
+      edition: status.edition,
+      /** @deprecated Use edition instead. */
+      tier: status.edition,
       features: status.features,
       expiresAt: status.expiresAt,
       nextRevalidationAt: status.nextRevalidationAt,
@@ -76,7 +78,9 @@ export class LicenseController {
     const status = await this.licenseService.activate(dto.key);
     return {
       valid: status.valid,
-      tier: status.tier,
+      edition: status.edition,
+      /** @deprecated Use edition instead. */
+      tier: status.edition,
       features: status.features,
       expiresAt: status.expiresAt,
       validatedAt: status.validatedAt,

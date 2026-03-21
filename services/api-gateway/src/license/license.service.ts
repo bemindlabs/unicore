@@ -65,8 +65,8 @@ const EDITION_FEATURES: Record<LicenseEdition, ProFeature[]> = {
  */
 const REDIS_LICENSE_KEY = 'unicore:license:active_key';
 
-/** Map env-var edition names to license tiers. */
-const EDITION_TO_TIER: Record<string, LicenseTier> = {
+/** Map env-var edition names to license editions. */
+const EDITION_MAP: Record<string, LicenseEdition> = {
   full: 'enterprise',
   pro: 'pro',
   community: 'community',
@@ -98,7 +98,7 @@ export class LicenseService implements OnModuleInit {
    * this instead of reading UNICORE_EDITION from the environment directly.
    * Prevents bypassing license enforcement by setting env vars alone.
    */
-  private effectiveEdition: LicenseTier = 'community';
+  private effectiveEdition: LicenseEdition = 'community';
 
   constructor(private readonly configService: ConfigService) {}
 
@@ -107,7 +107,7 @@ export class LicenseService implements OnModuleInit {
    *
    * 1. Connects to Redis and restores any previously-activated license key.
    * 2. If UNICORE_LICENSE_KEY is set (or a key was restored from Redis),
-   *    validates it eagerly so tier/features are known before the first
+   *    validates it eagerly so edition/features are known before the first
    *    request arrives.
    *
    * Failures are logged as warnings — the service still starts so the
@@ -153,13 +153,13 @@ export class LicenseService implements OnModuleInit {
 
     // Validate license on startup if a key is available
     const key = this.getKey();
-    let startupTier: LicenseTier = 'community';
+    let startupEdition: LicenseEdition = 'community';
     if (key) {
       try {
         const status = await this.getLicenseStatus();
-        startupTier = status.tier;
+        startupEdition = status.edition;
         this.logger.log(
-          `Startup license check: tier=${status.tier} valid=${status.valid}`,
+          `Startup license check: edition=${status.edition} valid=${status.valid}`,
         );
       } catch (err) {
         this.logger.warn(
@@ -169,26 +169,26 @@ export class LicenseService implements OnModuleInit {
       }
     } else {
       this.logger.log(
-        'No UNICORE_LICENSE_KEY configured — starting in Community tier',
+        'No UNICORE_LICENSE_KEY configured — starting in Community edition',
       );
     }
 
-    // Enforce: env-claimed edition must match license tier.
+    // Enforce: env-claimed edition must match license edition.
     // If UNICORE_EDITION claims 'full'/'pro' but the license says 'community',
     // override to 'community' to prevent env-only bypass.
     const envEdition = process.env.UNICORE_EDITION ?? 'community';
-    const licenseTier = startupTier;
-    this.effectiveEdition = licenseTier;
+    const licenseEdition = startupEdition;
+    this.effectiveEdition = licenseEdition;
 
-    const envClaimedTier = EDITION_TO_TIER[envEdition] ?? 'community';
-    if (envClaimedTier !== licenseTier) {
+    const envClaimedEdition = EDITION_MAP[envEdition] ?? 'community';
+    if (envClaimedEdition !== licenseEdition) {
       this.logger.warn(
-        `Edition mismatch: env claimed "${envEdition}" (${envClaimedTier}) but license tier is "${licenseTier}". ` +
-          `Overriding to "${licenseTier}".`,
+        `Edition mismatch: env claimed "${envEdition}" (${envClaimedEdition}) but license edition is "${licenseEdition}". ` +
+          `Overriding to "${licenseEdition}".`,
       );
     }
 
-    this.logger.log(`License tier: ${licenseTier} (env claimed: ${envEdition})`);
+    this.logger.log(`License edition: ${licenseEdition} (env claimed: ${envEdition})`);
   }
 
   /**
@@ -245,7 +245,7 @@ export class LicenseService implements OnModuleInit {
    * All feature flag checks must go through this method, not read
    * UNICORE_EDITION from the environment directly.
    */
-  getEffectiveEdition(): LicenseTier {
+  getEffectiveEdition(): LicenseEdition {
     return this.effectiveEdition;
   }
 
@@ -271,10 +271,10 @@ export class LicenseService implements OnModuleInit {
   }
 
   /**
-   * Validates that the current agent count is within the tier limit.
+   * Validates that the current agent count is within the edition limit.
    * Throws ForbiddenException when the limit has been reached.
    *
-   * Tier limits:
+   * Edition limits:
    *   - Community: 2 agents
    *   - Pro: 50 agents
    *   - Enterprise: 999 agents
@@ -282,7 +282,7 @@ export class LicenseService implements OnModuleInit {
   async checkAgentLimit(currentCount: number): Promise<void> {
     const status = await this.getLicenseStatus();
     const maxAgents =
-      status.tier === 'enterprise' ? 999 : status.tier === 'pro' ? 50 : 2;
+      status.edition === 'enterprise' ? 999 : status.edition === 'pro' ? 50 : 2;
     if (currentCount >= maxAgents) {
       throw new ForbiddenException(
         `Agent limit reached (${maxAgents}). Upgrade to Pro for more agents.`,
@@ -382,7 +382,7 @@ export class LicenseService implements OnModuleInit {
     const key = this.getKey();
 
     if (!key) {
-      this.logger.log('No UNICORE_LICENSE_KEY set — running in Community tier');
+      this.logger.log('No UNICORE_LICENSE_KEY set — running in Community edition');
       return this.buildCommunityStatus(null);
     }
 
@@ -391,10 +391,10 @@ export class LicenseService implements OnModuleInit {
       const status = this.buildStatusFromResponse(key, result);
       this.setLocalCache(status);
       await this.setRedisCache(status);
-      this.effectiveEdition = status.tier;
+      this.effectiveEdition = status.edition;
 
       this.logger.log(
-        `License validated: tier=${status.tier} features=[${status.features.join(', ')}]`,
+        `License validated: edition=${status.edition} features=[${status.features.join(', ')}]`,
       );
 
       return status;
@@ -465,30 +465,30 @@ export class LicenseService implements OnModuleInit {
       return this.buildCommunityStatus(key);
     }
 
-    const responseTier = response.tier || response.edition;
-    const tier: LicenseTier = (['pro', 'enterprise'] as LicenseTier[]).includes(
-      responseTier as LicenseTier,
+    const responseEdition = response.edition ?? response.tier;
+    const edition: LicenseEdition = (['pro', 'enterprise'] as LicenseEdition[]).includes(
+      responseEdition as LicenseEdition,
     )
-      ? (responseTier as LicenseTier)
+      ? (responseEdition as LicenseEdition)
       : 'community';
 
     // License server returns features as object { allAgents: true, ... }
-    // Convert to ProFeature[] array for internal use, fall back to tier defaults.
+    // Convert to ProFeature[] array for internal use, fall back to edition defaults.
     let features: ProFeature[];
     if (Array.isArray(response.features)) {
-      features = response.features.length > 0 ? response.features as ProFeature[] : TIER_FEATURES[tier];
+      features = response.features.length > 0 ? response.features as ProFeature[] : EDITION_FEATURES[edition];
     } else if (response.features && typeof response.features === 'object') {
       features = (Object.entries(response.features) as [string, boolean][])
         .filter(([, enabled]) => enabled)
         .map(([name]) => name as ProFeature);
-      if (features.length === 0) features = TIER_FEATURES[tier];
+      if (features.length === 0) features = EDITION_FEATURES[edition];
     } else {
-      features = TIER_FEATURES[tier];
+      features = EDITION_FEATURES[edition];
     }
 
     return {
       valid: true,
-      tier,
+      edition,
       key,
       features,
       expiresAt: response.expiresAt ? new Date(response.expiresAt) : null,
@@ -501,9 +501,9 @@ export class LicenseService implements OnModuleInit {
     const now = new Date();
     return {
       valid: !key, // key present but invalid → false; no key → true (community valid)
-      tier: 'community',
+      edition: 'community',
       key,
-      features: TIER_FEATURES.community,
+      features: EDITION_FEATURES.community,
       expiresAt: null,
       validatedAt: now,
       nextRevalidationAt: new Date(now.getTime() + CACHE_TTL_MS),
