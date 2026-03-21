@@ -866,7 +866,7 @@ async function main() {
   await seedInvoices(contacts, orders);
 
   // 7. Seed expenses
-  await seedExpenses();
+  await seedExpenses(userId);
 
   // 8. Seed tasks
   await seedTasks(userId);
