@@ -161,6 +161,7 @@ export default function SettingsLicensePage() {
   const [license, setLicense] = useState<LicenseInfo>(MOCK_LICENSE);
   const [isLoading, setIsLoading] = useState(true);
   const [upgradeKey, setUpgradeKey] = useState('');
+  const [keyError, setKeyError] = useState('');
   const [isActivating, setIsActivating] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [usersUsed, setUsersUsed] = useState(0);
@@ -168,6 +169,7 @@ export default function SettingsLicensePage() {
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [showDowngrade, setShowDowngrade] = useState(false);
   const [downgrading, setDowngrading] = useState(false);
+  const [downgradeConfirmText, setDowngradeConfirmText] = useState('');
 
   const { user } = useAuth();
   const searchParams = useSearchParams();
@@ -240,8 +242,28 @@ export default function SettingsLicensePage() {
   const statusCfg = STATUS_CONFIG[license.status];
   const StatusIcon = statusCfg.icon;
 
+  const LICENSE_KEY_REGEX = /^UC-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+  const isKeyValid = LICENSE_KEY_REGEX.test(upgradeKey);
+
+  const handleKeyChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const clean = e.target.value.replace(/[^A-Z0-9]/gi, '').toUpperCase().slice(0, 18);
+    const parts: string[] = [];
+    if (clean.length > 0) parts.push(clean.slice(0, 2));
+    if (clean.length > 2) parts.push(clean.slice(2, 6));
+    if (clean.length > 6) parts.push(clean.slice(6, 10));
+    if (clean.length > 10) parts.push(clean.slice(10, 14));
+    if (clean.length > 14) parts.push(clean.slice(14, 18));
+    const formatted = parts.join('-');
+    setUpgradeKey(formatted);
+    if (formatted && !LICENSE_KEY_REGEX.test(formatted)) {
+      setKeyError('Format must be UC-XXXX-XXXX-XXXX-XXXX (letters and digits only)');
+    } else {
+      setKeyError('');
+    }
+  }, []);
+
   const handleActivate = useCallback(async () => {
-    if (!upgradeKey.trim()) return;
+    if (!isKeyValid) return;
     setIsActivating(true);
     try {
       await api.post('/api/v1/license/activate', { key: upgradeKey });
@@ -250,10 +272,11 @@ export default function SettingsLicensePage() {
         description: 'Key validated. Reload required to apply Pro features.',
       });
       setUpgradeKey('');
+      setKeyError('');
     } finally {
       setIsActivating(false);
     }
-  }, [upgradeKey]);
+  }, [upgradeKey, isKeyValid]);
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -291,6 +314,7 @@ export default function SettingsLicensePage() {
         email: user?.email ?? '',
       });
       setShowDowngrade(false);
+      setDowngradeConfirmText('');
       toast({
         title: 'Downgrade confirmed',
         description: res.effectiveDate
@@ -559,15 +583,21 @@ export default function SettingsLicensePage() {
                 <Label htmlFor="upgrade-key">License Key</Label>
                 <Input
                   id="upgrade-key"
-                  placeholder="PRO-XXXX-XXXX-XXXX"
+                  placeholder="UC-XXXX-XXXX-XXXX-XXXX"
                   value={upgradeKey}
-                  onChange={(e) => setUpgradeKey(e.target.value)}
+                  onChange={handleKeyChange}
+                  className={keyError ? 'border-destructive focus-visible:ring-destructive dark:border-red-500' : ''}
+                  spellCheck={false}
+                  autoComplete="off"
                 />
+                {keyError && (
+                  <p className="text-xs text-destructive dark:text-red-400">{keyError}</p>
+                )}
               </div>
               <div className="flex items-end">
                 <Button
                   onClick={handleActivate}
-                  disabled={isActivating || !upgradeKey.trim()}
+                  disabled={isActivating || !isKeyValid}
                   variant="outline"
                 >
                   {isActivating ? 'Activating...' : 'Activate'}
@@ -592,12 +622,12 @@ export default function SettingsLicensePage() {
         </div>
       )}
 
-      {/* UNC-478: Downgrade confirmation dialog */}
-      <Dialog open={showDowngrade} onOpenChange={setShowDowngrade}>
-        <DialogContent className="sm:max-w-md">
+      {/* UNC-505: Downgrade confirmation dialog */}
+      <Dialog open={showDowngrade} onOpenChange={(open) => { setShowDowngrade(open); if (!open) setDowngradeConfirmText(''); }}>
+        <DialogContent className="sm:max-w-md dark:bg-zinc-900 dark:border-zinc-800">
           <DialogHeader>
-            <DialogTitle>Downgrade to Community?</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="dark:text-zinc-100">Downgrade to Community?</DialogTitle>
+            <DialogDescription className="dark:text-zinc-400">
               Your Pro subscription will be cancelled at the end of the current billing period.
               You will lose access to the following features:
             </DialogDescription>
@@ -605,30 +635,43 @@ export default function SettingsLicensePage() {
 
           <ul className="space-y-2 py-2 text-sm">
             {[
-              ['All Pro agents', 'Limited to 2 custom agents'],
-              ['Advanced workflows', 'Basic workflows only'],
-              ['All channels', 'Slack + Email only'],
-              ['Full RBAC', 'Basic roles only (3 max)'],
-              ['SSO integration', 'Standard login only'],
-              ['White-label branding', 'UniCore branding'],
-              ['Priority support', 'Community support only'],
+              ['SSO', 'Single sign-on disabled'],
+              ['RBAC', 'Basic roles only (3 max)'],
+              ['All Channels', 'Slack + Email only'],
+              ['Advanced Workflows', 'Basic workflows only'],
+              ['Custom Domains', 'Removed — unicore subdomain only'],
+              ['White-label Branding', 'UniCore branding restored'],
             ].map(([feature, fallback]) => (
               <li key={feature} className="flex items-start gap-2">
                 <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
                 <div>
-                  <span className="font-medium">{feature}</span>
-                  <span className="text-muted-foreground"> — {fallback}</span>
+                  <span className="font-medium dark:text-zinc-200">{feature}</span>
+                  <span className="text-muted-foreground dark:text-zinc-500"> — {fallback}</span>
                 </div>
               </li>
             ))}
           </ul>
+
+          <div className="space-y-2 pt-2">
+            <Label htmlFor="downgrade-confirm" className="text-sm dark:text-zinc-300">
+              Type <span className="font-mono font-semibold text-destructive">DOWNGRADE</span> to confirm
+            </Label>
+            <Input
+              id="downgrade-confirm"
+              placeholder="DOWNGRADE"
+              value={downgradeConfirmText}
+              onChange={(e) => setDowngradeConfirmText(e.target.value)}
+              disabled={downgrading}
+              className="dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+            />
+          </div>
 
           <DialogFooter className="flex-col gap-2 sm:flex-col">
             <Button
               variant="destructive"
               className="w-full"
               onClick={handleDowngrade}
-              disabled={downgrading}
+              disabled={downgrading || downgradeConfirmText !== 'DOWNGRADE'}
             >
               {downgrading ? (
                 <>
@@ -641,8 +684,8 @@ export default function SettingsLicensePage() {
             </Button>
             <Button
               variant="ghost"
-              className="w-full"
-              onClick={() => setShowDowngrade(false)}
+              className="w-full dark:text-zinc-300 dark:hover:bg-zinc-800"
+              onClick={() => { setShowDowngrade(false); setDowngradeConfirmText(''); }}
               disabled={downgrading}
             >
               Keep Pro
