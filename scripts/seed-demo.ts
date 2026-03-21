@@ -728,6 +728,13 @@ async function seedTasks(userId: string) {
 async function seedChatHistory(userId: string) {
   console.log('\n💬 Seeding chat history...');
 
+  // Check existing
+  const existingChats = await api('GET', `${GATEWAY}/chat-history?limit=10`);
+  if (existingChats?.data?.length >= 3) {
+    console.log(`  ℹ Found existing chat history, skipping`);
+    return;
+  }
+
   for (const chat of CHAT_SESSIONS) {
     const messages = chat.messages.map((m, i) => ({
       id: `msg-${Date.now()}-${i}`,
