@@ -19,7 +19,8 @@ function makeReq(overrides: Partial<{
   emitter.method = overrides.method ?? 'GET';
   emitter.originalUrl = overrides.originalUrl ?? '/api/proxy/erp/contacts';
   emitter.headers = overrides.headers ?? {};
-  emitter.body = overrides.body ?? undefined;
+  // Default body to null (not undefined) so readBody doesn't wait for stream events
+  emitter.body = 'body' in overrides ? overrides.body : null;
   if (overrides.rawBody !== undefined) emitter.rawBody = overrides.rawBody;
   return emitter;
 }
