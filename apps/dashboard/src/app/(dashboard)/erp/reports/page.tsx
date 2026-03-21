@@ -16,6 +16,8 @@ import {
   toast,
 } from "@unicore/ui";
 import { api } from "@/lib/api";
+import { formatCurrency } from "@/lib/format-currency";
+import { useBusinessTimezone } from "@/hooks/use-business-timezone";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -78,11 +80,7 @@ interface TopContact {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function fmt(amount: number | string | undefined | null, currency = "USD") {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(
-    Number(amount) || 0,
-  );
-}
+const fmt = formatCurrency;
 
 const CATEGORY_LABELS: Record<string, string> = {
   ADVERTISING: "Advertising", BANK_FEES: "Bank Fees", CONSULTING: "Consulting",
@@ -104,6 +102,7 @@ function EmptyState({ message }: { message: string }) {
 // ---------------------------------------------------------------------------
 
 export default function ReportsPage() {
+  const timezone = useBusinessTimezone();
   const [dashboard, setDashboard] = useState<DashboardSummary | null>(null);
   const [revenue, setRevenue] = useState<RevenueData | null>(null);
   const [inventory, setInventory] = useState<InventorySummary | null>(null);
@@ -124,11 +123,13 @@ export default function ReportsPage() {
       }
     };
 
+    const tzParam = `timezone=${encodeURIComponent(timezone)}`;
+
     Promise.all([
       safeFetch<DashboardSummary>("/api/proxy/erp/reports/dashboard"),
-      safeFetch<RevenueData>("/api/proxy/erp/reports/revenue"),
+      safeFetch<RevenueData>(`/api/proxy/erp/reports/revenue?${tzParam}`),
       safeFetch<InventorySummary>("/api/proxy/erp/reports/inventory"),
-      safeFetch<ExpenseCategoryRaw[]>("/api/proxy/erp/reports/expenses/categories"),
+      safeFetch<ExpenseCategoryRaw[]>(`/api/proxy/erp/reports/expenses/categories?${tzParam}`),
       safeFetch<TopProduct[]>("/api/proxy/erp/reports/products/top"),
       safeFetch<TopContact[]>("/api/proxy/erp/reports/contacts/top"),
     ])
@@ -164,7 +165,7 @@ export default function ReportsPage() {
         }),
       )
       .finally(() => setLoading(false));
-  }, []);
+  }, [timezone]);
 
   if (loading) {
     return (

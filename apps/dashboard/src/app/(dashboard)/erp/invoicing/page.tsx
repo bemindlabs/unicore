@@ -37,6 +37,7 @@ import {
   toast,
 } from "@unicore/ui";
 import { api } from "@/lib/api";
+import { formatCurrency } from "@/lib/format-currency";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -531,9 +532,7 @@ export default function InvoicingPage() {
   );
 
   const fmt = (amount: string | number, currency: string) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency }).format(
-      Number(amount) || 0,
-    );
+    formatCurrency(amount, currency);
 
   return (
     <div className="space-y-6">
