@@ -132,9 +132,9 @@ export class OpenClawGateway
             case 'message:unsubscribe': this.handleUnsubscribe(socket, msg); break;
             case 'system:ping':        this.handlePing(socket, msg); break;
             default:
-              this.send(socket, JSON.stringify({
+              socket.send(JSON.stringify({
                 type: 'system:error',
-                payload: { code: 'UNKNOWN_TYPE', message: `Unknown message type: ${msg.type}` },
+                payload: { code: 'UNKNOWN_TYPE', message: `Unknown message type: ${(msg as { type: string }).type}` },
               }));
           }
         } catch {
