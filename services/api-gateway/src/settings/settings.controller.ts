@@ -2,7 +2,7 @@ import {
   Controller, Get, Put, Post, Param, Body, Headers, Query,
   UseGuards, UseInterceptors, UploadedFile,
   BadRequestException, NotFoundException,
-  Res, StreamableFile, UsePipes, ValidationPipe,
+  Res, StreamableFile, UsePipes, ValidationPipe, Logger,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
@@ -16,6 +16,7 @@ import { Public } from '../auth/decorators/public.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { encrypt, decrypt, maskKey } from './crypto.util';
 import { BrandingConfigDto } from './dto/branding-config.dto';
+import { sanitizeCss } from './utils/css-sanitizer';
 
 const ALLOWED_MIME_TYPES: Record<string, string[]> = {
   'image/svg+xml': ['.svg'],
