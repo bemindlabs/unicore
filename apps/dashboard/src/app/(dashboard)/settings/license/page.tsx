@@ -195,7 +195,7 @@ export default function SettingsLicensePage() {
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [showDowngrade, setShowDowngrade] = useState(false);
   const [downgrading, setDowngrading] = useState(false);
-  const [downgradeConfirmText, setDowngradeConfirmText] = useState('');
+  const [_downgradeConfirmText, setDowngradeConfirmText] = useState('');
 
   const { user } = useAuth();
   const searchParams = useSearchParams();
