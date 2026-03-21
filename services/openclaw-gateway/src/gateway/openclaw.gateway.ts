@@ -285,7 +285,7 @@ export class OpenClawGateway
     const isChatChannel = OpenClawGateway.CHAT_CHANNEL_PREFIXES.some((p) => channel.startsWith(p));
 
     if (isChatChannel && fromAgent === 'dashboard-ui') {
-      const text = message.payload.data?.text;
+      const text = (message.payload.data as Record<string, unknown>)?.text;
       if (typeof text === 'string' && text.trim()) {
         const tracked = client as TrackedSocket;
         const sessionId = channel; // use channel as session for conversation continuity
