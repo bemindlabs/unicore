@@ -16,7 +16,15 @@ let TOKEN = '';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-async function api(method: string, url: string, body?: any) {
+const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
+let requestCount = 0;
+
+async function api(method: string, url: string, body?: any, retries = 2): Promise<any> {
+  // Throttle: max ~20 requests/sec to stay under nginx 30r/s limit
+  requestCount++;
+  if (requestCount % 15 === 0) await delay(1200);
+  else await delay(80);
+
   const res = await fetch(url, {
     method,
     headers: {
@@ -25,9 +33,17 @@ async function api(method: string, url: string, body?: any) {
     },
     body: body ? JSON.stringify(body) : undefined,
   });
+
+  if (res.status === 429 && retries > 0) {
+    const retryAfter = parseInt(res.headers.get('retry-after') || '3');
+    console.log(`  ⏳ Rate limited, waiting ${retryAfter}s...`);
+    await delay(retryAfter * 1000);
+    return api(method, url, body, retries - 1);
+  }
+
   if (!res.ok) {
     const text = await res.text();
-    console.error(`  ✗ ${method} ${url} → ${res.status}: ${text}`);
+    console.error(`  ✗ ${method} ${url.replace(API, '')} → ${res.status}: ${text.substring(0, 120)}`);
     return null;
   }
   const text = await res.text();
@@ -40,11 +56,11 @@ async function login() {
     email: 'admin@unicore.dev',
     password: 'admin123',
   });
-  if (!res?.access_token) {
+  if (!res?.accessToken) {
     console.error('Failed to login. Make sure admin@unicore.dev exists.');
     process.exit(1);
   }
-  TOKEN = res.access_token;
+  TOKEN = res.accessToken;
   console.log('  ✓ Logged in as admin@unicore.dev');
 }
 
@@ -307,6 +323,17 @@ const NOTIFICATIONS = [
 async function seedContacts(): Promise<{ id: string; name: string; type: string }[]> {
   console.log('\n📇 Seeding contacts...');
   const contacts: { id: string; name: string; type: string }[] = [];
+
+  // Check for existing contacts first
+  const existing = await api('GET', `${ERP}/contacts?limit=100`);
+  if (existing?.data?.length >= PEOPLE.length) {
+    console.log(`  ℹ Found ${existing.data.length} existing contacts, using those`);
+    for (const c of existing.data) {
+      contacts.push({ id: c.id, name: c.name, type: c.type });
+    }
+    return contacts;
+  }
+
   const types = ['CUSTOMER', 'CUSTOMER', 'CUSTOMER', 'LEAD', 'LEAD', 'LEAD', 'PROSPECT', 'PROSPECT', 'VENDOR', 'PARTNER'];
   const stages = ['NEW', 'CONTACTED', 'QUALIFIED', 'PROPOSAL', 'NEGOTIATION', 'CLOSED_WON', 'CLOSED_LOST'];
   const sources = ['Website', 'Referral', 'LinkedIn', 'Conference', 'Cold Outreach', 'Webinar', 'Product Hunt', 'Google Ads'];
@@ -357,7 +384,20 @@ async function seedProducts(): Promise<{ id: string; sku: string; name: string; 
   console.log('\n📦 Seeding products...');
   const products: { id: string; sku: string; name: string; price: number }[] = [];
 
+  // Check for existing products first
+  const existing = await api('GET', `${ERP}/inventory?limit=100`);
+  if (existing?.data?.length > 0) {
+    console.log(`  ℹ Found ${existing.data.length} existing products, using those`);
+    for (const p of existing.data) {
+      products.push({ id: p.id, sku: p.sku, name: p.name, price: parseFloat(p.unitPrice || '0') });
+    }
+    if (products.length >= PRODUCTS.length) return products;
+  }
+
   for (const p of PRODUCTS) {
+    // Skip if already exists
+    if (products.find(ep => ep.sku === p.sku)) continue;
+
     const quantity = p.type === 'digital' ? rand(500, 9999) : rand(5, 100);
     const data = {
       sku: p.sku,
@@ -387,6 +427,17 @@ async function seedOrders(
 ): Promise<{ id: string; orderNumber: string; contactId: string; total: number }[]> {
   console.log('\n🛒 Seeding orders...');
   const orders: { id: string; orderNumber: string; contactId: string; total: number }[] = [];
+
+  // Check existing
+  const existingOrders = await api('GET', `${ERP}/orders?limit=100`);
+  if (existingOrders?.data?.length >= 10) {
+    console.log(`  ℹ Found ${existingOrders.data.length} existing orders, skipping`);
+    for (const o of existingOrders.data) {
+      orders.push({ id: o.id, orderNumber: o.orderNumber, contactId: o.contactId, total: parseFloat(o.total || '0') });
+    }
+    return orders;
+  }
+
   const customers = contacts.filter(c => c.type === 'CUSTOMER' || c.type === 'PROSPECT');
 
   // Create diverse orders with different statuses
@@ -439,16 +490,17 @@ async function seedOrders(
           await api('POST', `${ERP}/orders/${res.id}/confirm`, {});
           if (scenario.status !== 'confirmed') {
             await api('POST', `${ERP}/orders/${res.id}/process`, {});
-            if (scenario.status === 'shipped' || scenario.status === 'fulfilled') {
+            if (scenario.status === 'shipped') {
               await api('POST', `${ERP}/orders/${res.id}/ship`, {
                 trackingNumber: `TRK${rand(100000, 999999)}`,
                 carrier: pick(['FedEx', 'UPS', 'DHL', 'USPS']),
               });
-              if (scenario.status === 'fulfilled') {
-                await api('POST', `${ERP}/orders/${res.id}/fulfill`, {
-                  notes: 'Delivered and confirmed by customer',
-                });
-              }
+            } else if (scenario.status === 'fulfilled') {
+              await api('POST', `${ERP}/orders/${res.id}/fulfill`, {
+                trackingNumber: `TRK${rand(100000, 999999)}`,
+                carrier: pick(['FedEx', 'UPS', 'DHL', 'USPS']),
+                notes: 'Delivered and confirmed by customer',
+              });
             } else if (scenario.status === 'cancelled') {
               await api('POST', `${ERP}/orders/${res.id}/cancel`, {
                 reason: pick(['Customer requested cancellation', 'Out of stock', 'Duplicate order']),
@@ -470,6 +522,14 @@ async function seedInvoices(
   orders: { id: string; orderNumber: string; contactId: string; total: number }[],
 ) {
   console.log('\n🧾 Seeding invoices...');
+
+  // Check existing
+  const existingInv = await api('GET', `${ERP}/invoices?limit=100`);
+  if (existingInv?.data?.length >= 10) {
+    console.log(`  ℹ Found ${existingInv.data.length} existing invoices, skipping`);
+    return;
+  }
+
   const customers = contacts.filter(c => c.type === 'CUSTOMER');
   const paymentMethods = ['CREDIT_CARD', 'BANK_TRANSFER', 'STRIPE', 'PAYPAL'];
 
@@ -511,15 +571,16 @@ async function seedInvoices(
         await api('POST', `${ERP}/invoices/${res.id}/send`, {});
       }
 
-      if (statusAction === 'pay' && res.total > 0) {
+      const invoiceTotal = parseFloat(res.total || res.amountDue || '100');
+      if (statusAction === 'pay' && invoiceTotal > 0) {
         await api('POST', `${ERP}/invoices/${res.id}/record-payment`, {
-          amount: res.total || res.amountDue || 100,
+          amount: invoiceTotal,
           method: pick(paymentMethods),
           reference: `PAY-${rand(10000, 99999)}`,
           notes: 'Payment received',
         });
-      } else if (statusAction === 'partial' && res.total > 0) {
-        const partial = Math.round((res.total || 200) * 0.4 * 100) / 100;
+      } else if (statusAction === 'partial' && invoiceTotal > 0) {
+        const partial = Math.round(invoiceTotal * 0.4 * 100) / 100;
         await api('POST', `${ERP}/invoices/${res.id}/record-payment`, {
           amount: partial,
           method: pick(paymentMethods),
@@ -575,6 +636,13 @@ async function seedInvoices(
 async function seedExpenses() {
   console.log('\n💰 Seeding expenses...');
 
+  // Check existing
+  const existingExp = await api('GET', `${ERP}/expenses?limit=100`);
+  if (existingExp?.data?.length >= 10) {
+    console.log(`  ℹ Found ${existingExp.data.length} existing expenses, skipping`);
+    return;
+  }
+
   for (const exp of EXPENSE_TEMPLATES) {
     const daysAgo = rand(1, 90);
     const data = {
@@ -617,6 +685,13 @@ async function seedExpenses() {
 
 async function seedTasks(userId: string) {
   console.log('\n✅ Seeding tasks...');
+
+  // Check existing
+  const existingTasks = await api('GET', `${GATEWAY}/tasks`);
+  if (existingTasks?.length >= 10 || existingTasks?.data?.length >= 10) {
+    console.log(`  ℹ Found existing tasks, skipping`);
+    return;
+  }
 
   const assignees = [
     { name: 'Sarah Chen', type: 'human', color: '#3B82F6' },
@@ -726,10 +801,11 @@ async function seedAdditionalUsers() {
   ];
 
   for (const user of teamMembers) {
-    // Register user
+    // Register user (requires confirmPassword)
     const res = await api('POST', `${API}/auth/register`, {
       email: user.email,
       password: user.password,
+      confirmPassword: user.password,
       name: user.name,
     });
 
