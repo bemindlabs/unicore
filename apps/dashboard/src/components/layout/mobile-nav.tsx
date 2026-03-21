@@ -15,6 +15,8 @@ interface MobileNavProps {
 export function MobileNav({ open, onOpenChange }: MobileNavProps) {
   const pathname = usePathname();
   const { user } = useAuth();
+  const { config } = useBranding();
+  const appName = config?.appName ?? 'UniCore';
   const sections = user ? filterSectionsByRole(user.role) : [];
 
   return (
