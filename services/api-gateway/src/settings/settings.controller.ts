@@ -3,6 +3,7 @@ import {
   UseGuards, UseInterceptors, UploadedFile,
   BadRequestException, NotFoundException,
   Res, StreamableFile, UsePipes, ValidationPipe, Logger,
+  Optional, Inject,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
