@@ -633,7 +633,7 @@ async function seedInvoices(
   console.log('  ✓ Marked overdue invoices');
 }
 
-async function seedExpenses() {
+async function seedExpenses(userId: string) {
   console.log('\n💰 Seeding expenses...');
 
   // Check existing
