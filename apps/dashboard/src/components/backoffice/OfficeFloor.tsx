@@ -159,12 +159,12 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
   // Redefine zones to take up whole maps based on floor
   const zones = useMemo(() => ({
     'conference': { x: 40, y: 40, w: 400, h: 520, floor: 3 },
-    'bedroom': { x: 460, y: 40, w: 380, h: 520, floor: 3 },
+    'bedroom': { x: 460, y: 40, w: 360, h: 520, floor: 3 },
     
-    'main-office': { x: 40, y: 40, w: 800, h: 520, floor: 2 },
+    'main-office': { x: 40, y: 40, w: 780, h: 520, floor: 2 },
     
     'standalone': { x: 40, y: 40, w: 460, h: 520, floor: 1 },
-    'shop': { x: 520, y: 40, w: 320, h: 520, floor: 1 },
+    'shop': { x: 520, y: 40, w: 300, h: 520, floor: 1 },
   }), []);
 
   const [positions, setPositions] = useState<Record<string, { x: number, y: number }>>({});
@@ -323,35 +323,35 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
         >
           {/* Elevator Panel securely nested inside rendering context */}
           <div 
-            className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-3 p-4 border-[6px] shadow-[8px_8px_0px_#00000050] z-50 rounded-lg" 
-            style={{ background: 'var(--retrodesk-surface)', borderColor: 'var(--retrodesk-border)', width: 180 }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 p-2.5 border-[4px] shadow-[6px_6px_0px_#00000040] z-50 rounded-lg" 
+            style={{ background: 'var(--retrodesk-surface)', borderColor: 'var(--retrodesk-border)', width: 130 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex flex-col items-center border-b-4 pb-3 mb-1" style={{ borderColor: 'var(--retrodesk-border)' }}>
-               <div className="text-[14px] font-mono font-black tracking-widest text-center" style={{ color: 'var(--retrodesk-text)' }}>ELEVATOR</div>
-               <div className="flex gap-2 mt-2">
-                  <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse border-2 border-[var(--retrodesk-bg)]" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-400 border-2 border-[var(--retrodesk-bg)]" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-400 border-2 border-[var(--retrodesk-bg)]" />
+            <div className="flex flex-col items-center border-b-2 pb-2 mb-1" style={{ borderColor: 'var(--retrodesk-border)' }}>
+               <div className="text-[12px] font-mono font-black tracking-widest text-center" style={{ color: 'var(--retrodesk-text)' }}>ELEVATOR</div>
+               <div className="flex gap-1.5 mt-1.5">
+                  <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse border-[1px] border-[var(--retrodesk-bg)]" />
+                  <div className="w-2 h-2 rounded-full bg-yellow-400 border-[1px] border-[var(--retrodesk-bg)]" />
+                  <div className="w-2 h-2 rounded-full bg-yellow-400 border-[1px] border-[var(--retrodesk-bg)]" />
                </div>
             </div>
             
-            <div className="flex flex-col gap-3 mt-1">
+            <div className="flex flex-col gap-2 mb-1">
               {floors.map(f => {
                 const isActive = currentFloor === f.id;
                 return (
                   <button 
                     key={f.id} 
                     onClick={(e) => { e.stopPropagation(); setCurrentFloor(f.id); }}
-                    className={`px-3 py-3 w-full flex items-center justify-between font-mono text-[10px] leading-none font-black transition-all group ${isActive ? 'translate-x-1.5 shadow-[4px_4px_0px_rgba(0,0,0,0.4)]' : 'hover:translate-x-1 opacity-75 hover:opacity-100'}`}
+                    className={`px-2 py-2 w-full flex items-center justify-start gap-2 font-mono text-[9px] leading-none font-black transition-all group ${isActive ? 'translate-x-1 shadow-[3px_3px_0px_rgba(0,0,0,0.4)]' : 'hover:translate-x-0.5 opacity-80 hover:opacity-100'}`}
                     style={{
                       background: isActive ? 'var(--retrodesk-blue)' : 'var(--retrodesk-bg)',
                       color: isActive ? 'var(--retrodesk-surface)' : 'var(--retrodesk-text)',
-                      border: `3px solid var(--retrodesk-border)`
+                      border: `2px solid var(--retrodesk-border)`
                     }}
                   >
                     <span 
-                      className="text-[14px] px-1.5 py-0.5 border-2 transition-colors flex-shrink-0"
+                      className="text-[10px] px-1 py-[1px] border-2 transition-colors flex-shrink-0"
                       style={{
                         background: 'var(--retrodesk-surface)',
                         color: 'var(--retrodesk-text)',
@@ -360,7 +360,7 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
                     >
                        {f.id}
                     </span>
-                    <span className="text-right flex-1 tracking-wider uppercase ml-2 leading-tight">
+                    <span className="text-left tracking-wider uppercase truncate">
                       {f.name}
                     </span>
                   </button>
