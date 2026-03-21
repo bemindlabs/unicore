@@ -14,11 +14,12 @@ const mockLicenseService = {
   getLicenseStatus: jest.fn().mockResolvedValue({ tier: 'pro' }),
 };
 
-function makeReq(originalUrl = '/api/proxy/ai/llm/complete', body: any = undefined) {
+function makeReq(originalUrl = '/api/proxy/ai/llm/complete', body: any = null) {
   const emitter = new EventEmitter() as any;
   emitter.method = 'POST';
   emitter.originalUrl = originalUrl;
   emitter.headers = {};
+  // Default body to null (not undefined) so readBody doesn't wait for stream events
   emitter.body = body;
   return emitter;
 }
