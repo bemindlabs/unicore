@@ -38,6 +38,12 @@ const SETTINGS_LINKS = [
     description: 'Monitor AI agents, heartbeat status, and pub/sub channels',
   },
   {
+    href: '/settings/branding',
+    icon: Paintbrush,
+    title: 'Branding',
+    description: 'Customize colors, fonts, logo, and white-label settings',
+  },
+  {
     href: '/settings/domains',
     icon: Globe,
     title: 'Custom Domains',
