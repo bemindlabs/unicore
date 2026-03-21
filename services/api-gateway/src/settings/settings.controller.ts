@@ -114,6 +114,33 @@ export class SettingsController {
   // NOTE: Specific named routes MUST be declared before the catch-all :key routes
   // to prevent NestJS from matching the parameterized route first.
 
+  /**
+   * GET branding config — tenant-scoped in enterprise, global otherwise.
+   *
+   * Resolution order (enterprise):
+   *   1. branding:{tenantId}  — tenant-specific override
+   *   2. branding             — global fallback
+   *
+   * Resolution order (community / pro):
+   *   1. branding             — global config only
+   */
+  @Get('branding')
+  @ProFeatureRequired('whiteLabelBranding')
+  @UseGuards(LicenseGuard)
+  async getBranding() {
+    const tenantKey = this.getBrandingKey();
+    if (tenantKey !== 'branding') {
+      const tenantSettings = await this.prisma.settings.findUnique({ where: { id: tenantKey } });
+      if (tenantSettings) return tenantSettings.data;
+    }
+    const settings = await this.prisma.settings.findUnique({ where: { id: 'branding' } });
+    return settings?.data ?? {};
+  }
+
+  /**
+   * PUT branding config — saves to `branding:{tenantId}` in enterprise,
+   * or to the global `branding` key in community/pro.
+   */
   @Put('branding')
   @ProFeatureRequired('whiteLabelBranding')
   @UseGuards(LicenseGuard)
@@ -126,9 +153,10 @@ export class SettingsController {
       }
       dto.customCss = sanitized;
     }
+    const key = this.getBrandingKey();
     const settings = await this.prisma.settings.upsert({
-      where: { id: 'branding' },
-      create: { id: 'branding', data: dto },
+      where: { id: key },
+      create: { id: key, data: dto },
       update: { data: dto },
     });
     return settings.data;
