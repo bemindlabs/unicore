@@ -1,5 +1,7 @@
 import { Injectable, Logger, ForbiddenException, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { createHash } from 'crypto';
+import { hostname, networkInterfaces, cpus } from 'os';
 import { MinimalRedisClient } from '../domains/redis-client';
 import type {
   LicenseStatus,
