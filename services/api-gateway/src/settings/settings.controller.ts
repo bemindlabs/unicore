@@ -92,11 +92,17 @@ export class SettingsController {
   @UseGuards(LicenseGuard)
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: false, transform: true }))
   async putBranding(@Body() dto: BrandingConfigDto) {
-    const body = dto;
+    if (typeof dto.customCss === 'string') {
+      const { sanitized, blocked } = sanitizeCss(dto.customCss);
+      if (blocked.length > 0) {
+        this.logger.warn(`customCss: blocked dangerous patterns: ${blocked.join(', ')}`);
+      }
+      dto.customCss = sanitized;
+    }
     const settings = await this.prisma.settings.upsert({
       where: { id: 'branding' },
-      create: { id: 'branding', data: body },
-      update: { data: body },
+      create: { id: 'branding', data: dto },
+      update: { data: dto },
     });
     return settings.data;
   }
