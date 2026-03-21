@@ -13,7 +13,8 @@ function makeReq(opts: { body?: any; rawBody?: Buffer } = {}) {
   emitter.method = 'GET';
   emitter.originalUrl = '/api/proxy/rag/info';
   emitter.headers = {};
-  emitter.body = opts.body;
+  // Default body to null (not undefined) so readBody doesn't wait for stream events
+  emitter.body = 'body' in opts ? opts.body : null;
   if (opts.rawBody !== undefined) emitter.rawBody = opts.rawBody;
   return emitter;
 }
