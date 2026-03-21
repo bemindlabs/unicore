@@ -8,7 +8,7 @@ const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
 const mockProStatus: LicenseStatus = {
   valid: true,
-  tier: 'pro',
+  edition: 'pro',
   key: 'UC-PRO-KEY',
   features: ['fullRbac', 'sso'],
   expiresAt: null,
