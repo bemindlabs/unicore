@@ -3,6 +3,7 @@ import {
   IsString,
   MaxLength,
   IsUrl,
+  IsHexColor,
   IsBoolean,
   ValidateNested,
   IsArray,

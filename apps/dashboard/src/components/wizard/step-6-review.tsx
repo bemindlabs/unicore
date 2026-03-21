@@ -11,6 +11,7 @@ import {
 } from "@unicore/ui";
 import { useState } from "react";
 
+import { useBranding } from "@/components/BrandingProvider";
 import { useWizardState } from "@/hooks/use-wizard-state";
 import { provisionWorkspace } from "@/lib/bootstrap-api";
 import type { ProvisionRequest, ProvisionResult } from "@/lib/bootstrap-api";

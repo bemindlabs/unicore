@@ -169,6 +169,63 @@ model Gamification {
 }
 
 // ---------------------------------------------------------------------------
+// Plugin Registry (UNC-537)
+// ---------------------------------------------------------------------------
+
+model Plugin {
+  id            String               @id @default(uuid())
+  name          String
+  slug          String               @unique
+  type          String               // 'integration' | 'ai' | 'workflow' | 'ui' | 'utility'
+  author        String
+  version       String               // latest published version
+  description   String
+  icon          String?
+  downloads     Int                  @default(0)
+  rating        Float                @default(0)
+  versions      PluginVersion[]
+  installations PluginInstallation[]
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  @@index([type])
+  @@map("plugins")
+}
+
+model PluginVersion {
+  id            String   @id @default(uuid())
+  pluginId      String
+  plugin        Plugin   @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  semver        String
+  changelog     String?
+  artifactUrl   String
+  checksum      String
+  compatibility Json     @default("{}") // { minApiVersion?, maxApiVersion?, nodeVersion? }
+  createdAt     DateTime @default(now())
+
+  @@unique([pluginId, semver])
+  @@index([pluginId])
+  @@map("plugin_versions")
+}
+
+model PluginInstallation {
+  id          String   @id @default(uuid())
+  instanceId  String
+  pluginId    String
+  plugin      Plugin   @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  version     String
+  enabled     Boolean  @default(true)
+  config      Json     @default("{}")
+  installedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([instanceId, pluginId])
+  @@index([instanceId])
+  @@index([pluginId])
+  @@map("plugin_installations")
+}
+
+// ---------------------------------------------------------------------------
 // Notifications
 // ---------------------------------------------------------------------------
 
