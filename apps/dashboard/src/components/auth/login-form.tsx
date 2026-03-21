@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   Button,
   Card,
@@ -13,6 +14,7 @@ import { useAuth } from '@/hooks/use-auth';
 
 export function LoginForm() {
   const { login } = useAuth();
+  const t = useTranslations('auth');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +28,7 @@ export function LoginForm() {
     try {
       await login(email, password);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      setError(err instanceof Error ? err.message : t('loginFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -38,9 +40,9 @@ export function LoginForm() {
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold text-lg lg:hidden">
           U
         </div>
-        <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t('welcomeBack')}</h1>
         <p className="text-sm text-muted-foreground">
-          Sign in to your UniCore account
+          {t('signInDescription')}
         </p>
       </div>
 
@@ -48,11 +50,11 @@ export function LoginForm() {
         <CardContent className="pt-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('email')}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder={t('emailPlaceholder')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -60,11 +62,11 @@ export function LoginForm() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('password')}</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder={t('passwordPlaceholder')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -76,7 +78,7 @@ export function LoginForm() {
               </div>
             )}
             <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? 'Signing in...' : 'Sign in'}
+              {isSubmitting ? t('signingIn') : t('signIn')}
             </Button>
           </form>
         </CardContent>

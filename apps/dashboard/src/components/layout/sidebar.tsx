@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Crown, PanelLeftClose, PanelLeftOpen, LogOut, Monitor } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage, Button, cn, Separator } from '@unicore/ui';
 import { useAuth } from '@/hooks/use-auth';
@@ -17,6 +18,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const { isPro } = useLicense();
+  const t = useTranslations('common');
   const sections = user ? filterSectionsByRole(user.role) : [];
 
   const initials =
@@ -47,7 +49,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           size="icon"
           onClick={onToggle}
           className="h-7 w-7 text-muted-foreground hover:text-foreground"
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          title={collapsed ? t('expandSidebar') : t('collapseSidebar')}
         >
           {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
         </Button>
@@ -110,10 +112,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
               collapsed && 'justify-center px-2',
             )}
-            title="Backoffice"
+            title={t('backoffice')}
           >
             <Monitor className="h-4 w-4 shrink-0" />
-            {!collapsed && <span className="truncate">Backoffice</span>}
+            {!collapsed && <span className="truncate">{t('backoffice')}</span>}
           </Link>
 
           {!isPro && (
@@ -124,10 +126,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 'bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 dark:bg-amber-500/15 dark:text-amber-400 dark:hover:bg-amber-500/25',
                 collapsed && 'justify-center px-2',
               )}
-              title="Upgrade to Pro"
+              title={t('upgradeToPro')}
             >
               <Crown className="h-4 w-4 shrink-0" />
-              {!collapsed && <span className="truncate">Upgrade to Pro</span>}
+              {!collapsed && <span className="truncate">{t('upgradeToPro')}</span>}
             </Link>
           )}
         </div>
@@ -150,7 +152,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   size="icon"
                   className="h-8 w-8 text-muted-foreground hover:text-destructive"
                   onClick={logout}
-                  title="Sign out"
+                  title={t('signOut')}
                 >
                   <LogOut className="h-4 w-4" />
                 </Button>
@@ -172,7 +174,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   size="icon"
                   className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
                   onClick={logout}
-                  title="Sign out"
+                  title={t('signOut')}
                 >
                   <LogOut className="h-3.5 w-3.5" />
                 </Button>
