@@ -1,5 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { readdirSync, statSync } from 'fs';
+import { readdirSync, lstatSync } from 'fs';
 import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { GitCloneService } from '../git-ingestion/git-clone.service';
@@ -163,7 +163,14 @@ export class GitIngestionService {
     );
   }
 
-  private discoverFiles(dir: string, results: string[] = []): string[] {
+  private static readonly MAX_TRAVERSAL_DEPTH = 20;
+
+  private discoverFiles(dir: string, results: string[] = [], depth = 0): string[] {
+    if (depth > GitIngestionService.MAX_TRAVERSAL_DEPTH) {
+      this.logger.warn(`Max traversal depth (${GitIngestionService.MAX_TRAVERSAL_DEPTH}) reached at ${dir}, skipping`);
+      return results;
+    }
+
     let entries: string[];
     try {
       entries = readdirSync(dir);
@@ -176,12 +183,16 @@ export class GitIngestionService {
       const fullPath = join(dir, entry);
       let stat;
       try {
-        stat = statSync(fullPath);
+        stat = lstatSync(fullPath);
       } catch {
         continue;
       }
+      if (stat.isSymbolicLink()) {
+        this.logger.warn(`Skipping symlink: ${fullPath}`);
+        continue;
+      }
       if (stat.isDirectory()) {
-        this.discoverFiles(fullPath, results);
+        this.discoverFiles(fullPath, results, depth + 1);
       } else if (stat.isFile() && !this.chunker.isBinaryFile(fullPath)) {
         results.push(fullPath);
       }

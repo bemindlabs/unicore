@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { readFile } from 'fs/promises';
-import { extname, relative } from 'path';
+import { extname, relative, resolve } from 'path';
 
 export interface CodeChunk {
   content: string;
@@ -86,6 +86,14 @@ export class CodeChunkerService {
 
   async chunkFile(options: ChunkFileOptions): Promise<CodeChunk[]> {
     const { filePath, repoRoot, commitAuthor, commitDate } = options;
+
+    // Validate file path is within the expected repo root
+    const resolvedFile = resolve(filePath);
+    const resolvedRoot = resolve(repoRoot);
+    if (!resolvedFile.startsWith(resolvedRoot)) {
+      throw new BadRequestException('File path is outside the repository root');
+    }
+
     const relPath = relative(repoRoot, filePath);
 
     if (this.shouldSkipPath(relPath) || this.isBinaryFile(filePath)) {

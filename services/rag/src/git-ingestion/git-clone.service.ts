@@ -1,5 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { join } from 'path';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { join, resolve } from 'path';
 import { tmpdir } from 'os';
 import { existsSync, mkdirSync } from 'fs';
 import { rm } from 'fs/promises';
@@ -27,7 +27,14 @@ export class GitCloneService {
   }
 
   repoPath(repoId: string): string {
-    return join(this.baseDir, repoId);
+    if (!/^[a-zA-Z0-9_-]+$/.test(repoId)) {
+      throw new BadRequestException(`Invalid repoId: ${repoId}`);
+    }
+    const resolved = resolve(this.baseDir, repoId);
+    if (!resolved.startsWith(this.baseDir)) {
+      throw new BadRequestException('Path traversal detected in repoId');
+    }
+    return resolved;
   }
 
   private injectToken(repoUrl: string, authToken: string): string {

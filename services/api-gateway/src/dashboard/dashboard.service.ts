@@ -216,11 +216,11 @@ export class DashboardService {
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
     const [currentCount, previousCount, pendingCount, processingCount, completedCount] = await Promise.all([
-      this.safeCount('orders', '"created_at" >= $1', [startOfMonth]),
-      this.safeCount('orders', '"created_at" >= $1 AND "created_at" < $2', [startOfLastMonth, startOfMonth]),
-      this.safeCount('orders', 'status IN ($1, $2, $3)', ['DRAFT', 'QUOTED', 'CONFIRMED']),
-      this.safeCount('orders', 'status IN ($1, $2, $3)', ['PROCESSING', 'PARTIALLY_FULFILLED', 'FULFILLED']),
-      this.safeCount('orders', 'status IN ($1, $2)', ['SHIPPED', 'DELIVERED']),
+      this.safeCount('orders', { clause: '"created_at" >= $1', params: [startOfMonth] }),
+      this.safeCount('orders', { clause: '"created_at" >= $1 AND "created_at" < $2', params: [startOfLastMonth, startOfMonth] }),
+      this.safeCount('orders', { clause: 'status IN ($1, $2, $3)', params: ['DRAFT', 'QUOTED', 'CONFIRMED'] }),
+      this.safeCount('orders', { clause: 'status IN ($1, $2, $3)', params: ['PROCESSING', 'PARTIALLY_FULFILLED', 'FULFILLED'] }),
+      this.safeCount('orders', { clause: 'status IN ($1, $2)', params: ['SHIPPED', 'DELIVERED'] }),
     ]);
 
     const trend = trendValue(currentCount, previousCount);
@@ -273,8 +273,8 @@ export class DashboardService {
   private async getInventoryWidgetFallback() {
     const [totalSkus, lowStockCount, outOfStockCount] = await Promise.all([
       this.safeCount('inventory_items'),
-      this.safeCount('inventory_items', '"quantity" > 0 AND "quantity" <= "reorder_level"'),
-      this.safeCount('inventory_items', '"quantity" = $1', [0]),
+      this.safeCount('inventory_items', { clause: '"quantity" > 0 AND "quantity" <= "reorder_level"', params: [] }),
+      this.safeCount('inventory_items', { clause: '"quantity" = $1', params: [0] }),
     ]);
 
     return {
@@ -510,16 +510,16 @@ export class DashboardService {
     'total_amount', 'monthly_amount',
   ]);
 
-  private async safeCount(table: string, where?: string, params?: unknown[]): Promise<number> {
+  private async safeCount(table: string, where?: { clause: string; params: unknown[] }): Promise<number> {
     if (!DashboardService.ALLOWED_TABLES.has(table)) {
       this.logger.warn(`Blocked query on disallowed table: ${table}`);
       return 0;
     }
     try {
-      const whereClause = where ? `WHERE ${where}` : '';
+      const whereClause = where ? `WHERE ${where.clause}` : '';
       const result = await this.prisma.$queryRawUnsafe<RawCount[]>(
         `SELECT COUNT(*)::bigint AS count FROM "${table}" ${whereClause}`,
-        ...(params ?? []),
+        ...(where?.params ?? []),
       );
       return Number(result[0]?.count ?? 0);
     } catch (error) {

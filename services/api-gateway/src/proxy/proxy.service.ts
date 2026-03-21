@@ -63,7 +63,11 @@ export class ProxyService {
       // never from an incoming request header.
       delete forwardHeaders['x-user-id'];
 
-      if (options.userId) {
+      if (
+        options.userId &&
+        typeof options.userId === 'string' &&
+        !/[\r\n\0]/.test(options.userId)
+      ) {
         forwardHeaders['x-user-id'] = options.userId;
       }
 

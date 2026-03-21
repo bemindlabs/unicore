@@ -106,6 +106,11 @@ export class IngestionService {
   }
 
   async ingestBatch(documents: IngestDocumentDto[]): Promise<BatchIngestionResult> {
+    const MAX_BATCH_SIZE = 100;
+    if (documents.length > MAX_BATCH_SIZE) {
+      throw new BadRequestException(`Batch size cannot exceed ${MAX_BATCH_SIZE}`);
+    }
+
     const results: IngestionResult[] = [];
     const failedDocuments: Array<{ index: number; error: string }> = [];
 

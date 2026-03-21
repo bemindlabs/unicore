@@ -200,11 +200,26 @@ export class SettingsController {
   @Public()
   @Get('branding/uploads/:filename')
   serveBrandingFile(@Param('filename') filename: string, @Res() res: Response) {
-    // Prevent path traversal
-    if (filename.includes('/') || filename.includes('..')) {
+    // Whitelist: only safe filename characters
+    if (!/^[a-zA-Z0-9._-]+$/.test(filename)) {
       throw new BadRequestException('Invalid filename');
     }
-    const filePath = path.join(BRANDING_UPLOAD_DIR, filename);
+    // Resolve-then-check: ensure resolved path stays within upload dir
+    const resolvedDir = path.resolve(BRANDING_UPLOAD_DIR);
+    const filePath = path.resolve(BRANDING_UPLOAD_DIR, filename);
+    if (!filePath.startsWith(resolvedDir + path.sep)) {
+      throw new BadRequestException('Invalid filename');
+    }
+    // Reject symlinks
+    try {
+      const stat = fs.lstatSync(filePath);
+      if (stat.isSymbolicLink()) {
+        throw new BadRequestException('Invalid filename');
+      }
+    } catch (e) {
+      if (e instanceof BadRequestException) throw e;
+      throw new NotFoundException('File not found');
+    }
     if (!fs.existsSync(filePath)) throw new NotFoundException('File not found');
     const ext = path.extname(filename).toLowerCase();
     const mimeMap: Record<string, string> = {

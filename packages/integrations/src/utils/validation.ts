@@ -43,5 +43,6 @@ export function isValidUrl(value: string): boolean {
  * Validate an email address format (basic RFC-5322 subset).
  */
 export function isValidEmail(value: string): boolean {
+  if (value.length > 254) return false;
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }

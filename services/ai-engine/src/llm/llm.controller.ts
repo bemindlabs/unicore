@@ -78,10 +78,13 @@ export class LlmController {
         if (chunk.done) break;
       }
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Stream failed';
+      const SAFE_FALLBACK = 'Stream processing error';
+      const raw = err instanceof Error ? err.message : SAFE_FALLBACK;
+      const message = raw
+        .replace(/[<>]/g, '')
+        .slice(0, 200) || SAFE_FALLBACK;
       res.write(`data: ${JSON.stringify({ error: message, done: true })}\n\n`);
-      this.logger.error(`Stream error: ${message}`);
+      this.logger.error(`Stream error: ${raw}`);
     } finally {
       res.end();
     }

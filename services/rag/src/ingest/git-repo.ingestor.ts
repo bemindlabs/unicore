@@ -7,8 +7,8 @@
  */
 
 import { Injectable, Logger } from '@nestjs/common';
-import { readdirSync, statSync } from 'fs';
-import { join, relative } from 'path';
+import { readdirSync, statSync, lstatSync } from 'fs';
+import { join, relative, resolve } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { GitCloneService } from '../git-ingestion/git-clone.service';
 import { CodeChunkerService, CodeChunk } from '../git/chunker.service';
@@ -196,6 +196,13 @@ export class GitRepoIngestor {
     let skipped = 0;
 
     for (const absPath of allFiles) {
+      // Validate path stays within cloned repo
+      const resolvedAbs = resolve(absPath);
+      const resolvedLocal = resolve(localPath);
+      if (!resolvedAbs.startsWith(resolvedLocal)) {
+        skipped++;
+        continue;
+      }
       const relPath = relative(localPath, absPath);
 
       // Apply glob filters
@@ -294,7 +301,14 @@ export class GitRepoIngestor {
     );
   }
 
-  private discoverFiles(dir: string, results: string[] = []): string[] {
+  private static readonly MAX_TRAVERSAL_DEPTH = 20;
+
+  private discoverFiles(dir: string, results: string[] = [], depth = 0): string[] {
+    if (depth > GitRepoIngestor.MAX_TRAVERSAL_DEPTH) {
+      this.logger.warn(`Max traversal depth (${GitRepoIngestor.MAX_TRAVERSAL_DEPTH}) reached at ${dir}, skipping`);
+      return results;
+    }
+
     let entries: string[];
     try {
       entries = readdirSync(dir);
@@ -307,12 +321,16 @@ export class GitRepoIngestor {
       const fullPath = join(dir, entry);
       let stat;
       try {
-        stat = statSync(fullPath);
+        stat = lstatSync(fullPath);
       } catch {
         continue;
       }
+      if (stat.isSymbolicLink()) {
+        this.logger.warn(`Skipping symlink: ${fullPath}`);
+        continue;
+      }
       if (stat.isDirectory()) {
-        this.discoverFiles(fullPath, results);
+        this.discoverFiles(fullPath, results, depth + 1);
       } else if (stat.isFile() && !this.chunker.isBinaryFile(fullPath)) {
         results.push(fullPath);
       }

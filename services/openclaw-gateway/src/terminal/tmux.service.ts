@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, OnModuleDestroy, BadRequestException } from '@nestjs/common';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
@@ -29,6 +29,18 @@ export class TmuxService implements OnModuleInit, OnModuleDestroy {
     if (this.cleanupInterval) clearInterval(this.cleanupInterval);
   }
 
+  /**
+   * Validate that a session/window name contains only safe characters.
+   * Prevents shell injection through interpolated tmux target names.
+   */
+  private sanitizeName(name: string): void {
+    if (!name || !/^[a-zA-Z0-9_-]+$/.test(name)) {
+      throw new BadRequestException(
+        `Invalid tmux name '${name}': only alphanumeric characters, hyphens, and underscores are allowed`,
+      );
+    }
+  }
+
   private async run(cmd: string): Promise<{ stdout: string; stderr: string }> {
     try {
       return await execAsync(cmd, {
@@ -42,7 +54,8 @@ export class TmuxService implements OnModuleInit, OnModuleDestroy {
   }
 
   async createSession(name: string): Promise<{ ok: boolean; error?: string }> {
-    const { stderr } = await this.run(`tmux new-session -d -s ${name}`);
+    this.sanitizeName(name);
+    const { stderr } = await this.run(`tmux new-session -d -s "${name}"`);
     if (stderr && !stderr.includes('duplicate session')) {
       return { ok: false, error: stderr.trim() };
     }
@@ -53,6 +66,7 @@ export class TmuxService implements OnModuleInit, OnModuleDestroy {
   }
 
   async execInSession(name: string, command: string, pane = 0): Promise<{ ok: boolean; error?: string }> {
+    this.sanitizeName(name);
     const target = `${name}:0.${pane}`;
     const escaped = command.replace(/'/g, `'\\''`);
     const { stderr } = await this.run(`tmux send-keys -t '${target}' '${escaped}' Enter`);
@@ -63,19 +77,21 @@ export class TmuxService implements OnModuleInit, OnModuleDestroy {
   }
 
   async captureOutput(name: string, pane = 0): Promise<string> {
+    this.sanitizeName(name);
     const target = `${name}:0.${pane}`;
     const { stdout } = await this.run(`tmux capture-pane -p -t '${target}'`);
     return stdout;
   }
 
   async getSession(name: string): Promise<{ name: string; windows: number; panes: number; output: string } | null> {
-    const { stdout: windowOut } = await this.run(`tmux list-windows -t ${name} 2>/dev/null | wc -l`);
+    this.sanitizeName(name);
+    const { stdout: windowOut } = await this.run(`tmux list-windows -t "${name}" 2>/dev/null | wc -l`);
     const windows = parseInt(windowOut.trim(), 10) || 0;
     if (windows === 0) {
       this.sessions.delete(name);
       return null;
     }
-    const { stdout: paneOut } = await this.run(`tmux list-panes -t ${name}:0 2>/dev/null | wc -l`);
+    const { stdout: paneOut } = await this.run(`tmux list-panes -t "${name}:0" 2>/dev/null | wc -l`);
     const panes = parseInt(paneOut.trim(), 10) || 1;
     const output = await this.captureOutput(name);
     const session = this.sessions.get(name);
@@ -84,7 +100,8 @@ export class TmuxService implements OnModuleInit, OnModuleDestroy {
   }
 
   async killSession(name: string): Promise<{ ok: boolean; error?: string }> {
-    const { stderr } = await this.run(`tmux kill-session -t ${name}`);
+    this.sanitizeName(name);
+    const { stderr } = await this.run(`tmux kill-session -t "${name}"`);
     this.sessions.delete(name);
     if (stderr) return { ok: false, error: stderr.trim() };
     this.logger.log(`Killed tmux session: ${name}`);
@@ -108,15 +125,18 @@ export class TmuxService implements OnModuleInit, OnModuleDestroy {
   }
 
   async splitPane(name: string, direction: 'h' | 'v'): Promise<{ ok: boolean; error?: string }> {
+    this.sanitizeName(name);
     const flag = direction === 'h' ? '-h' : '-v';
-    const { stderr } = await this.run(`tmux split-window ${flag} -t ${name}:0`);
+    const { stderr } = await this.run(`tmux split-window ${flag} -t "${name}:0"`);
     if (stderr) return { ok: false, error: stderr.trim() };
     return { ok: true };
   }
 
   async newWindow(name: string, windowName?: string): Promise<{ ok: boolean; error?: string }> {
-    const nameFlag = windowName ? `-n '${windowName}'` : '';
-    const { stderr } = await this.run(`tmux new-window ${nameFlag} -t ${name}`);
+    this.sanitizeName(name);
+    if (windowName) this.sanitizeName(windowName);
+    const nameFlag = windowName ? `-n "${windowName}"` : '';
+    const { stderr } = await this.run(`tmux new-window ${nameFlag} -t "${name}"`);
     if (stderr) return { ok: false, error: stderr.trim() };
     return { ok: true };
   }

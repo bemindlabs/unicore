@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger, BadRequestException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import type {
   EmbeddingProvider,
@@ -62,6 +62,11 @@ export class EmbeddingService implements EmbeddingProvider {
   }
 
   async embedBatch(texts: string[]): Promise<EmbeddingResponse[]> {
+    const MAX_BATCH_SIZE = 1000;
+    if (texts.length > MAX_BATCH_SIZE) {
+      throw new BadRequestException(`Batch size cannot exceed ${MAX_BATCH_SIZE}`);
+    }
+
     try {
       const results = await Promise.all(
         texts.map(async (text) => {
