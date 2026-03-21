@@ -81,7 +81,7 @@ const PRO_FEATURES: LicenseInfo = {
     advancedWorkflows: true,
     allChannels: true,
     unlimitedRag: true,
-    whiteLabelBranding: true,
+    whiteLabelBranding: false,
     sso: true,
     auditLogs: true,
     prioritySupport: true,
