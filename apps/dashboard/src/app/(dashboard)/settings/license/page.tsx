@@ -7,6 +7,7 @@ import { DemoGuard } from '@/components/demo/DemoGuard';
 import {
   AlertTriangle,
   ArrowDownCircle,
+  Building2,
   CheckCircle2,
   Crown,
   KeyRound,
@@ -87,6 +88,27 @@ const PRO_FEATURES: LicenseInfo = {
   },
 };
 
+const ENTERPRISE_FEATURES: LicenseInfo = {
+  key: '',
+  edition: 'enterprise',
+  status: 'active',
+  maxAgents: 999,
+  maxRoles: 999,
+  expiresAt: '',
+  features: {
+    allAgents: true,
+    customAgentBuilder: true,
+    fullRbac: true,
+    advancedWorkflows: true,
+    allChannels: true,
+    unlimitedRag: true,
+    whiteLabelBranding: true,
+    sso: true,
+    auditLogs: true,
+    prioritySupport: true,
+  },
+};
+
 const STATUS_CONFIG: Record<
   LicenseStatus,
   { label: string; variant: 'default' | 'secondary' | 'outline'; icon: React.ComponentType<{ className?: string }> }
@@ -105,12 +127,15 @@ function FeatureRow({
   label,
   community,
   pro,
+  enterprise,
 }: {
   label: string;
-  community: boolean | number;
-  pro: boolean | number;
+  community: boolean | number | string;
+  pro: boolean | number | string;
+  enterprise: boolean | number | string;
 }) {
-  const renderValue = (v: boolean | number) => {
+  const renderValue = (v: boolean | number | string) => {
+    if (typeof v === 'string') return <span className="font-medium text-xs">{v}</span>;
     if (typeof v === 'number') return <span className="font-medium">{v}</span>;
     return v ? (
       <CheckCircle2 className="h-4 w-4 text-emerald-500" />
@@ -120,10 +145,11 @@ function FeatureRow({
   };
 
   return (
-    <div className="grid grid-cols-3 items-center gap-4 py-2 text-sm">
+    <div className="grid grid-cols-4 items-center gap-4 py-2 text-sm">
       <span className="text-muted-foreground">{label}</span>
       <span className="flex justify-center">{renderValue(community)}</span>
       <span className="flex justify-center">{renderValue(pro)}</span>
+      <span className="flex justify-center">{renderValue(enterprise)}</span>
     </div>
   );
 }
@@ -202,6 +228,7 @@ export default function SettingsLicensePage() {
         // Map API response to LicenseInfo format
         const edition = raw.edition ?? raw.tier ?? 'community';
         const isPro = edition === 'pro';
+        const isEnt = edition === 'enterprise';
         const featureObj: Record<string, boolean> = {};
 
         if (Array.isArray(raw.features)) {
@@ -215,16 +242,16 @@ export default function SettingsLicensePage() {
         } else {
           // Default community features
           for (const k of ['allAgents', 'customAgentBuilder', 'fullRbac', 'advancedWorkflows', 'allChannels', 'unlimitedRag', 'whiteLabelBranding', 'sso', 'auditLogs', 'prioritySupport']) {
-            featureObj[k] = isPro;
+            featureObj[k] = isPro || isEnt;
           }
         }
 
         const mapped: LicenseInfo = {
-          key: raw.key ?? (isPro ? 'PRO-XXXX-XXXX-XXXX' : 'COMM-XXXX-XXXX-XXXX'),
+          key: raw.key ?? (isEnt ? 'ENT-XXXX-XXXX-XXXX' : isPro ? 'PRO-XXXX-XXXX-XXXX' : 'COMM-XXXX-XXXX-XXXX'),
           edition: edition as LicenseInfo['edition'],
           status: (raw.status ?? (raw.valid !== false ? 'active' : 'invalid')) as LicenseStatus,
-          maxAgents: raw.maxAgents ?? (isPro ? 50 : 2),
-          maxRoles: raw.maxRoles ?? (isPro ? 20 : 3),
+          maxAgents: raw.maxAgents ?? (isEnt ? 999 : isPro ? 50 : 2),
+          maxRoles: raw.maxRoles ?? (isEnt ? 999 : isPro ? 20 : 3),
           expiresAt: raw.expiresAt ?? '2099-12-31T23:59:59Z',
           features: featureObj as unknown as LicenseInfo['features'],
         };
@@ -241,42 +268,25 @@ export default function SettingsLicensePage() {
 
   const statusCfg = STATUS_CONFIG[license.status];
   const StatusIcon = statusCfg.icon;
-
-  const LICENSE_KEY_REGEX = /^UC-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
-  const isKeyValid = LICENSE_KEY_REGEX.test(upgradeKey);
-
-  const handleKeyChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const clean = e.target.value.replace(/[^A-Z0-9]/gi, '').toUpperCase().slice(0, 18);
-    const parts: string[] = [];
-    if (clean.length > 0) parts.push(clean.slice(0, 2));
-    if (clean.length > 2) parts.push(clean.slice(2, 6));
-    if (clean.length > 6) parts.push(clean.slice(6, 10));
-    if (clean.length > 10) parts.push(clean.slice(10, 14));
-    if (clean.length > 14) parts.push(clean.slice(14, 18));
-    const formatted = parts.join('-');
-    setUpgradeKey(formatted);
-    if (formatted && !LICENSE_KEY_REGEX.test(formatted)) {
-      setKeyError('Format must be UC-XXXX-XXXX-XXXX-XXXX (letters and digits only)');
-    } else {
-      setKeyError('');
-    }
-  }, []);
+  const isEnterprise = license.edition === 'enterprise';
 
   const handleActivate = useCallback(async () => {
-    if (!isKeyValid) return;
+    if (!upgradeKey.trim()) return;
     setIsActivating(true);
+    setKeyError('');
     try {
       await api.post('/api/v1/license/activate', { key: upgradeKey });
       toast({
         title: 'License activation',
-        description: 'Key validated. Reload required to apply Pro features.',
+        description: 'Key validated. Reload required to apply features.',
       });
       setUpgradeKey('');
-      setKeyError('');
+    } catch (err: any) {
+      setKeyError(err?.message ?? 'Invalid key. Please check and try again.');
     } finally {
       setIsActivating(false);
     }
-  }, [upgradeKey, isKeyValid]);
+  }, [upgradeKey]);
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -353,9 +363,9 @@ export default function SettingsLicensePage() {
       {isPolling && (
         <Alert className="border-amber-500/50 bg-amber-500/10">
           <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
-          <AlertTitle>Activating your Pro license...</AlertTitle>
+          <AlertTitle>Activating your license...</AlertTitle>
           <AlertDescription>
-            We are verifying your payment and activating Pro features. This usually takes a few seconds.
+            We are verifying your payment and activating features. This usually takes a few seconds.
           </AlertDescription>
         </Alert>
       )}
@@ -405,7 +415,9 @@ export default function SettingsLicensePage() {
         <CardContent className="space-y-6">
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2 rounded-lg bg-primary/10 px-4 py-2">
-              {license.edition === 'pro' ? (
+              {isEnterprise ? (
+                <Building2 className="h-5 w-5 text-violet-500" />
+              ) : license.edition === 'pro' ? (
                 <Crown className="h-5 w-5 text-amber-500" />
               ) : (
                 <ShieldCheck className="h-5 w-5 text-primary" />
@@ -425,7 +437,9 @@ export default function SettingsLicensePage() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Custom Agent Slots</p>
-              <p className="text-sm font-medium">{license.maxAgents} (+ 8 built-in)</p>
+              <p className="text-sm font-medium">
+                {isEnterprise ? 'Unlimited' : `${license.maxAgents} (+ 8 built-in)`}
+              </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Expires</p>
@@ -447,20 +461,20 @@ export default function SettingsLicensePage() {
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>Team Members</span>
                   <span>
-                    {usersUsed} / {license.maxRoles}
+                    {usersUsed} / {isEnterprise ? '∞' : license.maxRoles}
                   </span>
                 </div>
-                <Progress value={(usersUsed / license.maxRoles) * 100} className="h-2" />
+                <Progress value={isEnterprise ? 0 : (usersUsed / license.maxRoles) * 100} className="h-2" />
               </div>
               <div className="space-y-1">
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>Active Agents</span>
                   <span>
-                    {agentsUsed} / {license.maxAgents}
+                    {agentsUsed} / {isEnterprise ? '∞' : license.maxAgents}
                   </span>
                 </div>
                 <Progress
-                  value={(agentsUsed / license.maxAgents) * 100}
+                  value={isEnterprise ? 0 : (agentsUsed / license.maxAgents) * 100}
                   className="h-2"
                 />
               </div>
@@ -478,24 +492,29 @@ export default function SettingsLicensePage() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-4 border-b pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <div className="grid grid-cols-4 gap-4 border-b pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             <span>Feature</span>
             <span className="text-center">Community</span>
             <span className="text-center">Pro</span>
+            <span className="text-center">Enterprise</span>
           </div>
           {(
             [
-              ['Max Agents', MOCK_LICENSE.maxAgents, PRO_FEATURES.maxAgents],
-              ['Max Roles', MOCK_LICENSE.maxRoles, PRO_FEATURES.maxRoles],
-              ['All Agents', MOCK_LICENSE.features.allAgents, PRO_FEATURES.features.allAgents],
-              ['Advanced Workflows', MOCK_LICENSE.features.advancedWorkflows, PRO_FEATURES.features.advancedWorkflows],
-              ['White Label', MOCK_LICENSE.features.whiteLabelBranding, PRO_FEATURES.features.whiteLabelBranding],
-              ['Audit Logs', MOCK_LICENSE.features.auditLogs, PRO_FEATURES.features.auditLogs],
-              ['SSO (Coming Soon)', MOCK_LICENSE.features.sso, PRO_FEATURES.features.sso],
-              ['Priority Support', MOCK_LICENSE.features.prioritySupport, PRO_FEATURES.features.prioritySupport],
-            ] as [string, boolean | number, boolean | number][]
-          ).map(([label, community, pro]) => (
-            <FeatureRow key={label} label={label} community={community} pro={pro} />
+              ['Max Agents', MOCK_LICENSE.maxAgents, PRO_FEATURES.maxAgents, 'Unlimited'],
+              ['Max Roles', MOCK_LICENSE.maxRoles, PRO_FEATURES.maxRoles, 'Unlimited'],
+              ['All Agents', MOCK_LICENSE.features.allAgents, PRO_FEATURES.features.allAgents, ENTERPRISE_FEATURES.features.allAgents],
+              ['Advanced Workflows', MOCK_LICENSE.features.advancedWorkflows, PRO_FEATURES.features.advancedWorkflows, ENTERPRISE_FEATURES.features.advancedWorkflows],
+              ['White Label', MOCK_LICENSE.features.whiteLabelBranding, PRO_FEATURES.features.whiteLabelBranding, ENTERPRISE_FEATURES.features.whiteLabelBranding],
+              ['Audit Logs', MOCK_LICENSE.features.auditLogs, PRO_FEATURES.features.auditLogs, ENTERPRISE_FEATURES.features.auditLogs],
+              ['SSO', MOCK_LICENSE.features.sso, PRO_FEATURES.features.sso, ENTERPRISE_FEATURES.features.sso],
+              ['Priority Support', MOCK_LICENSE.features.prioritySupport, PRO_FEATURES.features.prioritySupport, ENTERPRISE_FEATURES.features.prioritySupport],
+              ['Multi-tenancy', false, false, true],
+              ['HA Cluster', false, false, true],
+              ['Compliance Controls', false, false, true],
+              ['Dedicated Account Mgr', false, false, true],
+            ] as [string, boolean | number | string, boolean | number | string, boolean | number | string][]
+          ).map(([label, community, pro, enterprise]) => (
+            <FeatureRow key={label} label={label} community={community} pro={pro} enterprise={enterprise} />
           ))}
         </CardContent>
       </Card>
@@ -575,7 +594,7 @@ export default function SettingsLicensePage() {
               <ShieldCheck className="h-4 w-4" />
               <AlertTitle>Have a license key?</AlertTitle>
               <AlertDescription>
-                Enter your Pro license key below. Keys are validated against the UniCore license server.
+                Enter your license key below. Keys are validated against the UniCore license server.
               </AlertDescription>
             </Alert>
             <div className="flex gap-3">
@@ -583,27 +602,48 @@ export default function SettingsLicensePage() {
                 <Label htmlFor="upgrade-key">License Key</Label>
                 <Input
                   id="upgrade-key"
-                  placeholder="UC-XXXX-XXXX-XXXX-XXXX"
+                  placeholder="PRO-XXXX-XXXX-XXXX"
                   value={upgradeKey}
-                  onChange={handleKeyChange}
-                  className={keyError ? 'border-destructive focus-visible:ring-destructive dark:border-red-500' : ''}
-                  spellCheck={false}
-                  autoComplete="off"
+                  onChange={(e) => { setUpgradeKey(e.target.value); setKeyError(''); }}
                 />
-                {keyError && (
-                  <p className="text-xs text-destructive dark:text-red-400">{keyError}</p>
-                )}
+                {keyError && <p className="text-xs text-destructive">{keyError}</p>}
               </div>
               <div className="flex items-end">
                 <Button
                   onClick={handleActivate}
-                  disabled={isActivating || !isKeyValid}
+                  disabled={isActivating || !upgradeKey.trim()}
                   variant="outline"
                 >
                   {isActivating ? 'Activating...' : 'Activate'}
                 </Button>
               </div>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Enterprise upsell card for Community and Pro users */}
+      {!isEnterprise && (
+        <Card className="border-violet-200 dark:border-violet-900/50">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-violet-500" />
+              <CardTitle>Need Enterprise?</CardTitle>
+            </div>
+            <CardDescription>
+              Multi-tenancy, HA clustering, compliance controls, SCIM SSO, and a dedicated account manager.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <a
+              href="https://unicore.bemind.tech/get-started"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-lg border border-violet-300 bg-violet-50 px-4 py-2.5 text-sm font-semibold text-violet-700 transition hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-900/20 dark:text-violet-300 dark:hover:bg-violet-900/40"
+            >
+              <Building2 className="h-4 w-4" />
+              Contact Sales
+            </a>
           </CardContent>
         </Card>
       )}
@@ -622,12 +662,12 @@ export default function SettingsLicensePage() {
         </div>
       )}
 
-      {/* UNC-505: Downgrade confirmation dialog */}
-      <Dialog open={showDowngrade} onOpenChange={(open) => { setShowDowngrade(open); if (!open) setDowngradeConfirmText(''); }}>
-        <DialogContent className="sm:max-w-md dark:bg-zinc-900 dark:border-zinc-800">
+      {/* UNC-478: Downgrade confirmation dialog */}
+      <Dialog open={showDowngrade} onOpenChange={setShowDowngrade}>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="dark:text-zinc-100">Downgrade to Community?</DialogTitle>
-            <DialogDescription className="dark:text-zinc-400">
+            <DialogTitle>Downgrade to Community?</DialogTitle>
+            <DialogDescription>
               Your Pro subscription will be cancelled at the end of the current billing period.
               You will lose access to the following features:
             </DialogDescription>
@@ -635,43 +675,30 @@ export default function SettingsLicensePage() {
 
           <ul className="space-y-2 py-2 text-sm">
             {[
-              ['SSO', 'Single sign-on disabled'],
-              ['RBAC', 'Basic roles only (3 max)'],
-              ['All Channels', 'Slack + Email only'],
-              ['Advanced Workflows', 'Basic workflows only'],
-              ['Custom Domains', 'Removed — unicore subdomain only'],
-              ['White-label Branding', 'UniCore branding restored'],
+              ['All Pro agents', 'Limited to 2 custom agents'],
+              ['Advanced workflows', 'Basic workflows only'],
+              ['All channels', 'Slack + Email only'],
+              ['Full RBAC', 'Basic roles only (3 max)'],
+              ['SSO integration', 'Standard login only'],
+              ['White-label branding', 'UniCore branding'],
+              ['Priority support', 'Community support only'],
             ].map(([feature, fallback]) => (
               <li key={feature} className="flex items-start gap-2">
                 <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
                 <div>
-                  <span className="font-medium dark:text-zinc-200">{feature}</span>
-                  <span className="text-muted-foreground dark:text-zinc-500"> — {fallback}</span>
+                  <span className="font-medium">{feature}</span>
+                  <span className="text-muted-foreground"> — {fallback}</span>
                 </div>
               </li>
             ))}
           </ul>
-
-          <div className="space-y-2 pt-2">
-            <Label htmlFor="downgrade-confirm" className="text-sm dark:text-zinc-300">
-              Type <span className="font-mono font-semibold text-destructive">DOWNGRADE</span> to confirm
-            </Label>
-            <Input
-              id="downgrade-confirm"
-              placeholder="DOWNGRADE"
-              value={downgradeConfirmText}
-              onChange={(e) => setDowngradeConfirmText(e.target.value)}
-              disabled={downgrading}
-              className="dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder:text-zinc-500"
-            />
-          </div>
 
           <DialogFooter className="flex-col gap-2 sm:flex-col">
             <Button
               variant="destructive"
               className="w-full"
               onClick={handleDowngrade}
-              disabled={downgrading || downgradeConfirmText !== 'DOWNGRADE'}
+              disabled={downgrading}
             >
               {downgrading ? (
                 <>
@@ -684,8 +711,8 @@ export default function SettingsLicensePage() {
             </Button>
             <Button
               variant="ghost"
-              className="w-full dark:text-zinc-300 dark:hover:bg-zinc-800"
-              onClick={() => { setShowDowngrade(false); setDowngradeConfirmText(''); }}
+              className="w-full"
+              onClick={() => setShowDowngrade(false)}
               disabled={downgrading}
             >
               Keep Pro
