@@ -65,7 +65,7 @@ export class DashboardService {
   constructor(private readonly prisma: PrismaService) {
     const host = process.env.ERP_SERVICE_HOST ?? 'localhost';
     const port = process.env.ERP_SERVICE_PORT ?? '4100';
-    this.erpBaseUrl = `http://${host}:${port}`;
+    this.erpBaseUrl = `http://${host}:${port}/api/v1`;
   }
 
   // ---- ERP fetch helper ---------------------------------------------------
@@ -111,10 +111,15 @@ export class DashboardService {
         totalRevenue?: number;
         currentMonth?: number;
         previousMonth?: number;
+        invoices?: number;
+        byCurrency?: Record<string, number>;
         chartData?: Array<{ date: string; value: number }>;
       }>('/reports/revenue');
 
-      const currentRevenue = revenueData.currentMonth ?? revenueData.totalRevenue ?? 0;
+      // Handle both flat totalRevenue and byCurrency response shapes
+      const currentRevenue = revenueData.currentMonth
+        ?? revenueData.totalRevenue
+        ?? (revenueData.byCurrency ? Object.values(revenueData.byCurrency).reduce((s, v) => s + v, 0) : 0);
       const previousRevenue = revenueData.previousMonth ?? 0;
       const chartData = revenueData.chartData ?? this.emptyDateSeries(30);
       const trend = trendValue(currentRevenue, previousRevenue);
