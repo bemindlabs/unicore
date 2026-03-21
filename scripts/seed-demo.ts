@@ -208,24 +208,37 @@ const EXPENSE_TEMPLATES = [
 // ─── Task Templates ─────────────────────────────────────────────────────────
 
 const TASK_TEMPLATES = [
-  { title: 'Implement multi-tenant data isolation', desc: 'Add row-level security policies for enterprise tenants', status: 'done', priority: 'high', labels: ['backend', 'security'], progress: 100 },
-  { title: 'Design new pricing page', desc: 'Create Figma mockups for the updated pricing tiers with annual toggle', status: 'done', priority: 'medium', labels: ['design', 'frontend'], progress: 100 },
-  { title: 'Set up Kafka dead-letter queue', desc: 'Configure DLQ for failed workflow events with retry logic', status: 'in-progress', priority: 'high', labels: ['backend', 'infrastructure'], progress: 65 },
-  { title: 'Add Stripe webhook signature verification', desc: 'Verify webhook signatures to prevent replay attacks', status: 'done', priority: 'critical', labels: ['security', 'payments'], progress: 100 },
-  { title: 'Build inventory low-stock alerts', desc: 'Push notifications when stock falls below reorder point', status: 'in-progress', priority: 'medium', labels: ['erp', 'notifications'], progress: 40 },
-  { title: 'Migrate to Prisma 6', desc: 'Upgrade Prisma ORM to v6 with new preview features', status: 'done', priority: 'medium', labels: ['backend', 'dependencies'], progress: 100 },
-  { title: 'Write E2E tests for order lifecycle', desc: 'Playwright tests covering DRAFT → DELIVERED flow', status: 'todo', priority: 'medium', labels: ['testing', 'erp'], progress: 0 },
-  { title: 'Optimize dashboard initial load', desc: 'Reduce bundle size and add code splitting for ERP modules', status: 'in-progress', priority: 'high', labels: ['frontend', 'performance'], progress: 30 },
+  // ── Backlog ──
+  { title: 'Evaluate GraphQL federation', desc: 'Research Apollo Federation for microservice API composition', status: 'backlog', priority: 'low', labels: ['research', 'backend'], progress: 0 },
+  { title: 'Add dark mode toggle', desc: 'System/light/dark theme support using next-themes', status: 'backlog', priority: 'low', labels: ['frontend', 'ux'], progress: 0 },
+  { title: 'Implement webhook retry with exponential backoff', desc: 'Retry failed webhook deliveries 3x with 1s/5s/30s delays', status: 'backlog', priority: 'medium', labels: ['backend', 'reliability'], progress: 0 },
+
+  // ── Todo ──
+  { title: 'Write E2E tests for order lifecycle', desc: 'Playwright tests covering DRAFT → DELIVERED full flow', status: 'todo', priority: 'medium', labels: ['testing', 'erp'], progress: 0 },
   { title: 'Add LINE channel integration', desc: 'Connect LINE Messaging API for Thai market customers', status: 'todo', priority: 'medium', labels: ['channels', 'integration'], progress: 0 },
-  { title: 'Implement RBAC for ERP modules', desc: 'Role-based access control per module (CRM, inventory, invoicing)', status: 'in-progress', priority: 'high', labels: ['security', 'erp'], progress: 55 },
-  { title: 'Create API rate limiting dashboard', desc: 'Visualize rate limit usage per endpoint in admin panel', status: 'todo', priority: 'low', labels: ['admin', 'monitoring'], progress: 0 },
-  { title: 'Set up automated DB backups', desc: 'Daily pg_dump to S3 with 30-day retention', status: 'done', priority: 'critical', labels: ['infrastructure', 'database'], progress: 100 },
-  { title: 'Build agent performance metrics', desc: 'Track response time, accuracy, and user satisfaction per agent', status: 'todo', priority: 'medium', labels: ['ai', 'analytics'], progress: 0 },
-  { title: 'Add PDF export for invoices', desc: 'Generate branded PDF invoices with company logo and terms', status: 'in-progress', priority: 'medium', labels: ['erp', 'feature'], progress: 70 },
-  { title: 'Fix timezone handling in reports', desc: 'Reports show UTC instead of user timezone for daily aggregations', status: 'in-progress', priority: 'high', labels: ['bug', 'erp'], progress: 20 },
   { title: 'Implement SSO with Okta', desc: 'SAML 2.0 integration for enterprise SSO via Okta', status: 'todo', priority: 'high', labels: ['enterprise', 'auth'], progress: 0 },
   { title: 'Add bulk import for contacts', desc: 'CSV/Excel import with field mapping and duplicate detection', status: 'todo', priority: 'medium', labels: ['erp', 'feature'], progress: 0 },
-  { title: 'Upgrade Next.js to 15', desc: 'Migrate dashboard to Next.js 15 with React 19 support', status: 'todo', priority: 'low', labels: ['frontend', 'dependencies'], progress: 0 },
+  { title: 'Build agent performance metrics', desc: 'Track response time, accuracy, and satisfaction per agent', status: 'todo', priority: 'medium', labels: ['ai', 'analytics'], progress: 0 },
+  { title: 'Create API rate limiting dashboard', desc: 'Visualize rate limit usage per endpoint in admin panel', status: 'todo', priority: 'low', labels: ['admin', 'monitoring'], progress: 0 },
+
+  // ── In Progress ──
+  { title: 'Set up Kafka dead-letter queue', desc: 'Configure DLQ for failed workflow events with retry logic', status: 'in_progress', priority: 'high', labels: ['backend', 'infrastructure'], progress: 65 },
+  { title: 'Build inventory low-stock alerts', desc: 'Push notifications when stock falls below reorder point', status: 'in_progress', priority: 'medium', labels: ['erp', 'notifications'], progress: 40 },
+  { title: 'Optimize dashboard initial load', desc: 'Reduce bundle size and add code splitting for ERP modules', status: 'in_progress', priority: 'high', labels: ['frontend', 'performance'], progress: 30 },
+  { title: 'Implement RBAC for ERP modules', desc: 'Role-based access control per module (CRM, inventory, invoicing)', status: 'in_progress', priority: 'high', labels: ['security', 'erp'], progress: 55 },
+  { title: 'Fix timezone handling in reports', desc: 'Reports show UTC instead of user timezone for daily aggregations', status: 'in_progress', priority: 'critical', labels: ['bug', 'erp'], progress: 20 },
+
+  // ── Review ──
+  { title: 'Add PDF export for invoices', desc: 'Generate branded PDF invoices with company logo and terms', status: 'review', priority: 'medium', labels: ['erp', 'feature'], progress: 90 },
+  { title: 'Migrate to Prisma 6', desc: 'Upgrade Prisma ORM to v6 with new preview features and views', status: 'review', priority: 'medium', labels: ['backend', 'dependencies'], progress: 95 },
+  { title: 'Add Stripe webhook signature verification', desc: 'Verify webhook signatures to prevent replay attacks', status: 'review', priority: 'critical', labels: ['security', 'payments'], progress: 85 },
+
+  // ── Done ──
+  { title: 'Implement multi-tenant data isolation', desc: 'Row-level security policies for enterprise tenants', status: 'done', priority: 'high', labels: ['backend', 'security'], progress: 100 },
+  { title: 'Design new pricing page', desc: 'Figma mockups for updated pricing tiers with annual toggle', status: 'done', priority: 'medium', labels: ['design', 'frontend'], progress: 100 },
+  { title: 'Set up automated DB backups', desc: 'Daily pg_dump to S3 with 30-day retention and alerts', status: 'done', priority: 'critical', labels: ['infrastructure', 'database'], progress: 100 },
+  { title: 'Deploy edge caching with Cloudflare', desc: 'Cache static assets and API responses at edge locations', status: 'done', priority: 'high', labels: ['infrastructure', 'performance'], progress: 100 },
+  { title: 'Implement JWT token blacklist', desc: 'Redis-based token blacklist for logout and revocation', status: 'done', priority: 'critical', labels: ['security', 'auth'], progress: 100 },
 ];
 
 // ─── Chat History Templates ─────────────────────────────────────────────────

@@ -24,7 +24,7 @@ export class InventoryService {
     private readonly eventPublisher: EventPublisherService,
   ) {}
 
-  async create(dto: CreateProductDto): Promise<ProductRecord> {
+  async create(dto: CreateProductDto): Promise<ProductRecord & { quantity?: number }> {
     const existing = await this.prisma.product.findUnique({ where: { sku: dto.sku } });
     if (existing) throw new ConflictException(`Product with SKU ${dto.sku} already exists`);
     const product = await this.prisma.product.create({
@@ -35,8 +35,37 @@ export class InventoryService {
         tags: dto.tags ?? [],
       },
     });
-    this.logger.log(`Product created: ${product.sku}`);
-    return product;
+
+    // Auto-create inventory item when quantity is provided
+    const qty = dto.quantity ?? 0;
+    if (qty > 0) {
+      const warehouse = await this.getOrCreateDefaultWarehouse();
+      await this.prisma.inventoryItem.create({
+        data: {
+          productId: product.id,
+          warehouseId: warehouse.id,
+          quantityOnHand: qty,
+          quantityReserved: dto.reservedQuantity ?? 0,
+          quantityAvailable: qty - (dto.reservedQuantity ?? 0),
+          reorderPoint: dto.lowStockThreshold ?? 10,
+          reorderQty: dto.lowStockThreshold ? dto.lowStockThreshold * 2 : 20,
+        },
+      });
+    }
+
+    this.logger.log(`Product created: ${product.sku}${qty > 0 ? ` (qty: ${qty})` : ''}`);
+    return { ...product, quantity: qty } as any;
+  }
+
+  private async getOrCreateDefaultWarehouse() {
+    let warehouse = await this.prisma.warehouse.findFirst({ where: { isDefault: true } });
+    if (!warehouse) {
+      warehouse = await this.prisma.warehouse.create({
+        data: { name: 'Main Warehouse', code: 'MAIN', isDefault: true, status: 'ACTIVE' },
+      });
+      this.logger.log('Created default warehouse: MAIN');
+    }
+    return warehouse;
   }
 
   async findAll(query: QueryProductsDto): Promise<PaginatedResult<ProductRecord>> {
@@ -53,10 +82,25 @@ export class InventoryService {
       }),
     };
     const [data, total] = await this.prisma.$transaction([
-      this.prisma.product.findMany({ where, skip, take: limit, orderBy: { name: 'asc' } }),
+      this.prisma.product.findMany({
+        where, skip, take: limit, orderBy: { name: 'asc' },
+        include: { inventoryItems: { select: { quantityOnHand: true, quantityReserved: true, quantityAvailable: true, reorderPoint: true } } },
+      }),
       this.prisma.product.count({ where }),
     ]);
-    return paginate(data, total, page, limit);
+    // Flatten inventory data onto product for frontend convenience
+    const enriched = data.map((p: any) => {
+      const inv = p.inventoryItems?.[0];
+      return {
+        ...p,
+        quantity: inv?.quantityOnHand ?? 0,
+        reservedQuantity: inv?.quantityReserved ?? 0,
+        availableQuantity: inv?.quantityAvailable ?? 0,
+        lowStockThreshold: inv?.reorderPoint ?? 10,
+        inventoryItems: undefined,
+      };
+    });
+    return paginate(enriched, total, page, limit);
   }
 
   async findOne(id: string): Promise<ProductRecord> {
