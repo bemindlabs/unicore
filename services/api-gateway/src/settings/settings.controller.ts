@@ -59,6 +59,8 @@ function safeDecrypt(encrypted: string): string {
 
 @Controller('api/v1/settings')
 export class SettingsController {
+  private readonly logger = new Logger(SettingsController.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   /** Public: wizard completion status (no auth required) */
