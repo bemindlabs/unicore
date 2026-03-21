@@ -58,11 +58,37 @@ function safeDecrypt(encrypted: string): string {
   }
 }
 
+/**
+ * Minimal interface consumed from TenantContextProvider (enterprise package).
+ * Using a local interface + string token avoids a hard compile-time dependency
+ * on @unicore-enterprise/multi-tenancy in community/pro editions.
+ */
+interface ITenantContextProvider {
+  get(): { tenantId: string } | null;
+}
+
+/** DI token published by TenancyModule when enterprise multi-tenancy is active. */
+export const TENANT_CONTEXT_PROVIDER = 'TENANT_CONTEXT_PROVIDER';
+
 @Controller('api/v1/settings')
 export class SettingsController {
   private readonly logger = new Logger(SettingsController.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional() @Inject(TENANT_CONTEXT_PROVIDER)
+    private readonly tenantCtx: ITenantContextProvider | null,
+  ) {}
+
+  /**
+   * Returns the Settings table key for branding.
+   * In enterprise multi-tenant mode the key is `branding:{tenantId}`.
+   * In community/pro (no tenant context) it falls back to the global `branding` key.
+   */
+  private getBrandingKey(): string {
+    const tenant = this.tenantCtx?.get();
+    return tenant?.tenantId ? `branding:${tenant.tenantId}` : 'branding';
+  }
 
   /** Public: wizard completion status (no auth required) */
   @Public()
