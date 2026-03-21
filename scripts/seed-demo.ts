@@ -226,7 +226,7 @@ const TASK_TEMPLATES = [
   { title: 'Build inventory low-stock alerts', desc: 'Push notifications when stock falls below reorder point', status: 'in_progress', priority: 'medium', labels: ['erp', 'notifications'], progress: 40 },
   { title: 'Optimize dashboard initial load', desc: 'Reduce bundle size and add code splitting for ERP modules', status: 'in_progress', priority: 'high', labels: ['frontend', 'performance'], progress: 30 },
   { title: 'Implement RBAC for ERP modules', desc: 'Role-based access control per module (CRM, inventory, invoicing)', status: 'in_progress', priority: 'high', labels: ['security', 'erp'], progress: 55 },
-  { title: 'Fix timezone handling in reports', desc: 'Reports show UTC instead of user timezone for daily aggregations', status: 'in_progress', priority: 'critical', labels: ['bug', 'erp'], progress: 20 },
+  { title: 'Fix timezone handling in reports', desc: 'Reports show UTC instead of user timezone for daily aggregations', status: 'done', priority: 'critical', labels: ['bug', 'erp'], progress: 100 },
 
   // ── Review ──
   { title: 'Add PDF export for invoices', desc: 'Generate branded PDF invoices with company logo and terms', status: 'review', priority: 'medium', labels: ['erp', 'feature'], progress: 90 },

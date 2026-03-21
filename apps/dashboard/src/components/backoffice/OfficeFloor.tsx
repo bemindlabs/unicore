@@ -333,6 +333,18 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
   const [showSettings, setShowSettings] = useState(false);
   const [autonomyEnabled, setAutonomyEnabled] = useState(false);
   const [autonomyInterval, setAutonomyInterval] = useState(60);
+  const [activeTheme, setActiveTheme] = useState('retrodesk');
+
+  // Load from local storage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('hq_map_theme');
+    if (saved) setActiveTheme(saved);
+  }, []);
+  
+  const handleThemeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setActiveTheme(e.target.value);
+    localStorage.setItem('hq_map_theme', e.target.value);
+  };
 
   // Redefine zones to take up whole maps based on floor
   const zones = useMemo(() => ({
@@ -555,7 +567,11 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
   ];
 
   return (
-    <div data-character-theme="retrodesk" className="w-full h-full relative flex items-center justify-center bg-[var(--retrodesk-bg)] overflow-hidden" ref={containerRef}>
+    <div 
+      data-character-theme={activeTheme.replace('-dark', '')} 
+      className={`w-full h-full relative flex items-center justify-center bg-[var(--retrodesk-bg)] overflow-hidden ${activeTheme === 'retrodesk-dark' ? 'dark' : ''}`} 
+      ref={containerRef}
+    >
       
       <div className="absolute flex justify-center items-center" style={{ width: MAP_WIDTH, height: MAP_HEIGHT, transform: `scale(${scale})`, transformOrigin: 'center' }}>
         <div 
@@ -663,6 +679,26 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
                    </div>
                    <input type="range" min={10} max={120} step={10} value={autonomyInterval} onChange={(e) => setAutonomyInterval(Number(e.target.value))} className="w-full cursor-pointer" disabled={!autonomyEnabled} />
                  </div>
+                 
+                 <div className="flex flex-col gap-2 pt-2 border-t-2" style={{ borderColor: 'var(--retrodesk-border)' }}>
+                    <div className="flex justify-between items-center">
+                       <span className="font-mono text-[10px] font-bold uppercase" style={{ color: 'var(--retrodesk-pink)' }}>HQ Protocol Paint</span>
+                    </div>
+                    <select 
+                      value={activeTheme} 
+                      onChange={handleThemeChange}
+                      className="w-full border-[3px] bg-[var(--retrodesk-surface)] text-[var(--retrodesk-text)] font-mono text-[10px] p-2 cursor-pointer outline-none uppercase font-bold tracking-widest" 
+                      style={{ borderColor: 'var(--retrodesk-border)' }}
+                    >
+                      <option value="retrodesk">01 - Classic Vanilla</option>
+                      <option value="retrodesk-dark">02 - Classic Neon (Dark)</option>
+                      <option value="retrodesk-doge">DOGE (2024 Gold Standard)</option>
+                      <option value="retrodesk-shib">SHIB (2024 Shiba Red)</option>
+                      <option value="retrodesk-pepe">PEPE (2025 Frog Green)</option>
+                      <option value="retrodesk-bonk">BONK (2025 Orange Chaos)</option>
+                      <option value="retrodesk-floki">FLOKI (2026 Viking Vault)</option>
+                    </select>
+                 </div>
                </div>
              </div>
           )}
@@ -733,14 +769,21 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
                 </div>
                 
                 {/* Character Class Showroom */}
-                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-5 bg-black/10 p-4 pt-6 border-[4px] shadow-2xl" style={{ borderColor: 'var(--retrodesk-border)', zIndex: 540 }}>
-                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 border-[3px] shadow-sm uppercase font-mono text-[10px] tracking-widest font-bold" style={{ background: 'var(--retrodesk-surface)', borderColor: 'var(--retrodesk-border)', color: 'var(--retrodesk-text)' }}>AGENT CLASSES</div>
-                   <PixelDisplayPodium label="Human" styleId={0} />
-                   <PixelDisplayPodium label="Robot" styleId={1} />
-                   <PixelDisplayPodium label="Slime" styleId={2} />
-                   <PixelDisplayPodium label="Wizard" styleId={3} />
-                   <PixelDisplayPodium label="Ninja" styleId={4} />
-                   <PixelDisplayPodium label="Cyber" styleId={5} />
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/10 p-4 pt-6 border-[4px] shadow-2xl" style={{ borderColor: 'var(--retrodesk-border)', zIndex: 540 }}>
+                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 border-[3px] shadow-sm uppercase font-mono text-[10px] tracking-widest font-bold whitespace-nowrap" style={{ background: 'var(--retrodesk-surface)', borderColor: 'var(--retrodesk-border)', color: 'var(--retrodesk-text)' }}>AGENT CLASSES</div>
+                   <div className="flex flex-wrap justify-center gap-5 w-[560px]">
+                     <PixelDisplayPodium label="Human" styleId={0} />
+                     <PixelDisplayPodium label="Robot" styleId={1} />
+                     <PixelDisplayPodium label="Slime" styleId={2} />
+                     <PixelDisplayPodium label="Wizard" styleId={3} />
+                     <PixelDisplayPodium label="Ninja" styleId={4} />
+                     <PixelDisplayPodium label="Cyber" styleId={5} />
+                     <PixelDisplayPodium label="Doge" styleId={6} />
+                     <PixelDisplayPodium label="Pepe" styleId={7} />
+                     <PixelDisplayPodium label="Floki" styleId={8} />
+                     <PixelDisplayPodium label="Shib" styleId={9} />
+                     <PixelDisplayPodium label="Bonk" styleId={10} />
+                   </div>
                 </div>
                 
                 <div className="absolute top-12 left-12" style={{ zIndex: 120 }}><PixelVendingMachine /></div>

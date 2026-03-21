@@ -34,6 +34,86 @@
   --retrodesk-orange: #ffb347;
 }
 
+[data-character-theme="retrodesk-pepe"] {
+  --pixel-size: 3px;
+  --pixel-border-width: 2px;
+  --retrodesk-bg: #1F3B1A;
+  --retrodesk-surface: #4C9540;
+  --retrodesk-text: #FFFFFF;
+  --retrodesk-muted: #9ACA91;
+  --retrodesk-border: #152911;
+  --retrodesk-pink: #d81e5b;
+  --retrodesk-blue: #2563eb;
+  --retrodesk-yellow: #FFE208;
+  --retrodesk-green: #00FF00;
+  --retrodesk-orange: #ea580c;
+  --radius: 0px;
+}
+
+[data-character-theme="retrodesk-doge"] {
+  --pixel-size: 3px;
+  --pixel-border-width: 2px;
+  --retrodesk-bg: #3E2723;
+  --retrodesk-surface: #F1C40F;
+  --retrodesk-text: #FFFFFF;
+  --retrodesk-muted: #FDEBD0;
+  --retrodesk-border: #1E1210;
+  --retrodesk-pink: #d81e5b;
+  --retrodesk-blue: #2563eb;
+  --retrodesk-yellow: #F39C12;
+  --retrodesk-green: #059669;
+  --retrodesk-orange: #D35400;
+  --radius: 0px;
+}
+
+[data-character-theme="retrodesk-shib"] {
+  --pixel-size: 3px;
+  --pixel-border-width: 2px;
+  --retrodesk-bg: #C02D02;
+  --retrodesk-surface: #F28F3C;
+  --retrodesk-text: #171717;
+  --retrodesk-muted: #4A1201;
+  --retrodesk-border: #751B01;
+  --retrodesk-pink: #d81e5b;
+  --retrodesk-blue: #2563eb;
+  --retrodesk-yellow: #d97706;
+  --retrodesk-green: #059669;
+  --retrodesk-orange: #ea580c;
+  --radius: 0px;
+}
+
+[data-character-theme="retrodesk-bonk"] {
+  --pixel-size: 3px;
+  --pixel-border-width: 2px;
+  --retrodesk-bg: #FDC202;
+  --retrodesk-surface: #FC8E03;
+  --retrodesk-text: #000000;
+  --retrodesk-muted: #664100;
+  --retrodesk-border: #2B3649;
+  --retrodesk-pink: #d81e5b;
+  --retrodesk-blue: #2563eb;
+  --retrodesk-yellow: #FFE208;
+  --retrodesk-green: #059669;
+  --retrodesk-orange: #FF0000;
+  --radius: 0px;
+}
+
+[data-character-theme="retrodesk-floki"] {
+  --pixel-size: 3px;
+  --pixel-border-width: 2px;
+  --retrodesk-bg: #111111;
+  --retrodesk-surface: #FFC107;
+  --retrodesk-text: #FFFFFF;
+  --retrodesk-muted: #888888;
+  --retrodesk-border: #B08D07;
+  --retrodesk-pink: #d81e5b;
+  --retrodesk-blue: #2563eb;
+  --retrodesk-yellow: #d97706;
+  --retrodesk-green: #059669;
+  --retrodesk-orange: #ea580c;
+  --radius: 0px;
+}
+
 /* Pixel grid background pattern */
 [data-character-theme="retrodesk"] .retrodesk-grid-bg {
   background:

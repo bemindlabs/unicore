@@ -154,6 +154,119 @@ const TEMPLATES: SpriteTemplate[] = [
       'C': () => '#111827', // Collar/Trim
       'P': () => '#1e293b', // Pants
     }
+  },
+  // 7. Doge
+  {
+    map: [
+      '_ E E _ _ E E _',
+      '_ E E E E E E _',
+      'E E O E E O E E',
+      'E _ _ N N _ _ E',
+      'E _ N N N N _ E',
+      '_ E E P P E E _',
+      '_ _ P P P P _ _',
+      '_ E E P P E E _',
+      '_ _ E E E E _ _',
+      '_ E E _ _ E E _'
+    ],
+    palette: {
+      '_': () => 'transparent',
+      'E': () => '#facc15', // Yellow/Gold
+      'O': () => '#000',    // Black Eyes
+      'N': () => '#333',    // Dark Nose
+      'P': () => '#fef08a'  // Light belly
+    }
+  },
+  // 8. Pepe
+  {
+    map: [
+      '_ _ G G G G _ _',
+      '_ G G G G G G _',
+      '_ G G G G G G _',
+      'G W O G G O W G',
+      'G G G G G G G G',
+      '_ G R R R R G _',
+      '_ _ G G G G _ _',
+      '_ G G P P G G _',
+      '_ _ P P P P _ _',
+      '_ P P _ _ P P _'
+    ],
+    palette: {
+      '_': () => 'transparent',
+      'G': () => '#4ade80', // Apple Green
+      'W': () => '#fff',    // Sclera
+      'O': () => '#000',    // Pupil
+      'R': () => '#ef4444', // Red Lips
+      'P': () => '#1e40af'  // Blue Pants
+    }
+  },
+  // 9. Floki (Viking Dog)
+  {
+    map: [
+      'M _ S S S S _ M',
+      'M _ S _ _ S _ M',
+      '_ Y Y Y Y Y Y _',
+      'Y Y O Y Y O Y Y',
+      'Y _ _ N N _ _ Y',
+      '_ Y Y Y Y Y Y _',
+      '_ _ B B B B _ _',
+      '_ Y Y B B Y Y _',
+      '_ _ Y Y Y Y _ _',
+      '_ Y Y _ _ Y Y _'
+    ],
+    palette: {
+      '_': () => 'transparent',
+      'M': () => '#f8fafc', // White Horns
+      'S': () => '#64748b', // Iron Helmet
+      'Y': () => '#fbbf24', // Gold Dog
+      'O': () => '#000',    // Eyes
+      'N': () => '#333',    // Nose
+      'B': () => '#78350f'  // Brown Vest
+    }
+  },
+  // 10. Shib (Red Dog)
+  {
+    map: [
+      '_ R R _ _ R R _',
+      '_ R R R R R R _',
+      'R R W R R W R R',
+      'R _ _ N N _ _ R',
+      'R _ N N N N _ R',
+      '_ R R W W R R _',
+      '_ _ W W W W _ _',
+      '_ R R W W R R _',
+      '_ _ R R R R _ _',
+      '_ R R _ _ R R _'
+    ],
+    palette: {
+      '_': () => 'transparent',
+      'R': () => '#dc2626', // Shiba Red
+      'W': () => '#ffffff', // White
+      'N': () => '#000'     // Nose
+    }
+  },
+  // 11. Bonk (Orange Dog with Bat)
+  {
+    map: [
+      '_ _ _ _ I I _ _',
+      '_ O O _ _ O O _',
+      '_ O O O O O O _',
+      'O O B O O B O O',
+      'O _ N N N N _ O',
+      '_ O O W W O O I',
+      '_ _ W W W W _ I',
+      '_ O O W W O O I',
+      '_ _ O O O O _ I',
+      '_ O O _ _ O O _'
+    ],
+    palette: {
+      '_': () => 'transparent',
+      'O': () => '#f97316', // Orange
+      'B': () => '#111',    // Eyes
+      'W': () => '#ffedd5', // Light Chest
+      'N': () => '#000',    // Nose
+      'I': () => '#92400e'  // Brown Bat (Bonk!)
+    }
   }
 ];
 
