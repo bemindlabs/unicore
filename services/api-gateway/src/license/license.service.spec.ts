@@ -70,7 +70,7 @@ describe('LicenseService', () => {
 
       const status = await service.getLicenseStatus();
 
-      expect(status.tier).toBe('community');
+      expect(status.edition).toBe('community');
       expect(status.valid).toBe(true);
       expect(status.features).toEqual(['auditLogs']);
       expect(status.key).toBeNull();
@@ -101,7 +101,7 @@ describe('LicenseService', () => {
       const status = await service.getLicenseStatus();
 
       expect(status.valid).toBe(true);
-      expect(status.tier).toBe('pro');
+      expect(status.edition).toBe('pro');
       expect(status.key).toBe('UC-PRO-VALID-KEY');
     });
 
@@ -154,7 +154,7 @@ describe('LicenseService', () => {
       const status = await service.getLicenseStatus();
 
       expect(status.valid).toBe(false);
-      expect(status.tier).toBe('community');
+      expect(status.edition).toBe('community');
       expect(status.features).toEqual(['auditLogs']);
     });
 
@@ -228,7 +228,7 @@ describe('LicenseService', () => {
 
       const status = await service.getLicenseStatus();
 
-      expect(status.tier).toBe('community');
+      expect(status.edition).toBe('community');
     });
 
     it('preserves stale cached status when server is unreachable', async () => {
