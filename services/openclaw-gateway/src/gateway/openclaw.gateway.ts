@@ -277,6 +277,74 @@ export class OpenClawGateway
     );
 
     this.send(client, this.ack(message.messageId, { channel: message.payload.channel, deliveredTo: count }));
+
+    // Bridge: if this is a user chat message on a chat/command channel,
+    // invoke the RouterAgent pipeline and publish the AI response back.
+    const channel = message.payload.channel;
+    const fromAgent = message.payload.fromAgentId;
+    const isChatChannel = OpenClawGateway.CHAT_CHANNEL_PREFIXES.some((p) => channel.startsWith(p));
+
+    if (isChatChannel && fromAgent === 'dashboard-ui') {
+      const text = message.payload.data?.text;
+      if (typeof text === 'string' && text.trim()) {
+        const tracked = client as TrackedSocket;
+        const sessionId = channel; // use channel as session for conversation continuity
+        const userId = tracked.userId ?? 'anonymous';
+
+        this.processChat(text, sessionId, userId, channel, tracked.socketId).catch((err) => {
+          this.logger.error(`Chat processing failed: ${err instanceof Error ? err.message : err}`);
+        });
+      }
+    }
+  }
+
+  /**
+   * Process a chat message through the RouterAgent and publish the response
+   * back to the originating channel so the dashboard receives it.
+   */
+  private async processChat(
+    text: string,
+    sessionId: string,
+    userId: string,
+    channel: string,
+    senderSocketId: string,
+  ): Promise<void> {
+    const result = await this.routerAgent.process(text, sessionId, userId);
+
+    const responseMessage: IncomingMessage = {
+      type: 'message:publish',
+      messageId: uuidv4(),
+      timestamp: new Date().toISOString(),
+      payload: {
+        fromAgentId: result.decision.targetAgent ?? 'router',
+        channel,
+        data: {
+          id: uuidv4(),
+          text: result.response.content,
+          author: result.decision.targetAgent
+            ? `${result.decision.targetAgent.charAt(0).toUpperCase()}${result.decision.targetAgent.slice(1)} Agent`
+            : 'Router Agent',
+          authorId: result.decision.targetAgent ?? 'router',
+          authorType: 'agent',
+          channel,
+          timestamp: new Date().toISOString(),
+          metadata: {
+            processingTimeMs: result.processingTimeMs,
+            intent: result.decision.classification?.intent,
+            confidence: result.decision.classification?.confidence,
+          },
+        },
+      },
+    };
+
+    // Publish response to all channel subscribers (including the sender)
+    const envelope = JSON.stringify(responseMessage);
+    this.router.routePublish(
+      channel,
+      responseMessage.payload.fromAgentId,
+      envelope,
+      (socketId, data) => this.sendToSocket(socketId, data),
+    );
   }
 
   @SubscribeMessage('message:subscribe')
