@@ -26,43 +26,43 @@ export class FontConfigDto {
 
 export class BrandingColorsDto {
   @IsOptional()
-  @IsString()
+  @IsHexColor()
   primary?: string;
 
   @IsOptional()
-  @IsString()
+  @IsHexColor()
   secondary?: string;
 
   @IsOptional()
-  @IsString()
+  @IsHexColor()
   accent?: string;
 
   @IsOptional()
-  @IsString()
+  @IsHexColor()
   background?: string;
 
   @IsOptional()
-  @IsString()
+  @IsHexColor()
   surface?: string;
 
   @IsOptional()
-  @IsString()
+  @IsHexColor()
   text?: string;
 
   @IsOptional()
-  @IsString()
+  @IsHexColor()
   textMuted?: string;
 
   @IsOptional()
-  @IsString()
+  @IsHexColor()
   border?: string;
 
   @IsOptional()
-  @IsString()
+  @IsHexColor()
   success?: string;
 
   @IsOptional()
-  @IsString()
+  @IsHexColor()
   error?: string;
 }
 
