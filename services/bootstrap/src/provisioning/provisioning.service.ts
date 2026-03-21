@@ -1,5 +1,4 @@
-import { Injectable, UnauthorizedException, Logger } from "@nestjs/common";
-import { v4 as uuidv4 } from "uuid";
+import { Injectable, UnauthorizedException, ServiceUnavailableException, Logger } from "@nestjs/common";
 import { TemplatesService } from "../templates/templates.service";
 import { ConfigGeneratorService } from "../config-generator/config-generator.service";
 import type { UniCoreConfig } from "../config-generator/config-generator.service";
@@ -22,6 +21,7 @@ export interface ProvisioningResult {
     rolesEnabled: string[];
   };
   licenseKey?: string;
+  warnings?: string[];
 }
 
 @Injectable()
@@ -78,18 +78,10 @@ export class ProvisioningService {
       adminUser = (await registerRes.json()) as typeof adminUser;
       this.logger.log(`Admin user created in database: ${adminUser.email}`);
     } catch (err) {
-      this.logger.error(
-        `Failed to create admin user: ${err instanceof Error ? err.message : err}`,
-      );
-      // Fallback to in-memory record so provisioning still returns data
-      adminUser = {
-        id: uuidv4(),
-        email: request.adminEmail,
-        name: request.adminName,
-        role: "OWNER",
-      };
-      this.logger.warn(
-        "Admin user was NOT persisted — login will not work until the user is manually registered",
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      this.logger.error(`Failed to create admin user: ${errorMsg}`);
+      throw new ServiceUnavailableException(
+        `Failed to create admin user — API Gateway may be unavailable. Please check the service and try again. (${errorMsg})`,
       );
     }
 
@@ -109,6 +101,9 @@ export class ProvisioningService {
     this.logger.log(
       `Provisioning complete: ${erpModulesEnabled.length} ERP modules, ${agentsEnabled.length} agents, ${rolesEnabled.length} roles`,
     );
+
+    // Collect non-fatal warnings for the response
+    const warnings: string[] = [];
 
     // Auto-create community license
     let licenseKey: string | undefined;
@@ -141,16 +136,21 @@ export class ProvisioningService {
         licenseKey = licenseData.key ?? licenseData.licenseKey;
         this.logger.log(`Community license created: ${licenseKey}`);
       } else {
-        this.logger.warn(`License creation returned ${licenseRes.status}`);
+        const msg = `License creation returned ${licenseRes.status}`;
+        this.logger.warn(msg);
+        warnings.push(msg);
       }
     } catch (err) {
-      this.logger.warn(
-        `License creation failed (non-fatal): ${err instanceof Error ? err.message : err}`,
-      );
+      const msg = `License creation failed (non-fatal): ${err instanceof Error ? err.message : err}`;
+      this.logger.warn(msg);
+      warnings.push(msg);
     }
 
     // Auto-register default agents with OpenClaw gateway
-    await this.registerDefaultAgents();
+    const agentWarnings = await this.registerDefaultAgents();
+    if (agentWarnings) {
+      warnings.push(agentWarnings);
+    }
 
     return {
       success: true,
@@ -164,10 +164,11 @@ export class ProvisioningService {
         rolesEnabled,
       },
       licenseKey,
+      ...(warnings.length > 0 ? { warnings } : {}),
     };
   }
 
-  private async registerDefaultAgents(): Promise<void> {
+  private async registerDefaultAgents(): Promise<string | undefined> {
     const openclawUrl =
       process.env.OPENCLAW_GATEWAY_URL ?? "http://localhost:18790";
 
@@ -201,10 +202,15 @@ export class ProvisioningService {
       this.logger.log(
         `Registered ${registered}/${defaultAgents.length} default agents with OpenClaw`,
       );
+      if (registered < defaultAgents.length) {
+        return `Only ${registered}/${defaultAgents.length} agents registered with OpenClaw`;
+      }
+      return undefined;
     } else {
-      this.logger.warn(
-        "Could not register any agents with OpenClaw — gateway may be unavailable",
-      );
+      const msg =
+        "Could not register any agents with OpenClaw — gateway may be unavailable";
+      this.logger.warn(msg);
+      return msg;
     }
   }
 }
