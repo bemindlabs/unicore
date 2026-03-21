@@ -669,8 +669,9 @@ async function seedTasks(userId: string) {
 
   // Check existing
   const existingTasks = await api('GET', `${GATEWAY}/tasks`);
-  if (existingTasks?.length >= 10 || existingTasks?.data?.length >= 10) {
-    console.log(`  ℹ Found existing tasks, skipping`);
+  const taskCount = existingTasks?.tasks?.length || existingTasks?.length || 0;
+  if (taskCount >= 10) {
+    console.log(`  ℹ Found ${taskCount} existing tasks, skipping`);
     return;
   }
 
@@ -711,8 +712,9 @@ async function seedChatHistory(userId: string) {
 
   // Check existing
   const existingChats = await api('GET', `${GATEWAY}/chat-history?limit=10`);
-  if (existingChats?.data?.length >= 3) {
-    console.log(`  ℹ Found existing chat history, skipping`);
+  const chatCount = existingChats?.data?.length || existingChats?.total || 0;
+  if (chatCount >= 6) {
+    console.log(`  ℹ Found ${chatCount} existing chat sessions, skipping`);
     return;
   }
 
@@ -741,94 +743,51 @@ async function seedChatHistory(userId: string) {
   }
 }
 
-async function seedNotifications(userId: string) {
-  console.log('\n🔔 Seeding notifications (via database)...');
-
-  // No public POST endpoint - insert directly via psql
-  const values = NOTIFICATIONS.map((n) => {
-    const id = `notif_${Math.random().toString(36).substring(2, 15)}`;
-    const read = Math.random() > 0.6;
-    const createdAt = pastDate(rand(0, 14));
-    const escaped = (s: string) => s.replace(/'/g, "''");
-    return `('${id}', '${userId}', '${n.type}', '${escaped(n.title)}', '${escaped(n.message)}', ${read}, '${n.link || ''}', '${createdAt}', '${createdAt}')`;
-  }).join(',\n    ');
-
-  const sql = `INSERT INTO "Notification" (id, "userId", type, title, message, read, link, "createdAt", "updatedAt") VALUES
-    ${values}
-  ON CONFLICT DO NOTHING;`;
-
-  const { execSync } = await import('child_process');
-  try {
-    execSync(`docker exec unicores-unicore-postgres-1 psql -U unicore -d unicore -c '${sql.replace(/'/g, "'\\''")}'`, { stdio: 'pipe' });
-    for (const n of NOTIFICATIONS) {
-      console.log(`  ✓ [${n.type.padEnd(8)}] ${n.title}`);
-    }
-  } catch (err: any) {
-    // Fallback: try generating via internal API header
-    console.log('  ℹ Direct DB insert failed, trying internal API...');
-    for (const notif of NOTIFICATIONS) {
-      const res = await fetch(`${API}/api/v1/notifications`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Internal-Service': 'seed-demo',
-          Authorization: `Bearer ${TOKEN}`,
-        },
-        body: JSON.stringify({
-          userId,
-          type: notif.type,
-          title: notif.title,
-          message: notif.message,
-          link: notif.link,
-        }),
-      });
-      if (res.ok) console.log(`  ✓ [${notif.type.padEnd(8)}] ${notif.title}`);
-    }
-  }
-}
-
 async function updateExpenseStatuses(userId: string) {
   console.log('\n  Updating expense statuses via database...');
-  const { execSync } = await import('child_process');
-  const statuses = ['SUBMITTED', 'SUBMITTED', 'SUBMITTED', 'APPROVED', 'APPROVED', 'APPROVED', 'APPROVED', 'REJECTED', 'REIMBURSED', 'DRAFT'];
+  const { execSync, spawnSync } = await import('child_process');
+  const { writeFileSync, unlinkSync } = await import('fs');
 
   try {
-    // Update expenses to varied statuses
     const sql = `
-      WITH numbered AS (
-        SELECT id, ROW_NUMBER() OVER (ORDER BY "createdAt") as rn
-        FROM "Expense"
-        WHERE status = 'DRAFT'
-      )
-      UPDATE "Expense" e SET
-        status = CASE
-          WHEN n.rn % 10 IN (0,1,2) THEN 'SUBMITTED'
-          WHEN n.rn % 10 IN (3,4,5,6) THEN 'APPROVED'
-          WHEN n.rn % 10 = 7 THEN 'REJECTED'
-          WHEN n.rn % 10 = 8 THEN 'REIMBURSED'
-          ELSE 'DRAFT'
-        END,
-        "approvedById" = CASE
-          WHEN n.rn % 10 IN (3,4,5,6,7,8) THEN '${userId}'
-          ELSE NULL
-        END,
-        "approvedAt" = CASE
-          WHEN n.rn % 10 IN (3,4,5,6,8) THEN NOW()
-          ELSE NULL
-        END
-      FROM numbered n
-      WHERE e.id = n.id;
-    `;
-    execSync(`docker exec unicores-unicore-postgres-1 psql -U unicore -d unicore_erp -c "${sql.replace(/"/g, '\\"')}"`, { stdio: 'pipe' });
+WITH numbered AS (
+  SELECT id, ROW_NUMBER() OVER (ORDER BY "createdAt") as rn
+  FROM "Expense"
+  WHERE status = 'DRAFT'
+)
+UPDATE "Expense" e SET
+  status = CASE
+    WHEN n.rn % 10 IN (0,1,2) THEN 'SUBMITTED'::"ExpenseStatus"
+    WHEN n.rn % 10 IN (3,4,5,6) THEN 'APPROVED'::"ExpenseStatus"
+    WHEN n.rn % 10 = 7 THEN 'REJECTED'::"ExpenseStatus"
+    WHEN n.rn % 10 = 8 THEN 'REIMBURSED'::"ExpenseStatus"
+    ELSE 'DRAFT'::"ExpenseStatus"
+  END,
+  "approvedById" = CASE
+    WHEN n.rn % 10 IN (3,4,5,6,7,8) THEN '${userId}'::uuid
+    ELSE NULL
+  END,
+  "approvedAt" = CASE
+    WHEN n.rn % 10 IN (3,4,5,6,8) THEN NOW()
+    ELSE NULL
+  END
+FROM numbered n
+WHERE e.id = n.id;
+`;
+    writeFileSync('/tmp/seed-expenses.sql', sql);
+    execSync('docker cp /tmp/seed-expenses.sql unicores-unicore-postgres-1:/tmp/seed-expenses.sql', { stdio: 'pipe' });
+    execSync('docker exec unicores-unicore-postgres-1 psql -U unicore -d unicore_erp -f /tmp/seed-expenses.sql', { stdio: 'pipe' });
+    unlinkSync('/tmp/seed-expenses.sql');
     console.log('  ✓ Expense statuses updated (SUBMITTED/APPROVED/REJECTED/REIMBURSED)');
   } catch (err: any) {
-    console.log('  ℹ Could not update expense statuses:', err.message?.substring(0, 100));
+    console.log('  ℹ Could not update expense statuses:', err.stderr?.toString()?.substring(0, 200) || err.message?.substring(0, 200));
   }
 }
 
 async function seedNotificationsViaSql(userId: string) {
   console.log('\n🔔 Seeding notifications via database...');
   const { execSync } = await import('child_process');
+  const { writeFileSync, unlinkSync } = await import('fs');
 
   const values = NOTIFICATIONS.map((n) => {
     const id = `notif_${Math.random().toString(36).substring(2, 15)}`;
@@ -836,19 +795,22 @@ async function seedNotificationsViaSql(userId: string) {
     const ago = rand(0, 14);
     const escaped = (s: string) => s.replace(/'/g, "''");
     return `('${id}', '${userId}', '${n.type}', '${escaped(n.title)}', '${escaped(n.message)}', ${read}, '${n.link || ''}', NOW() - interval '${ago} days', NOW() - interval '${ago} days')`;
-  }).join(',\n    ');
+  }).join(',\n');
 
-  const sql = `INSERT INTO "Notification" (id, "userId", type, title, message, read, link, "createdAt", "updatedAt") VALUES
-    ${values}
-  ON CONFLICT DO NOTHING;`;
+  const sql = `INSERT INTO notifications (id, "userId", type, title, message, read, link, "createdAt", "updatedAt") VALUES
+${values}
+ON CONFLICT DO NOTHING;`;
 
   try {
-    execSync(`docker exec unicores-unicore-postgres-1 psql -U unicore -d unicore -c "${sql.replace(/"/g, '\\"')}"`, { stdio: 'pipe' });
+    writeFileSync('/tmp/seed-notifications.sql', sql);
+    execSync('docker cp /tmp/seed-notifications.sql unicores-unicore-postgres-1:/tmp/seed-notifications.sql', { stdio: 'pipe' });
+    execSync('docker exec unicores-unicore-postgres-1 psql -U unicore -d unicore -f /tmp/seed-notifications.sql', { stdio: 'pipe' });
+    unlinkSync('/tmp/seed-notifications.sql');
     for (const n of NOTIFICATIONS) {
       console.log(`  ✓ [${n.type.padEnd(8)}] ${n.title}`);
     }
   } catch (err: any) {
-    console.log('  ℹ Could not seed notifications:', err.message?.substring(0, 100));
+    console.log('  ℹ Could not seed notifications:', err.stderr?.toString()?.substring(0, 200) || err.message?.substring(0, 200));
   }
 }
 
