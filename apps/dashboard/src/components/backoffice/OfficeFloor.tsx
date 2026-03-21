@@ -3,6 +3,7 @@
 import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import type { BackofficeAgent } from '@/lib/backoffice/types';
 import { PixelAvatar } from './PixelAvatar';
+import { useChatWebSocket } from '@/hooks/use-chat-ws';
 
 interface Props {
   agents: BackofficeAgent[];
@@ -149,6 +150,91 @@ function PixelDisplayPodium({ label, styleId }: { label: string, styleId: number
        <div className="w-20 h-6 border-[4px] shadow-lg flex items-center justify-center" style={{ background: 'var(--retrodesk-surface)', borderColor: 'var(--retrodesk-border)' }}>
           <span className="font-mono text-[8px] tracking-widest uppercase font-bold" style={{ color: 'var(--retrodesk-text)' }}>{label}</span>
        </div>
+    </div>
+  );
+}
+
+// --- Gamification Components --- //
+
+function commandChannel(agentId: string): string {
+  return `command-${agentId}`;
+}
+
+const QUICK_PROMPTS: Record<string, string[]> = {
+  router: ["What's the status of our orders?", "Summarize today's activity"],
+  finance: ['Generate monthly revenue report', 'List overdue invoices'],
+  growth: ['Draft a marketing email', 'Analyze customer churn'],
+  ops: ['Check system health', 'Review deployment status'],
+  research: ['Research competitor pricing', 'Summarize latest trends'],
+};
+const DEFAULT_PROMPTS = ['What can you help me with?', 'Show me your recent activity'];
+
+function AgentCommandDialog({ agent, onClose }: { agent: BackofficeAgent, onClose: () => void }) {
+  const channel = commandChannel(agent.id);
+  const { connected, send } = useChatWebSocket(channel, () => {});
+
+  const prompts = QUICK_PROMPTS[agent.id] ?? DEFAULT_PROMPTS;
+
+  function handleSend(e: React.MouseEvent, text: string) {
+    e.stopPropagation();
+    if (!connected) return;
+    send(text, 'You', 'human-user', 'human');
+    onClose();
+  }
+
+  return (
+    <div className="absolute top-0 left-full ml-5 w-48 bg-[var(--retrodesk-surface)] border-[4px] z-[100] p-3 shadow-[8px_8px_0px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in duration-200 cursor-default" style={{ borderColor: 'var(--retrodesk-border)' }} onClick={(e) => e.stopPropagation()}>
+       {/* Pointer arrow */}
+       <div className="absolute -left-[11px] top-4 border-y-[8px] border-y-transparent border-r-[8px]" style={{ borderRightColor: 'var(--retrodesk-border)' }} />
+       
+       <div className="flex justify-between items-center mb-2 border-b-2 pb-1" style={{ borderColor: 'var(--retrodesk-border)' }}>
+         <div className="font-mono text-[10px] font-black tracking-widest uppercase" style={{ color: 'var(--retrodesk-pink)' }}>COMMAND QUEST</div>
+         <button onClick={(e) => { e.stopPropagation(); onClose(); }} className="text-[10px] font-bold hover:scale-110 transition-transform" style={{ color: 'var(--retrodesk-text)' }}>X</button>
+       </div>
+       
+       <div className="flex flex-col gap-2">
+         {prompts.map(p => (
+           <button 
+             key={p} 
+             onClick={(e) => handleSend(e, p)}
+             className="text-[8px] font-mono leading-tight text-left border-[3px] p-1.5 transition-all hover:translate-x-1 shadow-sm uppercase font-bold"
+             style={{ 
+               borderColor: 'var(--retrodesk-border)', 
+               color: 'var(--retrodesk-surface)',
+               background: 'var(--retrodesk-text)'
+             }}
+           >
+             ▶ {p}
+           </button>
+         ))}
+       </div>
+       {!connected && <div className="text-[8px] font-mono mt-2 text-red-500 animate-pulse font-bold tracking-widest uppercase text-center">Connecting...</div>}
+    </div>
+  );
+}
+
+function AgentSpeechBubble({ agent }: { agent: BackofficeAgent }) {
+  const [bubbleText, setBubbleText] = useState<string | null>(null);
+  const channel = commandChannel(agent.id);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  useChatWebSocket(channel, (msg) => {
+    if (msg.authorId !== 'human-user') {
+      let text = msg.text;
+      if (text.length > 45) text = text.slice(0, 42) + '...';
+      setBubbleText(text);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setBubbleText(null), 6000);
+    }
+  });
+
+  if (!bubbleText) return null;
+
+  return (
+    <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-32 bg-white text-black border-[3px] border-black p-2 pt-1.5 shadow-[4px_4px_0px_rgba(0,0,0,0.5)] z-[100] animate-in zoom-in-50 fade-in duration-200" style={{ fontFamily: 'monospace', fontSize: '9px', lineHeight: '1.3', fontWeight: 'bold' }}>
+       {bubbleText}
+       <div className="absolute -bottom-[6px] left-1/2 -translate-x-1/2 border-x-[6px] border-x-transparent border-t-[6px] border-t-black" />
+       <div className="absolute -bottom-[3px] left-1/2 -translate-x-1/2 border-x-[4px] border-x-transparent border-t-[4px] border-t-white" />
     </div>
   );
 }
@@ -523,20 +609,27 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
                 }}
               >
                 <div className="flex flex-col items-center gap-1 drop-shadow-xl relative">
+                  <AgentSpeechBubble agent={agent} />
+                  
                   {isSelectedForMove && (
-                     <div className="absolute -bottom-2 w-16 h-4 border-2 border-[var(--retrodesk-blue)] rounded-[100%] animate-pulse" style={{ borderStyle: 'dashed' }} />
+                     <>
+                       <div className="absolute -bottom-2 w-16 h-4 border-2 border-[var(--retrodesk-blue)] rounded-[100%] animate-pulse" style={{ borderStyle: 'dashed' }} />
+                       <AgentCommandDialog agent={agent} onClose={() => setSelectedAgentToMove(null)} />
+                     </>
                   )}
                   <div className="relative">
                     {agent.status === 'working' && (
-                      <div className="absolute -top-4 -right-3 w-4 h-4 bg-green-400 rounded-full border-2 border-[var(--retrodesk-surface)] animate-bounce shadow-md flex items-center justify-center">
-                         <span className="text-[6px] font-bold text-green-900">✓</span>
+                      <div className="absolute -top-6 -right-2 w-5 h-5 bg-[#e2e8f0] rounded-full border-[3px] border-[var(--retrodesk-border)] animate-bounce shadow-md flex items-center justify-center z-10" style={{ animationDuration: '0.4s' }}>
+                         <span className="text-[10px] font-black" style={{ color: 'var(--retrodesk-text)' }}>!</span>
                       </div>
                     )}
                     {agent.status === 'idle' && (
-                      <div className="absolute -top-4 -right-3 text-[12px] font-mono animate-pulse text-[var(--retrodesk-blue)] drop-shadow-md font-bold z-10">zZ</div>
+                      <div className="absolute -top-6 -right-2 w-5 h-5 bg-[var(--retrodesk-yellow)] rounded-full border-[3px] border-[var(--retrodesk-border)] animate-[bounce_1.5s_infinite] shadow-md flex items-center justify-center z-10">
+                         <span className="text-[10px] font-black" style={{ color: 'var(--retrodesk-text)' }}>?</span>
+                      </div>
                     )}
                     {agent.status === 'offline' && (
-                      <div className="absolute -top-4 -right-3 text-[12px] font-mono animate-pulse text-[var(--retrodesk-orange)] drop-shadow-md font-bold z-10">zZ</div>
+                      <div className="absolute -top-6 -right-3 text-[12px] font-mono animate-pulse text-[var(--retrodesk-orange)] drop-shadow-md font-bold z-10">zZ</div>
                     )}
                     <PixelAvatar name={agent.name} color={agent.color} status={agent.status} size="lg" className="drop-shadow-lg" />
                   </div>

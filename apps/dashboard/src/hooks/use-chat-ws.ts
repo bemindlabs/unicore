@@ -68,7 +68,9 @@ export function useChatWebSocket(
 
   const connect = useCallback(() => {
     try {
-      const ws = new WebSocket(WS_URL);
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+      const wsUrl = token ? `${WS_URL}${WS_URL.includes('?') ? '&' : '?'}token=${encodeURIComponent(token)}` : WS_URL;
+      const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
       ws.onopen = () => {
