@@ -17,6 +17,7 @@ import { Public } from '../auth/decorators/public.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { encrypt, decrypt, maskKey } from './crypto.util';
 import { BrandingConfigDto } from './dto/branding-config.dto';
+import { WizardStatusDto } from './dto/wizard-status.dto';
 import { sanitizeCss } from './utils/css-sanitizer';
 
 const ALLOWED_MIME_TYPES: Record<string, string[]> = {
@@ -101,7 +102,7 @@ export class SettingsController {
   /** Public: save wizard completion (called after provisioning) */
   @Public()
   @Put('wizard-status')
-  async setWizardStatus(@Body() body: any) {
+  async setWizardStatus(@Body() body: WizardStatusDto) {
     const settings = await this.prisma.settings.upsert({
       where: { id: 'wizard-status' },
       create: { id: 'wizard-status', data: body },
