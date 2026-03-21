@@ -7,6 +7,7 @@ import { Crown, PanelLeftClose, PanelLeftOpen, LogOut, Monitor } from 'lucide-re
 import { Avatar, AvatarFallback, AvatarImage, Button, cn, Separator } from '@unicore/ui';
 import { useAuth } from '@/hooks/use-auth';
 import { useLicense } from '@/hooks/use-license';
+import { useBranding } from '@/components/BrandingProvider';
 import { filterSectionsByRole } from '@/lib/navigation';
 
 interface SidebarProps {
