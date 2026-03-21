@@ -1,8 +1,9 @@
 import { Injectable, Logger, ForbiddenException, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { MinimalRedisClient } from '../domains/redis-client';
 import type {
   LicenseStatus,
-  LicenseTier,
+  LicenseEdition,
   ProFeature,
   LicenseValidationResponse,
 } from './interfaces/license.interface';
@@ -18,15 +19,10 @@ const REDIS_LICENSE_STATUS_KEY = 'unicore:license:status';
 
 
 /**
- * Features available per tier.
- * Community tier has no Pro features.
- * Enterprise tier is a superset of Pro.
- */
-/**
- * Features available per tier — camelCase names aligned with
+ * Features available per edition — camelCase names aligned with
  * @unicore-license/license-types FeatureFlags.
  */
-const TIER_FEATURES: Record<LicenseTier, ProFeature[]> = {
+const EDITION_FEATURES: Record<LicenseEdition, ProFeature[]> = {
   community: [
     'auditLogs',
   ],
@@ -103,6 +99,8 @@ export class LicenseService implements OnModuleInit {
    * Prevents bypassing license enforcement by setting env vars alone.
    */
   private effectiveEdition: LicenseTier = 'community';
+
+  constructor(private readonly configService: ConfigService) {}
 
   /**
    * Lifecycle hook — runs once when the module is initialised.
@@ -425,21 +423,16 @@ export class LicenseService implements OnModuleInit {
   /**
    * Calls the UniCore License Server REST API.
    *
-   * SECURITY: The license server URL is hardcoded to prevent spoofing via
-   * environment variable override. An attacker who controls
-   * UNICORE_LICENSE_SERVER_URL could point it at a fake server that always
-   * returns valid=true, bypassing all license enforcement. Only allow
-   * override in NODE_ENV=development for local testing.
+   * The URL defaults to the internal Docker service (http://unicore-license-api:4600)
+   * but can be overridden via the LICENSE_SERVER_URL environment variable for
+   * on-premise deployments or local testing.
    *
    * @throws {Error} when the HTTP request fails or returns a non-2xx status.
    */
   private async callLicenseServer(
     key: string,
   ): Promise<LicenseValidationResponse> {
-    const baseUrl =
-      process.env.NODE_ENV === 'development' && process.env.UNICORE_LICENSE_SERVER_URL
-        ? process.env.UNICORE_LICENSE_SERVER_URL
-        : 'https://license.unicore.io';
+    const baseUrl = this.configService.get('LICENSE_SERVER_URL', 'http://unicore-license-api:4600');
 
     const url = `${baseUrl}/v1/validate`;
 

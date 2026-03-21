@@ -103,6 +103,7 @@ services:
       WORKFLOW_SERVICE_PORT: "4400"
       PLATFORM_URL: ${PLATFORM_URL:-https://unicore.bemind.tech}
       PLATFORM_CALLBACK_SECRET: ${PLATFORM_CALLBACK_SECRET:-}
+      LICENSE_SERVER_URL: ${LICENSE_SERVER_URL:-http://unicore-license-api:4600}
     depends_on:
       unicore-postgres:
         condition: service_healthy
