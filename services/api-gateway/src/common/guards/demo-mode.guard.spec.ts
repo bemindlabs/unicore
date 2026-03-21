@@ -70,17 +70,17 @@ describe('DemoModeGuard', () => {
     });
 
     it('should allow GET requests', () => {
-      const ctx = createMockContext('GET', { role: 'VIEWER' });
+      const ctx = createMockContext('GET', { role: 'VIEWER' }, '/api/v1/contacts');
       expect(guard.canActivate(ctx)).toBe(true);
     });
 
     it('should allow HEAD requests', () => {
-      const ctx = createMockContext('HEAD', { role: 'VIEWER' });
+      const ctx = createMockContext('HEAD', { role: 'VIEWER' }, '/api/v1/contacts');
       expect(guard.canActivate(ctx)).toBe(true);
     });
 
     it('should allow OPTIONS requests', () => {
-      const ctx = createMockContext('OPTIONS', { role: 'VIEWER' });
+      const ctx = createMockContext('OPTIONS', { role: 'VIEWER' }, '/api/v1/contacts');
       expect(guard.canActivate(ctx)).toBe(true);
     });
 
