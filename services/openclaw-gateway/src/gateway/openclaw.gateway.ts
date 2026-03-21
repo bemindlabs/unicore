@@ -384,7 +384,8 @@ export class OpenClawGateway
     if (message.type !== 'message:subscribe') return;
 
     const { agentId, channel } = message.payload;
-    this.router.subscribe(agentId, channel);
+    const tracked = client as TrackedSocket;
+    this.router.subscribe(agentId, channel, tracked.socketId);
     this.send(client, this.ack(message.messageId, { agentId, channel }));
   }
 
