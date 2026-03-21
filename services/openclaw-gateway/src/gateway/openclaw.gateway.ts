@@ -45,10 +45,14 @@ export class OpenClawGateway
   @WebSocketServer()
   server!: Server;
 
+  /** Chat channel prefixes that trigger the RouterAgent pipeline. */
+  private static readonly CHAT_CHANNEL_PREFIXES = ['chat-agent-', 'command-'];
+
   constructor(
     private readonly registry: AgentRegistryService,
     private readonly router: MessageRouterService,
     private readonly heartbeat: HeartbeatService,
+    private readonly routerAgent: RouterAgent,
   ) {}
 
   onModuleInit(): void {
