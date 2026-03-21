@@ -6,6 +6,7 @@ import {
   CreditCard,
   Crown,
   Globe,
+  Paintbrush,
   Settings,
   Puzzle,
   Wand2,
