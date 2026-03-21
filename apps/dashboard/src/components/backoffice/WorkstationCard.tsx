@@ -32,7 +32,7 @@ function DeskScene({ agent }: { agent: BackofficeAgent }) {
         )}
       </div>
 
-      <PixelAvatar color={agent.color} status={agent.status} size="md" />
+      <PixelAvatar color={agent.color} status={agent.status} size="md" forceStyle={agent.styleId} />
 
       <div className="flex flex-col items-center gap-1">
         {items.includes('globe') && (

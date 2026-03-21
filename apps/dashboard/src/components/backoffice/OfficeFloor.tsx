@@ -846,7 +846,7 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
                 style={{
                   left: pos.x,
                   top: pos.y,
-                  zIndex: Math.floor(pos.y + 60),
+                  zIndex: isSelectedForMove ? 9999 : Math.floor(pos.y + 60),
                   transition: isSelectedForMove ? 'none' : 'left 2000ms cubic-bezier(0.4, 0, 0.2, 1), top 2000ms cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
               >
@@ -860,6 +860,7 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
                      </>
                   )}
                   <div className="relative">
+                    <PixelAvatar name={agent.name} color={agent.color} status={agent.status} size="lg" className="drop-shadow-lg" forceStyle={agent.styleId} />
                     {agent.status === 'working' && (
                       <div className="absolute -top-6 -right-2 w-5 h-5 bg-[#e2e8f0] rounded-full border-[3px] border-[var(--retrodesk-border)] animate-bounce shadow-md flex items-center justify-center z-10" style={{ animationDuration: '0.4s' }}>
                          <span className="text-[10px] font-black" style={{ color: 'var(--retrodesk-text)' }}>!</span>

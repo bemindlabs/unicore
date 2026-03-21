@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, OrderStatus, InvoiceStatus, ExpenseStatus } from '../generated/prisma';
 
@@ -41,8 +41,6 @@ export function toTzDate(dateStr: string, timezone: string): Date {
 
 @Injectable()
 export class ReportsService {
-  private readonly logger = new Logger(ReportsService.name);
-
   constructor(private readonly prisma: PrismaService) {}
 
   /** Resolves the effective timezone, falling back to env or UTC. */

@@ -87,7 +87,13 @@ export function TeamSidebar({ agents, filter, onFilterChange, onSelectAgent, onO
                 : 'hover:bg-[var(--bo-accent-5)]'
             }`}
           >
-            <PixelAvatar color={agent.color} status={agent.status} size="sm" />
+            {isRetroDesk ? (
+              <div className="relative flex-shrink-0 z-10 w-8 h-8 flex items-center justify-center translate-y-2">
+                <PixelAvatar color={agent.color} status={agent.status} size="md" name={agent.name} forceStyle={agent.styleId} className="-translate-y-3" />
+              </div>
+            ) : (
+              <PixelAvatar color={agent.color} status={agent.status} size="sm" forceStyle={agent.styleId} />
+            )}
             <div className="flex-1 min-w-0">
               <div
                 className={isRetroDesk

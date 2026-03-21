@@ -1,0 +1,8 @@
+{
+  "name": "@unicore/branding",
+  "version": "0.0.2",
+  "private": true,
+  "description": "Branding stub for community edition (Pro package provides full implementation)",
+  "main": "index.js",
+  "types": "index.d.ts"
+}

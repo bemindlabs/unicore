@@ -49,6 +49,21 @@ const COLORS = [
   "#aed581",
 ];
 
+const CHARACTER_CLASSES = [
+  { value: "auto", label: "Auto (Random Hash)" },
+  { value: "0", label: "00 - Human" },
+  { value: "1", label: "01 - Robot" },
+  { value: "2", label: "02 - Slime" },
+  { value: "3", label: "03 - Wizard" },
+  { value: "4", label: "04 - Ninja" },
+  { value: "5", label: "05 - Cyber" },
+  { value: "6", label: "06 - DOGE" },
+  { value: "7", label: "07 - PEPE" },
+  { value: "8", label: "08 - FLOKI" },
+  { value: "9", label: "09 - SHIB" },
+  { value: "10", label: "10 - BONK" },
+];
+
 export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
   const dialogRef = useRef<HTMLDivElement>(null);
   useEffect(() => { dialogRef.current?.focus(); }, []);
@@ -62,6 +77,7 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
       room: "standalone",
       activity: "",
       color: "#00e5ff",
+      styleId: undefined,
       deskItems: [],
     },
   );
@@ -70,7 +86,7 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
   const [saveError, setSaveError] = useState<string | null>(null);
   const { isActive: isRetroDesk } = useRetroDeskTheme();
 
-  function update(field: keyof BackofficeAgent, value: string | string[]) {
+  function update(field: keyof BackofficeAgent, value: any) {
     setForm((prev) => ({ ...prev, [field]: value }));
     setSaveError(null);
   }
@@ -84,6 +100,7 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
         ...form,
         id: form.id || form.name.toLowerCase().replace(/\s+/g, "-"),
         name: form.name.toUpperCase(),
+        styleId: form.styleId,
       });
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Save failed");
@@ -155,7 +172,7 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
 
         <div className="p-6 space-y-5">
           <div className="flex justify-center py-2 gap-4 items-end">
-            <PixelAvatar color={form.color} status={form.status} size="lg" />
+            <PixelAvatar color={form.color} status={form.status} size="lg" name={form.name} forceStyle={form.styleId} />
             {isRetroDesk && helper && (
               <PixelCharacter character={helper} size="sm" animation="wave" />
             )}
@@ -233,6 +250,22 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
               {ROOMS.map((r) => (
                 <option key={r.value} value={r.value}>
                   {r.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className={labelCls} style={labelStyle}>Character Class</label>
+            <select
+              value={form.styleId === undefined ? "auto" : form.styleId.toString()}
+              onChange={(e) => update("styleId", e.target.value === "auto" ? undefined : parseInt(e.target.value, 10)) as any}
+              className={inputCls}
+              style={inputStyle}
+            >
+              {CHARACTER_CLASSES.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
                 </option>
               ))}
             </select>

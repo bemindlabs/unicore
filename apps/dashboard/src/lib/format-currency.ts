@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 
 /**
  * Format a currency amount using Intl.NumberFormat.

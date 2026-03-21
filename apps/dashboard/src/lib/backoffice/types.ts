@@ -10,5 +10,6 @@ export interface BackofficeAgent {
   room: RoomId;
   activity?: string;
   color: string;
+  styleId?: number;
   deskItems?: string[];
 }
