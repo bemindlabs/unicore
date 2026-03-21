@@ -54,6 +54,10 @@ export class OrdersController {
     return this.ordersService.cancel(id, dto);
   }
 
+  @Post(':id/deliver')
+  @HttpCode(HttpStatus.OK)
+  deliver(@Param('id', ParseUUIDPipe) id: string) { return this.ordersService.deliver(id); }
+
   @Post(':id/refund')
   @HttpCode(HttpStatus.OK)
   refund(@Param('id', ParseUUIDPipe) id: string) { return this.ordersService.refund(id); }

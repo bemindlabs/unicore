@@ -441,13 +441,16 @@ async function seedOrders(
   const customers = contacts.filter(c => c.type === 'CUSTOMER' || c.type === 'PROSPECT');
 
   // Create diverse orders with different statuses
+  // State machine: DRAFT → CONFIRMED → PROCESSING → FULFILLED → SHIPPED → DELIVERED
   const orderScenarios = [
-    { status: 'confirmed', count: 5 },
+    { status: 'confirmed', count: 3 },
     { status: 'processing', count: 3 },
+    { status: 'fulfilled', count: 4 },
     { status: 'shipped', count: 4 },
-    { status: 'fulfilled', count: 6 },
-    { status: 'draft', count: 3 },
+    { status: 'delivered', count: 4 },
+    { status: 'draft', count: 2 },
     { status: 'cancelled', count: 2 },
+    { status: 'refunded', count: 1 },
   ];
 
   for (const scenario of orderScenarios) {
@@ -485,26 +488,41 @@ async function seedOrders(
       if (res) {
         orders.push({ id: res.id, orderNumber: res.orderNumber, contactId: contact.id, total: res.total || 0 });
 
-        // Transition order to desired status
-        if (scenario.status !== 'draft') {
+        // Transition order through state machine:
+        // DRAFT → CONFIRMED → PROCESSING → FULFILLED → SHIPPED → DELIVERED
+        const target = scenario.status;
+        if (target === 'cancelled') {
           await api('POST', `${ERP}/orders/${res.id}/confirm`, {});
-          if (scenario.status !== 'confirmed') {
+          await api('POST', `${ERP}/orders/${res.id}/cancel`, {
+            reason: pick(['Customer requested cancellation', 'Out of stock', 'Duplicate order']),
+          });
+        } else if (target === 'refunded') {
+          await api('POST', `${ERP}/orders/${res.id}/confirm`, {});
+          await api('POST', `${ERP}/orders/${res.id}/process`, {});
+          await api('POST', `${ERP}/orders/${res.id}/ship`, { trackingNumber: `TRK${rand(100000, 999999)}`, carrier: 'FedEx' });
+          await api('POST', `${ERP}/orders/${res.id}/refund`, { reason: 'Customer returned item' });
+        } else if (target !== 'draft') {
+          await api('POST', `${ERP}/orders/${res.id}/confirm`, {});
+          if (target !== 'confirmed') {
             await api('POST', `${ERP}/orders/${res.id}/process`, {});
-            if (scenario.status === 'shipped') {
-              await api('POST', `${ERP}/orders/${res.id}/ship`, {
-                trackingNumber: `TRK${rand(100000, 999999)}`,
-                carrier: pick(['FedEx', 'UPS', 'DHL', 'USPS']),
-              });
-            } else if (scenario.status === 'fulfilled') {
+            if (target !== 'processing') {
+              // PROCESSING → FULFILLED
               await api('POST', `${ERP}/orders/${res.id}/fulfill`, {
                 trackingNumber: `TRK${rand(100000, 999999)}`,
                 carrier: pick(['FedEx', 'UPS', 'DHL', 'USPS']),
-                notes: 'Delivered and confirmed by customer',
+                notes: 'All items packed and ready',
               });
-            } else if (scenario.status === 'cancelled') {
-              await api('POST', `${ERP}/orders/${res.id}/cancel`, {
-                reason: pick(['Customer requested cancellation', 'Out of stock', 'Duplicate order']),
-              });
+              if (target !== 'fulfilled') {
+                // FULFILLED → SHIPPED
+                await api('POST', `${ERP}/orders/${res.id}/ship`, {
+                  trackingNumber: `TRK${rand(100000, 999999)}`,
+                  carrier: pick(['FedEx', 'UPS', 'DHL', 'USPS']),
+                });
+                if (target === 'delivered') {
+                  // SHIPPED → DELIVERED
+                  await api('POST', `${ERP}/orders/${res.id}/deliver`, {});
+                }
+              }
             }
           }
         }

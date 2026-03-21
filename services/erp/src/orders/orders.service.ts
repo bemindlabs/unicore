@@ -237,6 +237,27 @@ export class OrdersService {
     });
   }
 
+  async deliver(id: string): Promise<OrderWithRelations> {
+    const order = await this.findOne(id);
+    const fromStatus = order.status as OrderStatus;
+    if (!canTransition(fromStatus, OrderStatus.DELIVERED)) {
+      throw new BadRequestException(`Cannot deliver order in status ${fromStatus}`);
+    }
+    const delivered = await this.prisma.order.update({
+      where: { id },
+      data: {
+        status: OrderStatus.DELIVERED as unknown as PrismaOrderStatus,
+        deliveredAt: new Date(),
+      },
+      include: ORDER_INCLUDE,
+    });
+    this.eventPublisher.publish(ERP_TOPICS.ORDER_UPDATED, {
+      orderId: id, customerId: order.contact.id, previousStatus: fromStatus, newStatus: OrderStatus.DELIVERED,
+    }, id).catch((err: unknown) => this.logger.error('Failed to publish order.delivered', err));
+    this.logger.log(`Order delivered: ${order.orderNumber}`);
+    return delivered;
+  }
+
   async refund(id: string): Promise<OrderWithRelations> { return this.transition(id, OrderStatus.REFUNDED); }
 
   private async generateOrderNumber(): Promise<string> {

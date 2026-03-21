@@ -370,10 +370,10 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
           </div>
 
           {selectedAgentToMove && (
-            <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-[var(--retrodesk-blue)] text-[var(--retrodesk-surface)] px-8 py-3 z-50 animate-bounce border-[6px] border-[var(--retrodesk-surface)] shadow-2xl text-center">
-              <div className="font-mono text-[16px] tracking-widest font-bold">[ CLICK TO RELOCATE ]</div>
-              <div className="font-mono text-[10px] mt-1.5 opacity-90 uppercase tracking-widest font-bold border-t-2 border-[var(--retrodesk-surface)] pt-1.5">
-                ✦ OR USE W A S D / ARROWS TO DRIVE AGENT ✦
+            <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-[var(--retrodesk-blue)] text-[var(--retrodesk-surface)] px-4 py-2 z-50 animate-bounce border-[4px] border-[var(--retrodesk-surface)] shadow-[6px_6px_0px_#00000040] text-center">
+              <div className="font-mono text-[12px] tracking-widest font-black">[ CLICK TO RELOCATE ]</div>
+              <div className="font-mono text-[8px] mt-1 opacity-90 uppercase tracking-wide font-bold border-t-2 border-[var(--retrodesk-surface)] pt-1">
+                ✦ OR USE W.A.S.D TO DRIVE ✦
               </div>
             </div>
           )}
