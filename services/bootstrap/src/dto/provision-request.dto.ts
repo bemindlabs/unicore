@@ -3,10 +3,11 @@ import { IsString, IsEmail, IsNotEmpty, IsOptional, MinLength, IsIn } from 'clas
 const VALID_TEMPLATES = [
   'ecommerce',
   'freelance',
+  'agency',
   'saas',
   'retail',
-  'content-creator',
-  'professional',
+  'content_creator',
+  'professional_services',
   'custom',
 ] as const;
 
