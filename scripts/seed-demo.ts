@@ -651,7 +651,6 @@ async function seedExpenses(userId: string) {
       category: exp.cat,
       amount: exp.amount + randFloat(-exp.amount * 0.1, exp.amount * 0.1),
       currency: 'USD',
-      vendor: exp.vendor,
       paidAt: pastDate(daysAgo),
       submittedBy: userId,
       notes: `Vendor: ${exp.vendor}. Regular business expense.`,
