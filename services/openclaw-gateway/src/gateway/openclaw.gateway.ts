@@ -291,7 +291,7 @@ export class OpenClawGateway
         const sessionId = channel; // use channel as session for conversation continuity
         const userId = tracked.userId ?? 'anonymous';
 
-        this.processChat(text, sessionId, userId, channel, tracked.socketId).catch((err) => {
+        this.processChat(text, sessionId, userId, channel).catch((err) => {
           this.logger.error(`Chat processing failed: ${err instanceof Error ? err.message : err}`);
         });
       }
