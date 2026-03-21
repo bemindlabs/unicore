@@ -14,6 +14,7 @@
     "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.config.js --coverage"
   },
   "dependencies": {
+    "@unicore/branding": "workspace:*",
     "@unicore/shared-types": "workspace:*",
     "@unicore/ui": "workspace:*",
     "lucide-react": "^0.400.0",
