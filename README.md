@@ -379,7 +379,8 @@ curl -X POST http://localhost:4000/auth/provision-admin \
 - [ ] Audit logging (Pro)
 - [ ] Custom domain routing (Pro)
 - [ ] White-label branding (Pro)
-- [ ] Rate limiting and API quotas
+- [x] Agent rate limiting
+- [ ] API quotas and per-user limits
 - [ ] Horizontal scaling with Redis Cluster
 
 ### v1.0 — General Availability
