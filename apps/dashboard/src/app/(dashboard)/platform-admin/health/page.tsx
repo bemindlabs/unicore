@@ -432,7 +432,3 @@ export default function PlatformHealthPage() {
   );
 }
 
-      {children}
-    </button>
-  );
-}
