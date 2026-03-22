@@ -241,9 +241,10 @@ function connectServiceWs(): Promise<WebSocket> {
 
 /**
  * Register an agent on a WebSocket connection. Returns the ack message.
+ * Works with both raw WebSocket and BufferedSocket.
  */
 async function registerAgent(
-  ws: WebSocket,
+  ws: WebSocket | BufferedSocket,
   agentId: string,
   opts: { name?: string; type?: string; version?: string; capabilities?: string[]; tags?: string[] } = {},
 ): Promise<ReceivedMessage> {
@@ -259,6 +260,10 @@ async function registerAgent(
       tags: opts.tags ?? [],
     },
   };
+  if (ws instanceof BufferedSocket) {
+    ws.send(msg);
+    return ws.nextMessage();
+  }
   wsSend(ws, msg);
   return waitForMessage(ws);
 }
