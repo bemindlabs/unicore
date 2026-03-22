@@ -357,6 +357,23 @@ export function ThemeSelector() {
     [setThemeById],
   );
 
+  const handleSkinSelect = useCallback(
+    (themeValue: string | null) => {
+      if (themeValue) {
+        // Apply the skin variant (e.g. "retrodesk-pepe")
+        setCharacterTheme(themeValue);
+        localStorage.setItem('character-skin', themeValue);
+      } else {
+        // Reset to the base theme (retrodesk or crypto)
+        setCharacterTheme(selectedThemeId);
+        localStorage.removeItem('character-skin');
+      }
+      // Reload to fully apply the skin CSS variables
+      window.location.reload();
+    },
+    [setCharacterTheme, selectedThemeId],
+  );
+
   // Guard: if THEME_OPTIONS is somehow empty, render nothing
   if (THEME_OPTIONS.length === 0 || !activeOption) {
     return null;
