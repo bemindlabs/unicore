@@ -41,6 +41,22 @@ export function TelegramConfig() {
   const [isSaving, setIsSaving] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
 
+  // Load saved config on mount
+  useEffect(() => {
+    api.get<Record<string, unknown>>('/api/v1/settings/telegram')
+      .then((data) => {
+        if (data && typeof data === 'object' && data.botToken) {
+          setConfig((prev) => ({
+            ...prev,
+            botToken: String(data.botToken ?? ''),
+            enabled: Boolean(data.enabled),
+            isConfigured: true,
+          }));
+        }
+      })
+      .catch(() => { /* no saved config */ });
+  }, []);
+
   const handleTestConnection = useCallback(async () => {
     if (!config.botToken.trim()) {
       toast({ title: 'Missing token', description: 'Enter a bot token first.' });
