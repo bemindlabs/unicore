@@ -1,4 +1,3 @@
-// Quick debug to check server.clients
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, Module } from '@nestjs/common';
 import { WsAdapter } from '@nestjs/platform-ws';
@@ -38,7 +37,7 @@ class TestGw extends OpenClawGateway {}
 })
 class TestMod {}
 
-describe('debug', () => {
+describe('debug direct msg', () => {
   let app: INestApplication;
   
   beforeAll(async () => {
@@ -60,27 +59,80 @@ describe('debug', () => {
 
   afterAll(async () => { await app.close(); });
 
-  it('check server.clients', async () => {
+  it('direct message delivery', async () => {
     const gw = app.get(TestGw);
+    const registry = app.get(AgentRegistryService);
     const server = (gw as any).server as Server;
-    console.log('server type:', typeof server);
-    console.log('server.clients type:', typeof server?.clients);
-    console.log('server.clients size before connect:', server?.clients?.size);
 
+    // Connect two clients
     const ws1 = new WebSocket(`ws://localhost:${WS_PORT}`);
     await new Promise<void>((resolve) => ws1.once('open', resolve));
-    
     const ws2 = new WebSocket(`ws://localhost:${WS_PORT}`);
     await new Promise<void>((resolve) => ws2.once('open', resolve));
+    await new Promise(r => setTimeout(r, 50));
+
+    console.log('clients count:', server.clients.size);
     
-    await new Promise(r => setTimeout(r, 100));
-    
-    console.log('server.clients size after 2 connects:', server?.clients?.size);
-    
-    // Try iterating
-    server?.clients?.forEach((client: any) => {
-      console.log('client socketId:', client.socketId, 'readyState:', client.readyState);
+    // Find socketIds assigned by afterInit
+    const socketIds: string[] = [];
+    server.clients.forEach((c: any) => {
+      socketIds.push(c.socketId);
+      console.log('socket', c.socketId, 'readyState', c.readyState);
     });
+
+    // Register agent on ws1
+    const regMsg1 = { type: 'agent:register', messageId: uuidv4(), timestamp: new Date().toISOString(), payload: { agentId: 'sender', name: 'S', agentType: 'w', version: '1', capabilities: [] } };
+    ws1.send(JSON.stringify(regMsg1));
+    const ack1Data = await new Promise<string>((resolve) => ws1.once('message', (d: any) => resolve(d.toString())));
+    console.log('reg1 ack:', ack1Data);
+
+    const regMsg2 = { type: 'agent:register', messageId: uuidv4(), timestamp: new Date().toISOString(), payload: { agentId: 'receiver', name: 'R', agentType: 'w', version: '1', capabilities: [] } };
+    ws2.send(JSON.stringify(regMsg2));
+    const ack2Data = await new Promise<string>((resolve) => ws2.once('message', (d: any) => resolve(d.toString())));
+    console.log('reg2 ack:', ack2Data);
+
+    // Check registry
+    const senderAgent = registry.getAgent('sender');
+    const receiverAgent = registry.getAgent('receiver');
+    console.log('sender socketId in registry:', senderAgent?.socketId);
+    console.log('receiver socketId in registry:', receiverAgent?.socketId);
+
+    // Check if receiver socketId matches any socket in server.clients
+    let found = false;
+    server.clients.forEach((c: any) => {
+      if (c.socketId === receiverAgent?.socketId) {
+        found = true;
+        console.log('MATCH: receiver socket found in server.clients');
+      }
+    });
+    console.log('receiver socket found:', found);
+
+    // Send direct message
+    const directMsg = {
+      type: 'message:direct',
+      messageId: uuidv4(),
+      timestamp: new Date().toISOString(),
+      payload: { fromAgentId: 'sender', toAgentId: 'receiver', topic: 'test', data: { hello: true } },
+    };
+    
+    // Listen on ws2 before sending
+    const receiverPromise = new Promise<string>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('timeout')), 2000);
+      ws2.once('message', (d: any) => { clearTimeout(timer); resolve(d.toString()); });
+    });
+
+    ws1.send(JSON.stringify(directMsg));
+    
+    // Wait for ack on sender
+    const senderAck = await new Promise<string>((resolve) => ws1.once('message', (d: any) => resolve(d.toString())));
+    console.log('sender ack:', senderAck);
+
+    try {
+      const receiverMsg = await receiverPromise;
+      console.log('receiver got:', receiverMsg);
+    } catch (e) {
+      console.log('receiver TIMED OUT - message not delivered');
+    }
 
     ws1.close();
     ws2.close();

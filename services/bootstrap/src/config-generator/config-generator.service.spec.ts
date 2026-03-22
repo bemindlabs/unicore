@@ -123,7 +123,7 @@ describe('ConfigGeneratorService', () => {
 
     it('always enables owner role even with empty template', () => {
       const emptyTemplate = makeTemplate({
-        agents: { comms: false, finance: false, growth: false, ops: false, research: false, erp: false, builder: false },
+        agents: { comms: false, finance: false, growth: false, ops: false, research: false, erp: false, builder: false, sentinel: false },
         erp: { contacts: false, orders: false, inventory: false, invoicing: false, expenses: false, reports: false },
       });
       const config = service.generate(makeRequest(), emptyTemplate);
@@ -138,7 +138,7 @@ describe('ConfigGeneratorService', () => {
 
     it('disables non-owner roles when template has no active agents or ERP modules', () => {
       const emptyTemplate = makeTemplate({
-        agents: { comms: false, finance: false, growth: false, ops: false, research: false, erp: false, builder: false },
+        agents: { comms: false, finance: false, growth: false, ops: false, research: false, erp: false, builder: false, sentinel: false },
         erp: { contacts: false, orders: false, inventory: false, invoicing: false, expenses: false, reports: false },
       });
       const config = service.generate(makeRequest(), emptyTemplate);
@@ -148,7 +148,7 @@ describe('ConfigGeneratorService', () => {
 
     it('enables other roles when only ERP modules are active (no agents)', () => {
       const erpOnlyTemplate = makeTemplate({
-        agents: { comms: false, finance: false, growth: false, ops: false, research: false, erp: false, builder: false },
+        agents: { comms: false, finance: false, growth: false, ops: false, research: false, erp: false, builder: false, sentinel: false },
         erp: { contacts: true, orders: false, inventory: false, invoicing: false, expenses: false, reports: false },
       });
       const config = service.generate(makeRequest(), erpOnlyTemplate);
@@ -201,7 +201,7 @@ describe('ConfigGeneratorService', () => {
 
     it('does not add channels to comms when comms agent is disabled', () => {
       const template = makeTemplate({
-        agents: { comms: false, finance: false, growth: false, ops: false, research: false, erp: false, builder: false },
+        agents: { comms: false, finance: false, growth: false, ops: false, research: false, erp: false, builder: false, sentinel: false },
       });
       const config = service.generate(makeRequest(), template);
       const comms = config.agents.find((a) => a.type === 'comms');
