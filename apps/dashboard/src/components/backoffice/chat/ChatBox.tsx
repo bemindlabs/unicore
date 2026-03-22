@@ -151,14 +151,26 @@ export function ChatBox() {
     };
   }, []);
 
-  // Clear messages when switching channels
+  // Load history when switching channels
   const prevChannelRef = useRef(channel);
   useEffect(() => {
     if (prevChannelRef.current !== channel) {
-      setMessages([]);
       prevChannelRef.current = channel;
     }
-  }, [channel]);
+    // Load saved chat history for this channel
+    setMessages([]);
+    const agentId = selectedAgent?.id ?? 'general';
+    api.get<{ data: Array<{ messages: ChatMessage[]; agentId: string; channel: string }> }>(
+      `/api/v1/chat-history?channel=${encodeURIComponent(channel)}&limit=1`,
+    )
+      .then((res) => {
+        const latest = res?.data?.[0];
+        if (latest?.messages?.length) {
+          setMessages(latest.messages.map((m) => ({ ...m, reactions: {} })));
+        }
+      })
+      .catch(() => { /* no history */ });
+  }, [channel, selectedAgent?.id]);
 
   useEffect(() => {
     if (scrollRef.current) {
