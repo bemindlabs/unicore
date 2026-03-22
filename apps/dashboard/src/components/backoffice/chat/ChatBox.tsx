@@ -174,17 +174,17 @@ export function ChatBox() {
     }
     // Load saved chat history for this channel
     setMessages([]);
-    api.get<{ data: Array<{ messages: ChatMessage[]; agentId: string; channel: string }> }>(
+    api.get<{ items: Array<{ messages: ChatMessage[]; agentId: string; channel: string }> }>(
       `/api/v1/chat-history?channel=${encodeURIComponent(channel)}&limit=1`,
     )
       .then((res) => {
-        const latest = res?.data?.[0];
+        const latest = res?.items?.[0];
         if (latest?.messages?.length) {
           setMessages(latest.messages.map((m) => ({ ...m, reactions: {} })));
         }
       })
       .catch(() => { /* no history */ });
-  }, [channel, selectedAgent?.id]);
+  }, [channel]);
 
   useEffect(() => {
     if (scrollRef.current) {
