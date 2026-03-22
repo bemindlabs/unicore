@@ -1,8 +1,12 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import type { BackofficeAgent } from '@/lib/backoffice/types';
-import { api } from '@/lib/api';
+import { usePtyWebSocket } from '@/hooks/use-pty-ws';
+import { Terminal } from '@xterm/xterm';
+import { FitAddon } from '@xterm/addon-fit';
+import { WebLinksAddon } from '@xterm/addon-web-links';
+import '@xterm/xterm/css/xterm.css';
 
 interface Props {
   agent: BackofficeAgent;
@@ -10,149 +14,108 @@ interface Props {
   onClose: () => void;
 }
 
-interface TerminalLine {
-  id: number;
-  type: 'input' | 'stdout' | 'stderr' | 'system';
-  text: string;
-}
-
 export function AgentTerminal({ agent, open, onClose }: Props) {
-  const [lines, setLines] = useState<TerminalLine[]>([]);
-  const [input, setInput] = useState('');
-  const [running, setRunning] = useState(false);
-  const [history, setHistory] = useState<string[]>([]);
-  const [_historyIdx, setHistoryIdx] = useState(-1);
-  const [cwd, setCwd] = useState('/app');
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const lineIdRef = useRef(0);
+  const termRef = useRef<HTMLDivElement>(null);
+  const xtermRef = useRef<Terminal | null>(null);
+  const fitRef = useRef<FitAddon | null>(null);
+  const initRef = useRef(false);
 
-  const addLine = (type: TerminalLine['type'], text: string) => {
-    const id = ++lineIdRef.current;
-    setLines((prev) => [...prev.slice(-500), { id, type, text }]);
-  };
+  const handleOutput = useCallback((data: string) => {
+    xtermRef.current?.write(data);
+  }, []);
 
+  const handleExit = useCallback((exitCode: number) => {
+    xtermRef.current?.writeln(`\r\n\x1b[33m[Process exited with code ${exitCode}]\x1b[0m`);
+  }, []);
+
+  const { connected, sessionId, createSession, sendInput, sendResize, destroy } = usePtyWebSocket(handleOutput, handleExit);
+
+  // Initialize xterm when panel opens
   useEffect(() => {
-    if (open) {
-      setLines([]);
-      lineIdRef.current = 0;
-      addLine('system', `UniCore Terminal — ${agent.name} (${agent.role})`);
-      addLine('system', 'Shell running inside OpenClaw Gateway container');
-      addLine('system', '');
-      setTimeout(() => inputRef.current?.focus(), 100);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, agent.id]);
+    if (!open || !termRef.current || initRef.current) return;
+    initRef.current = true;
 
+    const terminal = new Terminal({
+      cursorBlink: true,
+      fontSize: 13,
+      fontFamily: 'JetBrains Mono, Menlo, Monaco, Courier New, monospace',
+      theme: {
+        background: '#0d1117',
+        foreground: '#c9d1d9',
+        cursor: '#58a6ff',
+        selectionBackground: '#264f78',
+        black: '#0d1117',
+        red: '#ff7b72',
+        green: '#7ee787',
+        yellow: '#d29922',
+        blue: '#58a6ff',
+        magenta: '#bc8cff',
+        cyan: '#39c5cf',
+        white: '#c9d1d9',
+        brightBlack: '#484f58',
+        brightRed: '#ffa198',
+        brightGreen: '#56d364',
+        brightYellow: '#e3b341',
+        brightBlue: '#79c0ff',
+        brightMagenta: '#d2a8ff',
+        brightCyan: '#56d4dd',
+        brightWhite: '#f0f6fc',
+      },
+    });
+
+    const fit = new FitAddon();
+    const links = new WebLinksAddon();
+    terminal.loadAddon(fit);
+    terminal.loadAddon(links);
+    terminal.open(termRef.current);
+
+    // Fit after a frame to get correct dimensions
+    requestAnimationFrame(() => {
+      fit.fit();
+    });
+
+    terminal.onData((data) => sendInput(data));
+
+    xtermRef.current = terminal;
+    fitRef.current = fit;
+
+    // ResizeObserver for auto-fit
+    const observer = new ResizeObserver(() => {
+      requestAnimationFrame(() => {
+        fit.fit();
+        sendResize(terminal.cols, terminal.rows);
+      });
+    });
+    observer.observe(termRef.current);
+
+    return () => {
+      observer.disconnect();
+      terminal.dispose();
+      xtermRef.current = null;
+      fitRef.current = null;
+      initRef.current = false;
+    };
+  }, [open, sendInput, sendResize]);
+
+  // Create PTY session when connected and terminal is ready
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (connected && open && xtermRef.current && !sessionId) {
+      const term = xtermRef.current;
+      createSession(term.cols, term.rows, '/workspace');
     }
-  }, [lines]);
+  }, [connected, open, sessionId, createSession]);
 
-  const handleSend = async () => {
-    const cmd = input.trim();
-    if (!cmd) return;
+  // Handle close
+  const handleClose = useCallback(() => {
+    destroy();
+    onClose();
+  }, [destroy, onClose]);
 
-    addLine('input', `$ ${cmd}`);
-    setInput('');
-    setRunning(true);
-
-    if (cmd.trim()) {
-      setHistory((prev) => [...prev.slice(-50), cmd]);
-    }
-    setHistoryIdx(-1);
-
-    // Handle cd locally
-    if (cmd.startsWith('cd ')) {
-      const dir = cmd.slice(3).trim();
-      try {
-        const result = await api.post<{ stdout: string; stderr: string; exitCode: number }>(
-          '/api/proxy/openclaw/terminal/exec',
-          { command: `cd ${dir} && pwd`, cwd },
-        );
-        if (result.exitCode === 0 && result.stdout.trim()) {
-          setCwd(result.stdout.trim());
-          addLine('stdout', result.stdout.trim());
-        } else {
-          addLine('stderr', result.stderr || 'cd failed');
-        }
-      } catch (err) {
-        addLine('stderr', err instanceof Error ? err.message : 'Request failed');
-      }
-      setRunning(false);
-      return;
-    }
-
-    if (cmd === 'clear') {
-      setLines([]);
-      lineIdRef.current = 0;
-      setRunning(false);
-      return;
-    }
-
-    try {
-      const result = await api.post<{ stdout: string; stderr: string; exitCode: number }>(
-        '/api/proxy/openclaw/terminal/exec',
-        { command: cmd, cwd, timeout: 15000 },
-      );
-
-      if (result.stdout) {
-        for (const line of result.stdout.split('\n')) {
-          if (line) addLine('stdout', line);
-        }
-      }
-      if (result.stderr) {
-        for (const line of result.stderr.split('\n')) {
-          if (line) addLine('stderr', line);
-        }
-      }
-      if (result.exitCode !== 0) {
-        addLine('system', `exit code: ${result.exitCode}`);
-      }
-    } catch (err) {
-      addLine('stderr', err instanceof Error ? err.message : 'Request failed');
-    }
-
-    setRunning(false);
-    setTimeout(() => inputRef.current?.focus(), 50);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleSend();
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setHistoryIdx((prev) => {
-        const next = prev + 1;
-        if (next >= history.length) return prev;
-        setInput(history[history.length - 1 - next]);
-        return next;
-      });
-    } else if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setHistoryIdx((prev) => {
-        if (prev <= 0) { setInput(''); return -1; }
-        const next = prev - 1;
-        setInput(history[history.length - 1 - next]);
-        return next;
-      });
-    }
-  };
-
-  const lineColor: Record<TerminalLine['type'], string> = {
-    input: 'text-cyan-400',
-    stdout: 'text-green-400/90',
-    stderr: 'text-red-400/80',
-    system: 'text-green-700/50',
-  };
+  if (!open) return null;
 
   return (
     <div
-      className={`fixed inset-y-0 right-0 z-50 w-full max-w-2xl flex flex-col shadow-2xl transition-transform duration-200 ${
-        open ? 'translate-x-0' : 'translate-x-full'
-      }`}
+      className="fixed inset-y-0 right-0 z-50 w-full max-w-2xl flex flex-col shadow-2xl animate-in slide-in-from-right duration-200"
       style={{ background: '#0d1117' }}
     >
       {/* Header */}
@@ -160,51 +123,17 @@ export function AgentTerminal({ agent, open, onClose }: Props) {
         <div className="flex items-center gap-3">
           <span className="font-mono text-xs text-green-500">$</span>
           <span className="font-mono text-xs text-green-400 uppercase tracking-wider">{agent.name}</span>
-          <span className="font-mono text-[9px] text-green-700">{cwd}</span>
+          <span className={`font-mono text-[9px] ${connected ? 'text-green-500' : 'text-yellow-500 animate-pulse'}`}>
+            {connected ? (sessionId ? 'CONNECTED' : 'STARTING...') : 'CONNECTING...'}
+          </span>
         </div>
-        <div className="flex items-center gap-3">
-          {running && <span className="font-mono text-[9px] text-yellow-400 animate-pulse">RUNNING</span>}
-          <button onClick={onClose} className="text-green-600/60 hover:text-green-400 text-lg leading-none px-1" aria-label="Close">
-            &times;
-          </button>
-        </div>
+        <button onClick={handleClose} className="text-green-600/60 hover:text-green-400 text-lg leading-none px-1" aria-label="Close">
+          &times;
+        </button>
       </div>
 
-      {/* Output */}
-      <div
-        ref={scrollRef}
-        className="flex-1 overflow-y-auto px-4 py-3 font-mono text-xs leading-relaxed select-text"
-        style={{ background: '#0d1117' }}
-        onClick={() => inputRef.current?.focus()}
-      >
-        {lines.map((line) => (
-          <div key={line.id} className={`${lineColor[line.type]} whitespace-pre-wrap break-all`}>
-            {line.text}
-          </div>
-        ))}
-      </div>
-
-      {/* Input */}
-      <div className="border-t border-green-900/30 px-4 py-3" style={{ background: '#161b22' }}>
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-xs text-green-500 shrink-0">$</span>
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={running ? 'Running...' : 'Type command...'}
-            className="flex-1 bg-transparent font-mono text-xs text-green-300 placeholder-green-800/40 outline-none"
-            disabled={running}
-            autoComplete="off"
-            spellCheck={false}
-          />
-        </div>
-        <div className="font-mono text-[8px] text-green-900/40 mt-1">
-          Enter: run &middot; Up/Down: history &middot; clear: reset
-        </div>
-      </div>
+      {/* Terminal */}
+      <div ref={termRef} className="flex-1 overflow-hidden p-1" />
     </div>
   );
 }
