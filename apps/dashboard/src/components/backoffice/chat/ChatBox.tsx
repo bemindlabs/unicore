@@ -356,7 +356,7 @@ export function ChatBox() {
                   onClick={() => setDropdownOpen((v) => !v)}
                   className="flex items-center gap-1 text-sm font-medium font-mono hover:bg-[var(--bo-accent-10)] rounded px-1 py-0.5"
                 >
-                  Team Chat
+                  Agent Chat
                   <ChevronDown className="h-3 w-3" />
                 </button>
                 {dropdownOpen && (
