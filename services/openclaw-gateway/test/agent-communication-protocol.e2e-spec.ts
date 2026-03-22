@@ -220,6 +220,14 @@ function connectWs(token?: string): Promise<WebSocket> {
 }
 
 /**
+ * Connect and return a BufferedSocket (for cross-socket message tests).
+ */
+async function connectBuffered(token?: string): Promise<BufferedSocket> {
+  const ws = await connectWs(token);
+  return new BufferedSocket(ws);
+}
+
+/**
  * Connect with internal service token.
  */
 function connectServiceWs(): Promise<WebSocket> {
