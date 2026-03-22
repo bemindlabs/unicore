@@ -70,6 +70,45 @@ export function AgentSettings() {
   const [saving, setSaving] = useState<Record<number, boolean>>({});
   const [saveSuccess, setSaveSuccess] = useState<Record<number, boolean>>({});
 
+  // Map Directives state
+  const [autonomyEnabled, setAutonomyEnabled] = useState(false);
+  const [autonomyInterval, setAutonomyInterval] = useState(30);
+  const [directivesSaving, setDirectivesSaving] = useState(false);
+  const [directivesSaved, setDirectivesSaved] = useState(false);
+
+  // Load Map Directives on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await api.get<any>('/api/v1/settings/map-directives');
+        if (data) {
+          if (typeof data.autonomyEnabled === 'boolean') setAutonomyEnabled(data.autonomyEnabled);
+          if (typeof data.autonomyInterval === 'number') setAutonomyInterval(data.autonomyInterval);
+        }
+      } catch {
+        // Settings may not exist yet, use defaults
+      }
+    })();
+  }, []);
+
+  // Save Map Directives
+  async function saveDirectives() {
+    setDirectivesSaving(true);
+    setDirectivesSaved(false);
+    try {
+      await api.put('/api/v1/settings/map-directives', {
+        autonomyEnabled,
+        autonomyInterval,
+      });
+      setDirectivesSaved(true);
+      setTimeout(() => setDirectivesSaved(false), 2000);
+    } catch {
+      // Save failed silently
+    } finally {
+      setDirectivesSaving(false);
+    }
+  }
+
   const fetchAgents = useCallback(async () => {
     setLoading(true);
     setError(null);
