@@ -1,8 +1,15 @@
-import { Injectable, UnauthorizedException, ServiceUnavailableException, Logger } from "@nestjs/common";
-import { TemplatesService } from "../templates/templates.service";
-import { ConfigGeneratorService } from "../config-generator/config-generator.service";
-import type { UniCoreConfig } from "../config-generator/config-generator.service";
-import type { ProvisionRequestDto } from "../dto/provision-request.dto";
+import {
+  Injectable,
+  UnauthorizedException,
+  ServiceUnavailableException,
+  ConflictException,
+  Logger,
+} from '@nestjs/common';
+import { TemplatesService } from '../templates/templates.service';
+import { ConfigGeneratorService } from '../config-generator/config-generator.service';
+import { WizardStatusService } from '../wizard/wizard-status.service';
+import type { UniCoreConfig } from '../config-generator/config-generator.service';
+import type { ProvisionRequestDto } from '../dto/provision-request.dto';
 
 export interface ProvisioningResult {
   success: boolean;
@@ -31,12 +38,20 @@ export class ProvisioningService {
   constructor(
     private readonly templatesService: TemplatesService,
     private readonly configGeneratorService: ConfigGeneratorService,
+    private readonly wizardStatusService: WizardStatusService,
   ) {}
 
   async provision(request: ProvisionRequestDto): Promise<ProvisioningResult> {
+    // Lockout: prevent re-provisioning once wizard is complete
+    if (this.wizardStatusService.isComplete()) {
+      throw new ConflictException(
+        'Platform is already provisioned. Wizard cannot be run again.',
+      );
+    }
+
     const expectedSecret = process.env.BOOTSTRAP_SECRET;
     if (!expectedSecret || request.bootstrapSecret !== expectedSecret) {
-      throw new UnauthorizedException("Invalid bootstrap secret");
+      throw new UnauthorizedException('Invalid bootstrap secret');
     }
 
     this.logger.log(`Provisioning platform for: ${request.businessName}`);
@@ -49,23 +64,23 @@ export class ProvisioningService {
 
     // Create admin user in API gateway database
     const apiGatewayUrl =
-      process.env.API_GATEWAY_URL ?? "http://localhost:4000";
+      process.env.API_GATEWAY_URL ?? 'http://localhost:4000';
     let adminUser: { id: string; email: string; name: string; role: string };
 
     try {
       const registerRes = await fetch(
         `${apiGatewayUrl}/auth/provision-admin`,
         {
-          method: "POST",
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json",
-            "X-Bootstrap-Secret": request.bootstrapSecret,
+            'Content-Type': 'application/json',
+            'X-Bootstrap-Secret': request.bootstrapSecret,
           },
           body: JSON.stringify({
             email: request.adminEmail,
             name: request.adminName,
             password: request.adminPassword,
-            role: "OWNER",
+            role: 'OWNER',
           }),
         },
       );
@@ -109,21 +124,21 @@ export class ProvisioningService {
     let licenseKey: string | undefined;
     try {
       const licenseApiUrl =
-        process.env.LICENSE_API_URL ?? "http://localhost:4600";
+        process.env.LICENSE_API_URL ?? 'http://localhost:4600';
       const licenseAdminSecret = process.env.LICENSE_ADMIN_SECRET;
       if (!licenseAdminSecret) {
         this.logger.warn('LICENSE_ADMIN_SECRET not set — skipping license auto-creation');
         throw new Error('LICENSE_ADMIN_SECRET not configured');
       }
       const licenseRes = await fetch(`${licenseApiUrl}/api/v1/licenses`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${licenseAdminSecret}`,
         },
         body: JSON.stringify({
-          edition: "community",
-          expiry: "2099-12-31T23:59:59Z",
+          edition: 'community',
+          expiry: '2099-12-31T23:59:59Z',
           maxAgents: 2,
           maxRoles: 3,
         }),
@@ -152,6 +167,9 @@ export class ProvisioningService {
       warnings.push(agentWarnings);
     }
 
+    // Mark wizard as complete — prevents re-provisioning
+    this.wizardStatusService.markComplete();
+
     return {
       success: true,
       config,
@@ -170,26 +188,26 @@ export class ProvisioningService {
 
   private async registerDefaultAgents(): Promise<string | undefined> {
     const openclawUrl =
-      process.env.OPENCLAW_GATEWAY_URL ?? "http://localhost:18790";
+      process.env.OPENCLAW_GATEWAY_URL ?? 'http://localhost:18790';
 
     const defaultAgents = [
-      { agentId: "router", name: "ROUTER", type: "router", capabilities: ["routing", "delegation", "intent-classification"] },
-      { agentId: "comms", name: "COMMS", type: "comms", capabilities: ["messaging", "email", "notifications"] },
-      { agentId: "finance", name: "FINANCE", type: "finance", capabilities: ["invoicing", "expenses", "reports"] },
-      { agentId: "growth", name: "GROWTH", type: "growth", capabilities: ["marketing", "analytics", "campaigns"] },
-      { agentId: "ops", name: "OPS", type: "ops", capabilities: ["monitoring", "deployment", "system-health"] },
-      { agentId: "research", name: "RESEARCH", type: "research", capabilities: ["market-research", "analysis", "trends"] },
-      { agentId: "sentinel", name: "SENTINEL", type: "sentinel", capabilities: ["security-scan", "threat-detection", "access-audit", "incident-response"] },
-      { agentId: "builder", name: "BUILDER", type: "builder", capabilities: ["code-generation", "feature-building"] },
-      { agentId: "erp", name: "ERP", type: "erp", capabilities: ["data-entry", "workflow-automation"] },
+      { agentId: 'router', name: 'ROUTER', type: 'router', capabilities: ['routing', 'delegation', 'intent-classification'] },
+      { agentId: 'comms', name: 'COMMS', type: 'comms', capabilities: ['messaging', 'email', 'notifications'] },
+      { agentId: 'finance', name: 'FINANCE', type: 'finance', capabilities: ['invoicing', 'expenses', 'reports'] },
+      { agentId: 'growth', name: 'GROWTH', type: 'growth', capabilities: ['marketing', 'analytics', 'campaigns'] },
+      { agentId: 'ops', name: 'OPS', type: 'ops', capabilities: ['monitoring', 'deployment', 'system-health'] },
+      { agentId: 'research', name: 'RESEARCH', type: 'research', capabilities: ['market-research', 'analysis', 'trends'] },
+      { agentId: 'sentinel', name: 'SENTINEL', type: 'sentinel', capabilities: ['security-scan', 'threat-detection', 'access-audit', 'incident-response'] },
+      { agentId: 'builder', name: 'BUILDER', type: 'builder', capabilities: ['code-generation', 'feature-building'] },
+      { agentId: 'erp', name: 'ERP', type: 'erp', capabilities: ['data-entry', 'workflow-automation'] },
     ];
 
     let registered = 0;
     for (const agent of defaultAgents) {
       try {
         const res = await fetch(`${openclawUrl}/health/agents/register`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(agent),
         });
         if (res.ok) registered++;
@@ -208,7 +226,7 @@ export class ProvisioningService {
       return undefined;
     } else {
       const msg =
-        "Could not register any agents with OpenClaw — gateway may be unavailable";
+        'Could not register any agents with OpenClaw — gateway may be unavailable';
       this.logger.warn(msg);
       return msg;
     }
