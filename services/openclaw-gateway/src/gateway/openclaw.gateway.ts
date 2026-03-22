@@ -311,6 +311,22 @@ export class OpenClawGateway
   ): void {
     if (message.type !== 'message:broadcast') return;
 
+    const agentCheck = this.rateLimiter.checkAgentLimit(message.payload.fromAgentId);
+    if (!agentCheck.allowed) {
+      this.send(client, {
+        type: 'system:error',
+        messageId: require('uuid').v4(),
+        timestamp: new Date().toISOString(),
+        payload: {
+          originalMessageId: message.messageId,
+          code: 'RATE_LIMITED',
+          message: 'Agent message rate limit exceeded',
+          retryAfter: agentCheck.retryAfterSeconds,
+        },
+      });
+      return;
+    }
+
     const envelope = JSON.stringify(message);
     const count = this.router.routeBroadcast(
       message.payload.fromAgentId,
