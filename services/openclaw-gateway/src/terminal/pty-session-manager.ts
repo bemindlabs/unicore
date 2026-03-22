@@ -1,6 +1,17 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import { spawn, IPty } from 'node-pty';
 import { v4 as uuidv4 } from 'uuid';
+
+// Dynamic import — node-pty requires native compilation.
+// Gracefully degrade if the native module is unavailable.
+let nodePty: typeof import('node-pty') | null = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  nodePty = require('node-pty');
+} catch {
+  // node-pty not available — PTY sessions will be disabled
+}
+
+type IPty = import('node-pty').IPty;
 
 interface PtySession {
   id: string;
