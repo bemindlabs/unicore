@@ -26,9 +26,10 @@ import { PtySessionManager } from './terminal/pty-session-manager';
     OpenClawGateway,
     AgentRegistryService,
     MessageRouterService,
+    RateLimiterService,
     HeartbeatService,
     PtySessionManager,
   ],
-  exports: [AgentRegistryService, MessageRouterService],
+  exports: [AgentRegistryService, MessageRouterService, RateLimiterService],
 })
 export class OpenClawModule {}
