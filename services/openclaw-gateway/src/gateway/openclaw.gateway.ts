@@ -438,7 +438,7 @@ export class OpenClawGateway
   private handlePtyCreate(client: WebSocket, message: IncomingMessage): void {
     const tracked = client as TrackedSocket;
     if (!tracked.authenticated) return;
-    const { cols, rows, cwd } = message.payload;
+    const { cols, rows, cwd } = message.payload as Record<string, any>;
     const sessionId = this.ptyManager.createSession(tracked.socketId, tracked.userId ?? 'anonymous', cols ?? 80, rows ?? 24, cwd);
     if (sessionId) {
       if (client.readyState === WebSocket.OPEN) {
