@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { useTheme } from '@/hooks/use-theme';
+import { isRetroDeskFamily } from '@/lib/backoffice/theme-registry';
 
 interface RetroDeskThemeContext {
   isActive: boolean;
@@ -12,7 +13,7 @@ const RetroDeskCtx = createContext<RetroDeskThemeContext>({ isActive: false, ani
 
 export function RetroDeskThemeProvider({ children, forceTheme }: { children: ReactNode; forceTheme?: string }) {
   const { characterTheme } = useTheme();
-  const isActive = forceTheme === 'retrodesk' || forceTheme === 'crypto' || characterTheme === 'retrodesk' || characterTheme === 'crypto';
+  const isActive = isRetroDeskFamily(forceTheme ?? null) || isRetroDeskFamily(characterTheme);
   const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
