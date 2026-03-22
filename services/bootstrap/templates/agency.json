@@ -1,0 +1,27 @@
+{
+  "name": "Agency",
+  "description": "Digital agency with client management, project tracking, invoicing, and team collaboration",
+  "erp": {
+    "contacts": true,
+    "orders": true,
+    "inventory": false,
+    "invoicing": true,
+    "expenses": true,
+    "reports": true
+  },
+  "agents": {
+    "comms": true,
+    "finance": true,
+    "growth": true,
+    "ops": true,
+    "research": true,
+    "erp": false,
+    "builder": true,
+    "sentinel": false
+  },
+  "dashboard": {
+    "widgets": ["active_projects", "revenue", "utilization", "client_satisfaction", "pipeline"]
+  },
+  "channels": ["email", "web", "slack", "teams"],
+  "workflows": ["proposal_approval", "invoice_reminder", "project_milestone", "client_onboarding"]
+}
