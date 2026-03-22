@@ -74,7 +74,7 @@ describe('MessagePersistenceService', () => {
         { id: '2', messageId: 'm2', channel: 'ch', fromAgentId: 'a', data: {}, createdAt: new Date('2026-01-02') },
         { id: '1', messageId: 'm1', channel: 'ch', fromAgentId: 'a', data: {}, createdAt: new Date('2026-01-01') },
       ];
-      // prisma returns descending; service reverses
+      // prisma returns descending; service reverses to ascending (oldest first)
       (prisma.chatMessage.findMany as jest.Mock).mockResolvedValue(rows);
 
       const result = await service.findByChannel('ch', 50);
@@ -84,9 +84,9 @@ describe('MessagePersistenceService', () => {
         orderBy: { createdAt: 'desc' },
         take: 50,
       });
-      // reversed → oldest first
-      expect(result[0].messageId).toBe('m2');
-      expect(result[1].messageId).toBe('m1');
+      // reversed → oldest first (m1 Jan-01 before m2 Jan-02)
+      expect(result[0].messageId).toBe('m1');
+      expect(result[1].messageId).toBe('m2');
     });
 
     it('applies before-timestamp filter', async () => {
