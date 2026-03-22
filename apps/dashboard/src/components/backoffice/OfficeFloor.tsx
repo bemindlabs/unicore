@@ -4,6 +4,7 @@ import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import type { BackofficeAgent } from '@/lib/backoffice/types';
 import { PixelAvatar } from './PixelAvatar';
 import { useChatWebSocket } from '@/hooks/use-chat-ws';
+import { useTheme } from '@/hooks/use-theme';
 
 interface Props {
   agents: BackofficeAgent[];
@@ -332,13 +333,11 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
   const [currentFloor, setCurrentFloor] = useState<number>(1);
   const [autonomyEnabled, setAutonomyEnabled] = useState(false);
   const [autonomyInterval, setAutonomyInterval] = useState(60);
-  const [activeTheme, setActiveTheme] = useState('retrodesk');
+  const { characterTheme } = useTheme();
+  const activeTheme = characterTheme ?? 'retrodesk';
 
-  // Load map directives + theme from settings/localStorage on mount
+  // Load map directives from settings on mount
   useEffect(() => {
-    const saved = localStorage.getItem('hq_map_theme');
-    if (saved) setActiveTheme(saved);
-    // Load autonomy settings from API (saved by AgentSettings)
     fetch('/api/v1/settings/map-directives')
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {

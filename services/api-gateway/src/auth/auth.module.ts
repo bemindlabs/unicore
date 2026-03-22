@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Provider } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthService } from './auth.service';
@@ -11,6 +11,15 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { TokenBlacklistService } from './token-blacklist.service';
 import { AuditModule } from '../audit/audit.module';
+
+// Only register OAuth strategies when credentials are configured
+const oauthProviders: Provider[] = [];
+if (process.env.GOOGLE_CLIENT_ID) {
+  oauthProviders.push(GoogleStrategy);
+}
+if (process.env.GITHUB_CLIENT_ID) {
+  oauthProviders.push(GithubStrategy);
+}
 
 @Module({
   imports: [
@@ -26,8 +35,7 @@ import { AuditModule } from '../audit/audit.module';
     AuthService,
     JwtStrategy,
     LocalStrategy,
-    GoogleStrategy,
-    GithubStrategy,
+    ...oauthProviders,
     JwtAuthGuard,
     RolesGuard,
     TokenBlacklistService,
