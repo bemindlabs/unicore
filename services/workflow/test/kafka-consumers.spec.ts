@@ -364,7 +364,8 @@ describe('InvoiceConsumerService', () => {
     jest.clearAllMocks();
     mockWorkflowService = makeMockWorkflowService();
     eventHandler = makeRealEventHandler();
-    consumer = new InvoiceConsumerService(eventHandler, mockWorkflowService);
+    mockRetryService = makeMockRetryService();
+    consumer = new InvoiceConsumerService(eventHandler, mockWorkflowService, mockRetryService);
   });
 
   describe('handleInvoiceCreated', () => {
