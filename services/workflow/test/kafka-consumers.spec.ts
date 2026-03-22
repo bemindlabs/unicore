@@ -99,7 +99,8 @@ describe('OrderConsumerService', () => {
     jest.clearAllMocks();
     mockWorkflowService = makeMockWorkflowService();
     eventHandler = makeRealEventHandler();
-    consumer = new OrderConsumerService(eventHandler, mockWorkflowService);
+    mockRetryService = makeMockRetryService();
+    consumer = new OrderConsumerService(eventHandler, mockWorkflowService, mockRetryService);
   });
 
   describe('handleOrderCreated', () => {
