@@ -128,7 +128,7 @@ export function BackofficeApp({
             {/* Mobile sidebar overlay */}
             {mobileSidebarOpen && (
               <div
-                className="fixed inset-0 z-40 bg-black/50 md:hidden"
+                className="fixed inset-0 z-40 bg-black/50 lg:hidden"
                 onClick={() => setMobileSidebarOpen(false)}
               />
             )}
@@ -150,6 +150,11 @@ export function BackofficeApp({
                 agents={agents}
                 onSelectAgent={setSelectedAgent}
               />
+            </div>
+
+            {/* Desktop chat panel (always visible on lg+) */}
+            <div className="hidden lg:flex w-[380px] border-l border-[var(--bo-border)] flex-col">
+              <ChatBox />
             </div>
           </div>
         )}
