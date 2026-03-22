@@ -5,6 +5,7 @@ import {
   BookOpen,
   DollarSign,
   FileText,
+  Loader2,
   Package,
   ShoppingCart,
   TrendingUp,
@@ -23,6 +24,7 @@ import {
   toast,
 } from '@unicore/ui';
 import type { ErpModulesConfig } from '@unicore/shared-types';
+import { api } from '@/lib/api';
 
 interface ErpModuleDefinition {
   key: keyof ErpModulesConfig;
@@ -83,7 +85,7 @@ const DEFAULT_MODULES: ErpModulesConfig = {
 
 const STORAGE_KEY = 'unicore_erp_modules';
 
-function loadModules(): ErpModulesConfig {
+function loadModulesFromStorage(): ErpModulesConfig {
   if (typeof window === 'undefined') return DEFAULT_MODULES;
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -95,11 +97,35 @@ function loadModules(): ErpModulesConfig {
 
 export default function SettingsErpPage() {
   const [modules, setModules] = useState<ErpModulesConfig>(DEFAULT_MODULES);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Load saved modules on mount
+  // Load saved modules from API on mount, fall back to localStorage
   useEffect(() => {
-    setModules(loadModules());
+    let cancelled = false;
+    async function fetchModules() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const { data } = await api.get<ErpModulesConfig>('/api/v1/settings/erp-modules');
+        if (!cancelled) {
+          const merged = { ...DEFAULT_MODULES, ...data };
+          setModules(merged);
+          // Sync localStorage cache
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+        }
+      } catch {
+        // API unavailable — fall back to localStorage
+        if (!cancelled) {
+          setModules(loadModulesFromStorage());
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+    fetchModules();
+    return () => { cancelled = true; };
   }, []);
 
   const handleToggle = useCallback((key: keyof ErpModulesConfig, enabled: boolean) => {
@@ -108,9 +134,21 @@ export default function SettingsErpPage() {
 
   const handleSave = useCallback(async () => {
     setIsSaving(true);
+    setError(null);
     try {
+      await api.put('/api/v1/settings/erp-modules', modules);
+      // Update localStorage cache after successful API save
       localStorage.setItem(STORAGE_KEY, JSON.stringify(modules));
-      toast({ title: 'Saved', description: 'ERP modules updated.' });
+      toast({ title: 'Saved', description: 'ERP module configuration saved successfully.' });
+    } catch {
+      // If API fails, still save to localStorage as fallback
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(modules));
+      setError('Failed to save to server. Changes saved locally and will sync when the server is available.');
+      toast({
+        title: 'Warning',
+        description: 'Saved locally only — server is unavailable.',
+        variant: 'destructive',
+      });
     } finally {
       setIsSaving(false);
     }
