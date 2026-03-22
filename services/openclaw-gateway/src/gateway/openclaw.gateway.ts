@@ -23,6 +23,7 @@ import {
   AckMessage,
   ErrorMessage,
   PongMessage,
+  PtyMessage,
 } from '../routing/interfaces/message.interface';
 import { AgentMetadata } from '../registry/interfaces/agent.interface';
 
