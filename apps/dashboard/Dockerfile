@@ -26,8 +26,8 @@ COPY packages/branding-base ./packages/branding-base
 COPY apps/dashboard ./apps/dashboard
 RUN pnpm install --no-frozen-lockfile
 RUN cd packages/shared-types && npx tsc
-RUN cd packages/branding-base && npx tsc || true
-RUN cd packages/branding && npx tsc || true
+RUN cd packages/branding-base && npx tsc 2>&1 || echo "branding-base tsc failed"
+RUN cd packages/branding && npx tsc 2>&1 || echo "branding tsc failed"
 RUN ls packages/branding/dist/ 2>/dev/null || echo "NO branding dist" && \
     ls packages/branding-base/dist/ 2>/dev/null || echo "NO branding-base dist" && \
     cat apps/dashboard/node_modules/@unicore/branding/package.json 2>/dev/null | head -5
