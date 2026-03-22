@@ -123,8 +123,8 @@ export function AgentTerminal({ agent, open, onClose }: Props) {
         <div className="flex items-center gap-3">
           <span className="font-mono text-xs text-green-500">$</span>
           <span className="font-mono text-xs text-green-400 uppercase tracking-wider">{agent.name}</span>
-          <span className={`font-mono text-[9px] ${connected ? 'text-green-500' : 'text-yellow-500 animate-pulse'}`}>
-            {connected ? (sessionId ? 'CONNECTED' : 'STARTING...') : 'CONNECTING...'}
+          <span className={`font-mono text-[9px] ${connected ? 'text-green-500' : error ? 'text-red-500' : 'text-yellow-500 animate-pulse'}`}>
+            {connected ? (sessionId ? 'CONNECTED' : 'STARTING...') : error ? `ERROR: ${error}` : 'CONNECTING...'}
           </span>
         </div>
         <button onClick={handleClose} className="text-green-600/60 hover:text-green-400 text-lg leading-none px-1" aria-label="Close">
