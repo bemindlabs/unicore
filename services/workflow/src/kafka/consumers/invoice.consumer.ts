@@ -4,6 +4,7 @@ import { WORKFLOW_TOPICS } from '../constants/kafka.constants';
 import { deserializeEnvelope, deserializePayload } from '../utils/event-deserializer';
 import { EventHandlerService } from '../event-handler.service';
 import { WorkflowService } from '../../workflow/workflow.service';
+import { RetryService } from '../retry/retry.service';
 import {
   InvoiceCreatedPayloadDto,
   InvoiceOverduePayloadDto,
@@ -12,7 +13,7 @@ import {
 
 /**
  * InvoiceConsumerService handles Kafka messages on the invoice.* topics
- * and forwards validated payloads into the workflow engine.
+ * and forwards validated payloads into the workflow engine via RetryService.
  */
 @Controller()
 export class InvoiceConsumerService {
@@ -21,6 +22,7 @@ export class InvoiceConsumerService {
   constructor(
     private readonly eventHandler: EventHandlerService,
     private readonly workflowService: WorkflowService,
+    private readonly retryService: RetryService,
   ) {}
 
   // ---------------------------------------------------------------------------
