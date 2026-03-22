@@ -834,33 +834,25 @@ describe('Agent Communication Protocol (E2E)', () => {
 
     describe('message:publish / message:subscribe / message:unsubscribe (Pub/Sub)', () => {
       it('should deliver published messages only to channel subscribers', async () => {
-        const wsPub = trackWs(await connectWs(defaultToken));
-        const wsSub1 = trackWs(await connectWs(makeJwt('sub-1')));
-        const wsSub2 = trackWs(await connectWs(makeJwt('sub-2')));
-        const wsNonSub = trackWs(await connectWs(makeJwt('non-sub')));
+        const pub = trackWs(await connectBuffered(defaultToken));
+        const sub1 = trackWs(await connectBuffered(makeJwt('sub-1')));
+        const sub2 = trackWs(await connectBuffered(makeJwt('sub-2')));
+        const nonSub = trackWs(await connectBuffered(makeJwt('non-sub')));
 
-        await registerAgent(wsPub, 'pub-agent');
-        await registerAgent(wsSub1, 'sub-agent-1');
-        await registerAgent(wsSub2, 'sub-agent-2');
-        await registerAgent(wsNonSub, 'non-sub-agent');
+        await registerAgent(pub, 'pub-agent');
+        await registerAgent(sub1, 'sub-agent-1');
+        await registerAgent(sub2, 'sub-agent-2');
+        await registerAgent(nonSub, 'non-sub-agent');
 
         // Subscribe sub1 and sub2 to 'updates' channel
-        wsSend(wsSub1, {
-          ...baseMsg(),
-          type: 'message:subscribe',
-          payload: { agentId: 'sub-agent-1', channel: 'updates' },
-        });
-        await waitForMessage(wsSub1); // ack
+        sub1.send({ ...baseMsg(), type: 'message:subscribe', payload: { agentId: 'sub-agent-1', channel: 'updates' } });
+        await sub1.nextMessage(); // ack
 
-        wsSend(wsSub2, {
-          ...baseMsg(),
-          type: 'message:subscribe',
-          payload: { agentId: 'sub-agent-2', channel: 'updates' },
-        });
-        await waitForMessage(wsSub2); // ack
+        sub2.send({ ...baseMsg(), type: 'message:subscribe', payload: { agentId: 'sub-agent-2', channel: 'updates' } });
+        await sub2.nextMessage(); // ack
 
         // Publish to 'updates'
-        wsSend(wsPub, {
+        pub.send({
           ...baseMsg(),
           type: 'message:publish',
           payload: {
@@ -871,22 +863,22 @@ describe('Agent Communication Protocol (E2E)', () => {
         });
 
         // Publisher gets ack with delivery count
-        const ack = await waitForMessage(wsPub);
+        const ack = await pub.nextMessage();
         expect(ack.type).toBe('system:ack');
         expect((ack.payload.result as any).deliveredTo).toBe(2);
         expect((ack.payload.result as any).channel).toBe('updates');
 
         // Subscribers receive the message
-        const msg1 = await waitForMessage(wsSub1);
+        const msg1 = await sub1.nextMessage();
         expect(msg1.type).toBe('message:publish');
         expect(msg1.payload.channel).toBe('updates');
         expect(msg1.payload.data).toEqual({ event: 'deploy', build: 42 });
 
-        const msg2 = await waitForMessage(wsSub2);
+        const msg2 = await sub2.nextMessage();
         expect(msg2.type).toBe('message:publish');
 
         // Non-subscriber should NOT receive anything
-        await expect(waitForMessage(wsNonSub, 500)).rejects.toThrow('Timed out');
+        await expect(nonSub.nextMessage(500)).rejects.toThrow('Timed out');
       });
 
       it('should unsubscribe agent from channel and stop delivery', async () => {
