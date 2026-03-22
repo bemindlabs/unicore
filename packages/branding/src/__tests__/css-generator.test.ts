@@ -23,10 +23,18 @@ describe('generateCssVariables', () => {
     assert.equal(vars['--color-primary'], config.colors.primary);
   });
 
-  it('includes --app-name', () => {
-    const config = makeConfig({ appName: 'AcmeDash' });
+  it('includes --app-name and --remove-unicore-branding', () => {
+    const config = makeConfig({ appName: 'AcmeDash', removeUnicoreBranding: true });
     const vars = generateCssVariables(config);
+
     assert.equal(vars['--app-name'], 'AcmeDash');
+    assert.equal(vars['--remove-unicore-branding'], '1');
+  });
+
+  it('returns 0 for removeUnicoreBranding when false', () => {
+    const config = makeConfig({ removeUnicoreBranding: false });
+    const vars = generateCssVariables(config);
+    assert.equal(vars['--remove-unicore-branding'], '0');
   });
 
   it('includes font variables when fonts are configured', () => {
@@ -95,6 +103,31 @@ describe('generateCssTheme', () => {
     assert.ok(!css.includes('fonts.googleapis.com'));
   });
 
+  it('hides [data-unicore-branding] when removeUnicoreBranding is true', () => {
+    const config = makeConfig({ removeUnicoreBranding: true });
+    const css = generateCssTheme(config);
+    assert.match(css, /\[data-unicore-branding\]/);
+    assert.match(css, /display: none/);
+  });
+
+  it('does not hide UniCore branding elements when flag is false', () => {
+    const config = makeConfig({ removeUnicoreBranding: false });
+    const css = generateCssTheme(config);
+    assert.ok(!css.includes('[data-unicore-branding]'));
+  });
+
+  it('appends customCss when includeCustomCss is true', () => {
+    const config = makeConfig({ customCss: '.hero { color: red; }' });
+    const css = generateCssTheme(config, { includeCustomCss: true });
+    assert.match(css, /\.hero \{ color: red; \}/);
+  });
+
+  it('omits customCss when includeCustomCss is false', () => {
+    const config = makeConfig({ customCss: '.hero { color: red; }' });
+    const css = generateCssTheme(config, { includeCustomCss: false });
+    assert.ok(!css.includes('.hero { color: red; }'));
+  });
+
   it('emits HSL companion variables for hex colors', () => {
     const config = makeConfig({
       colors: {
@@ -105,11 +138,5 @@ describe('generateCssTheme', () => {
     });
     const css = generateCssTheme(config);
     assert.match(css, /--color-primary-hsl:/);
-  });
-
-  it('includes --app-name in :root block', () => {
-    const config = makeConfig({ appName: 'MyApp' });
-    const css = generateCssTheme(config);
-    assert.match(css, /--app-name: 'MyApp'/);
   });
 });

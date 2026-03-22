@@ -1,97 +1,25 @@
-// CSS theme generator for @unicore/branding (community edition)
-// Converts BrandingConfig → CSS custom properties (variables) + font imports
+// CSS theme generator for @unicore/branding (pro edition)
+// Extends community base with: removeUnicoreBranding, customCss injection
 
-import type { BrandingConfig, BrandingFont, CssGeneratorOptions } from './types';
-
-/** Map a color key to a CSS variable name */
-export const COLOR_VAR_MAP: Record<string, string> = {
-  primary: '--color-primary',
-  secondary: '--color-secondary',
-  accent: '--color-accent',
-  background: '--color-background',
-  surface: '--color-surface',
-  onPrimary: '--color-on-primary',
-  foreground: '--color-foreground',
-  muted: '--color-muted',
-  border: '--color-border',
-  destructive: '--color-destructive',
-};
-
-export const FONT_VAR_MAP: Record<string, string> = {
-  body: '--font-body',
-  heading: '--font-heading',
-  mono: '--font-mono',
-};
-
-/**
- * Attempt to derive a Tailwind-compatible HSL triple from a hex color.
- * Returns null if the value cannot be parsed as a 6-digit hex.
- */
-export function hexToHslComponents(hex: string): string | null {
-  const cleaned = hex.replace('#', '');
-  if (cleaned.length !== 6) return null;
-
-  const r = parseInt(cleaned.slice(0, 2), 16) / 255;
-  const g = parseInt(cleaned.slice(2, 4), 16) / 255;
-  const b = parseInt(cleaned.slice(4, 6), 16) / 255;
-
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const delta = max - min;
-
-  let h = 0;
-  const l = (max + min) / 2;
-  const s = delta === 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
-
-  if (delta !== 0) {
-    switch (max) {
-      case r:
-        h = ((g - b) / delta) % 6;
-        break;
-      case g:
-        h = (b - r) / delta + 2;
-        break;
-      case b:
-        h = (r - g) / delta + 4;
-        break;
-    }
-    h = Math.round(h * 60);
-    if (h < 0) h += 360;
-  }
-
-  return `${h} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
-}
-
-/**
- * Build a Google Fonts @import URL for a font definition, if possible.
- * Returns null if the font has a custom URL (handled separately).
- */
-export function buildGoogleFontImport(font: BrandingFont): string | null {
-  if (font.url) return null;
-  const weights = font.weights?.map((w) => {
-    const map: Record<string, string> = {
-      thin: '100',
-      light: '300',
-      regular: '400',
-      medium: '500',
-      semibold: '600',
-      bold: '700',
-      extrabold: '800',
-    };
-    return map[w] ?? '400';
-  }) ?? ['400', '500', '600', '700'];
-  const family = font.family.replace(/\s+/g, '+');
-  return `@import url('https://fonts.googleapis.com/css2?family=${family}:wght@${weights.join(';')}&display=swap');`;
-}
+import {
+  COLOR_VAR_MAP,
+  FONT_VAR_MAP,
+  hexToHslComponents,
+  buildGoogleFontImport,
+  generateCssVariables as generateBaseCssVariables,
+} from '@unicore/branding-base/css-generator';
+import type { BrandingFont } from '@unicore/branding-base/types';
+import type { BrandingConfig, CssGeneratorOptions } from './types';
 
 function fontToCssVar(varName: string, font: BrandingFont): string {
   return `  ${varName}: '${font.family}', sans-serif;`;
 }
 
 /**
- * Generate the complete CSS theme string from a BrandingConfig.
- * Handles colors, fonts, and app-name. Pro features (customCss,
- * removeUnicoreBranding, logos) are handled by the Pro branding package.
+ * Generate the complete CSS theme string from a pro BrandingConfig.
+ * Handles all community features (colors, fonts, app-name) plus pro features:
+ * - removeUnicoreBranding flag and [data-unicore-branding] hide rule
+ * - customCss injection
  */
 export function generateCssTheme(
   config: BrandingConfig,
@@ -99,6 +27,7 @@ export function generateCssTheme(
 ): string {
   const selector = options.selector ?? ':root';
   const includeFontImports = options.includeFontImports ?? true;
+  const includeCustomCss = options.includeCustomCss ?? true;
 
   const lines: string[] = [];
 
@@ -127,13 +56,11 @@ export function generateCssTheme(
   // --- CSS custom properties block ---
   const declarations: string[] = [];
 
-  // Colors
+  // Colors (with HSL companions for Tailwind opacity modifier support)
   for (const [key, varName] of Object.entries(COLOR_VAR_MAP)) {
     const value = (config.colors as unknown as Record<string, string | undefined>)[key];
     if (value !== undefined) {
       declarations.push(`  ${varName}: ${value};`);
-
-      // Emit HSL components for Tailwind opacity modifier support
       const hsl = hexToHslComponents(value);
       if (hsl) {
         declarations.push(`  ${varName}-hsl: ${hsl};`);
@@ -154,43 +81,45 @@ export function generateCssTheme(
     declarations.push(fontToCssVar(FONT_VAR_MAP['mono']!, config.monoFont));
   }
 
-  // App name as a CSS custom property
+  // App name CSS custom property
   declarations.push(`  --app-name: '${config.appName.replace(/'/g, "\\'")}';`);
+
+  // Pro: white-label flag
+  declarations.push(
+    `  --remove-unicore-branding: ${config.removeUnicoreBranding ? '1' : '0'};`,
+  );
 
   lines.push(`${selector} {`);
   lines.push(...declarations);
   lines.push('}');
+
+  // Pro: hide UniCore branding elements when flag is set
+  if (config.removeUnicoreBranding) {
+    lines.push('');
+    lines.push('/* UniCore branding removed by white-label configuration */');
+    lines.push('[data-unicore-branding] { display: none !important; }');
+  }
+
+  // Pro: custom CSS injection
+  if (includeCustomCss && config.customCss) {
+    lines.push('');
+    lines.push('/* Custom CSS */');
+    lines.push(config.customCss);
+  }
 
   return lines.join('\n');
 }
 
 /**
  * Generate only the CSS custom property declarations (without selector wrapper).
- * Useful for injecting into inline styles or SSR style tags.
+ * Extends the community base with pro-specific variables.
  */
 export function generateCssVariables(config: BrandingConfig): Record<string, string> {
-  const vars: Record<string, string> = {};
+  // Start with community base vars (colors, fonts, app-name)
+  const vars = generateBaseCssVariables(config);
 
-  for (const [key, varName] of Object.entries(COLOR_VAR_MAP)) {
-    const value = (config.colors as unknown as Record<string, string | undefined>)[key];
-    if (value !== undefined) {
-      vars[varName] = value;
-    }
-  }
-
-  if (config.bodyFont) {
-    vars[FONT_VAR_MAP['body']!] = `'${config.bodyFont.family}', sans-serif`;
-  }
-  if (config.headingFont) {
-    vars[FONT_VAR_MAP['heading']!] = `'${config.headingFont.family}', sans-serif`;
-  } else if (config.bodyFont) {
-    vars[FONT_VAR_MAP['heading']!] = `'${config.bodyFont.family}', sans-serif`;
-  }
-  if (config.monoFont) {
-    vars[FONT_VAR_MAP['mono']!] = `'${config.monoFont.family}', monospace`;
-  }
-
-  vars['--app-name'] = config.appName;
+  // Pro: add white-label flag
+  vars['--remove-unicore-branding'] = config.removeUnicoreBranding ? '1' : '0';
 
   return vars;
 }

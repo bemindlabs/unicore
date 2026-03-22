@@ -9,8 +9,8 @@ import {
 } from '../presets';
 
 describe('BRANDING_PRESETS', () => {
-  it('contains at least 1 preset', () => {
-    assert.ok(BRANDING_PRESETS.length >= 1);
+  it('contains at least 5 presets', () => {
+    assert.ok(BRANDING_PRESETS.length >= 5);
   });
 
   it('every preset has an id, name, and colors', () => {
@@ -31,9 +31,10 @@ describe('BRANDING_PRESETS', () => {
 
 describe('findPreset', () => {
   it('returns the correct preset by id', () => {
-    const preset = findPreset('unicore-default');
+    const preset = findPreset('midnight-blue');
     assert.ok(preset, 'Expected preset to be found');
-    assert.equal(preset!.id, 'unicore-default');
+    assert.equal(preset!.id, 'midnight-blue');
+    assert.equal(preset!.name, 'Midnight Blue');
   });
 
   it('returns undefined for unknown preset id', () => {
@@ -50,6 +51,11 @@ describe('getDefaultConfig', () => {
   it('uses provided appName', () => {
     const config = getDefaultConfig('Acme Dashboard');
     assert.equal(config.appName, 'Acme Dashboard');
+  });
+
+  it('has removeUnicoreBranding = false', () => {
+    const config = getDefaultConfig();
+    assert.equal(config.removeUnicoreBranding, false);
   });
 
   it('has a valid updatedAt ISO timestamp', () => {

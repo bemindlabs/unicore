@@ -1,5 +1,5 @@
-// @unicore/branding — Community edition public API
-// Base branding: colors, fonts, dark/light mode
+// @unicore/branding — Pro edition public API
+// White-label customization: themes, CSS, Tailwind, email, React context
 
 // Types
 export type {
@@ -10,26 +10,24 @@ export type {
   BrandingPreset,
   CssGeneratorOptions,
   FontWeight,
+  CharacterThemeConfig,
 } from './types';
 
 export type {
-  TailwindColorScale,
-  TailwindThemeExtension,
+  TailwindColorScale as TwColorScale,
+  TailwindThemeExtension as TwThemeExtension,
 } from './tailwind';
 
 // Service & storage
-export { BrandingService, MemoryBrandingStorage } from './service';
+export {
+  BrandingService,
+  MemoryBrandingStorage,
+  FileBrandingStorage,
+} from './service';
 export type { BrandingStorage, BrandingServiceOptions } from './service';
 
 // CSS generator
-export {
-  generateCssTheme,
-  generateCssVariables,
-  COLOR_VAR_MAP,
-  FONT_VAR_MAP,
-  hexToHslComponents,
-  buildGoogleFontImport,
-} from './css-generator';
+export { generateCssTheme, generateCssVariables } from './css-generator';
 
 // Tailwind integration
 export { brandingToTailwindTheme, brandingToCssVarTailwindTheme } from './tailwind';
@@ -41,3 +39,20 @@ export {
   findPreset,
   getDefaultConfig,
 } from './presets';
+
+// React provider & hooks (tree-shaken in non-React environments)
+export {
+  BrandingProvider,
+  useBranding,
+  useBrandingConfig,
+  useIsWhiteLabel,
+} from './provider';
+export type { BrandingContextValue, BrandingProviderProps } from './provider';
+
+// Email template theming (pro feature)
+export {
+  brandingToEmailTheme,
+  generateEmailCss,
+  getEmailInlineStyles,
+} from './email-theming';
+export type { EmailTheme } from './email-theming';
