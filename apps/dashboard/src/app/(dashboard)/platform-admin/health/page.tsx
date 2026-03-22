@@ -432,31 +432,6 @@ export default function PlatformHealthPage() {
   );
 }
 
-// Need Button import — re-export local
-function Button({ children, variant = 'default', size = 'default', onClick, disabled, className = '' }: {
-  children: React.ReactNode;
-  variant?: 'default' | 'outline';
-  size?: 'default' | 'sm';
-  onClick?: () => void;
-  disabled?: boolean;
-  className?: string;
-}) {
-  const base = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50';
-  const variants: Record<string, string> = {
-    default: 'bg-primary text-primary-foreground hover:bg-primary/90',
-    outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
-  };
-  const sizes: Record<string, string> = {
-    default: 'h-9 px-4 py-2 text-sm',
-    sm: 'h-8 px-3 text-xs',
-  };
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
-    >
       {children}
     </button>
   );
