@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTheme } from '@/hooks/use-theme';
 import { useRetroDeskTheme } from './retrodesk/RetroDeskThemeProvider';
-import { THEME_OPTIONS } from '@/lib/backoffice/theme-registry';
-import type { ThemeOption } from '@/lib/backoffice/theme-registry';
+import { THEME_OPTIONS, CHARACTER_SKINS, getActiveSkinId, isRetroDeskFamily } from '@/lib/backoffice/theme-registry';
+import type { ThemeOption, CharacterSkin } from '@/lib/backoffice/theme-registry';
 import { findCharacterByRole } from '@/lib/backoffice/retrodesk-characters';
 
 // ---------------------------------------------------------------------------
