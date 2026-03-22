@@ -1,8 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UnauthorizedException, ServiceUnavailableException } from '@nestjs/common';
+import { UnauthorizedException, ServiceUnavailableException, ConflictException } from '@nestjs/common';
 import { ProvisioningService } from './provisioning.service';
 import { TemplatesService } from '../templates/templates.service';
 import { ConfigGeneratorService } from '../config-generator/config-generator.service';
+import { WizardStatusService } from '../wizard/wizard-status.service';
 import type { Template } from '../common/interfaces/template.interface';
 import type { UniCoreConfig } from '../config-generator/config-generator.service';
 import type { ProvisionRequestDto } from '../dto/provision-request.dto';
@@ -27,6 +28,7 @@ const mockTemplate: Template = {
     research: true,
     erp: false,
     builder: true,
+    sentinel: false,
   },
   dashboard: { widgets: ['mrr', 'churn'] },
   channels: ['email', 'web', 'slack'],
@@ -59,6 +61,12 @@ const mockTemplatesService = {
 
 const mockConfigGeneratorService = {
   generate: jest.fn().mockReturnValue(mockConfig),
+};
+
+const mockWizardStatusService = {
+  isComplete: jest.fn().mockReturnValue(false),
+  markComplete: jest.fn(),
+  getStatus: jest.fn().mockReturnValue({ completed: false }),
 };
 
 const makeRequest = (overrides: Partial<ProvisionRequestDto> = {}): ProvisionRequestDto =>
@@ -94,6 +102,9 @@ describe('ProvisioningService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
+    // Reset wizard to not-complete by default
+    mockWizardStatusService.isComplete.mockReturnValue(false);
+
     process.env.BOOTSTRAP_SECRET = 'test-secret';
     process.env.API_GATEWAY_URL = 'http://api-gateway:4000';
     process.env.LICENSE_API_URL = 'http://license-api:4600';
@@ -119,6 +130,7 @@ describe('ProvisioningService', () => {
         ProvisioningService,
         { provide: TemplatesService, useValue: mockTemplatesService },
         { provide: ConfigGeneratorService, useValue: mockConfigGeneratorService },
+        { provide: WizardStatusService, useValue: mockWizardStatusService },
       ],
     }).compile();
 
@@ -155,6 +167,60 @@ describe('ProvisioningService', () => {
 
     it('proceeds when secret matches', async () => {
       await expect(service.provision(makeRequest())).resolves.toBeDefined();
+    });
+  });
+
+  describe('wizard lockout', () => {
+    it('throws ConflictException when wizard is already complete', async () => {
+      mockWizardStatusService.isComplete.mockReturnValue(true);
+      await expect(service.provision(makeRequest())).rejects.toThrow(ConflictException);
+    });
+
+    it('throws ConflictException with descriptive message when already provisioned', async () => {
+      mockWizardStatusService.isComplete.mockReturnValue(true);
+      await expect(service.provision(makeRequest())).rejects.toThrow(
+        'Platform is already provisioned',
+      );
+    });
+
+    it('does not check secret when wizard lockout triggers first', async () => {
+      mockWizardStatusService.isComplete.mockReturnValue(true);
+      // Even with wrong secret, lockout fires first
+      await expect(
+        service.provision(makeRequest({ bootstrapSecret: 'wrong' })),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('calls markComplete after successful provisioning', async () => {
+      await service.provision(makeRequest());
+      expect(mockWizardStatusService.markComplete).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not call markComplete when provisioning fails at API gateway', async () => {
+      (global as Record<string, unknown>).fetch = jest.fn().mockImplementation((url: string) => {
+        if (url.includes('/auth/provision-admin')) {
+          return Promise.reject(new Error('ECONNREFUSED'));
+        }
+        return Promise.resolve(mockResponse(true));
+      });
+      await expect(service.provision(makeRequest())).rejects.toThrow(ServiceUnavailableException);
+      expect(mockWizardStatusService.markComplete).not.toHaveBeenCalled();
+    });
+
+    it('checks wizard status before secret validation', async () => {
+      const callOrder: string[] = [];
+      mockWizardStatusService.isComplete.mockImplementation(() => {
+        callOrder.push('isComplete');
+        return false;
+      });
+      // Override fetch to track order
+      (global as Record<string, unknown>).fetch = jest.fn().mockImplementation((url: string) => {
+        if (url.includes('/auth/provision-admin')) return Promise.resolve(mockResponse(true, mockAdminUser));
+        if (url.includes('/api/v1/licenses')) return Promise.resolve(mockResponse(true, { key: 'UC-TEST' }));
+        return Promise.resolve(mockResponse(true));
+      });
+      await service.provision(makeRequest());
+      expect(callOrder[0]).toBe('isComplete');
     });
   });
 
@@ -394,6 +460,11 @@ describe('ProvisioningService', () => {
 
       await service.provision(makeRequest());
       expect(callOrder).toEqual(['findById', 'generate']);
+    });
+
+    it('calls isComplete to check lockout on each provision attempt', async () => {
+      await service.provision(makeRequest());
+      expect(mockWizardStatusService.isComplete).toHaveBeenCalled();
     });
   });
 });
