@@ -24,6 +24,43 @@ export const THEME_OPTIONS: ThemeOption[] = [
   { id: 'crypto', label: 'Crypto', icon: '\u{1F680}', description: 'Meme coin agents \u00B7 To the moon' },
 ];
 
+// ---------------------------------------------------------------------------
+// Character Skins — sub-themes for RetroDesk / Crypto
+// ---------------------------------------------------------------------------
+export interface CharacterSkin {
+  id: string;
+  label: string;
+  icon: string;
+  /** The data-character-theme attribute value, e.g. "retrodesk-pepe" */
+  themeValue: string;
+}
+
+export const CHARACTER_SKINS: CharacterSkin[] = [
+  { id: 'pepe', label: 'Pepe', icon: '\u{1F438}', themeValue: 'retrodesk-pepe' },
+  { id: 'doge', label: 'Doge', icon: '\u{1F436}', themeValue: 'retrodesk-doge' },
+  { id: 'shib', label: 'Shiba', icon: '\u{1F415}', themeValue: 'retrodesk-shib' },
+  { id: 'bonk', label: 'Bonk', icon: '\u{1F528}', themeValue: 'retrodesk-bonk' },
+  { id: 'floki', label: 'Floki', icon: '\u2693', themeValue: 'retrodesk-floki' },
+];
+
+/**
+ * Check if a character theme value is a RetroDesk-family theme
+ * (retrodesk, crypto, or any retrodesk-* skin variant).
+ */
+export function isRetroDeskFamily(characterTheme: string | null): boolean {
+  if (!characterTheme) return false;
+  return characterTheme === 'retrodesk' || characterTheme === 'crypto' || characterTheme.startsWith('retrodesk-');
+}
+
+/**
+ * Get the active skin ID from a characterTheme value, or null if no skin is active.
+ */
+export function getActiveSkinId(characterTheme: string | null): string | null {
+  if (!characterTheme) return null;
+  const skin = CHARACTER_SKINS.find((s) => s.themeValue === characterTheme);
+  return skin?.id ?? null;
+}
+
 /**
  * Resolve a theme ID to its characterTheme + colorScheme.
  */
