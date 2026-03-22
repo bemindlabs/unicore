@@ -7,6 +7,8 @@ export interface EventHandlerResult {
   eventId: string;
   success: boolean;
   durationMs: number;
+  /** Number of retry attempts made before this result (0 = first try). */
+  retryCount?: number;
   error?: string;
 }
 
