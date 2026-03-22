@@ -453,7 +453,7 @@ export class OpenClawGateway
 
   private handlePtyInput(client: WebSocket, message: IncomingMessage): void {
     const tracked = client as TrackedSocket;
-    const { sessionId, data } = message.payload;
+    const { sessionId, data } = message.payload as Record<string, any>;
     if (sessionId && typeof data === 'string') {
       this.ptyManager.writeInput(sessionId, tracked.socketId, data);
     }
