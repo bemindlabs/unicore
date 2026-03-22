@@ -54,6 +54,7 @@ export class OpenClawGateway
   constructor(
     private readonly registry: AgentRegistryService,
     private readonly router: MessageRouterService,
+    private readonly rateLimiter: RateLimiterService,
     private readonly heartbeat: HeartbeatService,
     private readonly routerAgent: RouterAgent,
     private readonly ptyManager: PtySessionManager,
