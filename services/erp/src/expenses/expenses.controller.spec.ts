@@ -85,9 +85,9 @@ describe('ExpensesController', () => {
     expect(mockExpensesService.reimburse).toHaveBeenCalledWith('exp-1');
   });
 
-  it('uploadReceipt throws BadRequestException when no file provided', async () => {
-    await expect(controller.uploadReceipt('exp-1', undefined as any))
-      .rejects.toBeInstanceOf(BadRequestException);
+  it('uploadReceipt throws BadRequestException when no file provided', () => {
+    expect(() => controller.uploadReceipt('exp-1', undefined as any))
+      .toThrow(BadRequestException);
     expect(mockExpensesService.uploadReceipt).not.toHaveBeenCalled();
   });
 
