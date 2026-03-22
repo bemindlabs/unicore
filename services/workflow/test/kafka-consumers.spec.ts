@@ -52,6 +52,15 @@ function makeMockWorkflowService() {
   return { handleEvent: jest.fn().mockResolvedValue([]) } as unknown as WorkflowService;
 }
 
+function makeMockRetryService() {
+  return {
+    withRetry: jest.fn().mockImplementation(async (fn: () => Promise<void>) => {
+      await fn();
+      return { retryCount: 0, succeeded: true };
+    }),
+  } as any;
+}
+
 // ---------------------------------------------------------------------------
 // OrderConsumerService
 // ---------------------------------------------------------------------------

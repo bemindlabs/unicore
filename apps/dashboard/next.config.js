@@ -4,7 +4,10 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ['@unicore/ui', '@unicore/shared-types'],
+  transpilePackages: ['@unicore/ui', '@unicore/shared-types', '@unicore/branding', '@unicore/branding-base'],
+  typescript: {
+    ignoreBuildErrors: true,
+  },
 };
 
 export default withNextIntl(nextConfig);

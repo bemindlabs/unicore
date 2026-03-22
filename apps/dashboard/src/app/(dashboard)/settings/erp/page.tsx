@@ -108,9 +108,10 @@ export default function SettingsErpPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const { data } = await api.get<ErpModulesConfig>('/api/v1/settings/erp-modules');
+        const res = await api.get<ErpModulesConfig>('/api/v1/settings/erp-modules');
+        const data = (res as { data?: ErpModulesConfig }).data ?? res;
         if (!cancelled) {
-          const merged = { ...DEFAULT_MODULES, ...data };
+          const merged = { ...DEFAULT_MODULES, ...(data as ErpModulesConfig) };
           setModules(merged);
           // Sync localStorage cache
           localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
