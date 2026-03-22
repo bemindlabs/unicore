@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { CheckCircle2, Copy, Eye, EyeOff, Loader2, MessageSquare, XCircle } from 'lucide-react';
 import { api } from '@/lib/api';
 import {
