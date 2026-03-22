@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { resolveTheme } from '@/lib/backoffice/theme-registry';
+import { resolveTheme, isRetroDeskFamily } from '@/lib/backoffice/theme-registry';
 
 type Theme = 'light' | 'dark';
 
