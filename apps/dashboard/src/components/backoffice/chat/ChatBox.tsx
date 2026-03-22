@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Send, MessageCircle, ChevronDown, ArrowLeft, Search, Bell, BellOff } from 'lucide-react';
 import { useChatWebSocket, type ChatMessage } from '@/hooks/use-chat-ws';
 import { getAgents } from '@/lib/backoffice/store';
+import { api } from '@/lib/api';
 import type { BackofficeAgent } from '@/lib/backoffice/types';
 
 const GENERAL_CHANNEL = 'chat-backoffice';
