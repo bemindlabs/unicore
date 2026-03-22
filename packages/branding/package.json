@@ -1,8 +1,8 @@
 {
-  "name": "@unicore/branding-base",
-  "version": "0.1.0",
+  "name": "@unicore/branding",
+  "version": "0.0.2",
   "private": true,
-  "description": "Base branding system — colors, fonts, dark/light mode theming for UniCore community edition",
+  "description": "White-label branding customization for UniCore Pro — config, CSS generator, Tailwind integration, React context",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -10,26 +10,6 @@
       "import": "./dist/index.js",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
-    },
-    "./types": {
-      "import": "./dist/types.js",
-      "types": "./dist/types.d.ts"
-    },
-    "./presets": {
-      "import": "./dist/presets.js",
-      "types": "./dist/presets.d.ts"
-    },
-    "./service": {
-      "import": "./dist/service.js",
-      "types": "./dist/service.d.ts"
-    },
-    "./css-generator": {
-      "import": "./dist/css-generator.js",
-      "types": "./dist/css-generator.d.ts"
-    },
-    "./tailwind": {
-      "import": "./dist/tailwind.js",
-      "types": "./dist/tailwind.d.ts"
     }
   },
   "scripts": {
@@ -39,8 +19,24 @@
     "test": "npx tsx --test src/__tests__/presets.test.ts src/__tests__/css-generator.test.ts src/__tests__/service.test.ts src/__tests__/tailwind.test.ts",
     "lint": "echo 'no linter configured'"
   },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@unicore/branding-base": "workspace:*"
+  },
   "devDependencies": {
     "@types/node": "^20.14.0",
+    "@types/react": "^18.3.0",
     "typescript": "^5.5.0"
   }
 }
