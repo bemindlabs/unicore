@@ -381,8 +381,9 @@ describe('Agent Communication Protocol (E2E)', () => {
   afterEach(() => {
     // Close all WebSockets opened during the test
     for (const ws of openSockets) {
-      if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
-        ws.close();
+      const raw = ws instanceof BufferedSocket ? ws.ws : ws;
+      if (raw.readyState === WebSocket.OPEN || raw.readyState === WebSocket.CONNECTING) {
+        raw.close();
       }
     }
     openSockets.length = 0;
