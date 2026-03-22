@@ -281,7 +281,7 @@ export class AdminController {
     const page = query.page ? parseInt(query.page) : 1;
     const limit = query.limit ? parseInt(query.limit) : 20;
 
-    const [userCount, sessionCount] = await Promise.all([
+    const [userCount, _sessionCount] = await Promise.all([
       this.prisma.user.count(),
       this.prisma.session.count(),
     ]);
