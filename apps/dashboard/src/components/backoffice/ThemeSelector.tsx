@@ -166,10 +166,113 @@ function OptionRow({
 }
 
 // ---------------------------------------------------------------------------
+// Character Skin sub-selector (shown when RetroDesk/Crypto is active)
+// ---------------------------------------------------------------------------
+function CharacterSkinSelector({
+  isRetroDesk,
+  characterTheme,
+  onSelectSkin,
+}: {
+  isRetroDesk: boolean;
+  characterTheme: string | null;
+  onSelectSkin: (themeValue: string | null) => void;
+}) {
+  if (!isRetroDesk) return null;
+
+  const activeSkinId = getActiveSkinId(characterTheme);
+
+  return (
+    <div
+      style={{
+        borderTop: isRetroDesk
+          ? '1px solid var(--retrodesk-border)'
+          : '1px solid var(--bo-border-accent)',
+        padding: '6px 0 4px',
+      }}
+    >
+      <div
+        className={isRetroDesk ? 'retrodesk-mono' : 'font-mono'}
+        style={{
+          fontSize: '9px',
+          textTransform: 'uppercase',
+          letterSpacing: '0.1em',
+          padding: '0 12px 4px',
+          color: isRetroDesk ? 'var(--retrodesk-muted)' : 'var(--bo-text-muted)',
+        }}
+      >
+        Character Skin
+      </div>
+      {/* Default / no skin option */}
+      <div
+        role="option"
+        aria-selected={activeSkinId === null}
+        onClick={() => onSelectSkin(null)}
+        className={[
+          'w-full flex items-center gap-2 px-3 py-1.5 text-left transition-colors cursor-pointer',
+          isRetroDesk ? 'retrodesk-mono' : 'font-mono',
+        ].join(' ')}
+        style={{
+          color: activeSkinId === null
+            ? (isRetroDesk ? 'var(--retrodesk-pink)' : 'var(--bo-text-accent-2)')
+            : (isRetroDesk ? 'var(--retrodesk-text)' : 'var(--bo-text-accent)'),
+          background: activeSkinId === null
+            ? (isRetroDesk ? 'color-mix(in srgb, var(--retrodesk-pink) 10%, transparent)' : 'var(--bo-accent-15)')
+            : undefined,
+        }}
+      >
+        <span className="text-sm leading-none w-5 flex items-center justify-center">{'\u2B50'}</span>
+        <span className="flex-1 min-w-0">
+          <span className="block text-[11px] tracking-wider uppercase">Default</span>
+        </span>
+        {activeSkinId === null && (
+          <span className="text-[11px] leading-none ml-auto" aria-hidden="true">
+            {isRetroDesk ? '\u{2588}' : '\u2713'}
+          </span>
+        )}
+      </div>
+      {/* Skin options */}
+      {CHARACTER_SKINS.map((skin) => {
+        const isSelected = activeSkinId === skin.id;
+        return (
+          <div
+            key={skin.id}
+            role="option"
+            aria-selected={isSelected}
+            onClick={() => onSelectSkin(skin.themeValue)}
+            className={[
+              'w-full flex items-center gap-2 px-3 py-1.5 text-left transition-colors cursor-pointer',
+              isRetroDesk ? 'retrodesk-mono' : 'font-mono',
+            ].join(' ')}
+            style={{
+              color: isSelected
+                ? (isRetroDesk ? 'var(--retrodesk-pink)' : 'var(--bo-text-accent-2)')
+                : (isRetroDesk ? 'var(--retrodesk-text)' : 'var(--bo-text-accent)'),
+              background: isSelected
+                ? (isRetroDesk ? 'color-mix(in srgb, var(--retrodesk-pink) 10%, transparent)' : 'var(--bo-accent-15)')
+                : undefined,
+            }}
+          >
+            <span className="text-sm leading-none w-5 flex items-center justify-center">{skin.icon}</span>
+            <span className="flex-1 min-w-0">
+              <span className="block text-[11px] tracking-wider uppercase">{skin.label}</span>
+            </span>
+            {isSelected && (
+              <span className="text-[11px] leading-none ml-auto" aria-hidden="true">
+                {isRetroDesk ? '\u{2588}' : '\u2713'}
+              </span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // ThemeSelector (the dropdown)
 // ---------------------------------------------------------------------------
 export function ThemeSelector() {
-  const { selectedThemeId, setThemeById } = useTheme();
+  const { selectedThemeId, setThemeById, characterTheme, setCharacterTheme } = useTheme();
   const { isActive: isRetroDesk } = useRetroDeskTheme();
   const [open, setOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
