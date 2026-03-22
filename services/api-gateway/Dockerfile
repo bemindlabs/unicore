@@ -36,7 +36,7 @@ COPY --from=build /app/services/api-gateway/node_modules ./services/api-gateway/
 COPY --from=build /app/services/api-gateway/dist ./services/api-gateway/dist
 COPY --from=build /app/services/api-gateway/package.json ./services/api-gateway/
 COPY --from=build /app/services/api-gateway/src/prisma ./services/api-gateway/prisma
-COPY --from=build /app/services/api-gateway/src/generated ./services/api-gateway/generated
+COPY --from=build /app/services/api-gateway/src/generated ./services/api-gateway/dist/generated
 WORKDIR /app/services/api-gateway
 RUN addgroup -g 1001 -S nodejs && adduser -S -u 1001 appuser
 USER appuser
