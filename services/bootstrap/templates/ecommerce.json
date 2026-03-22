@@ -1,0 +1,27 @@
+{
+  "name": "E-Commerce",
+  "description": "Full-featured online store with inventory, order management, and customer communications",
+  "erp": {
+    "contacts": true,
+    "orders": true,
+    "inventory": true,
+    "invoicing": true,
+    "expenses": false,
+    "reports": true
+  },
+  "agents": {
+    "comms": true,
+    "finance": true,
+    "growth": true,
+    "ops": true,
+    "research": false,
+    "erp": true,
+    "builder": false,
+    "sentinel": false
+  },
+  "dashboard": {
+    "widgets": ["revenue", "orders", "inventory", "customers", "conversion_rate"]
+  },
+  "channels": ["line", "facebook", "web", "email"],
+  "workflows": ["low_stock_alert", "order_confirmation", "abandoned_cart", "shipping_update"]
+}
