@@ -12,7 +12,7 @@ const RetroDeskCtx = createContext<RetroDeskThemeContext>({ isActive: false, ani
 
 export function RetroDeskThemeProvider({ children, forceTheme }: { children: ReactNode; forceTheme?: string }) {
   const { characterTheme } = useTheme();
-  const isActive = forceTheme === 'retrodesk' || characterTheme === 'retrodesk';
+  const isActive = forceTheme === 'retrodesk' || forceTheme === 'crypto' || characterTheme === 'retrodesk' || characterTheme === 'crypto';
   const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
