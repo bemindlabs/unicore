@@ -173,8 +173,8 @@ unicore/
 | **AI Engine** | 4200 | Multi-provider LLM orchestration (OpenAI, Anthropic, Ollama) |
 | **RAG** | 4300 | Vector embeddings and retrieval via Qdrant |
 | **Bootstrap** | 4500 | Wizard provisioning, template loading, admin setup |
-| **OpenClaw Gateway** | 18789 | Multi-agent WebSocket hub, agent registry, pub/sub routing |
-| **Workflow** | — | Kafka consumers for event-driven automation |
+| **OpenClaw Gateway** | 18789 | Multi-agent WebSocket hub, agent registry, pub/sub routing, message persistence |
+| **Workflow** | — | Kafka consumers for event-driven automation, DLQ + retry logic |
 
 ### Infrastructure
 
