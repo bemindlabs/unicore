@@ -44,12 +44,17 @@ export class OrderConsumerService {
     const payload = await deserializePayload(OrderCreatedPayloadDto, envelope.payload);
     if (!payload) return;
 
-    await this.eventHandler.handle({ ...envelope, payload }, async (p) => {
-      this.logger.log(
-        `order.created — orderId=${p.orderId} customerId=${p.customerId} total=${p.total} ${p.currency}`,
-      );
-      await this.workflowService.handleEvent(WORKFLOW_TOPICS.ORDER_CREATED, p);
-    });
+    await this.retryService.withRetry(
+      async () => {
+        await this.eventHandler.handle({ ...envelope, payload }, async (p) => {
+          this.logger.log(
+            `order.created — orderId=${p.orderId} customerId=${p.customerId} total=${p.total} ${p.currency}`,
+          );
+          await this.workflowService.handleEvent(WORKFLOW_TOPICS.ORDER_CREATED, p);
+        });
+      },
+      { topic: WORKFLOW_TOPICS.ORDER_CREATED, eventId: envelope.eventId, originalPayload: payload },
+    );
   }
 
   // ---------------------------------------------------------------------------
