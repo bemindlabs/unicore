@@ -49,9 +49,9 @@ importers:
 
   apps/dashboard:
     dependencies:
-      '@unicore/branding':
+      '@unicore/branding-base':
         specifier: workspace:*
-        version: link:../../packages/branding
+        version: link:../../packages/branding-base
       '@unicore/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
@@ -127,6 +127,28 @@ importers:
         version: 5.9.3
 
   packages/branding:
+    dependencies:
+      '@unicore/branding-base':
+        specifier: workspace:*
+        version: link:../branding-base
+      react:
+        specifier: ^18.3.0
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.0
+        version: 18.3.1(react@18.3.1)
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.37
+      '@types/react':
+        specifier: ^18.3.0
+        version: 18.3.28
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+
+  packages/branding-base:
     devDependencies:
       '@types/node':
         specifier: ^20.14.0
