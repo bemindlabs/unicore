@@ -677,13 +677,13 @@ describe('Agent Communication Protocol (E2E)', () => {
   describe('Inter-Agent Messaging', () => {
     describe('message:direct (Point-to-Point)', () => {
       it('should deliver direct message to target agent and ack sender', async () => {
-        const wsSender = trackWs(await connectWs(defaultToken));
-        const wsRecipient = trackWs(await connectWs(makeJwt('user-2')));
+        const sender = trackWs(await connectBuffered(defaultToken));
+        const recipient = trackWs(await connectBuffered(makeJwt('user-2')));
 
-        await registerAgent(wsSender, 'direct-sender');
-        await registerAgent(wsRecipient, 'direct-recipient');
+        await registerAgent(sender, 'direct-sender');
+        await registerAgent(recipient, 'direct-recipient');
 
-        const directMsg = {
+        sender.send({
           ...baseMsg(),
           type: 'message:direct',
           payload: {
@@ -693,17 +693,15 @@ describe('Agent Communication Protocol (E2E)', () => {
             data: { task: 'analyze-data', priority: 'high' },
             correlationId: 'corr-123',
           },
-        };
-
-        wsSend(wsSender, directMsg);
+        });
 
         // Sender gets ack
-        const ack = await waitForMessage(wsSender);
+        const ack = await sender.nextMessage();
         expect(ack.type).toBe('system:ack');
         expect(ack.payload.result).toEqual(expect.objectContaining({ delivered: true }));
 
         // Recipient receives the message
-        const received = await waitForMessage(wsRecipient);
+        const received = await recipient.nextMessage();
         expect(received.type).toBe('message:direct');
         expect(received.payload.fromAgentId).toBe('direct-sender');
         expect(received.payload.toAgentId).toBe('direct-recipient');
@@ -733,16 +731,16 @@ describe('Agent Communication Protocol (E2E)', () => {
       });
 
       it('should support correlationId for request-reply patterns', async () => {
-        const wsA = trackWs(await connectWs(defaultToken));
-        const wsB = trackWs(await connectWs(makeJwt('user-b')));
+        const a = trackWs(await connectBuffered(defaultToken));
+        const b = trackWs(await connectBuffered(makeJwt('user-b')));
 
-        await registerAgent(wsA, 'requester');
-        await registerAgent(wsB, 'responder');
+        await registerAgent(a, 'requester');
+        await registerAgent(b, 'responder');
 
         const corrId = uuidv4();
 
         // A sends request to B
-        wsSend(wsA, {
+        a.send({
           ...baseMsg(),
           type: 'message:direct',
           payload: {
@@ -754,12 +752,12 @@ describe('Agent Communication Protocol (E2E)', () => {
           },
         });
 
-        await waitForMessage(wsA); // ack
-        const request = await waitForMessage(wsB);
+        await a.nextMessage(); // ack
+        const request = await b.nextMessage();
         expect(request.payload.correlationId).toBe(corrId);
 
         // B replies to A with same correlationId
-        wsSend(wsB, {
+        b.send({
           ...baseMsg(),
           type: 'message:direct',
           payload: {
@@ -771,8 +769,8 @@ describe('Agent Communication Protocol (E2E)', () => {
           },
         });
 
-        await waitForMessage(wsB); // ack
-        const reply = await waitForMessage(wsA);
+        await b.nextMessage(); // ack
+        const reply = await a.nextMessage();
         expect(reply.payload.correlationId).toBe(corrId);
         expect(reply.payload.data).toEqual({ status: 'ok' });
       });
