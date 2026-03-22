@@ -26,15 +26,31 @@ export class EventHandlerService {
    * In a production system this could write to an events table / tracing system.
    */
   recordResult(result: EventHandlerResult): void {
+    const retrySuffix = result.retryCount ? ` retries=${result.retryCount}` : '';
     if (result.success) {
       this.logger.log(
-        `[OK] topic=${result.topic} eventId=${result.eventId} duration=${result.durationMs}ms`,
+        `[OK] topic=${result.topic} eventId=${result.eventId} duration=${result.durationMs}ms${retrySuffix}`,
       );
     } else {
       this.logger.error(
-        `[FAIL] topic=${result.topic} eventId=${result.eventId} duration=${result.durationMs}ms error=${result.error ?? 'unknown'}`,
+        `[FAIL] topic=${result.topic} eventId=${result.eventId} duration=${result.durationMs}ms${retrySuffix} error=${result.error ?? 'unknown'}`,
       );
     }
+  }
+
+  /**
+   * Called by RetryService on each failed attempt to track retry progress.
+   * Logs a warning so retries are visible in structured logs.
+   */
+  recordRetryAttempt(
+    topic: string,
+    eventId: string,
+    attempt: number,
+    maxRetries: number,
+  ): void {
+    this.logger.warn(
+      `[RETRY] topic=${topic} eventId=${eventId} attempt=${attempt}/${maxRetries}`,
+    );
   }
 
   /**
