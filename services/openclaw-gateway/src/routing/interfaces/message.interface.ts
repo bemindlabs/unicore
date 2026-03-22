@@ -100,6 +100,8 @@ export interface SubscribeMessage extends BaseMessage {
   payload: {
     agentId: string;
     channel: string;
+    /** Last message ID the client received — triggers replay of missed messages on reconnect. */
+    lastMessageId?: string;
   };
 }
 

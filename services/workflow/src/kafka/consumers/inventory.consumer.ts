@@ -66,11 +66,16 @@ export class InventoryConsumerService {
     const payload = await deserializePayload(InventoryRestockedPayloadDto, envelope.payload);
     if (!payload) return;
 
-    await this.eventHandler.handle({ ...envelope, payload }, async (p) => {
-      this.logger.log(
-        `inventory.restocked — sku=${p.sku} +${p.quantityAdded} → ${p.newQuantity}`,
-      );
-      await this.workflowService.handleEvent(WORKFLOW_TOPICS.INVENTORY_RESTOCKED, p);
-    });
+    await this.retryService.withRetry(
+      async () => {
+        await this.eventHandler.handle({ ...envelope, payload }, async (p) => {
+          this.logger.log(
+            `inventory.restocked — sku=${p.sku} +${p.quantityAdded} → ${p.newQuantity}`,
+          );
+          await this.workflowService.handleEvent(WORKFLOW_TOPICS.INVENTORY_RESTOCKED, p);
+        });
+      },
+      { topic: WORKFLOW_TOPICS.INVENTORY_RESTOCKED, eventId: envelope.eventId, originalPayload: payload },
+    );
   }
 }
