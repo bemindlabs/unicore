@@ -8,6 +8,7 @@ const VALID_TEMPLATES = [
   'retail',
   'content_creator',
   'professional_services',
+  'developer',
   'custom',
 ] as const;
 
