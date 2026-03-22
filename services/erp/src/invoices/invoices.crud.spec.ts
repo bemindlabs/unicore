@@ -59,7 +59,7 @@ describe('InvoicesService — CRUD extensions', () => {
       mockPrisma.invoice.findMany.mockResolvedValue([]);
       mockPrisma.invoice.count.mockResolvedValue(0);
 
-      await service.findAll({ page: 1, limit: 20, status: 'OVERDUE' });
+      await service.findAll({ page: 1, limit: 20, status: InvoiceStatusFilter.OVERDUE });
       expect(mockPrisma.invoice.findMany).toHaveBeenCalledTimes(1);
     });
   });
