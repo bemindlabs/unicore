@@ -53,6 +53,7 @@ class TestOpenClawGateway extends OpenClawGateway {}
     HeartbeatService,
     PtySessionManager,
     MessagePersistenceService,
+    RouterAgent,
     // The gateway constructor expects OpenClawGateway — alias it
     { provide: OpenClawGateway, useExisting: TestOpenClawGateway },
   ],
