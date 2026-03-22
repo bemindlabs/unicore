@@ -20,8 +20,6 @@ const mockLicenseService = {
   getLicenseStatus: jest.fn().mockResolvedValue({ tier: 'pro' }),
 };
 
-const currentUser = { id: 'owner-1', email: 'owner@test.com', role: 'OWNER' };
-
 describe('AdminController — health endpoint', () => {
   let controller: AdminController;
   let originalFetch: typeof global.fetch;
