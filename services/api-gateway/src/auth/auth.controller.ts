@@ -176,4 +176,70 @@ export class AuthController {
     });
     return result;
   }
+
+  // ---------------------------------------------------------------------------
+  // Google OAuth
+  // ---------------------------------------------------------------------------
+
+  @Public()
+  @UseGuards(GoogleAuthGuard)
+  @Get('google')
+  googleLogin() {
+    // Guard redirects to Google consent screen
+  }
+
+  @Public()
+  @UseGuards(GoogleAuthGuard)
+  @Get('google/callback')
+  async googleCallback(@Req() req: Request, @Res() res: Response) {
+    const user = req.user as { id: string; email: string; name: string; role: string };
+    const tokens = await this.authService.login(user);
+    await this.auditService.log({
+      userId: user.id,
+      userEmail: user.email,
+      action: 'login',
+      resource: 'auth',
+      detail: 'Google OAuth login',
+      ip: req.ip,
+    });
+    const dashboardUrl = process.env.DASHBOARD_URL || 'http://localhost:3000';
+    const params = new URLSearchParams({
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    });
+    res.redirect(`${dashboardUrl}/auth/oauth-callback?${params.toString()}`);
+  }
+
+  // ---------------------------------------------------------------------------
+  // GitHub OAuth
+  // ---------------------------------------------------------------------------
+
+  @Public()
+  @UseGuards(GithubAuthGuard)
+  @Get('github')
+  githubLogin() {
+    // Guard redirects to GitHub authorization page
+  }
+
+  @Public()
+  @UseGuards(GithubAuthGuard)
+  @Get('github/callback')
+  async githubCallback(@Req() req: Request, @Res() res: Response) {
+    const user = req.user as { id: string; email: string; name: string; role: string };
+    const tokens = await this.authService.login(user);
+    await this.auditService.log({
+      userId: user.id,
+      userEmail: user.email,
+      action: 'login',
+      resource: 'auth',
+      detail: 'GitHub OAuth login',
+      ip: req.ip,
+    });
+    const dashboardUrl = process.env.DASHBOARD_URL || 'http://localhost:3000';
+    const params = new URLSearchParams({
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    });
+    res.redirect(`${dashboardUrl}/auth/oauth-callback?${params.toString()}`);
+  }
 }
