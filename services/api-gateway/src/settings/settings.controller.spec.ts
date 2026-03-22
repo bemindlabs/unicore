@@ -373,7 +373,7 @@ describe('SettingsController', () => {
     });
 
     it('returns masked response with hasXxxKey flags', async () => {
-      const { encrypt } = await import('./crypto.util');
+      const { encrypt: _encrypt } = await import('./crypto.util');
       mockPrismaService.settings.findUnique.mockResolvedValue(null);
       mockPrismaService.settings.upsert.mockImplementation(({ create }) => ({
         data: create.data,
