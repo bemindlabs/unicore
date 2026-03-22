@@ -65,8 +65,8 @@ describe('AdminController — health endpoint', () => {
 
     const pg = result.services.find((s: any) => s.name === 'PostgreSQL');
     expect(pg).toBeDefined();
-    expect(pg.status).toBe('healthy');
-    expect(pg.latencyMs).toBeGreaterThanOrEqual(0);
+    expect(pg!.status).toBe('healthy');
+    expect(pg!.latencyMs).toBeGreaterThanOrEqual(0);
   });
 
   it('marks PostgreSQL as down when $queryRaw throws', async () => {
