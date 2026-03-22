@@ -49,7 +49,8 @@ describe('sanitizeCss', () => {
     const css = '@import url("https://evil.com/evil.css");';
     const { sanitized, blocked } = sanitizeCss(css);
     expect(blocked).toContain('@import');
-    expect(sanitized).not.toContain('@import');
+    // The original @import directive is gone (the name appears only in the blocked comment)
+    expect(sanitized).not.toContain('@import url');
   });
 
   it('blocks @charset', () => {
