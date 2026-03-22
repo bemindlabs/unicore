@@ -432,6 +432,46 @@ export class OpenClawGateway
   }
 
   // ---------------------------------------------------------------------------
+  // PTY terminal handlers
+  // ---------------------------------------------------------------------------
+
+  private handlePtyCreate(client: WebSocket, message: IncomingMessage): void {
+    const tracked = client as TrackedSocket;
+    if (!tracked.authenticated) return;
+    const { cols, rows, cwd } = message.payload;
+    const sessionId = this.ptyManager.createSession(tracked.socketId, tracked.userId ?? 'anonymous', cols ?? 80, rows ?? 24, cwd);
+    if (sessionId) {
+      this.send(client, JSON.stringify({ type: 'pty:created', payload: { sessionId } }) as unknown as OutgoingMessage);
+    } else {
+      this.send(client, JSON.stringify({ type: 'system:error', payload: { code: 'PTY_CREATE_FAILED', message: 'Failed to create PTY session (limit reached or error)' } }) as unknown as OutgoingMessage);
+    }
+  }
+
+  private handlePtyInput(client: WebSocket, message: IncomingMessage): void {
+    const tracked = client as TrackedSocket;
+    const { sessionId, data } = message.payload;
+    if (sessionId && typeof data === 'string') {
+      this.ptyManager.writeInput(sessionId, tracked.socketId, data);
+    }
+  }
+
+  private handlePtyResize(client: WebSocket, message: IncomingMessage): void {
+    const tracked = client as TrackedSocket;
+    const { sessionId, cols, rows } = message.payload;
+    if (sessionId && cols && rows) {
+      this.ptyManager.resize(sessionId, tracked.socketId, cols, rows);
+    }
+  }
+
+  private handlePtyDestroy(client: WebSocket, message: IncomingMessage): void {
+    const tracked = client as TrackedSocket;
+    const { sessionId } = message.payload;
+    if (sessionId) {
+      this.ptyManager.destroySession(sessionId, tracked.socketId);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
 
