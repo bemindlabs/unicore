@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { uuid } from '@/lib/uuid';
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:18789';
+const MAX_BACKOFF = 30_000;
 
 export function usePtyWebSocket(
   onOutput: (data: string) => void,
@@ -11,6 +12,7 @@ export function usePtyWebSocket(
 ): {
   connected: boolean;
   sessionId: string | null;
+  error: string | null;
   createSession: (cols: number, rows: number, cwd?: string) => void;
   sendInput: (data: string) => void;
   sendResize: (cols: number, rows: number) => void;
@@ -18,12 +20,16 @@ export function usePtyWebSocket(
 } {
   const [connected, setConnected] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const onOutputRef = useRef(onOutput);
   onOutputRef.current = onOutput;
   const onExitRef = useRef(onExit);
   onExitRef.current = onExit;
   const sessionIdRef = useRef<string | null>(null);
+  const backoffRef = useRef(2000);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const unmountedRef = useRef(false);
 
   const connect = useCallback(() => {
     try {
@@ -32,7 +38,11 @@ export function usePtyWebSocket(
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
-      ws.onopen = () => setConnected(true);
+      ws.onopen = () => {
+        setConnected(true);
+        setError(null);
+        backoffRef.current = 2000;
+      };
 
       ws.onmessage = (event) => {
         try {
@@ -46,24 +56,47 @@ export function usePtyWebSocket(
             onExitRef.current(msg.payload.exitCode ?? 0);
             sessionIdRef.current = null;
             setSessionId(null);
+          } else if (msg.type === 'system:error') {
+            const errMsg = msg.payload?.message ?? 'Unknown error';
+            console.error('[PTY WebSocket] Server error:', errMsg);
+            setError(errMsg);
           }
-        } catch { /* ignore */ }
+        } catch { /* ignore malformed messages */ }
       };
 
-      ws.onclose = () => {
+      ws.onclose = (event) => {
         setConnected(false);
         wsRef.current = null;
         sessionIdRef.current = null;
         setSessionId(null);
+        if (event.code === 4401) {
+          setError('Authentication failed');
+          return; // Don't reconnect on auth failure
+        }
+        // Reconnect with exponential backoff
+        if (!unmountedRef.current) {
+          const delay = backoffRef.current;
+          backoffRef.current = Math.min(delay * 2, MAX_BACKOFF);
+          reconnectTimerRef.current = setTimeout(connect, delay);
+        }
       };
 
-      ws.onerror = () => ws.close();
-    } catch { /* ignore */ }
+      ws.onerror = () => {
+        console.error('[PTY WebSocket] Connection error');
+        ws.close();
+      };
+    } catch (err) {
+      console.error('[PTY WebSocket] Failed to create connection:', err);
+      setError('Failed to connect');
+    }
   }, []);
 
   useEffect(() => {
+    unmountedRef.current = false;
     connect();
     return () => {
+      unmountedRef.current = true;
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
       wsRef.current?.close();
       wsRef.current = null;
     };
