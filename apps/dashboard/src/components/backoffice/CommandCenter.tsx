@@ -6,7 +6,6 @@ import { useChatWebSocket, type ChatMessage } from '@/hooks/use-chat-ws';
 import { getAgents } from '@/lib/backoffice/store';
 import { api } from '@/lib/api';
 import type { BackofficeAgent } from '@/lib/backoffice/types';
-import { StatusIndicator } from './StatusIndicator';
 import { useRetroDeskTheme } from './retrodesk/RetroDeskThemeProvider';
 import { useBusinessTimezone } from '@/hooks/use-business-timezone';
 
