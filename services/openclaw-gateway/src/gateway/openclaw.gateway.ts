@@ -574,12 +574,13 @@ export class OpenClawGateway
     originalMessageId: string | undefined,
     code: string,
     message: string,
+    retryAfter?: number,
   ): ErrorMessage {
     return {
       type: 'system:error',
       messageId: uuidv4(),
       timestamp: new Date().toISOString(),
-      payload: { originalMessageId, code, message },
+      payload: { originalMessageId, code, message, ...(retryAfter !== undefined && { retryAfter }) },
     };
   }
 }
