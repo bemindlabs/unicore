@@ -361,61 +361,55 @@ curl -X POST http://localhost:4000/auth/provision-admin \
 
 ## Roadmap
 
-### v0.1 — Foundation (Current)
+### v0.1.0 — Foundation + Full Stack (Released 2026-03-22)
 
 - [x] Monorepo with Turborepo + pnpm workspaces
 - [x] Next.js 16 dashboard with shadcn/ui
 - [x] NestJS API Gateway with JWT/Local auth
-- [x] ERP service (CRM, orders, inventory, invoicing, expenses)
-- [x] OpenClaw multi-agent WebSocket gateway
-- [x] 9 specialist AI agents with autonomy levels
-- [x] Agent CRUD API (register, update, delete)
+- [x] ERP service (CRM, orders, inventory, invoicing, expenses, reports)
+- [x] OpenClaw multi-agent WebSocket gateway (9 specialist agents)
 - [x] RAG service with Qdrant vector search
-- [x] Bootstrap wizard with 7 industry templates
-- [x] Kafka-based workflow engine
-- [x] Nginx reverse proxy
-- [x] Playwright E2E test suite
-- [x] Docker Compose deployment
+- [x] Bootstrap wizard with industry templates
+- [x] Kafka-based workflow engine with DLQ + retry
+- [x] AI Engine with 13 LLM provider failover
 - [x] Plugin SDK (loader, lifecycle, sandbox, events, dependency resolver)
+- [x] WebSocket message persistence and replay
+- [x] Agent-to-agent rate limiting (token bucket)
+- [x] 12+ messaging channel adapters (Telegram, WhatsApp, Discord, Slack, LINE, etc.)
+- [x] SSO (SAML 2.0, OAuth, OIDC) authentication (Pro)
+- [x] RBAC, audit logging, custom domains (Pro)
+- [x] White-label branding with per-tenant support
+- [x] Stripe payment processing + Plaid financial sync
+- [x] Ed25519 license key signing and validation
+- [x] GitHub Actions CI (14/14 passing) + Docker Hub publishing
 - [x] Pre-push quality gate (tests + Trivy + Semgrep)
-- [x] GitHub Actions CI + Docker Hub publishing pipeline
+- [x] Branch protection on all repos
+- [x] 2,300+ unit tests across all repos
 
-### v0.2 — Intelligence
+### v0.2 — Intelligence & DX (Planned)
 
-- [x] Agent memory and conversation persistence (WebSocket message persistence)
 - [ ] Multi-turn tool calling with chain-of-thought
 - [ ] Knowledge base document ingestion (PDF, DOCX, CSV)
-- [ ] Custom agent builder (Pro)
-- [ ] Agent-to-agent delegation protocols
+- [ ] Custom agent builder UI (Pro)
 - [ ] Workflow visual builder
-
-### v0.3 — Channels & Integrations
-
-- [ ] Telegram bot integration
-- [ ] LINE messaging channel
-- [ ] WhatsApp Business API
-- [ ] Slack workspace integration
-- [ ] Stripe payment processing
-- [ ] Plaid financial data sync
-
-### v0.4 — Scale & Security
-
-- [ ] SSO (SAML/OIDC) authentication (Pro)
-- [ ] Role-based access control enhancements (Pro)
-- [ ] Audit logging (Pro)
-- [ ] Custom domain routing (Pro)
-- [ ] White-label branding (Pro)
-- [x] Agent rate limiting
-- [ ] API quotas and per-user limits
-- [ ] Horizontal scaling with Redis Cluster
-
-### v1.0 — General Availability
-
-- [ ] Production hardening and security audit
-- [ ] Comprehensive API documentation (OpenAPI 3.0)
-- [ ] Plugin marketplace for community extensions
+- [ ] OpenAPI 3.0 auto-generation from NestJS decorators
 - [ ] Self-hosted installer CLI
+
+### v0.3 — Marketplace & Scale (Planned)
+
+- [ ] Plugin marketplace for community extensions (live, not coming-soon)
+- [ ] Agent marketplace with revenue sharing
+- [ ] API quotas and per-user rate limits
+- [ ] Horizontal scaling with Redis Cluster
 - [ ] Helm chart for Kubernetes deployment
+
+### v1.0 — General Availability (Planned)
+
+- [ ] Production security audit (external pen test)
+- [ ] SOC 2 Type II compliance (Enterprise)
+- [ ] 99.9% SLA for managed instances
+- [ ] Migration toolkit (import/export)
+- [ ] Mobile companion app
 
 ## Documentation
 
