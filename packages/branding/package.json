@@ -1,5 +1,5 @@
 {
-  "name": "@unicore/branding",
+  "name": "@unicore/branding-base",
   "version": "0.1.0",
   "private": true,
   "description": "Base branding system — colors, fonts, dark/light mode theming for UniCore community edition",
