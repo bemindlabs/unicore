@@ -53,6 +53,10 @@ export interface BrandingConfig {
   headingFont?: BrandingFont;
   /** Mono / code font */
   monoFont?: BrandingFont;
+  /** URL to the favicon (ICO, PNG, or SVG). */
+  faviconUrl?: string;
+  /** When true, UniCore-specific branding is removed from the UI. */
+  removeUnicoreBranding?: boolean;
   /** ISO timestamp of when this config was last saved */
   updatedAt?: string;
 }

@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MessagePersistenceService, PersistedMessage } from './message-persistence.service';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../generated/prisma';
 
-jest.mock('@prisma/client', () => {
+jest.mock('../generated/prisma', () => {
   const mChatMessage = {
     create: jest.fn(),
     findMany: jest.fn(),
@@ -17,9 +17,9 @@ jest.mock('@prisma/client', () => {
   };
 });
 
-const getPrismaInstance = (): ReturnType<typeof PrismaClient.prototype.constructor> => {
+const getPrismaInstance = (): InstanceType<typeof PrismaClient> => {
   const MockPrisma = PrismaClient as jest.MockedClass<typeof PrismaClient>;
-  return MockPrisma.mock.instances[0] as unknown as ReturnType<typeof PrismaClient.prototype.constructor>;
+  return MockPrisma.mock.instances[0] as unknown as InstanceType<typeof PrismaClient>;
 };
 
 describe('MessagePersistenceService', () => {
