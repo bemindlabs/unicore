@@ -285,6 +285,21 @@ npx playwright show-report
 
 E2E tests cover: API health checks, authentication flows, dashboard navigation, ERP CRUD operations, settings management, and onboarding.
 
+### Pre-Push Quality Gate
+
+A pre-push hook runs automatically before every `git push`:
+
+```bash
+# Runs in sequence: unit tests → Trivy vulnerability scan → Semgrep static analysis
+# All three must pass; push is blocked on any failure
+```
+
+Install the hook once after cloning:
+
+```bash
+cp .git/hooks/pre-push.sample .git/hooks/pre-push   # or use the provided script
+```
+
 ## Deployment
 
 ### Docker Compose (Production)
