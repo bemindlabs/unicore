@@ -17,8 +17,6 @@ import {
   Sparkles,
   ArrowUpDown,
   Info,
-  X,
-  ExternalLink,
 } from 'lucide-react';
 import {
   Button,
