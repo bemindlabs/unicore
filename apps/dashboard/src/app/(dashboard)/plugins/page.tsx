@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Bot,
@@ -16,6 +16,9 @@ import {
   TrendingUp,
   Sparkles,
   ArrowUpDown,
+  Info,
+  X,
+  ExternalLink,
 } from 'lucide-react';
 import {
   Button,
@@ -35,6 +38,12 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
 } from '@unicore/ui';
 
 type PluginCategory = 'all' | 'agents' | 'apps' | 'workflows' | 'channels' | 'analytics' | 'security';
@@ -69,7 +78,7 @@ const MOCK_PLUGINS: Plugin[] = [
     rating: 4.8,
     reviewCount: 234,
     installCount: 15420,
-    icon: '🤖',
+    icon: '\u{1F916}',
     featured: true,
     createdAt: '2025-12-01',
   },
@@ -85,7 +94,7 @@ const MOCK_PLUGINS: Plugin[] = [
     rating: 4.6,
     reviewCount: 189,
     installCount: 12300,
-    icon: '💬',
+    icon: '\u{1F4AC}',
     featured: true,
     createdAt: '2025-11-15',
   },
@@ -101,7 +110,7 @@ const MOCK_PLUGINS: Plugin[] = [
     rating: 4.7,
     reviewCount: 156,
     installCount: 9870,
-    icon: '📊',
+    icon: '\u{1F4CA}',
     featured: true,
     createdAt: '2025-10-20',
   },
@@ -117,7 +126,7 @@ const MOCK_PLUGINS: Plugin[] = [
     rating: 4.5,
     reviewCount: 98,
     installCount: 7650,
-    icon: '🔀',
+    icon: '\u{1F500}',
     createdAt: '2025-11-05',
   },
   {
@@ -132,7 +141,7 @@ const MOCK_PLUGINS: Plugin[] = [
     rating: 4.4,
     reviewCount: 203,
     installCount: 11200,
-    icon: '🏆',
+    icon: '\u{1F3C6}',
     createdAt: '2025-09-30',
   },
   {
@@ -147,7 +156,7 @@ const MOCK_PLUGINS: Plugin[] = [
     rating: 4.9,
     reviewCount: 87,
     installCount: 5430,
-    icon: '🛡️',
+    icon: '\u{1F6E1}\uFE0F',
     createdAt: '2025-12-10',
   },
   {
@@ -162,7 +171,7 @@ const MOCK_PLUGINS: Plugin[] = [
     rating: 4.3,
     reviewCount: 145,
     installCount: 8900,
-    icon: '🎮',
+    icon: '\u{1F3AE}',
     createdAt: '2025-11-28',
   },
   {
@@ -177,7 +186,7 @@ const MOCK_PLUGINS: Plugin[] = [
     rating: 4.2,
     reviewCount: 112,
     installCount: 6700,
-    icon: '🔗',
+    icon: '\u{1F517}',
     createdAt: '2025-10-15',
   },
   {
@@ -192,7 +201,7 @@ const MOCK_PLUGINS: Plugin[] = [
     rating: 4.6,
     reviewCount: 267,
     installCount: 19800,
-    icon: '⚡',
+    icon: '\u{26A1}',
     createdAt: '2025-08-20',
   },
   {
@@ -207,7 +216,7 @@ const MOCK_PLUGINS: Plugin[] = [
     rating: 4.3,
     reviewCount: 78,
     installCount: 4200,
-    icon: '👥',
+    icon: '\u{1F465}',
     createdAt: '2025-09-10',
   },
   {
@@ -222,7 +231,7 @@ const MOCK_PLUGINS: Plugin[] = [
     rating: 4.7,
     reviewCount: 321,
     installCount: 22100,
-    icon: '📱',
+    icon: '\u{1F4F1}',
     featured: true,
     createdAt: '2025-07-15',
   },
@@ -238,7 +247,7 @@ const MOCK_PLUGINS: Plugin[] = [
     rating: 4.1,
     reviewCount: 56,
     installCount: 3100,
-    icon: '🔍',
+    icon: '\u{1F50D}',
     createdAt: '2025-12-05',
   },
 ];
@@ -259,9 +268,27 @@ const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest' },
 ];
 
-function PluginCard({ plugin }: { plugin: Plugin }) {
+async function fetchPluginsFromAPI(): Promise<Plugin[] | null> {
+  try {
+    const res = await fetch('/api/proxy/ai/plugins', {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (Array.isArray(data) && data.length > 0) return data;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function PluginCard({ plugin, onSelect }: { plugin: Plugin; onSelect: (plugin: Plugin) => void }) {
   return (
-    <Link href={`/plugins/${plugin.slug}`}>
+    <button
+      type="button"
+      className="w-full text-left"
+      onClick={() => onSelect(plugin)}
+    >
       <Card className="h-full cursor-pointer transition-all hover:bg-muted/40 hover:shadow-md">
         <CardHeader className="pb-3">
           <div className="flex items-start gap-3">
@@ -299,7 +326,101 @@ function PluginCard({ plugin }: { plugin: Plugin }) {
           </div>
         </CardContent>
       </Card>
-    </Link>
+    </button>
+  );
+}
+
+function PluginDetailDialog({
+  plugin,
+  open,
+  onClose,
+  isPreview,
+}: {
+  plugin: Plugin | null;
+  open: boolean;
+  onClose: () => void;
+  isPreview: boolean;
+}) {
+  if (!plugin) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 text-3xl">
+              {plugin.icon}
+            </div>
+            <div className="min-w-0 flex-1">
+              <DialogTitle className="text-xl">{plugin.name}</DialogTitle>
+              <DialogDescription className="mt-1">
+                by {plugin.author} &middot; v{plugin.version}
+              </DialogDescription>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <div className="space-y-4 pt-2">
+          <p className="text-sm text-foreground">{plugin.description}</p>
+
+          <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-1">
+              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+              <span className="font-medium">{plugin.rating}</span>
+              <span className="text-muted-foreground">({plugin.reviewCount} reviews)</span>
+            </div>
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <Download className="h-4 w-4" />
+              <span>{plugin.installCount.toLocaleString()} installs</span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-1.5">
+            {plugin.tags.map((tag) => (
+              <Badge key={tag} variant="secondary" className="text-xs">
+                {tag}
+              </Badge>
+            ))}
+            <Badge variant="outline" className="text-xs capitalize">
+              {plugin.category}
+            </Badge>
+          </div>
+
+          <div className="flex items-center justify-between border-t pt-4">
+            <span className="text-xs text-muted-foreground">
+              Published {new Date(plugin.createdAt).toLocaleDateString()}
+            </span>
+            <div className="flex gap-2">
+              <DialogClose asChild>
+                <Button variant="outline" size="sm">
+                  Close
+                </Button>
+              </DialogClose>
+              <Button
+                size="sm"
+                disabled
+                className="relative"
+                title="Plugin installation is coming soon"
+              >
+                Install
+                <Badge
+                  variant="secondary"
+                  className="ml-2 px-1.5 py-0 text-[10px] font-normal"
+                >
+                  Coming Soon
+                </Badge>
+              </Button>
+            </div>
+          </div>
+
+          {isPreview && (
+            <p className="text-xs text-muted-foreground italic">
+              This is sample data. Live plugin details will be available when the Plugin API is connected.
+            </p>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -307,11 +428,32 @@ export default function PluginsMarketplacePage() {
   const [category, setCategory] = useState<PluginCategory>('all');
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('popular');
+  const [plugins, setPlugins] = useState<Plugin[]>(MOCK_PLUGINS);
+  const [isPreview, setIsPreview] = useState(true);
+  const [selectedPlugin, setSelectedPlugin] = useState<Plugin | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
-  const featured = MOCK_PLUGINS.filter((p) => p.featured);
+  useEffect(() => {
+    let cancelled = false;
+    fetchPluginsFromAPI().then((data) => {
+      if (cancelled) return;
+      if (data) {
+        setPlugins(data);
+        setIsPreview(false);
+      }
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  const handleSelectPlugin = useCallback((plugin: Plugin) => {
+    setSelectedPlugin(plugin);
+    setDetailOpen(true);
+  }, []);
+
+  const featured = plugins.filter((p) => p.featured);
 
   const filtered = useMemo(() => {
-    let result = MOCK_PLUGINS;
+    let result = plugins;
     if (category !== 'all') result = result.filter((p) => p.category === category);
     if (search) {
       const q = search.toLowerCase();
@@ -327,7 +469,7 @@ export default function PluginsMarketplacePage() {
     else if (sort === 'rating') result = [...result].sort((a, b) => b.rating - a.rating);
     else result = [...result].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     return result;
-  }, [category, search, sort]);
+  }, [plugins, category, search, sort]);
 
   return (
     <div className="space-y-6">
@@ -338,7 +480,14 @@ export default function PluginsMarketplacePage() {
             <Puzzle className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Plugin Marketplace</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold tracking-tight">Plugin Marketplace</h1>
+              {isPreview && (
+                <Badge variant="secondary" className="text-xs font-normal">
+                  Preview
+                </Badge>
+              )}
+            </div>
             <p className="text-muted-foreground">Extend UniCore with community and official plugins</p>
           </div>
         </div>
@@ -348,6 +497,20 @@ export default function PluginsMarketplacePage() {
           </Button>
         </div>
       </div>
+
+      {/* Preview Banner */}
+      {isPreview && (
+        <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950/50">
+          <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600 dark:text-blue-400" />
+          <div className="flex-1 text-sm text-blue-800 dark:text-blue-300">
+            <p className="font-medium">Plugin Marketplace (Preview)</p>
+            <p className="mt-0.5 text-blue-700 dark:text-blue-400">
+              You are viewing sample plugins. The marketplace will be connected to the Plugin API in a future update.
+              Plugin installation is not yet available.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Search + Sort */}
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -376,7 +539,7 @@ export default function PluginsMarketplacePage() {
       </div>
 
       {/* Featured — shown only with no active search/filter */}
-      {!search && category === 'all' && (
+      {!search && category === 'all' && featured.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
@@ -384,7 +547,7 @@ export default function PluginsMarketplacePage() {
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {featured.map((plugin) => (
-              <PluginCard key={plugin.id} plugin={plugin} />
+              <PluginCard key={plugin.id} plugin={plugin} onSelect={handleSelectPlugin} />
             ))}
           </div>
         </div>
@@ -420,7 +583,7 @@ export default function PluginsMarketplacePage() {
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {filtered.map((plugin) => (
-                  <PluginCard key={plugin.id} plugin={plugin} />
+                  <PluginCard key={plugin.id} plugin={plugin} onSelect={handleSelectPlugin} />
                 ))}
               </div>
             )}
@@ -433,9 +596,17 @@ export default function PluginsMarketplacePage() {
         <span>{filtered.length} plugin{filtered.length !== 1 ? 's' : ''}</span>
         <div className="flex items-center gap-1">
           <TrendingUp className="h-3 w-3" />
-          <span>{MOCK_PLUGINS.reduce((sum, p) => sum + p.installCount, 0).toLocaleString()} total installs</span>
+          <span>{plugins.reduce((sum, p) => sum + p.installCount, 0).toLocaleString()} total installs</span>
         </div>
       </div>
+
+      {/* Plugin Detail Dialog */}
+      <PluginDetailDialog
+        plugin={selectedPlugin}
+        open={detailOpen}
+        onClose={() => setDetailOpen(false)}
+        isPreview={isPreview}
+      />
     </div>
   );
 }
