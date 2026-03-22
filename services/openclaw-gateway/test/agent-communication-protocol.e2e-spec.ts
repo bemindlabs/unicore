@@ -778,15 +778,15 @@ describe('Agent Communication Protocol (E2E)', () => {
 
     describe('message:broadcast (One-to-All)', () => {
       it('should broadcast to all registered agents except sender', async () => {
-        const wsA = trackWs(await connectWs(defaultToken));
-        const wsB = trackWs(await connectWs(makeJwt('user-b')));
-        const wsC = trackWs(await connectWs(makeJwt('user-c')));
+        const a = trackWs(await connectBuffered(defaultToken));
+        const b = trackWs(await connectBuffered(makeJwt('user-b')));
+        const c = trackWs(await connectBuffered(makeJwt('user-c')));
 
-        await registerAgent(wsA, 'broadcast-sender');
-        await registerAgent(wsB, 'broadcast-receiver-1');
-        await registerAgent(wsC, 'broadcast-receiver-2');
+        await registerAgent(a, 'broadcast-sender');
+        await registerAgent(b, 'broadcast-receiver-1');
+        await registerAgent(c, 'broadcast-receiver-2');
 
-        wsSend(wsA, {
+        a.send({
           ...baseMsg(),
           type: 'message:broadcast',
           payload: {
@@ -797,18 +797,18 @@ describe('Agent Communication Protocol (E2E)', () => {
         });
 
         // Sender gets ack with delivery count
-        const ack = await waitForMessage(wsA);
+        const ack = await a.nextMessage();
         expect(ack.type).toBe('system:ack');
         // deliveredTo >= 2 (our 2 + any default agents from HealthController)
         expect((ack.payload.result as any).deliveredTo).toBeGreaterThanOrEqual(2);
 
         // Receivers get the broadcast
-        const msgB = await waitForMessage(wsB);
+        const msgB = await b.nextMessage();
         expect(msgB.type).toBe('message:broadcast');
         expect(msgB.payload.fromAgentId).toBe('broadcast-sender');
         expect(msgB.payload.data).toEqual({ version: '2.0', action: 'upgrade' });
 
-        const msgC = await waitForMessage(wsC);
+        const msgC = await c.nextMessage();
         expect(msgC.type).toBe('message:broadcast');
         expect(msgC.payload.fromAgentId).toBe('broadcast-sender');
       });
