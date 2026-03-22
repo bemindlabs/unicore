@@ -10,6 +10,26 @@
       "import": "./dist/index.js",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./types": {
+      "import": "./dist/types.js",
+      "types": "./dist/types.d.ts"
+    },
+    "./presets": {
+      "import": "./dist/presets.js",
+      "types": "./dist/presets.d.ts"
+    },
+    "./service": {
+      "import": "./dist/service.js",
+      "types": "./dist/service.d.ts"
+    },
+    "./css-generator": {
+      "import": "./dist/css-generator.js",
+      "types": "./dist/css-generator.d.ts"
+    },
+    "./tailwind": {
+      "import": "./dist/tailwind.js",
+      "types": "./dist/tailwind.d.ts"
     }
   },
   "scripts": {
