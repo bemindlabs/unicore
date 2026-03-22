@@ -791,7 +791,7 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
                 style={{
                   left: pos.x,
                   top: pos.y,
-                  zIndex: isSelectedForMove ? 9999 : Math.floor(pos.y + 60),
+                  zIndex: isSelectedForMove ? 9999 : Math.floor(pos.y + 600),
                   transition: isSelectedForMove ? 'none' : 'left 2000ms cubic-bezier(0.4, 0, 0.2, 1), top 2000ms cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
               >

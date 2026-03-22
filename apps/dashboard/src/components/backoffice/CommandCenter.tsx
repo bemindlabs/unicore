@@ -419,36 +419,31 @@ export function CommandCenter() {
     ? QUICK_PROMPTS[selectedAgent.id] ?? DEFAULT_PROMPTS
     : DEFAULT_PROMPTS;
 
+  // ── Theme helpers ──
+  const border = isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-[var(--bo-border)]';
+  const bg = isRetroDesk ? 'bg-[var(--retrodesk-bg)]' : 'bg-[var(--bo-bg)]';
+  const surface = isRetroDesk ? 'bg-[var(--retrodesk-surface)]' : 'bg-[var(--bo-bg)]';
+  const textMuted = isRetroDesk ? 'text-[var(--retrodesk-muted)]' : 'text-[var(--bo-text-muted)]';
+  const textBody = isRetroDesk ? 'text-[var(--retrodesk-text)]' : 'text-[var(--bo-text-body)]';
+  const mono = isRetroDesk ? 'retrodesk-mono' : 'font-mono';
+
   return (
-    <div className={`flex flex-col md:flex-row h-full min-h-0 border backdrop-blur-sm rounded-lg overflow-hidden ${
-      isRetroDesk
-        ? 'border-[var(--retrodesk-border)] bg-[var(--retrodesk-bg)]'
-        : 'border-[var(--bo-border)] bg-[var(--bo-bg)]'
-    }`}>
-      {/* ---- Top (mobile) / Left (desktop): Agent Selector ---- */}
-      <aside className={`md:w-56 flex-shrink-0 border-b md:border-b-0 md:border-r overflow-x-auto md:overflow-x-hidden md:overflow-y-auto ${
-        isRetroDesk
-          ? 'border-[var(--retrodesk-border)] bg-[var(--retrodesk-surface)]'
-          : 'border-[var(--bo-border)] bg-[var(--bo-bg)]'
-      }`}>
-        <div className={`px-4 py-3 border-b hidden md:block ${
-          isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-[var(--bo-border)]'
-        }`}>
-          <h2 className={`text-[10px] uppercase tracking-wider ${
-            isRetroDesk ? 'retrodesk-heading text-[var(--retrodesk-pink)]' : 'font-mono text-[var(--bo-text-muted)]'
-          }`}>
+    <div className={`grid grid-rows-1 md:grid-cols-[14rem_1fr] h-full min-h-0 border backdrop-blur-sm rounded-lg overflow-hidden ${border} ${bg}`}>
+
+      {/* ──── Left sidebar: Agent Roster ──── */}
+      <aside className={`hidden md:flex flex-col border-r ${border} ${surface}`}>
+        <div className={`shrink-0 px-4 py-3 border-b ${border}`}>
+          <h2 className={`text-[10px] uppercase tracking-wider ${mono} ${isRetroDesk ? 'retrodesk-heading text-[var(--retrodesk-pink)]' : textMuted}`}>
             Agent Roster
           </h2>
         </div>
-        <div className="flex md:flex-col overflow-x-auto md:overflow-x-hidden">
-          {/* --- COMMAND group --- */}
+        <div className="flex-1 overflow-y-auto">
           {(() => {
             const commandAgents = agents.filter((a) => a.id === 'router');
             const specialistAgents = agents.filter((a) =>
               ['comms', 'finance', 'growth', 'ops', 'research', 'erp', 'builder'].includes(a.id)
             );
             const securityAgents = agents.filter((a) => a.id === 'sentinel');
-            // Catch any agents that don't fit predefined groups
             const knownIds = new Set(['router', 'comms', 'finance', 'growth', 'ops', 'research', 'erp', 'builder', 'sentinel']);
             const otherAgents = agents.filter((a) => !knownIds.has(a.id));
 
@@ -463,9 +458,8 @@ export function CommandCenter() {
 
             return groups.filter((g) => g.agents.length > 0).map((group, gi) => (
               <div key={group.label}>
-                {/* Section header (desktop only) */}
-                <div className={`hidden md:flex items-center gap-1.5 px-4 pt-3 pb-1.5 ${
-                  gi > 0 ? `border-t ${isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-[var(--bo-border)]'}` : ''
+                <div className={`flex items-center gap-1.5 px-4 pt-3 pb-1.5 ${
+                  gi > 0 ? `border-t ${border}` : ''
                 }`}>
                   <span className={isRetroDesk ? 'text-[var(--retrodesk-muted)]' : 'text-[var(--bo-text-dimmer)]'}>
                     {group.icon}
@@ -476,7 +470,7 @@ export function CommandCenter() {
                     {group.label}
                   </span>
                 </div>
-                <div className="flex md:flex-col px-2 pb-1 gap-0.5 md:gap-0 md:space-y-0.5">
+                <div className="flex flex-col px-2 pb-1 space-y-0.5">
                   {group.agents.map((agent) => {
                     const active = selectedAgent?.id === agent.id;
                     const statusColor =
@@ -488,7 +482,7 @@ export function CommandCenter() {
                       <button
                         key={agent.id}
                         onClick={() => handleAgentClick(agent)}
-                        className={`flex-shrink-0 md:flex-shrink md:w-full text-left rounded-md px-3 py-2 transition-all duration-150 ${
+                        className={`w-full text-left rounded-md px-3 py-2 transition-all duration-150 ${
                           isRetroDesk
                             ? active
                               ? 'bg-[color-mix(in_srgb,var(--retrodesk-pink)_15%,transparent)] border-2 border-[var(--retrodesk-pink)] shadow-[0_0_8px_rgba(255,105,180,0.2)]'
@@ -499,28 +493,19 @@ export function CommandCenter() {
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          <span
-                            className="w-2 h-2 rounded-full flex-shrink-0"
-                            style={{ background: agent.color }}
-                          />
-                          <span
-                            className={`text-xs font-bold tracking-wider whitespace-nowrap flex-1 ${
-                              isRetroDesk
-                                ? active ? 'retrodesk-mono text-[var(--retrodesk-text)]' : 'retrodesk-mono text-[var(--retrodesk-muted)]'
-                                : active ? 'font-mono text-[var(--bo-text-accent-2)]' : 'font-mono text-[var(--bo-text-info)]'
-                            }`}
-                          >
+                          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: agent.color }} />
+                          <span className={`text-xs font-bold tracking-wider truncate flex-1 ${mono} ${
+                            isRetroDesk
+                              ? active ? 'text-[var(--retrodesk-text)]' : 'text-[var(--retrodesk-muted)]'
+                              : active ? 'text-[var(--bo-text-accent-2)]' : 'text-[var(--bo-text-info)]'
+                          }`}>
                             {agent.name}
                           </span>
-                          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusColor} ${
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusColor} ${
                             agent.status === 'working' ? 'animate-pulse' : ''
                           }`} />
                         </div>
-                        <p className={`text-[10px] font-mono truncate mt-0.5 ml-[16px] ${
-                          isRetroDesk ? 'text-[var(--retrodesk-muted)]' : 'text-[var(--bo-text-muted)]'
-                        }`}>
-                          {agent.role}
-                        </p>
+                        <p className={`text-[10px] ${mono} truncate mt-0.5 ml-4 ${textMuted}`}>{agent.role}</p>
                       </button>
                     );
                   })}
@@ -531,123 +516,99 @@ export function CommandCenter() {
         </div>
       </aside>
 
-      {/* ---- Right: Conversation ---- */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Conversation header */}
-        <div className={`flex items-center gap-3 px-5 py-3 border-b ${
-          isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-[var(--bo-border)]'
-        }`}>
+      {/* ──── Mobile: horizontal agent selector ──── */}
+      <div className={`md:hidden shrink-0 flex gap-1.5 overflow-x-auto px-3 py-2 border-b ${border} ${surface}`}>
+        {agents.map((agent) => {
+          const active = selectedAgent?.id === agent.id;
+          return (
+            <button
+              key={agent.id}
+              onClick={() => handleAgentClick(agent)}
+              className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs ${mono} transition-colors ${
+                active
+                  ? `${isRetroDesk ? 'bg-[color-mix(in_srgb,var(--retrodesk-pink)_20%,transparent)] text-[var(--retrodesk-pink)]' : 'bg-[var(--bo-accent-15)] text-[var(--bo-text-accent)]'} font-bold`
+                  : `${textMuted} hover:${bg}`
+              }`}
+            >
+              <span className="w-2 h-2 rounded-full shrink-0" style={{ background: agent.color }} />
+              {agent.name}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ──── Right: Conversation panel ──── */}
+      <div className="flex flex-col min-w-0 min-h-0">
+
+        {/* ── Header ── */}
+        <div className={`shrink-0 flex flex-wrap items-center gap-2 px-4 py-2.5 border-b ${border}`}>
           {selectedAgent && (
             <>
-              <span
-                className="w-3 h-3 rounded-full flex-shrink-0"
-                style={{ background: selectedAgent.color }}
-              />
-              <div>
-                <span className={`text-sm font-bold tracking-wider ${
-                  isRetroDesk ? 'retrodesk-mono text-[var(--retrodesk-text)]' : 'font-mono text-[var(--bo-text-accent-2)]'
-                }`}>
-                  {selectedAgent.name}
-                </span>
-                <span className={`text-[10px] ml-2 ${
-                  isRetroDesk ? 'retrodesk-mono text-[var(--retrodesk-muted)]' : 'font-mono text-[var(--bo-text-muted)]'
-                }`}>
-                  {selectedAgent.role}
-                </span>
-              </div>
-              <div className="ml-auto flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full shrink-0" style={{ background: selectedAgent.color }} />
+              <span className={`text-sm font-bold tracking-wider ${mono} ${isRetroDesk ? 'text-[var(--retrodesk-text)]' : 'text-[var(--bo-text-accent-2)]'}`}>{selectedAgent.name}</span>
+              <span className={`text-[10px] ${mono} ${textMuted}`}>{selectedAgent.role}</span>
+              <div className="flex-1" />
+              <div className="flex items-center gap-1.5">
                 {messages.length > 0 && (
                   <>
                     <button
                       onClick={handleManualSave}
                       disabled={isSaving}
-                      className="font-mono text-[9px] text-[var(--bo-text-dim)] hover:text-[var(--bo-text-accent)] transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-[var(--bo-accent-10)] disabled:opacity-40"
+                      className={`${mono} text-[9px] ${textMuted} hover:text-[var(--bo-text-accent)] transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-[var(--bo-accent-10)] disabled:opacity-40`}
                       title="Save conversation to history"
                     >
-                      {savedFeedback ? (
-                        <Check className="w-3 h-3 text-green-400" />
-                      ) : (
-                        <BookmarkPlus className="w-3 h-3" />
-                      )}
-                      {savedFeedback ? 'Saved' : isSaving ? 'Saving…' : 'Save'}
+                      {savedFeedback ? <Check className="w-3 h-3 text-green-400" /> : <BookmarkPlus className="w-3 h-3" />}
+                      <span className="hidden sm:inline">{savedFeedback ? 'Saved' : isSaving ? 'Saving…' : 'Save'}</span>
                     </button>
                     <button
-                      onClick={() => {
-                        if (window.confirm('Clear all messages? This cannot be undone.')) {
-                          handleClearMessages();
-                        }
-                      }}
-                      className="font-mono text-[9px] text-[var(--bo-text-dim)] hover:text-red-400 transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-red-500/10"
-                      title="Clear conversation (auto-saves first)"
+                      onClick={() => { if (window.confirm('Clear all messages?')) handleClearMessages(); }}
+                      className={`${mono} text-[9px] ${textMuted} hover:text-red-400 transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-red-500/10`}
+                      title="Clear conversation"
                     >
                       <Trash2 className="w-3 h-3" />
-                      Clear
+                      <span className="hidden sm:inline">Clear</span>
                     </button>
                   </>
                 )}
-                <span
-                  className={`w-2 h-2 rounded-full ${
-                    connected
-                      ? isRetroDesk ? 'bg-[var(--retrodesk-green)]' : 'bg-green-400 animate-pulse'
-                      : 'bg-red-500'
-                  }`}
-                />
-                <span className={`font-mono text-[9px] uppercase ${
-                  isRetroDesk ? 'text-[var(--retrodesk-muted)]' : 'text-[var(--bo-text-dim)]'
-                }`}>
-                  {connected ? 'Connected' : 'Disconnected'}
+                <span className={`w-2 h-2 rounded-full shrink-0 ${connected
+                  ? isRetroDesk ? 'bg-[var(--retrodesk-green)]' : 'bg-green-400 animate-pulse'
+                  : 'bg-red-500'
+                }`} />
+                <span className={`${mono} text-[9px] uppercase hidden sm:inline ${textMuted}`}>
+                  {connected ? 'Online' : 'Offline'}
                 </span>
               </div>
             </>
           )}
         </div>
 
-        {/* Messages */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 space-y-4">
+        {/* ── Messages ── */}
+        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-3">
           {messages.length === 0 && selectedAgent && (
-            <div className="flex flex-col items-center justify-center h-full text-center py-12">
-              <span
-                className="w-10 h-10 rounded-full mb-4"
-                style={{ background: selectedAgent.color, opacity: 0.3 }}
-              />
-              <p className="font-mono text-xs text-[var(--bo-text-muted)]">
-                Start a conversation with {selectedAgent.name}
-              </p>
-              <p className="font-mono text-[10px] text-[var(--bo-text-dimmer)] mt-1">
-                Type a prompt below or pick a suggestion
-              </p>
+            <div className="flex flex-col items-center justify-center h-full text-center py-8">
+              <span className="w-10 h-10 rounded-full mb-4 opacity-30" style={{ background: selectedAgent.color }} />
+              <p className={`${mono} text-xs ${textMuted}`}>Start a conversation with {selectedAgent.name}</p>
+              <p className={`${mono} text-[10px] ${textMuted} mt-1 opacity-60`}>Type a prompt below or pick a suggestion</p>
             </div>
           )}
           {messages.map((msg) => {
             const isMe = msg.authorId === 'human-user';
             return (
-              <div
-                key={msg.id}
-                className={`group flex ${isMe ? 'justify-end' : 'justify-start'}`}
-              >
-                <div className={`max-w-[70%] ${isMe ? 'items-end' : 'items-start'} flex flex-col`}>
+              <div key={msg.id} className={`group flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[85%] sm:max-w-[70%] flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                   <div className="flex items-center gap-1.5 mb-1">
                     {!isMe && msg.authorColor && (
-                      <span
-                        className="w-2 h-2 rounded-full flex-shrink-0"
-                        style={{ background: msg.authorColor }}
-                      />
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ background: msg.authorColor }} />
                     )}
-                    <span className="font-mono text-[10px] text-[var(--bo-text-muted)]">
-                      {isMe ? 'You' : msg.author}
-                    </span>
-                    <span className="font-mono text-[9px] text-[var(--bo-text-dimmer)]">
-                      {formatTimestamp(msg.timestamp, tz)}
-                    </span>
+                    <span className={`${mono} text-[10px] ${textMuted}`}>{isMe ? 'You' : msg.author}</span>
+                    <span className={`${mono} text-[9px] ${textMuted} opacity-60`}>{formatTimestamp(msg.timestamp, tz)}</span>
                     {!isMe && <CopyButton text={msg.text} />}
                   </div>
-                  <div
-                    className={`rounded-lg px-4 py-2.5 text-sm font-mono leading-relaxed ${
-                      isMe
-                        ? 'bg-[var(--bo-accent-20)] text-[var(--bo-text-body)] border border-[var(--bo-border-accent)] whitespace-pre-wrap'
-                        : 'bg-[var(--bo-bg-bubble)] text-[var(--bo-text-body-soft)] border border-[var(--bo-border-subtle)]'
-                    }`}
-                  >
+                  <div className={`rounded-lg px-4 py-2.5 text-sm ${mono} leading-relaxed break-words ${
+                    isMe
+                      ? 'bg-[var(--bo-accent-20)] text-[var(--bo-text-body)] border border-[var(--bo-border-accent)] whitespace-pre-wrap'
+                      : 'bg-[var(--bo-bg-bubble)] text-[var(--bo-text-body-soft)] border border-[var(--bo-border-subtle)]'
+                  }`}>
                     {isMe ? msg.text : formatMessageText(msg.text)}
                   </div>
                 </div>
@@ -656,78 +617,63 @@ export function CommandCenter() {
           })}
           {isWaiting && (
             <div className="flex justify-start">
-              <div className="max-w-[70%] flex flex-col items-start">
-                <div className="rounded-lg px-4 py-2.5 text-sm font-mono bg-[var(--bo-bg-bubble)] text-[var(--bo-text-body-soft)] border border-[var(--bo-border-subtle)]">
-                  <span className="text-[var(--bo-text-muted)]">
-                    Agent is thinking
-                    <span className="inline-flex w-6">
-                      <span className="animate-[bounce_1.4s_ease-in-out_infinite]">.</span>
-                      <span className="animate-[bounce_1.4s_ease-in-out_0.2s_infinite]">.</span>
-                      <span className="animate-[bounce_1.4s_ease-in-out_0.4s_infinite]">.</span>
-                    </span>
-                  </span>
-                </div>
+              <div className={`rounded-lg px-4 py-2.5 text-sm ${mono} bg-[var(--bo-bg-bubble)] border border-[var(--bo-border-subtle)] ${textMuted}`}>
+                Agent is thinking
+                <span className="inline-flex w-6 ml-0.5">
+                  <span className="animate-[bounce_1.4s_ease-in-out_infinite]">.</span>
+                  <span className="animate-[bounce_1.4s_ease-in-out_0.2s_infinite]">.</span>
+                  <span className="animate-[bounce_1.4s_ease-in-out_0.4s_infinite]">.</span>
+                </span>
               </div>
             </div>
           )}
         </div>
 
-        {/* Quick Prompts */}
-        <div className="px-5 pt-2 flex flex-wrap gap-2">
+        {/* ── Quick Prompts (max 2 rows) ── */}
+        <div className={`shrink-0 px-4 pt-2 pb-1 flex flex-wrap gap-1.5 max-h-16 overflow-hidden`}>
           {prompts.map((prompt) => (
             <button
               key={prompt}
               onClick={() => handleSend(prompt)}
               disabled={!connected}
-              className="font-mono text-[10px] px-3 py-1.5 rounded-full border border-[var(--bo-border-accent)] text-[var(--bo-text-muted)] hover:bg-[var(--bo-accent-10)] hover:text-[var(--bo-text-accent)] hover:border-[var(--bo-border-accent-hover)] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              className={`${mono} text-[10px] px-3 py-1 rounded-full border ${border} ${textMuted} hover:bg-[var(--bo-accent-10)] hover:text-[var(--bo-text-accent)] transition-colors disabled:opacity-30`}
             >
               {prompt}
             </button>
           ))}
         </div>
 
-        {/* Input Area */}
-        <div className={`p-4 border-t ${
-          isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-[var(--bo-border)]'
-        }`}>
-          <div className="flex gap-3 items-end">
+        {/* ── Input ── */}
+        <div className={`shrink-0 px-4 pb-3 pt-2 border-t ${border}`}>
+          <div className="flex gap-2 items-stretch">
             <textarea
               ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={
-                connected
-                  ? `Ask ${selectedAgent?.name ?? 'an agent'} anything...`
-                  : 'Connecting...'
-              }
+              placeholder={connected ? `Ask ${selectedAgent?.name ?? 'an agent'} anything...` : 'Connecting...'}
               disabled={!connected}
-              rows={3}
-              className={`flex-1 resize-none rounded-md border px-4 py-3 text-sm focus:outline-none disabled:opacity-40 ${
+              rows={2}
+              className={`flex-1 min-w-0 resize-none rounded-md border px-3 py-2 text-sm focus:outline-none disabled:opacity-40 ${
                 isRetroDesk
                   ? 'border-[var(--retrodesk-border)] bg-[var(--retrodesk-surface)] retrodesk-mono text-[var(--retrodesk-text)] placeholder:text-[var(--retrodesk-muted)] focus:border-[var(--retrodesk-pink)] focus:ring-1 focus:ring-[var(--retrodesk-pink)]'
-                  : 'border-[var(--bo-border-strong)] bg-[var(--bo-bg)] font-mono text-[var(--bo-text-body)] placeholder:text-[var(--bo-text-dimmer)] focus:border-[var(--bo-border-accent-hover)] focus:ring-1 focus:ring-[var(--bo-accent-20)]'
+                  : `border-[var(--bo-border-strong)] ${bg} ${mono} ${textBody} placeholder:${textMuted} focus:border-[var(--bo-border-accent-hover)] focus:ring-1 focus:ring-[var(--bo-accent-20)]`
               }`}
             />
             <button
               onClick={() => handleSend()}
               disabled={!input.trim() || !connected}
-              className={`flex-shrink-0 rounded-md border p-3 disabled:opacity-30 disabled:cursor-not-allowed transition-all ${
+              className={`shrink-0 self-end rounded-md border p-2.5 disabled:opacity-30 transition-all ${
                 isRetroDesk
                   ? 'bg-[color-mix(in_srgb,var(--retrodesk-pink)_15%,transparent)] border-[var(--retrodesk-pink)] text-[var(--retrodesk-pink)] hover:bg-[color-mix(in_srgb,var(--retrodesk-pink)_25%,transparent)]'
-                  : 'bg-[var(--bo-accent-20)] border-[var(--bo-border-accent)] text-[var(--bo-text-accent)] hover:bg-[var(--bo-accent-30)] hover:border-[var(--bo-border-accent-hover)]'
+                  : 'bg-[var(--bo-accent-20)] border-[var(--bo-border-accent)] text-[var(--bo-text-accent)] hover:bg-[var(--bo-accent-30)]'
               }`}
-              aria-label="Send message"
               title="Send (Ctrl+Enter)"
             >
-              <Send className="h-5 w-5" />
+              <Send className="h-4 w-4" />
             </button>
           </div>
-          <p className={`font-mono text-[9px] mt-1.5 text-right ${
-            isRetroDesk ? 'text-[var(--retrodesk-muted)]' : 'text-[var(--bo-text-dimmer)]'
-          }`}>
-            Press Ctrl+Enter to send
-          </p>
+          <p className={`${mono} text-[9px] mt-1 text-right ${textMuted} opacity-50`}>Ctrl+Enter to send</p>
         </div>
       </div>
     </div>
