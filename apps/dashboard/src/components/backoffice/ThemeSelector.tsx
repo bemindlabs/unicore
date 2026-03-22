@@ -439,6 +439,11 @@ export function ThemeSelector() {
               onSelect={handleSelect}
             />
           ))}
+          <CharacterSkinSelector
+            isRetroDesk={isRetroDesk}
+            characterTheme={characterTheme}
+            onSelectSkin={handleSkinSelect}
+          />
         </div>
       )}
     </div>
