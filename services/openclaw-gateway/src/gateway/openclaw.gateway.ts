@@ -16,6 +16,7 @@ import { AgentRegistryService } from '../registry/agent-registry.service';
 import { MessageRouterService } from '../routing/message-router.service';
 import { HeartbeatService } from '../health/heartbeat.service';
 import { RouterAgent } from '../router/router.agent';
+import { PtySessionManager } from '../terminal/pty-session-manager';
 import {
   IncomingMessage,
   OutgoingMessage,
