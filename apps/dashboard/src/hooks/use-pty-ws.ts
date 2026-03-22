@@ -148,5 +148,5 @@ export function usePtyWebSocket(
     setSessionId(null);
   }, []);
 
-  return { connected, sessionId, createSession, sendInput, sendResize, destroy };
+  return { connected, sessionId, error, createSession, sendInput, sendResize, destroy };
 }
