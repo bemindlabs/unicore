@@ -21,6 +21,7 @@ COPY packages/config/package.json ./packages/config/
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/branding/package.json ./packages/branding/
+COPY packages/branding-base/package.json ./packages/branding-base/
 COPY apps/dashboard/package.json ./apps/dashboard/
 RUN pnpm install --no-frozen-lockfile
 # Copy source
@@ -29,6 +30,7 @@ COPY packages/config ./packages/config
 COPY packages/shared-types ./packages/shared-types
 COPY packages/ui ./packages/ui
 COPY packages/branding ./packages/branding
+COPY packages/branding-base ./packages/branding-base
 COPY apps/dashboard ./apps/dashboard
 RUN cd packages/shared-types && node /app/node_modules/typescript/bin/tsc
 RUN cd apps/dashboard && node /app/node_modules/next/dist/bin/next build
