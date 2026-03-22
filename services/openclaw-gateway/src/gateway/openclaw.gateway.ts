@@ -269,17 +269,7 @@ export class OpenClawGateway
 
     const agentCheck = this.rateLimiter.checkAgentLimit(message.payload.fromAgentId);
     if (!agentCheck.allowed) {
-      this.send(client, {
-        type: 'system:error',
-        messageId: require('uuid').v4(),
-        timestamp: new Date().toISOString(),
-        payload: {
-          originalMessageId: message.messageId,
-          code: 'RATE_LIMITED',
-          message: 'Agent message rate limit exceeded',
-          retryAfter: agentCheck.retryAfterSeconds,
-        },
-      });
+      this.send(client, this.error(message.messageId, 'RATE_LIMITED', 'Agent message rate limit exceeded', agentCheck.retryAfterSeconds));
       return;
     }
 
