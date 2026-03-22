@@ -29,8 +29,7 @@ const makeEntry = (overrides: Partial<DlqEntry> = {}): DlqEntry => ({
 
 describe('DlqService', () => {
   let service: DlqService;
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  let mockProducer: ReturnType<typeof jest.fn>;
+  let mockProducer: { send: jest.Mock; connect: jest.Mock; disconnect: jest.Mock };
 
   beforeEach(async () => {
     jest.clearAllMocks();
