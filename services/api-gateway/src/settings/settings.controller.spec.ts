@@ -4,7 +4,6 @@ import { SettingsController, TENANT_CONTEXT_PROVIDER } from './settings.controll
 import { PrismaService } from '../prisma/prisma.service';
 import { LicenseService } from '../license/license.service';
 import * as fs from 'fs';
-import * as path from 'path';
 
 // Mock non-configurable fs methods so jest.spyOn can override them per test
 jest.mock('fs', () => ({
