@@ -12,8 +12,9 @@ COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
 COPY packages/config/package.json ./packages/config/
 COPY services/openclaw-gateway/package.json ./services/openclaw-gateway/
 RUN pnpm install --frozen-lockfile --filter @unicore/openclaw-gateway...
-# Rebuild node-pty native bindings (ignored by .npmrc ignore-scripts=true)
-RUN cd /app && pnpm rebuild node-pty
+# Build node-pty native bindings (prebuilds unavailable for this platform,
+# and .npmrc ignore-scripts=true may suppress install scripts)
+RUN cd /app/node_modules/.pnpm/node-pty@*/node_modules/node-pty && npx node-gyp rebuild
 
 # ─── Build ───────────────────────────────────────────────────────────────────
 FROM base AS build
