@@ -107,7 +107,7 @@ export class SlackWebhookController {
         this.logger.warn(`Failed to forward Slack event to OpenClaw: ${String(err)}`);
       });
     } else {
-      this.logger.log(`Slack webhook received: type=${body.type}`);
+      this.logger.log(`Slack webhook received: type=${(body as Record<string, unknown>).type}`);
     }
 
     return { ok: true };
