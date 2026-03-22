@@ -874,7 +874,6 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
                     {agent.status === 'offline' && (
                       <div className="absolute -top-6 -right-3 text-[12px] font-mono animate-pulse text-[var(--retrodesk-orange)] drop-shadow-md font-bold z-10">zZ</div>
                     )}
-                    <PixelAvatar name={agent.name} color={agent.color} status={agent.status} size="lg" className="drop-shadow-lg" />
                   </div>
                   <div className="mt-1 px-3 py-1 border-2 text-[10px] font-bold tracking-widest uppercase rounded shadow-xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50 pointer-events-none text-center" style={{ background: 'var(--retrodesk-surface)', borderColor: 'var(--retrodesk-border)', color: 'var(--retrodesk-text)' }}>
                     <div>{agent.name}</div>
