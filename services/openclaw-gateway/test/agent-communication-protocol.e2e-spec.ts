@@ -944,38 +944,38 @@ describe('Agent Communication Protocol (E2E)', () => {
       });
 
       it('should support multiple channels per agent', async () => {
-        const ws = trackWs(await connectWs(defaultToken));
-        const wsPub = trackWs(await connectWs(makeJwt('multi-pub')));
+        const sub = trackWs(await connectBuffered(defaultToken));
+        const pub = trackWs(await connectBuffered(makeJwt('multi-pub')));
 
-        await registerAgent(ws, 'multi-sub');
-        await registerAgent(wsPub, 'multi-pub');
+        await registerAgent(sub, 'multi-sub');
+        await registerAgent(pub, 'multi-pub');
 
         // Subscribe to two channels
-        wsSend(ws, { ...baseMsg(), type: 'message:subscribe', payload: { agentId: 'multi-sub', channel: 'ch-alpha' } });
-        await waitForMessage(ws);
-        wsSend(ws, { ...baseMsg(), type: 'message:subscribe', payload: { agentId: 'multi-sub', channel: 'ch-beta' } });
-        await waitForMessage(ws);
+        sub.send({ ...baseMsg(), type: 'message:subscribe', payload: { agentId: 'multi-sub', channel: 'ch-alpha' } });
+        await sub.nextMessage();
+        sub.send({ ...baseMsg(), type: 'message:subscribe', payload: { agentId: 'multi-sub', channel: 'ch-beta' } });
+        await sub.nextMessage();
 
         // Publish to ch-alpha
-        wsSend(wsPub, {
+        pub.send({
           ...baseMsg(),
           type: 'message:publish',
           payload: { fromAgentId: 'multi-pub', channel: 'ch-alpha', data: { from: 'alpha' } },
         });
-        await waitForMessage(wsPub); // ack
+        await pub.nextMessage(); // ack
 
-        const msgAlpha = await waitForMessage(ws);
+        const msgAlpha = await sub.nextMessage();
         expect(msgAlpha.payload.channel).toBe('ch-alpha');
 
         // Publish to ch-beta
-        wsSend(wsPub, {
+        pub.send({
           ...baseMsg(),
           type: 'message:publish',
           payload: { fromAgentId: 'multi-pub', channel: 'ch-beta', data: { from: 'beta' } },
         });
-        await waitForMessage(wsPub);
+        await pub.nextMessage();
 
-        const msgBeta = await waitForMessage(ws);
+        const msgBeta = await sub.nextMessage();
         expect(msgBeta.payload.channel).toBe('ch-beta');
       });
 
