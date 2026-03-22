@@ -4,11 +4,12 @@ import { WORKFLOW_TOPICS } from '../constants/kafka.constants';
 import { deserializeEnvelope, deserializePayload } from '../utils/event-deserializer';
 import { EventHandlerService } from '../event-handler.service';
 import { WorkflowService } from '../../workflow/workflow.service';
+import { RetryService } from '../retry/retry.service';
 import { InventoryLowPayloadDto, InventoryRestockedPayloadDto } from '../dto/inventory-events.dto';
 
 /**
  * InventoryConsumerService handles Kafka messages on the inventory.* topics
- * and forwards validated payloads into the workflow engine.
+ * and forwards validated payloads into the workflow engine via RetryService.
  */
 @Controller()
 export class InventoryConsumerService {
@@ -17,6 +18,7 @@ export class InventoryConsumerService {
   constructor(
     private readonly eventHandler: EventHandlerService,
     private readonly workflowService: WorkflowService,
+    private readonly retryService: RetryService,
   ) {}
 
   // ---------------------------------------------------------------------------
