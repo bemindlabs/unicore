@@ -1,0 +1,1 @@
+{"version":3,"file":"css-generator.d.ts","sourceRoot":"","sources":["css-generator.ts"],"names":[],"mappings":"AAWA,OAAO,KAAK,EAAE,cAAc,EAAE,mBAAmB,EAAE,MAAM,SAAS,CAAC;AAMnE;;;;;GAKG;AACH,wBAAgB,gBAAgB,CAC9B,MAAM,EAAE,cAAc,EACtB,OAAO,GAAE,mBAAwB,GAChC,MAAM,CAoFR;AAED;;;GAGG;AACH,wBAAgB,oBAAoB,CAAC,MAAM,EAAE,cAAc,GAAG,MAAM,CAAC,MAAM,EAAE,MAAM,CAAC,CAQnF"}
