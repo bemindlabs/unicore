@@ -21,6 +21,7 @@ export const THEME_OPTIONS: ThemeOption[] = [
   { id: 'dark', label: 'Dark', icon: '\u{1F319}', description: 'Dark cyberpunk mode' },
   { id: 'light', label: 'Light', icon: '\u2600\uFE0F', description: 'Light mode' },
   { id: 'retrodesk', label: 'RetroDesk', icon: '\u{1F47E}', description: 'Chinjan \u00B7 Pixel art office' },
+  { id: 'crypto', label: 'Crypto', icon: '\u{1F680}', description: 'Meme coin agents \u00B7 To the moon' },
 ];
 
 /**
