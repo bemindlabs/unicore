@@ -46,7 +46,7 @@ export class OpenClawGateway
   server!: Server;
 
   /** Chat channel prefixes that trigger the RouterAgent pipeline. */
-  private static readonly CHAT_CHANNEL_PREFIXES = ['chat-agent-', 'command-'];
+  private static readonly CHAT_CHANNEL_PREFIXES = ['chat-agent-', 'command-', 'chat-backoffice'];
 
   constructor(
     private readonly registry: AgentRegistryService,
