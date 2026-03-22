@@ -110,6 +110,16 @@ export const menuSections: NavSection[] = [
       { label: 'Settings', icon: Settings, href: '/settings', roles: [UserRole.Owner] },
     ],
   },
+  {
+    label: 'Enterprise',
+    items: [
+      { label: 'Platform Overview', icon: Globe, href: '/platform-admin', roles: [UserRole.Owner] },
+      { label: 'Tenants', icon: UsersRound, href: '/platform-admin/tenants', roles: [UserRole.Owner] },
+      { label: 'Health Monitor', icon: Activity, href: '/platform-admin/health', roles: [UserRole.Owner] },
+      { label: 'Analytics', icon: BarChart3, href: '/platform-admin/analytics', roles: [UserRole.Owner] },
+      { label: 'Platform Settings', icon: Shield, href: '/platform-admin/settings', roles: [UserRole.Owner] },
+    ],
+  },
 ];
 
 export const menuItems: NavItem[] = menuSections.flatMap((s) => s.items);
