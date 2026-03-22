@@ -441,9 +441,13 @@ export class OpenClawGateway
     const { cols, rows, cwd } = message.payload;
     const sessionId = this.ptyManager.createSession(tracked.socketId, tracked.userId ?? 'anonymous', cols ?? 80, rows ?? 24, cwd);
     if (sessionId) {
-      this.send(client, JSON.stringify({ type: 'pty:created', payload: { sessionId } }) as unknown as OutgoingMessage);
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({ type: 'pty:created', payload: { sessionId } }));
+      }
     } else {
-      this.send(client, JSON.stringify({ type: 'system:error', payload: { code: 'PTY_CREATE_FAILED', message: 'Failed to create PTY session (limit reached or error)' } }) as unknown as OutgoingMessage);
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({ type: 'system:error', payload: { code: 'PTY_CREATE_FAILED', message: 'Failed to create PTY session (limit reached or error)' } }));
+      }
     }
   }
 
