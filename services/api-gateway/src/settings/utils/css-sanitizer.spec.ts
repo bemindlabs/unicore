@@ -33,7 +33,7 @@ describe('sanitizeCss', () => {
 
   it('blocks behavior: (IE)', () => {
     const css = '.x { behavior: url(evil.htc); }';
-    const { sanitized, blocked } = sanitizeCss(css);
+    const { sanitized: _sanitized, blocked } = sanitizeCss(css);
     expect(blocked).toContain('behavior:');
   });
 

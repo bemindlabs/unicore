@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Delete, Param, Body, Query, Logger, UseGuards, HttpCode, HttpStatus, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Query, Logger, UseGuards, HttpCode, HttpStatus, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { TokenBlacklistService } from '../auth/token-blacklist.service';
@@ -6,11 +6,35 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { LicenseGuard } from '../license/guards/license.guard';
 import { ProFeatureRequired } from '../license/decorators/pro-feature.decorator';
+import * as os from 'os';
 
 @Roles('OWNER')
 @Controller('api/v1/admin')
 export class AdminController {
   private readonly logger = new Logger(AdminController.name);
+  private readonly startedAt = new Date();
+  private platformSettings = {
+    defaultPlan: 'STARTER' as const,
+    allowedPlans: ['STARTER', 'GROWTH', 'ENTERPRISE', 'CUSTOM'] as string[],
+    defaultUserQuota: 10,
+    defaultStorageQuotaBytes: 5 * 1024 * 1024 * 1024, // 5 GB
+    defaultApiCallQuotaPerDay: 10000,
+    maintenanceMode: false,
+    registrationEnabled: true,
+    featureToggles: {
+      sso: true,
+      whiteLabel: true,
+      advancedWorkflows: true,
+      allChannels: true,
+      customDomains: true,
+      advancedAnalytics: true,
+      prioritySupport: true,
+      dlcChat: true,
+      geekMode: true,
+    } as Record<string, boolean>,
+    updatedAt: new Date().toISOString(),
+    updatedBy: 'system',
+  };
 
   constructor(
     private readonly prisma: PrismaService,
