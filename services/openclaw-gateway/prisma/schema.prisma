@@ -1,0 +1,23 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Individual persisted WebSocket messages for history, replay, and dashboard load.
+model ChatMessage {
+  id          String   @id @default(uuid())
+  messageId   String   @unique
+  channel     String
+  fromAgentId String
+  data        Json     @default("{}")
+  createdAt   DateTime @default(now())
+
+  @@index([channel])
+  @@index([channel, createdAt])
+  @@index([fromAgentId])
+  @@map("chat_messages")
+}
