@@ -6,6 +6,7 @@ import { HeartbeatService } from './health/heartbeat.service';
 import { HealthController } from './health/health.controller';
 import { AgentsController } from './agents/agents.controller';
 import { RouterModule } from './router/router.module';
+import { PtySessionManager } from './terminal/pty-session-manager';
 
 /**
  * OpenClawModule — WebSocket hub for multi-agent communication.
