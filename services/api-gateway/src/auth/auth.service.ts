@@ -402,6 +402,12 @@ export class AuthService implements OnModuleDestroy {
       throw new UnauthorizedException('User not found');
     }
 
+    if (!user.password) {
+      throw new UnauthorizedException(
+        'This account uses OAuth login. Set a password first via your profile settings.',
+      );
+    }
+
     const isCurrentPasswordValid = await bcrypt.compare(dto.currentPassword, user.password);
     if (!isCurrentPasswordValid) {
       throw new UnauthorizedException('Current password is incorrect');
