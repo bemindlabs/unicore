@@ -350,10 +350,13 @@ curl -X POST http://localhost:4000/auth/provision-admin \
 - [x] Nginx reverse proxy
 - [x] Playwright E2E test suite
 - [x] Docker Compose deployment
+- [x] Plugin SDK (loader, lifecycle, sandbox, events, dependency resolver)
+- [x] Pre-push quality gate (tests + Trivy + Semgrep)
+- [x] GitHub Actions CI + Docker Hub publishing pipeline
 
 ### v0.2 — Intelligence
 
-- [ ] Agent memory and conversation persistence
+- [x] Agent memory and conversation persistence (WebSocket message persistence)
 - [ ] Multi-turn tool calling with chain-of-thought
 - [ ] Knowledge base document ingestion (PDF, DOCX, CSV)
 - [ ] Custom agent builder (Pro)
