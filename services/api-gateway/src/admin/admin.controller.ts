@@ -181,66 +181,67 @@ export class AdminController {
 
   @Get('health')
   async health() {
-    const start = Date.now();
-    const services = [];
+    const now = new Date().toISOString();
+    const services: Array<{ name: string; status: string; latencyMs?: number; lastCheckedAt: string; errorMessage?: string }> = [];
+
+    const checkService = async (name: string, url: string) => {
+      const t = Date.now();
+      try {
+        const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
+        services.push({ name, status: res.ok ? 'HEALTHY' : 'DEGRADED', latencyMs: Date.now() - t, lastCheckedAt: now });
+      } catch (err: any) {
+        services.push({ name, status: 'UNHEALTHY', latencyMs: Date.now() - t, lastCheckedAt: now, errorMessage: err?.message ?? 'Connection failed' });
+      }
+    };
 
     // Check database
     const dbStart = Date.now();
     try {
       await this.prisma.$queryRaw`SELECT 1`;
-      services.push({ name: 'PostgreSQL', status: 'healthy', latencyMs: Date.now() - dbStart });
-    } catch {
-      services.push({ name: 'PostgreSQL', status: 'down', latencyMs: Date.now() - dbStart });
+      services.push({ name: 'PostgreSQL', status: 'HEALTHY', latencyMs: Date.now() - dbStart, lastCheckedAt: now });
+    } catch (err: any) {
+      services.push({ name: 'PostgreSQL', status: 'UNHEALTHY', latencyMs: Date.now() - dbStart, lastCheckedAt: now, errorMessage: err?.message });
     }
 
-    // Check ERP service
+    // Check services in parallel
     const erpHost = process.env.ERP_SERVICE_HOST ?? 'localhost';
     const erpPort = process.env.ERP_SERVICE_PORT ?? '4100';
-    try {
-      const erpStart = Date.now();
-      const res = await fetch(`http://${erpHost}:${erpPort}/api/v1/health`, { signal: AbortSignal.timeout(3000) });
-      services.push({ name: 'ERP Service', status: res.ok ? 'healthy' : 'degraded', latencyMs: Date.now() - erpStart });
-    } catch {
-      services.push({ name: 'ERP Service', status: 'down' });
-    }
-
-    // Check OpenClaw
     const ocHost = process.env.OPENCLAW_SERVICE_HOST ?? 'localhost';
     const ocPort = process.env.OPENCLAW_SERVICE_PORT ?? '18790';
-    try {
-      const ocStart = Date.now();
-      const res = await fetch(`http://${ocHost}:${ocPort}/health`, { signal: AbortSignal.timeout(3000) });
-      services.push({ name: 'OpenClaw Gateway', status: res.ok ? 'healthy' : 'degraded', latencyMs: Date.now() - ocStart });
-    } catch {
-      services.push({ name: 'OpenClaw Gateway', status: 'down' });
-    }
-
-    // Check RAG
     const ragHost = process.env.RAG_SERVICE_HOST ?? 'localhost';
     const ragPort = process.env.RAG_SERVICE_PORT ?? '4300';
-    try {
-      const ragStart = Date.now();
-      const res = await fetch(`http://${ragHost}:${ragPort}/health`, { signal: AbortSignal.timeout(3000) });
-      services.push({ name: 'RAG Service', status: res.ok ? 'healthy' : 'degraded', latencyMs: Date.now() - ragStart });
-    } catch {
-      services.push({ name: 'RAG Service', status: 'down' });
-    }
-
-    // Check AI Engine
     const aiHost = process.env.AI_ENGINE_SERVICE_HOST ?? 'localhost';
     const aiPort = process.env.AI_ENGINE_SERVICE_PORT ?? '4200';
-    try {
-      const aiStart = Date.now();
-      const res = await fetch(`http://${aiHost}:${aiPort}/api/v1/llm/health`, { signal: AbortSignal.timeout(3000) });
-      services.push({ name: 'AI Engine', status: res.ok ? 'healthy' : 'degraded', latencyMs: Date.now() - aiStart });
-    } catch {
-      services.push({ name: 'AI Engine', status: 'down' });
-    }
 
-    // Process uptime
-    const uptime = Math.floor(process.uptime());
+    await Promise.all([
+      checkService('ERP Service', `http://${erpHost}:${erpPort}/api/v1/health`),
+      checkService('OpenClaw Gateway', `http://${ocHost}:${ocPort}/health`),
+      checkService('RAG Service', `http://${ragHost}:${ragPort}/health`),
+      checkService('AI Engine', `http://${aiHost}:${aiPort}/api/v1/llm/health`),
+    ]);
 
-    return { services, uptime, timestamp: new Date().toISOString(), totalMs: Date.now() - start };
+    const hasUnhealthy = services.some(s => s.status === 'UNHEALTHY');
+    const hasDegraded = services.some(s => s.status === 'DEGRADED');
+    const overallStatus = hasUnhealthy ? 'DEGRADED' : hasDegraded ? 'DEGRADED' : 'HEALTHY';
+
+    const uptimeSec = Math.floor(process.uptime());
+    const cpus = os.cpus();
+    const totalMem = os.totalmem();
+    const usedMem = totalMem - os.freemem();
+
+    const clusterNodes = [
+      {
+        nodeId: os.hostname(),
+        host: os.hostname(),
+        role: 'primary' as const,
+        status: overallStatus,
+        cpuPercent: Math.round(os.loadavg()[0] / cpus.length * 100),
+        memoryPercent: Math.round((usedMem / totalMem) * 100),
+        uptime: uptimeSec,
+      },
+    ];
+
+    return { overallStatus, services, clusterNodes, checkedAt: now };
   }
 
   // ─── Platform Overview ──────────────────────────────────────────────────
