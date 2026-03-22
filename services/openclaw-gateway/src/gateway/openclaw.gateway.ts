@@ -467,7 +467,7 @@ export class OpenClawGateway
     }
   }
 
-  private handlePtyDestroy(client: WebSocket, message: IncomingMessage): void {
+  private handlePtyDestroy(client: WebSocket, message: PtyMessage): void {
     const tracked = client as TrackedSocket;
     const { sessionId } = message.payload as Record<string, any>;
     if (sessionId) {
