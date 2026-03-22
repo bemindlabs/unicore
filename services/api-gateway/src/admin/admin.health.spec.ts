@@ -86,7 +86,7 @@ describe('AdminController — health endpoint', () => {
     const result = await controller.health();
 
     const erp = result.services.find((s: any) => s.name === 'ERP Service');
-    expect(erp.status).toBe('healthy');
+    expect(erp!.status).toBe('healthy');
   });
 
   it('marks ERP Service as degraded when fetch returns ok=false', async () => {
@@ -96,7 +96,7 @@ describe('AdminController — health endpoint', () => {
     const result = await controller.health();
 
     const erp = result.services.find((s: any) => s.name === 'ERP Service');
-    expect(erp.status).toBe('degraded');
+    expect(erp!.status).toBe('degraded');
   });
 
   it('marks services as down when fetch throws', async () => {
@@ -106,7 +106,7 @@ describe('AdminController — health endpoint', () => {
     const result = await controller.health();
 
     const erp = result.services.find((s: any) => s.name === 'ERP Service');
-    expect(erp.status).toBe('down');
+    expect(erp!.status).toBe('down');
   });
 
   it('includes all expected services in response', async () => {
