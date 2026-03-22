@@ -459,7 +459,7 @@ export class OpenClawGateway
     }
   }
 
-  private handlePtyResize(client: WebSocket, message: IncomingMessage): void {
+  private handlePtyResize(client: WebSocket, message: PtyMessage): void {
     const tracked = client as TrackedSocket;
     const { sessionId, cols, rows } = message.payload as Record<string, any>;
     if (sessionId && cols && rows) {
