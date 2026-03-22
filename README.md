@@ -150,7 +150,9 @@ unicore/
 │   ├── ui/                        # @unicore/ui — shared components (shadcn/ui)
 │   ├── shared-types/              # @unicore/shared-types — TypeScript types
 │   ├── config/                    # @unicore/config — ESLint, Tailwind, TS configs
-│   └── integrations/              # @unicore/integrations — 3rd-party API wrappers
+│   ├── integrations/              # @unicore/integrations — 3rd-party API wrappers
+│   ├── branding/                  # @unicore/branding — community base theming
+│   └── plugin-sdk/                # @unicore/plugin-sdk — loader, lifecycle, sandbox, events, dep resolver
 ├── templates/                     # Business templates (industry presets)
 ├── agents/                        # Agent extension points (pluggable)
 ├── e2e/                           # Playwright E2E tests
