@@ -73,12 +73,17 @@ export class OrderConsumerService {
     const payload = await deserializePayload(OrderUpdatedPayloadDto, envelope.payload);
     if (!payload) return;
 
-    await this.eventHandler.handle({ ...envelope, payload }, async (p) => {
-      this.logger.log(
-        `order.updated — orderId=${p.orderId} ${p.previousStatus} → ${p.newStatus}`,
-      );
-      await this.workflowService.handleEvent(WORKFLOW_TOPICS.ORDER_UPDATED, p);
-    });
+    await this.retryService.withRetry(
+      async () => {
+        await this.eventHandler.handle({ ...envelope, payload }, async (p) => {
+          this.logger.log(
+            `order.updated — orderId=${p.orderId} ${p.previousStatus} → ${p.newStatus}`,
+          );
+          await this.workflowService.handleEvent(WORKFLOW_TOPICS.ORDER_UPDATED, p);
+        });
+      },
+      { topic: WORKFLOW_TOPICS.ORDER_UPDATED, eventId: envelope.eventId, originalPayload: payload },
+    );
   }
 
   // ---------------------------------------------------------------------------
