@@ -427,7 +427,7 @@ export function CommandCenter() {
         : 'border-[var(--bo-border)] bg-[var(--bo-bg)]'
     }`}>
       {/* ---- Top (mobile) / Left (desktop): Agent Selector ---- */}
-      <aside className={`md:w-64 flex-shrink-0 border-b md:border-b-0 md:border-r overflow-x-auto md:overflow-x-hidden md:overflow-y-auto ${
+      <aside className={`md:w-56 flex-shrink-0 border-b md:border-b-0 md:border-r overflow-x-auto md:overflow-x-hidden md:overflow-y-auto ${
         isRetroDesk
           ? 'border-[var(--retrodesk-border)] bg-[var(--retrodesk-surface)]'
           : 'border-[var(--bo-border)] bg-[var(--bo-bg)]'
@@ -438,52 +438,97 @@ export function CommandCenter() {
           <h2 className={`text-[10px] uppercase tracking-wider ${
             isRetroDesk ? 'retrodesk-heading text-[var(--retrodesk-pink)]' : 'font-mono text-[var(--bo-text-muted)]'
           }`}>
-            Select Agent
+            Agent Roster
           </h2>
         </div>
-        <div className="flex md:flex-col p-2 gap-1 md:space-y-1 md:gap-0 overflow-x-auto md:overflow-x-hidden">
-          {agents.map((agent) => {
-            const active = selectedAgent?.id === agent.id;
-            return (
-              <button
-                key={agent.id}
-                onClick={() => handleAgentClick(agent)}
-                className={`flex-shrink-0 md:flex-shrink md:w-full text-left rounded-md px-3 py-2.5 transition-colors ${
-                  isRetroDesk
-                    ? active
-                      ? 'bg-[color-mix(in_srgb,var(--retrodesk-pink)_10%,transparent)] border-2 border-[var(--retrodesk-pink)]'
-                      : 'hover:bg-[color-mix(in_srgb,var(--retrodesk-pink)_5%,transparent)] border-2 border-transparent'
-                    : active
-                      ? 'bg-[var(--bo-accent-15)] border border-[var(--bo-border-accent)]'
-                      : 'hover:bg-[var(--bo-accent-5)] border border-transparent'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span
-                    className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                    style={{ background: agent.color }}
-                  />
-                  <span
-                    className={`text-xs font-bold tracking-wider whitespace-nowrap ${
-                      isRetroDesk
-                        ? active ? 'retrodesk-mono text-[var(--retrodesk-text)]' : 'retrodesk-mono text-[var(--retrodesk-muted)]'
-                        : active ? 'font-mono text-[var(--bo-text-accent-2)]' : 'font-mono text-[var(--bo-text-info)]'
-                    }`}
-                  >
-                    {agent.name}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between mt-1 ml-[18px]">
-                  <span className={`text-[10px] font-mono truncate ${
-                    isRetroDesk ? 'text-[var(--retrodesk-muted)]' : 'text-[var(--bo-text-muted)]'
-                  }`}>
-                    {agent.role}
-                  </span>
-                  <StatusIndicator status={agent.status} />
-                </div>
-              </button>
+        <div className="flex md:flex-col overflow-x-auto md:overflow-x-hidden">
+          {/* --- COMMAND group --- */}
+          {(() => {
+            const commandAgents = agents.filter((a) => a.id === 'router');
+            const specialistAgents = agents.filter((a) =>
+              ['comms', 'finance', 'growth', 'ops', 'research', 'erp', 'builder'].includes(a.id)
             );
-          })}
+            const securityAgents = agents.filter((a) => a.id === 'sentinel');
+            // Catch any agents that don't fit predefined groups
+            const knownIds = new Set(['router', 'comms', 'finance', 'growth', 'ops', 'research', 'erp', 'builder', 'sentinel']);
+            const otherAgents = agents.filter((a) => !knownIds.has(a.id));
+
+            const groups: { label: string; icon: React.ReactNode; agents: BackofficeAgent[] }[] = [
+              { label: 'COMMAND', icon: <Cpu className="w-3 h-3" />, agents: commandAgents },
+              { label: 'SPECIALISTS', icon: <Users className="w-3 h-3" />, agents: specialistAgents },
+              { label: 'SECURITY', icon: <Shield className="w-3 h-3" />, agents: securityAgents },
+            ];
+            if (otherAgents.length > 0) {
+              groups.push({ label: 'OTHER', icon: <Users className="w-3 h-3" />, agents: otherAgents });
+            }
+
+            return groups.filter((g) => g.agents.length > 0).map((group, gi) => (
+              <div key={group.label}>
+                {/* Section header (desktop only) */}
+                <div className={`hidden md:flex items-center gap-1.5 px-4 pt-3 pb-1.5 ${
+                  gi > 0 ? `border-t ${isRetroDesk ? 'border-[var(--retrodesk-border)]' : 'border-[var(--bo-border)]'}` : ''
+                }`}>
+                  <span className={isRetroDesk ? 'text-[var(--retrodesk-muted)]' : 'text-[var(--bo-text-dimmer)]'}>
+                    {group.icon}
+                  </span>
+                  <span className={`text-[9px] uppercase tracking-widest ${
+                    isRetroDesk ? 'retrodesk-mono text-[var(--retrodesk-muted)]' : 'font-mono text-[var(--bo-text-dimmer)]'
+                  }`}>
+                    {group.label}
+                  </span>
+                </div>
+                <div className="flex md:flex-col px-2 pb-1 gap-0.5 md:gap-0 md:space-y-0.5">
+                  {group.agents.map((agent) => {
+                    const active = selectedAgent?.id === agent.id;
+                    const statusColor =
+                      agent.status === 'working' ? 'bg-green-400' :
+                      agent.status === 'idle' ? 'bg-yellow-400' :
+                      'bg-red-500';
+
+                    return (
+                      <button
+                        key={agent.id}
+                        onClick={() => handleAgentClick(agent)}
+                        className={`flex-shrink-0 md:flex-shrink md:w-full text-left rounded-md px-3 py-2 transition-all duration-150 ${
+                          isRetroDesk
+                            ? active
+                              ? 'bg-[color-mix(in_srgb,var(--retrodesk-pink)_15%,transparent)] border-2 border-[var(--retrodesk-pink)] shadow-[0_0_8px_rgba(255,105,180,0.2)]'
+                              : 'hover:bg-[color-mix(in_srgb,var(--retrodesk-pink)_5%,transparent)] border-2 border-transparent'
+                            : active
+                              ? 'bg-[var(--bo-accent-15)] border border-[var(--bo-border-accent)] shadow-[inset_0_0_0_1px_var(--bo-accent-20)]'
+                              : 'hover:bg-[var(--bo-accent-5)] border border-transparent hover:border-[var(--bo-border)] hover:shadow-sm'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="w-2 h-2 rounded-full flex-shrink-0"
+                            style={{ background: agent.color }}
+                          />
+                          <span
+                            className={`text-xs font-bold tracking-wider whitespace-nowrap flex-1 ${
+                              isRetroDesk
+                                ? active ? 'retrodesk-mono text-[var(--retrodesk-text)]' : 'retrodesk-mono text-[var(--retrodesk-muted)]'
+                                : active ? 'font-mono text-[var(--bo-text-accent-2)]' : 'font-mono text-[var(--bo-text-info)]'
+                            }`}
+                          >
+                            {agent.name}
+                          </span>
+                          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusColor} ${
+                            agent.status === 'working' ? 'animate-pulse' : ''
+                          }`} />
+                        </div>
+                        <p className={`text-[10px] font-mono truncate mt-0.5 ml-[16px] ${
+                          isRetroDesk ? 'text-[var(--retrodesk-muted)]' : 'text-[var(--bo-text-muted)]'
+                        }`}>
+                          {agent.role}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ));
+          })()}
         </div>
       </aside>
 
