@@ -100,6 +100,12 @@ export class AuthService implements OnModuleDestroy {
       return null;
     }
 
+    // OAuth-only accounts have no password — reject password login
+    if (!user.password) {
+      this.logger.warn(`Password login rejected for OAuth-only account: ${email}`);
+      return null;
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       this.recordFailedAttempt(email);
@@ -109,6 +115,119 @@ export class AuthService implements OnModuleDestroy {
 
     this.loginAttempts.delete(email);
     return { id: user.id, email: user.email, name: user.name, role: user.role };
+  }
+
+  // ---------------------------------------------------------------------------
+  // OAuth
+  // ---------------------------------------------------------------------------
+
+  async validateOAuthUser(
+    provider: string,
+    profile: {
+      providerAccountId: string;
+      email: string | null;
+      name: string;
+      avatarUrl: string | null;
+      accessToken: string;
+      refreshToken: string | null;
+    },
+  ): Promise<{ id: string; email: string; name: string; role: string }> {
+    // 1. Check if this OAuth account is already linked
+    const existing = await this.prisma.oAuthAccount.findUnique({
+      where: {
+        provider_providerAccountId: {
+          provider,
+          providerAccountId: profile.providerAccountId,
+        },
+      },
+      include: {
+        user: { select: { id: true, email: true, name: true, role: true } },
+      },
+    });
+
+    if (existing) {
+      // Update tokens on the OAuth account
+      await this.prisma.oAuthAccount.update({
+        where: { id: existing.id },
+        data: {
+          accessToken: profile.accessToken,
+          refreshToken: profile.refreshToken,
+          email: profile.email,
+          name: profile.name,
+          avatarUrl: profile.avatarUrl,
+        },
+      });
+      this.logger.log(`OAuth login (${provider}): ${existing.user.email}`);
+      return existing.user;
+    }
+
+    // 2. If we have an email, check if a user with that email exists
+    if (profile.email) {
+      const userByEmail = await this.prisma.user.findUnique({
+        where: { email: profile.email },
+        select: { id: true, email: true, name: true, role: true },
+      });
+
+      if (userByEmail) {
+        // Link OAuth account to existing user
+        await this.linkOAuthAccount(userByEmail.id, provider, profile);
+        this.logger.log(
+          `OAuth account linked (${provider}): ${userByEmail.email}`,
+        );
+        return userByEmail;
+      }
+    }
+
+    // 3. Create a new user + OAuth account (no password)
+    const email = profile.email || `${provider}-${profile.providerAccountId}@oauth.local`;
+    const user = await this.prisma.user.create({
+      data: {
+        email,
+        name: profile.name,
+        password: null,
+        oauthAccounts: {
+          create: {
+            provider,
+            providerAccountId: profile.providerAccountId,
+            email: profile.email,
+            name: profile.name,
+            avatarUrl: profile.avatarUrl,
+            accessToken: profile.accessToken,
+            refreshToken: profile.refreshToken,
+          },
+        },
+      },
+      select: { id: true, email: true, name: true, role: true },
+    });
+
+    this.logger.log(`New OAuth user registered (${provider}): ${user.email}`);
+    return user;
+  }
+
+  async linkOAuthAccount(
+    userId: string,
+    provider: string,
+    profile: {
+      providerAccountId: string;
+      email: string | null;
+      name: string;
+      avatarUrl: string | null;
+      accessToken: string;
+      refreshToken: string | null;
+    },
+  ): Promise<void> {
+    await this.prisma.oAuthAccount.create({
+      data: {
+        userId,
+        provider,
+        providerAccountId: profile.providerAccountId,
+        email: profile.email,
+        name: profile.name,
+        avatarUrl: profile.avatarUrl,
+        accessToken: profile.accessToken,
+        refreshToken: profile.refreshToken,
+      },
+    });
   }
 
   async register(dto: RegisterDto): Promise<AuthResponseDto> {
