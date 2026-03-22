@@ -660,10 +660,12 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
           </button>
 
           {showSettings && (
-             <div className="absolute inset-x-0 bottom-0 top-auto mx-auto w-96 mb-20 bg-[var(--retrodesk-surface)] border-[6px] shadow-2xl p-6 z-[200] animate-in slide-in-from-bottom" style={{ borderColor: 'var(--retrodesk-border)' }}>
+             <div className="absolute inset-x-0 bottom-0 top-auto mx-auto w-96 mb-20 bg-[var(--retrodesk-surface)] border-[6px] shadow-2xl p-6 z-[10000] animate-in slide-in-from-bottom" style={{ borderColor: 'var(--retrodesk-border)' }}>
                <div className="border-b-4 pb-2 mb-4 flex justify-between items-center" style={{ borderColor: 'var(--retrodesk-border)' }}>
                  <h2 className="font-mono text-[14px] font-black tracking-widest uppercase text-[var(--retrodesk-text)]">Map Directives</h2>
-                 <button onClick={() => setShowSettings(false)} className="text-[14px] font-bold hover:text-red-500" aria-label="Close settings">X</button>
+                 <button onClick={() => setShowSettings(false)} className="p-1 hover:text-red-500 text-[var(--retrodesk-text)] transition-colors" aria-label="Close settings">
+                   <X className="w-4 h-4" />
+                 </button>
                </div>
                
                <div className="flex flex-col gap-6">
