@@ -30,6 +30,7 @@ export const THEME_OPTIONS: ThemeOption[] = [
 export function resolveTheme(id: string): ResolvedTheme {
   switch (id) {
     case 'retrodesk': return { characterTheme: 'retrodesk', colorScheme: 'dark' };
+    case 'crypto':    return { characterTheme: 'crypto', colorScheme: 'dark' };
     case 'light':     return { characterTheme: null, colorScheme: 'light' };
     case 'dark':      return { characterTheme: null, colorScheme: 'dark' };
     default:          return { characterTheme: null, colorScheme: 'system' };
