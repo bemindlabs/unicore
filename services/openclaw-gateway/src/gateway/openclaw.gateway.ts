@@ -136,6 +136,10 @@ export class OpenClawGateway
             case 'message:subscribe':  this.handleSubscribe(socket, msg); break;
             case 'message:unsubscribe': this.handleUnsubscribe(socket, msg); break;
             case 'system:ping':        this.handlePing(socket, msg); break;
+            case 'pty:create':         this.handlePtyCreate(socket, msg); break;
+            case 'pty:input':          this.handlePtyInput(socket, msg); break;
+            case 'pty:resize':         this.handlePtyResize(socket, msg); break;
+            case 'pty:destroy':        this.handlePtyDestroy(socket, msg); break;
             default:
               socket.send(JSON.stringify({
                 type: 'system:error',
