@@ -1095,23 +1095,18 @@ describe('Agent Communication Protocol (E2E)', () => {
 
   describe('Chat Bridge (Router Agent Integration)', () => {
     it('should trigger RouterAgent when dashboard-ui publishes to a chat-agent-* channel', async () => {
-      const wsDash = trackWs(await connectWs(defaultToken));
-      const wsSub = trackWs(await connectWs(makeJwt('chat-sub')));
+      const dash = trackWs(await connectBuffered(defaultToken));
+      const sub = trackWs(await connectBuffered(makeJwt('chat-sub')));
 
-      // Register as dashboard-ui (the special sender that triggers the bridge)
-      await registerAgent(wsDash, 'dashboard-ui', { name: 'Dashboard', type: 'ui' });
-      await registerAgent(wsSub, 'chat-listener', { type: 'listener' });
+      await registerAgent(dash, 'dashboard-ui', { name: 'Dashboard', type: 'ui' });
+      await registerAgent(sub, 'chat-listener', { type: 'listener' });
 
       // Subscribe listener to the chat channel
-      wsSend(wsSub, {
-        ...baseMsg(),
-        type: 'message:subscribe',
-        payload: { agentId: 'chat-listener', channel: 'chat-agent-session-abc' },
-      });
-      await waitForMessage(wsSub); // ack
+      sub.send({ ...baseMsg(), type: 'message:subscribe', payload: { agentId: 'chat-listener', channel: 'chat-agent-session-abc' } });
+      await sub.nextMessage(); // ack
 
       // Dashboard publishes a chat message
-      wsSend(wsDash, {
+      dash.send({
         ...baseMsg(),
         type: 'message:publish',
         payload: {
@@ -1121,12 +1116,11 @@ describe('Agent Communication Protocol (E2E)', () => {
         },
       });
 
-      // Dashboard gets ack
-      const ack = await waitForMessage(wsDash);
+      const ack = await dash.nextMessage();
       expect(ack.type).toBe('system:ack');
 
       // Subscriber should receive the AI response (published by router)
-      const aiResponse = await waitForMessage(wsSub, 5000);
+      const aiResponse = await sub.nextMessage(5000);
       expect(aiResponse.type).toBe('message:publish');
       expect(aiResponse.payload.channel).toBe('chat-agent-session-abc');
       expect((aiResponse.payload.data as any).authorType).toBe('agent');
@@ -1136,18 +1130,13 @@ describe('Agent Communication Protocol (E2E)', () => {
     });
 
     it('should trigger RouterAgent on command-* channels', async () => {
-      const wsDash = trackWs(await connectWs(defaultToken));
-      await registerAgent(wsDash, 'dashboard-ui', { name: 'Dashboard', type: 'ui' });
+      const dash = trackWs(await connectBuffered(defaultToken));
+      await registerAgent(dash, 'dashboard-ui', { name: 'Dashboard', type: 'ui' });
 
-      // Subscribe dashboard to command channel
-      wsSend(wsDash, {
-        ...baseMsg(),
-        type: 'message:subscribe',
-        payload: { agentId: 'dashboard-ui', channel: 'command-ops' },
-      });
-      await waitForMessage(wsDash); // ack
+      dash.send({ ...baseMsg(), type: 'message:subscribe', payload: { agentId: 'dashboard-ui', channel: 'command-ops' } });
+      await dash.nextMessage(); // ack
 
-      wsSend(wsDash, {
+      dash.send({
         ...baseMsg(),
         type: 'message:publish',
         payload: {
@@ -1157,27 +1146,23 @@ describe('Agent Communication Protocol (E2E)', () => {
         },
       });
 
-      const ack = await waitForMessage(wsDash);
+      const ack = await dash.nextMessage();
       expect(ack.type).toBe('system:ack');
 
       // Dashboard receives the AI response on same channel
-      const aiMsg = await waitForMessage(wsDash, 5000);
+      const aiMsg = await dash.nextMessage(5000);
       expect(aiMsg.type).toBe('message:publish');
       expect(aiMsg.payload.channel).toBe('command-ops');
     });
 
     it('should trigger RouterAgent on chat-backoffice channel', async () => {
-      const wsDash = trackWs(await connectWs(defaultToken));
-      await registerAgent(wsDash, 'dashboard-ui', { name: 'Dashboard', type: 'ui' });
+      const dash = trackWs(await connectBuffered(defaultToken));
+      await registerAgent(dash, 'dashboard-ui', { name: 'Dashboard', type: 'ui' });
 
-      wsSend(wsDash, {
-        ...baseMsg(),
-        type: 'message:subscribe',
-        payload: { agentId: 'dashboard-ui', channel: 'chat-backoffice' },
-      });
-      await waitForMessage(wsDash);
+      dash.send({ ...baseMsg(), type: 'message:subscribe', payload: { agentId: 'dashboard-ui', channel: 'chat-backoffice' } });
+      await dash.nextMessage(); // ack
 
-      wsSend(wsDash, {
+      dash.send({
         ...baseMsg(),
         type: 'message:publish',
         payload: {
@@ -1187,28 +1172,24 @@ describe('Agent Communication Protocol (E2E)', () => {
         },
       });
 
-      await waitForMessage(wsDash); // ack
-      const aiMsg = await waitForMessage(wsDash, 5000);
+      await dash.nextMessage(); // ack
+      const aiMsg = await dash.nextMessage(5000);
       expect(aiMsg.type).toBe('message:publish');
       expect(aiMsg.payload.channel).toBe('chat-backoffice');
     });
 
     it('should NOT trigger RouterAgent for non-dashboard-ui publishers on chat channels', async () => {
-      const ws = trackWs(await connectWs(defaultToken));
-      const wsSub = trackWs(await connectWs(makeJwt('chat-watch')));
+      const agent = trackWs(await connectBuffered(defaultToken));
+      const watcher = trackWs(await connectBuffered(makeJwt('chat-watch')));
 
-      await registerAgent(ws, 'random-agent');
-      await registerAgent(wsSub, 'chat-watcher');
+      await registerAgent(agent, 'random-agent');
+      await registerAgent(watcher, 'chat-watcher');
 
-      wsSend(wsSub, {
-        ...baseMsg(),
-        type: 'message:subscribe',
-        payload: { agentId: 'chat-watcher', channel: 'chat-agent-test' },
-      });
-      await waitForMessage(wsSub);
+      watcher.send({ ...baseMsg(), type: 'message:subscribe', payload: { agentId: 'chat-watcher', channel: 'chat-agent-test' } });
+      await watcher.nextMessage(); // ack
 
       // Non-dashboard-ui agent publishes on chat channel
-      wsSend(ws, {
+      agent.send({
         ...baseMsg(),
         type: 'message:publish',
         payload: {
@@ -1218,16 +1199,16 @@ describe('Agent Communication Protocol (E2E)', () => {
         },
       });
 
-      const ack = await waitForMessage(ws);
+      const ack = await agent.nextMessage();
       expect(ack.type).toBe('system:ack');
 
       // Subscriber should receive the original message but no AI response
-      const msg = await waitForMessage(wsSub);
+      const msg = await watcher.nextMessage();
       expect(msg.type).toBe('message:publish');
       expect(msg.payload.fromAgentId).toBe('random-agent');
 
       // No AI response should follow
-      await expect(waitForMessage(wsSub, 1000)).rejects.toThrow('Timed out');
+      await expect(watcher.nextMessage(1000)).rejects.toThrow('Timed out');
     });
 
     it('should NOT trigger RouterAgent for non-chat channels from dashboard-ui', async () => {
