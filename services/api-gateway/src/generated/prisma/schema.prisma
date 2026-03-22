@@ -1,0 +1,267 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  name          String
+  password      String
+  role          Role           @default(VIEWER)
+  sessions      Session[]
+  notifications Notification[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token        String   @unique
+  refreshToken String?  @unique
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+}
+
+enum Role {
+  OWNER
+  OPERATOR
+  MARKETER
+  FINANCE
+  VIEWER
+}
+
+// ---------------------------------------------------------------------------
+// Custom Domain Routing (UNC-55)
+// ---------------------------------------------------------------------------
+
+/// A custom domain owned by a tenant, used to route incoming requests.
+model CustomDomain {
+  id             String   @id @default(uuid())
+  /// Normalized hostname without port (e.g. "app.acme.com")
+  hostname       String   @unique
+  /// UUID of the owning tenant
+  tenantId       String
+  /// DNS-verified flag — unverified domains are stored but not routed
+  isVerified     Boolean  @default(false)
+  /// Allowed CORS origins for this domain (JSON array stored as Text[])
+  allowedOrigins String[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("custom_domains")
+}
+
+// ---------------------------------------------------------------------------
+// Audit Logging
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  timestamp  DateTime @default(now())
+  userId     String?
+  userEmail  String?
+  action     String // create, update, delete, login, logout
+  resource   String // contacts, orders, users, auth
+  resourceId String?
+  detail     String? // e.g. "Created contact John Doe"
+  ip         String?
+  success    Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  @@index([timestamp])
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+  @@map("audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Settings Persistence (key-value JSON store for dashboard settings)
+// ---------------------------------------------------------------------------
+
+model Settings {
+  id        String   @id @default("default")
+  data      Json     @default("{}")
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Tasks Board
+// ---------------------------------------------------------------------------
+
+model Task {
+  id            String    @id @default(uuid())
+  title         String
+  description   String?
+  status        String    @default("todo")
+  priority      String    @default("medium")
+  labels        String[]  @default([])
+  assigneeId    String?
+  assigneeType  String?
+  assigneeName  String?
+  assigneeColor String?
+  creatorId     String
+  creatorType   String    @default("human")
+  progress      Int       @default(0)
+  agentTaskRef  String?
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([status])
+  @@map("tasks")
+}
+
+// ---------------------------------------------------------------------------
+// Chat History (UNC-118)
+// ---------------------------------------------------------------------------
+
+model ChatHistory {
+  id        String   @id @default(uuid())
+  agentId   String
+  agentName String
+  userId    String
+  userName  String
+  messages  Json     @default("[]")
+  summary   String?
+  channel   String   @default("command")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([agentId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([agentId, createdAt])
+  @@index([userId, createdAt])
+  @@map("chat_histories")
+}
+
+// ---------------------------------------------------------------------------
+// Chat Messages (OpenClaw WebSocket persistence)
+// Individual persisted messages for history, replay, and dashboard load.
+// ---------------------------------------------------------------------------
+
+model ChatMessage {
+  id          String   @id @default(uuid())
+  messageId   String   @unique
+  channel     String
+  fromAgentId String
+  data        Json     @default("{}")
+  createdAt   DateTime @default(now())
+
+  @@index([channel])
+  @@index([channel, createdAt])
+  @@index([fromAgentId])
+  @@map("chat_messages")
+}
+
+// ---------------------------------------------------------------------------
+// Gamification (UNC-523) — Geek CLI game stats synced from CLI clients
+// ---------------------------------------------------------------------------
+
+model Gamification {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  xp              Int      @default(0)
+  level           Int      @default(1)
+  tier            String   @default("Intern")
+  currentStreak   Int      @default(0)
+  longestStreak   Int      @default(0)
+  achievements    Json     @default("[]")
+  actionCounts    Json     @default("{}")
+  totalPlayTimeMs Int      @default(0)
+  lastSyncedAt    DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([xp])
+  @@index([level])
+  @@map("gamification")
+}
+
+// ---------------------------------------------------------------------------
+// Plugin Registry (UNC-537)
+// ---------------------------------------------------------------------------
+
+model Plugin {
+  id            String               @id @default(uuid())
+  name          String
+  slug          String               @unique
+  type          String // 'integration' | 'ai' | 'workflow' | 'ui' | 'utility'
+  author        String
+  version       String // latest published version
+  description   String
+  icon          String?
+  downloads     Int                  @default(0)
+  rating        Float                @default(0)
+  versions      PluginVersion[]
+  installations PluginInstallation[]
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  @@index([type])
+  @@map("plugins")
+}
+
+model PluginVersion {
+  id            String   @id @default(uuid())
+  pluginId      String
+  plugin        Plugin   @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  semver        String
+  changelog     String?
+  artifactUrl   String
+  checksum      String
+  compatibility Json     @default("{}") // { minApiVersion?, maxApiVersion?, nodeVersion? }
+  createdAt     DateTime @default(now())
+
+  @@unique([pluginId, semver])
+  @@index([pluginId])
+  @@map("plugin_versions")
+}
+
+model PluginInstallation {
+  id          String   @id @default(uuid())
+  instanceId  String
+  pluginId    String
+  plugin      Plugin   @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  version     String
+  enabled     Boolean  @default(true)
+  config      Json     @default("{}")
+  installedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([instanceId, pluginId])
+  @@index([instanceId])
+  @@index([pluginId])
+  @@map("plugin_installations")
+}
+
+// ---------------------------------------------------------------------------
+// Notifications
+// ---------------------------------------------------------------------------
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // 'info' | 'warning' | 'success' | 'error'
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  link      String? // optional link to navigate to
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
