@@ -1791,67 +1791,63 @@ describe('Agent Communication Protocol (E2E)', () => {
     });
 
     it('should handle pub/sub fan-out to many subscribers', async () => {
-      const publisher = trackWs(await connectWs(defaultToken));
-      await registerAgent(publisher, 'fanout-pub');
+      const pub = trackWs(await connectBuffered(defaultToken));
+      await registerAgent(pub, 'fanout-pub');
 
       const subscriberCount = 5;
-      const subscribers: WebSocket[] = [];
+      const subscribers: BufferedSocket[] = [];
 
       for (let i = 0; i < subscriberCount; i++) {
-        const ws = trackWs(await connectWs(makeJwt(`fan-sub-${i}`)));
-        await registerAgent(ws, `fanout-sub-${i}`);
-        wsSend(ws, {
-          ...baseMsg(),
-          type: 'message:subscribe',
-          payload: { agentId: `fanout-sub-${i}`, channel: 'fanout-channel' },
-        });
-        await waitForMessage(ws); // ack
-        subscribers.push(ws);
+        const sub = trackWs(await connectBuffered(makeJwt(`fan-sub-${i}`)));
+        await registerAgent(sub, `fanout-sub-${i}`);
+        sub.send({ ...baseMsg(), type: 'message:subscribe', payload: { agentId: `fanout-sub-${i}`, channel: 'fanout-channel' } });
+        await sub.nextMessage(); // ack
+        subscribers.push(sub);
       }
 
       // Publish
-      wsSend(publisher, {
+      pub.send({
         ...baseMsg(),
         type: 'message:publish',
         payload: { fromAgentId: 'fanout-pub', channel: 'fanout-channel', data: { fanout: true } },
       });
 
-      const pubAck = await waitForMessage(publisher);
+      const pubAck = await pub.nextMessage();
       expect((pubAck.payload.result as any).deliveredTo).toBe(subscriberCount);
 
       // All subscribers should receive the message
       for (const sub of subscribers) {
-        const msg = await waitForMessage(sub);
+        const msg = await sub.nextMessage();
         expect(msg.type).toBe('message:publish');
         expect(msg.payload.data).toEqual({ fanout: true });
       }
     });
 
     it('should handle bidirectional direct messaging between two agents', async () => {
-      const wsA = trackWs(await connectWs(defaultToken));
-      const wsB = trackWs(await connectWs(makeJwt('bidir-b')));
+      const a = trackWs(await connectBuffered(defaultToken));
+      const b = trackWs(await connectBuffered(makeJwt('bidir-b')));
 
-      await registerAgent(wsA, 'agent-alpha');
-      await registerAgent(wsB, 'agent-beta');
+      await registerAgent(a, 'agent-alpha');
+      await registerAgent(b, 'agent-beta');
 
       // A → B
-      wsSend(wsA, {
+      a.send({
         ...baseMsg(),
         type: 'message:direct',
         payload: { fromAgentId: 'agent-alpha', toAgentId: 'agent-beta', topic: 'ping', data: { from: 'alpha' } },
       });
-      await waitForMessage(wsA); // ack
-      const msgToB = await waitForMessage(wsB);
+      await a.nextMessage(); // ack
+      const msgToB = await b.nextMessage();
       expect(msgToB.payload.fromAgentId).toBe('agent-alpha');
 
       // B → A
-      wsSend(wsB, {
+      b.send({
         ...baseMsg(),
         type: 'message:direct',
         payload: { fromAgentId: 'agent-beta', toAgentId: 'agent-alpha', topic: 'pong', data: { from: 'beta' } },
       });
-      await waitForMessage(wsB); // ack
-      const msgToA = await waitForMessage(wsA);
+      await b.nextMessage(); // ack
+      const msgToA = await a.nextMessage();
       expect(msgToA.payload.fromAgentId).toBe('agent-beta');
     });
   });
