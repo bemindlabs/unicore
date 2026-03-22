@@ -7,24 +7,58 @@
  * Updated: 2026-03-22
  */
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, Module } from '@nestjs/common';
 import { WsAdapter } from '@nestjs/platform-ws';
+import { WebSocketGateway } from '@nestjs/websockets';
 import { WebSocket } from 'ws';
 import { v4 as uuidv4 } from 'uuid';
 import * as jwt from 'jsonwebtoken';
 import * as http from 'http';
 
-// Module under test
-import { OpenClawModule } from '../src/openclaw.module';
-import { TerminalModule } from '../src/terminal/terminal.module';
+// Module under test — individual providers (to override the gateway port)
+import { OpenClawGateway } from '../src/gateway/openclaw.gateway';
+import { AgentRegistryService } from '../src/registry/agent-registry.service';
+import { MessageRouterService } from '../src/routing/message-router.service';
+import { RateLimiterService } from '../src/routing/rate-limiter.service';
+import { HeartbeatService } from '../src/health/heartbeat.service';
+import { HealthController } from '../src/health/health.controller';
 import { RouterAgent } from '../src/router/router.agent';
 import { PtySessionManager } from '../src/terminal/pty-session-manager';
 import { MessagePersistenceService } from '../src/persistence/message-persistence.service';
 
-// ─── Constants ───────────────────────────────────────────────────────────────
+// ─── Test Port Override ──────────────────────────────────────────────────────
 
-const WS_PORT = 18799; // Avoid clashing with production gateway
+// Use a free port for the WS server to avoid conflicts with the running production gateway (18789)
+const WS_PORT = 18799;
 const HTTP_PORT = 18800;
+
+/**
+ * Subclass the real gateway and override the port via @WebSocketGateway decorator.
+ * This is the only reliable way to change the port when the decorator is hardcoded.
+ */
+@WebSocketGateway(WS_PORT, { path: '/', transports: ['websocket'] })
+class TestOpenClawGateway extends OpenClawGateway {}
+
+/**
+ * Test module that wires the same providers as OpenClawModule but uses
+ * TestOpenClawGateway on a different port.
+ */
+@Module({
+  controllers: [HealthController],
+  providers: [
+    TestOpenClawGateway,
+    AgentRegistryService,
+    MessageRouterService,
+    RateLimiterService,
+    HeartbeatService,
+    PtySessionManager,
+    MessagePersistenceService,
+    // The gateway constructor expects OpenClawGateway — alias it
+    { provide: OpenClawGateway, useExisting: TestOpenClawGateway },
+  ],
+  exports: [AgentRegistryService, MessageRouterService],
+})
+class TestOpenClawModule {}
 const JWT_SECRET = 'e2e-test-secret-key-minimum-32-chars';
 const INTERNAL_SERVICE_SECRET = 'e2e-internal-service-secret';
 
