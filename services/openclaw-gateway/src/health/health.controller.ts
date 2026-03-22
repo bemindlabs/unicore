@@ -11,7 +11,7 @@ const DEFAULT_AGENTS = [
   { id: 'growth', name: 'GROWTH', type: 'growth', capabilities: ['marketing', 'analytics', 'campaigns'] },
   { id: 'ops', name: 'OPS', type: 'ops', capabilities: ['monitoring', 'deployment', 'system-health'] },
   { id: 'research', name: 'RESEARCH', type: 'research', capabilities: ['market-research', 'analysis', 'trends'] },
-  { id: 'sentinel', name: 'SENTINEL', type: 'security', capabilities: ['security-scan', 'threat-detection'] },
+  { id: 'sentinel', name: 'SENTINEL', type: 'sentinel', capabilities: ['security-scan', 'threat-detection', 'access-audit', 'incident-response'] },
   { id: 'builder', name: 'BUILDER', type: 'builder', capabilities: ['code-generation', 'feature-building'] },
   { id: 'erp', name: 'ERP', type: 'erp', capabilities: ['data-entry', 'workflow-automation'] },
 ];

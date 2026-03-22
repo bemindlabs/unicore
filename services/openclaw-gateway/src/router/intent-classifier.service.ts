@@ -19,6 +19,7 @@ const VALID_INTENTS = new Set<string>([
   'research',
   'erp',
   'builder',
+  'sentinel',
   'unknown',
 ]);
 

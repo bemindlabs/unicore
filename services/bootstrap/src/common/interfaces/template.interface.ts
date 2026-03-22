@@ -15,6 +15,7 @@ export interface TemplateAgentsConfig {
   research: boolean;
   erp: boolean;
   builder: boolean;
+  sentinel: boolean;
 }
 
 export interface TemplateDashboardConfig {

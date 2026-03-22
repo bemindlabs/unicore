@@ -22,6 +22,7 @@ import { OpsAgent } from "./ops/ops.agent";
 import { ResearchAgent } from "./research/research.agent";
 import { ErpAgent } from "./erp/erp.agent";
 import { BuilderAgent } from "./builder/builder.agent";
+import { SentinelAgent } from "./sentinel/sentinel.agent";
 
 @Injectable()
 export class SpecialistRegistryService implements OnModuleInit {
@@ -36,6 +37,7 @@ export class SpecialistRegistryService implements OnModuleInit {
     private readonly researchAgent: ResearchAgent,
     private readonly erpAgent: ErpAgent,
     private readonly builderAgent: BuilderAgent,
+    private readonly sentinelAgent: SentinelAgent,
   ) {}
 
   onModuleInit(): void {
@@ -47,6 +49,7 @@ export class SpecialistRegistryService implements OnModuleInit {
       this.researchAgent,
       this.erpAgent,
       this.builderAgent,
+      this.sentinelAgent,
     ];
 
     for (const agent of specialists) {

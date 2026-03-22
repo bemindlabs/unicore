@@ -11,7 +11,8 @@ export type AgentType =
   | 'ops'
   | 'research'
   | 'erp'
-  | 'builder';
+  | 'builder'
+  | 'sentinel';
 
 export type IntentCategory =
   | 'comms'
@@ -21,6 +22,7 @@ export type IntentCategory =
   | 'research'
   | 'erp'
   | 'builder'
+  | 'sentinel'
   | 'unknown';
 
 export interface AgentMessage {

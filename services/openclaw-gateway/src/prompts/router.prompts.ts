@@ -26,6 +26,9 @@ export const INTENT_DESCRIPTIONS: Record<IntentCategory, string> = {
   builder:
     'Technical and development — code generation, deployment automation, infrastructure ' +
     'management, API integration, debugging assistance.',
+  sentinel:
+    'Security and compliance — vulnerability scanning, access audits, threat detection, ' +
+    'incident response, dependency CVE checks, permission reviews.',
   unknown:
     'The intent does not clearly match any specialist domain, or the request is ambiguous.',
 };
@@ -67,7 +70,7 @@ Respond with a single JSON object in this exact structure:
 \`\`\`
 
 Rules:
-- "intent" must be one of: comms, finance, growth, ops, research, erp, builder, unknown
+- "intent" must be one of: comms, finance, growth, ops, research, erp, builder, sentinel, unknown
 - "confidence" must be a decimal between 0.0 and 1.0
 - "alternates" should contain the next 1–2 most likely intents if confidence < 0.85; otherwise omit or leave empty
 - "reasoning" must be a single concise sentence
@@ -93,4 +96,5 @@ Could you provide a bit more detail? For example:
 - **ERP data (contacts, orders, inventory)** — the ERP Agent can look that up
 - **Market research** — the Research Agent can dig in
 - **Growth / marketing** — the Growth Agent is on it
-- **Code / deployments** — the Builder Agent can assist`;
+- **Code / deployments** — the Builder Agent can assist
+- **Security / threats** — the Sentinel Agent can investigate`;

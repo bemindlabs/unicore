@@ -2,7 +2,7 @@
   "name": "Agency",
   "description": "Creative or professional agency with client projects and team collaboration",
   "erp": { "contacts": true, "orders": true, "inventory": false, "invoicing": true, "expenses": true, "reports": true },
-  "agents": { "comms": true, "finance": true, "growth": true, "ops": true, "research": false, "erp": false, "builder": false },
+  "agents": { "comms": true, "finance": true, "growth": true, "ops": true, "research": false, "erp": false, "builder": false, "sentinel": false },
   "dashboard": { "widgets": ["revenue", "clients", "projects", "channels"] },
   "channels": ["email", "web", "slack"],
   "workflows": ["client_onboarding", "invoice_overdue", "project_deadline"]

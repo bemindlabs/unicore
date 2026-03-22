@@ -2,7 +2,7 @@
   "name": "Professional Services",
   "description": "Law firms, accounting firms, agencies, consulting groups",
   "erp": { "contacts": true, "orders": false, "inventory": false, "invoicing": true, "expenses": true, "reports": true },
-  "agents": { "comms": true, "finance": true, "growth": false, "ops": true, "research": true, "erp": true, "builder": false },
+  "agents": { "comms": true, "finance": true, "growth": false, "ops": true, "research": true, "erp": true, "builder": false, "sentinel": true },
   "dashboard": { "widgets": ["billable_hours", "clients", "revenue", "pipeline"] },
   "channels": ["email", "web", "line"],
   "workflows": ["client_onboarding", "invoice_overdue", "timesheet_reminder", "contract_renewal"]

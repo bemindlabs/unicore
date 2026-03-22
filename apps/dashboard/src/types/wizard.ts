@@ -102,6 +102,7 @@ export const AGENT_DEFINITIONS: { type: AgentConfig['type']; name: string; descr
   { type: AgentType.Research, name: 'Research Agent', description: 'Market intelligence, competitor analysis, and trend reports', defaultChannels: ['web'] },
   { type: AgentType.Erp, name: 'ERP Agent', description: 'Natural language queries over your ERP data', defaultChannels: ['web'] },
   { type: AgentType.Builder, name: 'Builder Agent', description: 'Code generation, deployments, and technical scaffolding', defaultChannels: ['web'] },
+  { type: AgentType.Sentinel, name: 'Sentinel Agent', description: 'Security monitoring, threat detection, and vulnerability scanning', defaultChannels: ['web'] },
 ];
 
 export const ERP_MODULES: { key: keyof ErpModulesConfig; label: string; description: string }[] = [

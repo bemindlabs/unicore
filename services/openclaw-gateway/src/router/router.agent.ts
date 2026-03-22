@@ -9,6 +9,7 @@ import { OpsAgent } from '../agents/ops/ops.agent';
 import { ResearchAgent } from '../agents/research/research.agent';
 import { ErpAgent } from '../agents/erp/erp.agent';
 import { BuilderAgent } from '../agents/builder/builder.agent';
+import { SentinelAgent } from '../agents/sentinel/sentinel.agent';
 import type {
   AgentContext,
   AgentMessage,
@@ -54,6 +55,7 @@ export class RouterAgent implements OnModuleInit {
     private readonly researchAgent: ResearchAgent,
     private readonly erpAgent: ErpAgent,
     private readonly builderAgent: BuilderAgent,
+    private readonly sentinelAgent: SentinelAgent,
   ) {}
 
   // ---------------------------------------------------------------------------
@@ -70,6 +72,7 @@ export class RouterAgent implements OnModuleInit {
       this.researchAgent,
       this.erpAgent,
       this.builderAgent,
+      this.sentinelAgent,
     ];
 
     for (const agent of specialists) {

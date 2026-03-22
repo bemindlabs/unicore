@@ -11,6 +11,7 @@ import { OpsAgent } from "./ops/ops.agent";
 import { ResearchAgent } from "./research/research.agent";
 import { ErpAgent } from "./erp/erp.agent";
 import { BuilderAgent } from "./builder/builder.agent";
+import { SentinelAgent } from "./sentinel/sentinel.agent";
 import { SpecialistRegistryService } from "./agent-registry.service";
 
 export const SPECIALIST_AGENTS = [
@@ -21,6 +22,7 @@ export const SPECIALIST_AGENTS = [
   ResearchAgent,
   ErpAgent,
   BuilderAgent,
+  SentinelAgent,
 ];
 
 @Module({

@@ -179,7 +179,7 @@ export class ProvisioningService {
       { agentId: "growth", name: "GROWTH", type: "growth", capabilities: ["marketing", "analytics", "campaigns"] },
       { agentId: "ops", name: "OPS", type: "ops", capabilities: ["monitoring", "deployment", "system-health"] },
       { agentId: "research", name: "RESEARCH", type: "research", capabilities: ["market-research", "analysis", "trends"] },
-      { agentId: "sentinel", name: "SENTINEL", type: "security", capabilities: ["security-scan", "threat-detection"] },
+      { agentId: "sentinel", name: "SENTINEL", type: "sentinel", capabilities: ["security-scan", "threat-detection", "access-audit", "incident-response"] },
       { agentId: "builder", name: "BUILDER", type: "builder", capabilities: ["code-generation", "feature-building"] },
       { agentId: "erp", name: "ERP", type: "erp", capabilities: ["data-entry", "workflow-automation"] },
     ];

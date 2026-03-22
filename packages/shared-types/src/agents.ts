@@ -9,6 +9,7 @@ export enum AgentType {
   Research = 'research',
   Erp = 'erp',
   Builder = 'builder',
+  Sentinel = 'sentinel',
 }
 
 export enum AutonomyLevel {

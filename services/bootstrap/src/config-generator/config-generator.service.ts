@@ -49,6 +49,7 @@ const AGENT_TYPE_MAP: Record<string, string> = {
   research: 'research',
   erp: 'erp',
   builder: 'builder',
+  sentinel: 'sentinel',
 };
 
 const ALL_ROLES = ['owner', 'operator', 'marketer', 'finance', 'viewer'];

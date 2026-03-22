@@ -2,7 +2,7 @@
   "name": "Freelance",
   "description": "Freelancers, consultants, solo professionals",
   "erp": { "contacts": true, "orders": false, "inventory": false, "invoicing": true, "expenses": true, "reports": true },
-  "agents": { "comms": true, "finance": true, "growth": false, "ops": false, "research": false, "erp": false, "builder": false },
+  "agents": { "comms": true, "finance": true, "growth": false, "ops": false, "research": false, "erp": false, "builder": false, "sentinel": false },
   "dashboard": { "widgets": ["revenue", "invoices", "expenses", "clients"] },
   "channels": ["email", "web"],
   "workflows": ["invoice_overdue", "expense_report", "client_followup"]
