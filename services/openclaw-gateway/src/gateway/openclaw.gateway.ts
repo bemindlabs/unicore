@@ -348,6 +348,14 @@ export class OpenClawGateway
 
     this.send(client, this.ack(message.messageId, { channel: message.payload.channel, deliveredTo: count }));
 
+    // Persist the message for history and reconnect replay.
+    this.persistence.save(
+      message.messageId,
+      message.payload.channel,
+      message.payload.fromAgentId,
+      message.payload.data,
+    ).catch(() => { /* logged inside the service */ });
+
     // Bridge: if this is a user chat message on a chat/command channel,
     // invoke the RouterAgent pipeline and publish the AI response back.
     const channel = message.payload.channel;
@@ -414,6 +422,14 @@ export class OpenClawGateway
       envelope,
       (socketId, data) => this.sendToSocket(socketId, data),
     );
+
+    // Persist the AI response so it is included in history and replay.
+    this.persistence.save(
+      responseMessage.messageId,
+      channel,
+      responseMessage.payload.fromAgentId,
+      responseMessage.payload.data,
+    ).catch(() => { /* logged inside the service */ });
   }
 
   @SubscribeMessage('message:subscribe')
@@ -423,10 +439,51 @@ export class OpenClawGateway
   ): void {
     if (message.type !== 'message:subscribe') return;
 
-    const { agentId, channel } = message.payload;
+    const { agentId, channel, lastMessageId } = message.payload;
     const tracked = client as TrackedSocket;
     this.router.subscribe(agentId, channel, tracked.socketId);
     this.send(client, this.ack(message.messageId, { agentId, channel }));
+
+    // Replay missed messages if the client provides its last known message ID.
+    if (lastMessageId) {
+      this.replayMissedMessages(client, channel, lastMessageId).catch((err) => {
+        this.logger.error(`Replay failed for channel "${channel}": ${err instanceof Error ? err.message : err}`);
+      });
+    }
+  }
+
+  /**
+   * Fetch all messages on a channel that were sent after `lastMessageId`
+   * and deliver them directly to the reconnecting client.
+   */
+  private async replayMissedMessages(
+    client: WebSocket,
+    channel: string,
+    lastMessageId: string,
+  ): Promise<void> {
+    const missed = await this.persistence.findAfterMessageId(channel, lastMessageId);
+    if (missed.length === 0) return;
+
+    this.logger.log(`Replaying ${missed.length} missed message(s) for channel "${channel}"`);
+
+    for (const msg of missed) {
+      const replay = JSON.stringify({
+        type: 'message:publish',
+        messageId: uuidv4(),
+        timestamp: new Date().toISOString(),
+        payload: {
+          fromAgentId: msg.fromAgentId,
+          channel,
+          data: msg.data,
+          // Mark as replayed so the client can distinguish from live messages.
+          replay: true,
+          originalMessageId: msg.messageId,
+        },
+      });
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(replay);
+      }
+    }
   }
 
   @SubscribeMessage('message:unsubscribe')
