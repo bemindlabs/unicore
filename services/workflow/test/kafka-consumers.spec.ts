@@ -328,6 +328,7 @@ describe('InvoiceConsumerService', () => {
   let consumer: InvoiceConsumerService;
   let mockWorkflowService: WorkflowService;
   let eventHandler: EventHandlerService;
+  let mockRetryService: ReturnType<typeof makeMockRetryService>;
 
   const validInvoiceCreatedPayload = {
     invoiceId: 'INV-001',
