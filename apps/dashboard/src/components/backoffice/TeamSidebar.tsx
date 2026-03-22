@@ -117,7 +117,8 @@ export function TeamSidebar({ agents, filter, onFilterChange, onSelectAgent, onO
                     ? 'text-[var(--retrodesk-muted)] hover:text-[var(--retrodesk-pink)] border border-[var(--retrodesk-border)]'
                     : 'text-green-600/50 hover:text-green-400 border border-green-900/30 hover:border-green-500/40'
                 }`}
-                title={`Open terminal for ${agent.name}`}
+                title="Open terminal"
+                aria-label="Open terminal"
               >
                 {'>_'}
               </button>

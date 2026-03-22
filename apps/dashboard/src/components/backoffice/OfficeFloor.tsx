@@ -247,7 +247,7 @@ function AgentCommandDialog({ agent, onClose }: { agent: BackofficeAgent, onClos
        
        <div className="flex justify-between items-center mb-2 border-b-2 pb-1" style={{ borderColor: 'var(--retrodesk-border)' }}>
          <div className="font-mono text-[10px] font-black tracking-widest uppercase" style={{ color: 'var(--retrodesk-pink)' }}>COMMAND QUEST</div>
-         <button onClick={(e) => { e.stopPropagation(); onClose(); }} className="text-[10px] font-bold hover:scale-110 transition-transform" style={{ color: 'var(--retrodesk-text)' }}>X</button>
+         <button onClick={(e) => { e.stopPropagation(); onClose(); }} className="text-[10px] font-bold hover:scale-110 transition-transform" style={{ color: 'var(--retrodesk-text)' }} aria-label="Close">X</button>
        </div>
        
        <div className="flex flex-col gap-2">
@@ -653,14 +653,14 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
              className="absolute bottom-4 left-4 w-10 h-10 border-2 shadow-md bg-[var(--retrodesk-surface)] hover:bg-[var(--retrodesk-blue)] hover:text-white transition-colors flex items-center justify-center z-20 pointer-events-auto"
              style={{ borderColor: 'var(--retrodesk-border)', color: 'var(--retrodesk-border)' }}
           >
-             <span className="text-[18px] font-mono leading-none">⚙</span>
+             <span className="text-[9px] font-mono font-bold leading-none uppercase tracking-wider">Settings</span>
           </button>
 
           {showSettings && (
              <div className="absolute inset-x-0 bottom-0 top-auto mx-auto w-96 mb-20 bg-[var(--retrodesk-surface)] border-[6px] shadow-2xl p-6 z-[200] animate-in slide-in-from-bottom" style={{ borderColor: 'var(--retrodesk-border)' }}>
                <div className="border-b-4 pb-2 mb-4 flex justify-between items-center" style={{ borderColor: 'var(--retrodesk-border)' }}>
                  <h2 className="font-mono text-[14px] font-black tracking-widest uppercase text-[var(--retrodesk-text)]">Map Directives</h2>
-                 <button onClick={() => setShowSettings(false)} className="text-[14px] font-bold hover:text-red-500">X</button>
+                 <button onClick={() => setShowSettings(false)} className="text-[14px] font-bold hover:text-red-500" aria-label="Close settings">X</button>
                </div>
                
                <div className="flex flex-col gap-6">

@@ -528,7 +528,11 @@ export function CommandCenter() {
                       {savedFeedback ? 'Saved' : isSaving ? 'Saving…' : 'Save'}
                     </button>
                     <button
-                      onClick={handleClearMessages}
+                      onClick={() => {
+                        if (window.confirm('Clear all messages? This cannot be undone.')) {
+                          handleClearMessages();
+                        }
+                      }}
                       className="font-mono text-[9px] text-[var(--bo-text-dim)] hover:text-red-400 transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-red-500/10"
                       title="Clear conversation (auto-saves first)"
                     >

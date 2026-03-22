@@ -113,6 +113,7 @@ export function Header({ agentCount, workingCount, onAddAgent, activeTab, onTabC
                 background: chatOpen ? 'color-mix(in srgb, var(--retrodesk-pink) 10%, transparent)' : 'transparent',
               }}
               title="Team Chat"
+              aria-label="Toggle chat"
             >
               <MessageCircle className="w-4 h-4" />
             </button>
@@ -196,6 +197,7 @@ export function Header({ agentCount, workingCount, onAddAgent, activeTab, onTabC
                 : 'border-[var(--bo-border)] text-[var(--bo-text-muted)] hover:text-[var(--bo-text-accent)] hover:border-[var(--bo-border-accent-hover)]'
             }`}
             title="Team Chat"
+            aria-label="Toggle chat"
           >
             <MessageCircle className="w-4 h-4" />
           </button>

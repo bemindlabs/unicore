@@ -301,8 +301,8 @@ export function ChatBox() {
             <>
               <button
                 onClick={backToGeneral}
-                className="p-0.5 hover:bg-[var(--bo-accent-10)] rounded flex-shrink-0"
-                aria-label="Back to General"
+                className="p-1.5 hover:bg-[var(--bo-accent-10)] rounded flex-shrink-0"
+                aria-label="Go back"
                 title="Back to General"
               >
                 <ArrowLeft className="h-4 w-4" />
@@ -359,7 +359,7 @@ export function ChatBox() {
               setSearchOpen((v) => !v);
               if (searchOpen) setSearchQuery('');
             }}
-            className={`p-1 hover:bg-[var(--bo-accent-10)] rounded ${searchOpen ? 'bg-[var(--bo-accent-20)]' : ''}`}
+            className={`p-1.5 hover:bg-[var(--bo-accent-10)] rounded ${searchOpen ? 'bg-[var(--bo-accent-20)]' : ''}`}
             aria-label="Search messages"
             title="Search messages"
           >
@@ -368,7 +368,7 @@ export function ChatBox() {
           {/* UNC-103: Sound notification toggle */}
           <button
             onClick={() => setSoundEnabled((v) => !v)}
-            className={`p-1 hover:bg-[var(--bo-accent-10)] rounded ${soundEnabled ? '' : 'opacity-50'}`}
+            className={`p-1.5 hover:bg-[var(--bo-accent-10)] rounded ${soundEnabled ? '' : 'opacity-50'}`}
             aria-label={soundEnabled ? 'Mute notifications' : 'Unmute notifications'}
             title={soundEnabled ? 'Mute notifications' : 'Unmute notifications'}
           >

@@ -286,6 +286,7 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
                       : "border-2 border-transparent hover:border-white/30"
                   }`}
                   style={{ backgroundColor: c }}
+                  aria-label={c}
                 />
               ))}
             </div>
@@ -339,7 +340,7 @@ export function AgentModal({ agent, mode, onSave, onDelete, onClose }: Props) {
                     }
                   : undefined}
               >
-                {confirmDelete ? "Confirm?" : "Delete"}
+                {confirmDelete ? <span className="text-red-500">Are you sure?</span> : "Delete"}
               </button>
             )}
           </div>
