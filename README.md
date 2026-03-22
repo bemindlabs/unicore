@@ -9,7 +9,7 @@ Updated: 2026-03-22
 [![License: BSL 1.1](https://img.shields.io/badge/License-BSL_1.1-orange.svg)](LICENSE)
 [![Community Edition](https://img.shields.io/badge/Edition-Community-10b981)](LICENSE)
 [![TypeScript 5.5](https://img.shields.io/badge/TypeScript-5.5-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Next.js 14](https://img.shields.io/badge/Next.js-14.2-black?logo=next.js&logoColor=white)](https://nextjs.org/)
+[![Next.js 16](https://img.shields.io/badge/Next.js-16.2-black?logo=next.js&logoColor=white)](https://nextjs.org/)
 [![NestJS 10](https://img.shields.io/badge/NestJS-10.4-e0234e?logo=nestjs&logoColor=white)](https://nestjs.com/)
 [![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Prisma 6](https://img.shields.io/badge/Prisma-6-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
@@ -46,7 +46,7 @@ UniCore replaces dozens of SaaS tools with a single AI-driven platform — autom
 
 ## Features
 
-- **AI Agent Crew** — 8 specialized agents (Router, Comms, Finance, Growth, Ops, Research, ERP, Builder) working together via WebSocket
+- **AI Agent Crew** — 9 specialized agents (Router, Comms, Finance, Growth, Ops, Research, ERP, Builder, Sentinel) working together via WebSocket
 - **ERP Suite** — CRM contacts with lead scoring, inventory management, order lifecycle (DRAFT to DELIVERED), invoicing, expenses, and financial reports
 - **RAG Pipeline** — Vector search powered by Qdrant for context-aware AI responses
 - **Multi-LLM Support** — OpenAI, Anthropic, and Ollama with configurable primary provider
@@ -79,7 +79,7 @@ UniCore replaces dozens of SaaS tools with a single AI-driven platform — autom
 
 | Layer | Technology | Version |
 |:------|:-----------|:--------|
-| **Frontend** | Next.js, React, Tailwind CSS, shadcn/ui | 14.2, 18.3, 3.4 |
+| **Frontend** | Next.js, React, Tailwind CSS, shadcn/ui | 16.2, 18.3, 3.4 |
 | **Backend** | NestJS, Node.js | 10.4, 20+ |
 | **Language** | TypeScript | 5.5 |
 | **ORM** | Prisma | 6 |
@@ -165,7 +165,7 @@ unicore/
 
 | Service | Port | Description |
 |:--------|:-----|:------------|
-| **Dashboard** | 3000 | Next.js 14 SPA — main operations UI, backoffice, wizard |
+| **Dashboard** | 3000 | Next.js 16 SPA — main operations UI, backoffice, wizard |
 | **API Gateway** | 4000 | REST API, JWT/local auth, service proxy, rate limiting |
 | **ERP** | 4100 | CRM (lead scoring), inventory, orders, invoicing, expenses, reports |
 | **AI Engine** | 4200 | Multi-provider LLM orchestration (OpenAI, Anthropic, Ollama) |
@@ -189,7 +189,7 @@ Zookeeper and Kafka only start with the `workflows` profile.
 
 ## AI Agents
 
-UniCore ships with 8 specialized AI agents that collaborate via the OpenClaw WebSocket gateway:
+UniCore ships with 9 specialized AI agents that collaborate via the OpenClaw WebSocket gateway:
 
 | Agent | Type | Capabilities | Default Channels |
 |:------|:-----|:-------------|:-----------------|
@@ -201,6 +201,7 @@ UniCore ships with 8 specialized AI agents that collaborate via the OpenClaw Web
 | **Research** | `research` | Market intelligence, competitor analysis, trends | web |
 | **ERP** | `erp` | Natural language queries over ERP data | web |
 | **Builder** | `builder` | Code generation, deployments, technical scaffolding | web |
+| **Sentinel** | `sentinel` | Vulnerability scanning, access auditing, secret detection, threat identification, CVE checking, permission verification, incident response | web |
 
 Each agent supports three autonomy levels: **Full Auto**, **Approval Required**, and **Suggest Only**.
 
@@ -320,7 +321,7 @@ curl -X POST http://localhost:4000/auth/provision-admin \
 ### v0.1 — Foundation (Current)
 
 - [x] Monorepo with Turborepo + pnpm workspaces
-- [x] Next.js 14 dashboard with shadcn/ui
+- [x] Next.js 16 dashboard with shadcn/ui
 - [x] NestJS API Gateway with JWT/Local auth
 - [x] ERP service (CRM, orders, inventory, invoicing, expenses)
 - [x] OpenClaw multi-agent WebSocket gateway
