@@ -10,13 +10,17 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { AgentRegistryService } from '../registry/agent-registry.service';
+import { RateLimiterService } from '../routing/rate-limiter.service';
 import type { AgentCapability } from '../registry/interfaces/agent.interface';
 
 @Controller('agents')
 export class AgentsController {
   private readonly logger = new Logger(AgentsController.name);
 
-  constructor(private readonly registry: AgentRegistryService) {}
+  constructor(
+    private readonly registry: AgentRegistryService,
+    private readonly rateLimiter: RateLimiterService,
+  ) {}
 
   @Get()
   list() {
