@@ -11,7 +11,11 @@ export type MessageType =
   | 'system:ack'
   | 'system:error'
   | 'system:ping'
-  | 'system:pong';
+  | 'system:pong'
+  | 'pty:create'
+  | 'pty:input'
+  | 'pty:resize'
+  | 'pty:destroy';
 
 export interface BaseMessage {
   type: MessageType;
