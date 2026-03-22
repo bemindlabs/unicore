@@ -205,7 +205,7 @@ UniCore ships with 9 specialized AI agents that collaborate via the OpenClaw Web
 | **Builder** | `builder` | Code generation, deployments, technical scaffolding | web |
 | **Sentinel** | `sentinel` | Vulnerability scanning, access auditing, secret detection, threat identification, CVE checking, permission verification, incident response | web |
 
-Each agent supports three autonomy levels: **Full Auto**, **Approval Required**, and **Suggest Only**.
+Each agent supports three autonomy levels: **Full Auto**, **Approval Required**, and **Suggest Only**. Agent rate limiting is enforced per-agent at the gateway level.
 
 ## Business Templates
 
