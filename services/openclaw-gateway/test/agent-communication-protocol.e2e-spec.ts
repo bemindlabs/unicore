@@ -247,36 +247,42 @@ describe('Agent Communication Protocol (E2E)', () => {
     process.env['HEARTBEAT_INTERVAL_MS'] = '500';
     process.env['HEARTBEAT_TIMEOUT_MS'] = '1500';
 
+    const mockRouterAgent = {
+      process: jest.fn().mockResolvedValue({
+        response: { requestId: 'mock', agentType: 'router', content: 'Mock AI response', done: true, timestamp: new Date().toISOString() },
+        decision: { messageId: 'mock', classification: { intent: 'finance', confidence: 0.9, reasoning: 'test' }, targetAgent: 'finance', isFallback: false, decidedAt: new Date().toISOString() },
+        processingTimeMs: 50,
+      }),
+      onModuleInit: jest.fn(),
+    };
+
+    const mockPtyManager = {
+      setSendFunction: jest.fn(),
+      createSession: jest.fn().mockReturnValue('pty-session-1'),
+      writeInput: jest.fn(),
+      resize: jest.fn(),
+      destroySession: jest.fn(),
+      destroyAllForSocket: jest.fn(),
+      onModuleDestroy: jest.fn(),
+    };
+
+    const mockPersistence = {
+      save: jest.fn().mockResolvedValue(undefined),
+      findByChannel: jest.fn().mockResolvedValue([]),
+      findAfterMessageId: jest.fn().mockResolvedValue([]),
+      onModuleInit: jest.fn(),
+      onModuleDestroy: jest.fn(),
+    };
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [OpenClawModule, TerminalModule],
+      imports: [TestOpenClawModule],
     })
       .overrideProvider(RouterAgent)
-      .useValue({
-        process: jest.fn().mockResolvedValue({
-          response: { requestId: 'mock', agentType: 'router', content: 'Mock AI response', done: true, timestamp: new Date().toISOString() },
-          decision: { messageId: 'mock', classification: { intent: 'finance', confidence: 0.9, reasoning: 'test' }, targetAgent: 'finance', isFallback: false, decidedAt: new Date().toISOString() },
-          processingTimeMs: 50,
-        }),
-        onModuleInit: jest.fn(),
-      })
+      .useValue(mockRouterAgent)
       .overrideProvider(PtySessionManager)
-      .useValue({
-        setSendFunction: jest.fn(),
-        createSession: jest.fn().mockReturnValue('pty-session-1'),
-        writeInput: jest.fn(),
-        resize: jest.fn(),
-        destroySession: jest.fn(),
-        destroyAllForSocket: jest.fn(),
-        onModuleDestroy: jest.fn(),
-      })
+      .useValue(mockPtyManager)
       .overrideProvider(MessagePersistenceService)
-      .useValue({
-        save: jest.fn().mockResolvedValue(undefined),
-        findByChannel: jest.fn().mockResolvedValue([]),
-        findAfterMessageId: jest.fn().mockResolvedValue([]),
-        onModuleInit: jest.fn(),
-        onModuleDestroy: jest.fn(),
-      })
+      .useValue(mockPersistence)
       .compile();
 
     app = moduleFixture.createNestApplication();
