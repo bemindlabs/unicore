@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { Bot, CheckCircle2, Copy, Eye, EyeOff, Loader2, XCircle } from 'lucide-react';
 import {
