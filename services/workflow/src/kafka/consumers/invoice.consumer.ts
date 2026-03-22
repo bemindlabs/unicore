@@ -99,11 +99,16 @@ export class InvoiceConsumerService {
     const payload = await deserializePayload(InvoicePaidPayloadDto, envelope.payload);
     if (!payload) return;
 
-    await this.eventHandler.handle({ ...envelope, payload }, async (p) => {
-      this.logger.log(
-        `invoice.paid — invoiceId=${p.invoiceId} amountPaid=${p.amountPaid} ${p.currency} via ${p.paymentMethod ?? 'unknown'}`,
-      );
-      await this.workflowService.handleEvent(WORKFLOW_TOPICS.INVOICE_PAID, p);
-    });
+    await this.retryService.withRetry(
+      async () => {
+        await this.eventHandler.handle({ ...envelope, payload }, async (p) => {
+          this.logger.log(
+            `invoice.paid — invoiceId=${p.invoiceId} amountPaid=${p.amountPaid} ${p.currency} via ${p.paymentMethod ?? 'unknown'}`,
+          );
+          await this.workflowService.handleEvent(WORKFLOW_TOPICS.INVOICE_PAID, p);
+        });
+      },
+      { topic: WORKFLOW_TOPICS.INVOICE_PAID, eventId: envelope.eventId, originalPayload: payload },
+    );
   }
 }
