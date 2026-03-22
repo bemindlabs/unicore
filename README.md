@@ -2,6 +2,8 @@
 
 # UniCore
 
+Updated: 2026-03-22
+
 **AI-First Ecosystem Dashboard for Solopreneurs**
 
 [![License: BSL 1.1](https://img.shields.io/badge/License-BSL_1.1-orange.svg)](LICENSE)

@@ -1,5 +1,7 @@
 # Changelog — @unicore (Community Edition)
 
+Updated: 2026-03-22
+
 ## [0.0.3] - 2026-03-21
 
 ### Added

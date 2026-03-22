@@ -1,5 +1,7 @@
 # Contributing to UniCore
 
+Updated: 2026-03-22
+
 Thank you for your interest in contributing to UniCore! This guide will help you get started.
 
 ## Table of Contents

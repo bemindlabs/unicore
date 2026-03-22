@@ -1,5 +1,7 @@
 # Plugin System Architecture
 
+Updated: 2026-03-22
+
 > Research document for UniCore platform — plugin SDK, runtime sandboxing, distribution, and security.
 
 ---
