@@ -14,7 +14,7 @@ export interface ScheduleSocialPostDto {
   scheduledAt: string;
 }
 
-interface SocialPostRecord {
+export interface SocialPostRecord {
   id: string;
   channel: string;
   text: string;

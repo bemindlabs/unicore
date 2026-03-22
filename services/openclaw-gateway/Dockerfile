@@ -39,6 +39,7 @@ LABEL org.opencontainers.image.version="${VERSION}"
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/services/openclaw-gateway/node_modules ./services/openclaw-gateway/node_modules
 COPY --from=build /app/services/openclaw-gateway/dist ./services/openclaw-gateway/dist
+COPY --from=build /app/services/openclaw-gateway/src/generated ./services/openclaw-gateway/dist/generated
 COPY --from=build /app/services/openclaw-gateway/package.json ./services/openclaw-gateway/
 WORKDIR /app/services/openclaw-gateway
 RUN groupadd -g 1001 nodejs && useradd -u 1001 -g nodejs -m appuser
