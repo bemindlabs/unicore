@@ -270,14 +270,28 @@ const TEMPLATES: SpriteTemplate[] = [
   }
 ];
 
+/** Meme coin template indices (Doge=6, Pepe=7, Floki=8, Shib=9, Bonk=10) */
+const CRYPTO_TEMPLATES = [6, 7, 8, 9, 10];
+
 export function PixelAvatar({ color, status, name = '', size = 'md', className = '', forceStyle }: Props) {
   const scales = { sm: 2, md: 3, lg: 4 };
   const px = scales[size];
 
+  // Detect crypto theme from DOM
+  const isCrypto = typeof document !== 'undefined' && document.documentElement.getAttribute('data-character-theme') === 'crypto';
+
   // Derive template deterministically from name or color
   const seed = name || color;
   const hash = [...seed].reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const template = forceStyle !== undefined ? TEMPLATES[forceStyle % TEMPLATES.length] : TEMPLATES[hash % TEMPLATES.length];
+  let template: SpriteTemplate;
+  if (forceStyle !== undefined) {
+    template = TEMPLATES[forceStyle % TEMPLATES.length];
+  } else if (isCrypto) {
+    // Crypto theme: only use meme coin sprites
+    template = TEMPLATES[CRYPTO_TEMPLATES[hash % CRYPTO_TEMPLATES.length]];
+  } else {
+    template = TEMPLATES[hash % TEMPLATES.length];
+  }
 
   const shadows = useMemo(() => {
     return template.map
