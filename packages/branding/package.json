@@ -1,5 +1,5 @@
 {
-  "name": "@unicore/branding",
+  "name": "@unicore/branding-community",
   "version": "0.0.2",
   "private": true,
   "description": "White-label branding customization for UniCore Pro — config, CSS generator, Tailwind integration, React context",
