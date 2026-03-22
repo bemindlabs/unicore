@@ -224,6 +224,7 @@ describe('InventoryConsumerService', () => {
   let consumer: InventoryConsumerService;
   let mockWorkflowService: WorkflowService;
   let eventHandler: EventHandlerService;
+  let mockRetryService: ReturnType<typeof makeMockRetryService>;
 
   const validInventoryLowPayload = {
     productId: 'PROD-001',
