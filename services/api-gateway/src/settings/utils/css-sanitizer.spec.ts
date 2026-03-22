@@ -13,7 +13,8 @@ describe('sanitizeCss', () => {
     const { sanitized, blocked } = sanitizeCss(css);
     expect(blocked).toContain('url(javascript:)');
     expect(sanitized).toContain('/* blocked:url(javascript:) */');
-    expect(sanitized).not.toContain('javascript:');
+    // The original dangerous call is gone (the name appears only in the blocked comment)
+    expect(sanitized).not.toContain('javascript:alert');
   });
 
   it('blocks expression() (IE XSS)', () => {
