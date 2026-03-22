@@ -1,0 +1,27 @@
+{
+  "name": "Developer",
+  "description": "Developer-focused setup with AI coding assistant, automated pipelines, and build tooling",
+  "erp": {
+    "contacts": false,
+    "orders": false,
+    "inventory": false,
+    "invoicing": false,
+    "expenses": false,
+    "reports": false
+  },
+  "agents": {
+    "comms": false,
+    "finance": false,
+    "growth": false,
+    "ops": true,
+    "research": true,
+    "erp": false,
+    "builder": true,
+    "sentinel": true
+  },
+  "dashboard": {
+    "widgets": ["api_calls", "agent_activity", "build_status", "code_reviews", "deployment_frequency"]
+  },
+  "channels": ["github", "slack", "web"],
+  "workflows": ["code_review", "deploy_pipeline", "security_scan", "dependency_update"]
+}
