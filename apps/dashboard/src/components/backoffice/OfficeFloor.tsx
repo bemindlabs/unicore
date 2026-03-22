@@ -334,10 +334,18 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
   const [autonomyInterval, setAutonomyInterval] = useState(60);
   const [activeTheme, setActiveTheme] = useState('retrodesk');
 
-  // Load from local storage on mount
+  // Load map directives + theme from settings/localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem('hq_map_theme');
     if (saved) setActiveTheme(saved);
+    // Load autonomy settings from API (saved by AgentSettings)
+    fetch('/api/v1/settings/map-directives')
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.autonomyEnabled !== undefined) setAutonomyEnabled(Boolean(data.autonomyEnabled));
+        if (data?.autonomyInterval !== undefined) setAutonomyInterval(Number(data.autonomyInterval) || 60);
+      })
+      .catch(() => {});
   }, []);
 
   // Redefine zones to take up whole maps based on floor
