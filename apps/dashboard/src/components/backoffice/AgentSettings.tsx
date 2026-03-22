@@ -207,6 +207,85 @@ export function AgentSettings() {
 
   return (
     <div className="space-y-4">
+      {/* Map Directives */}
+      <div className={`border p-4 space-y-4 ${
+        isRetroDesk
+          ? 'border-[var(--retrodesk-border)] bg-[var(--retrodesk-surface)]'
+          : 'border-[var(--bo-border)] bg-[var(--bo-bg)]'
+      }`}>
+        <h3 className={`text-xs uppercase tracking-wider ${
+          isRetroDesk ? 'retrodesk-heading text-[var(--retrodesk-pink)]' : 'font-mono text-[var(--bo-text-accent)]'
+        }`}>
+          Map Directives
+        </h3>
+
+        {/* LLM Spatial Autonomy toggle */}
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-0.5">
+            <label className={`text-[10px] uppercase tracking-wider font-bold ${
+              isRetroDesk ? 'retrodesk-mono text-[var(--retrodesk-text)]' : 'font-mono text-[var(--bo-text-accent-2)]'
+            }`}>
+              LLM Spatial Autonomy
+            </label>
+            <span className={`text-[8px] ${
+              isRetroDesk ? 'retrodesk-mono text-[var(--retrodesk-muted)]' : 'font-mono text-[var(--bo-text-muted)]'
+            }`}>
+              Allow OpenClaw AI to drive characters.
+            </span>
+          </div>
+          <label className="flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={autonomyEnabled}
+              onChange={(e) => { setAutonomyEnabled(e.target.checked); setDirectivesSaved(false); }}
+              className="w-4 h-4 cursor-pointer accent-blue-500"
+            />
+          </label>
+        </div>
+
+        {/* Think Interval slider */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <label className={`text-[10px] uppercase tracking-wider font-bold ${
+              isRetroDesk ? 'retrodesk-mono text-[var(--retrodesk-text)]' : 'font-mono text-[var(--bo-text-accent-2)]'
+            }`}>
+              Think Interval (Sec)
+            </label>
+            <span className={`text-[10px] font-bold ${
+              isRetroDesk ? 'retrodesk-mono text-[var(--retrodesk-text)]' : 'font-mono text-[var(--bo-text-accent-2)]'
+            }`}>
+              {autonomyInterval}s
+            </span>
+          </div>
+          <input
+            type="range"
+            min={10}
+            max={120}
+            step={10}
+            value={autonomyInterval}
+            onChange={(e) => { setAutonomyInterval(Number(e.target.value)); setDirectivesSaved(false); }}
+            className="w-full cursor-pointer"
+            disabled={!autonomyEnabled}
+          />
+        </div>
+
+        {/* Save button */}
+        <div className="flex items-center justify-end gap-2">
+          {directivesSaved && (
+            <span className="font-mono text-[9px] text-green-400 uppercase tracking-wider">
+              Saved
+            </span>
+          )}
+          <button
+            onClick={saveDirectives}
+            disabled={directivesSaving}
+            className="font-mono text-[9px] text-[var(--bo-text-accent-2)] hover:text-[var(--bo-text-bright)] disabled:text-[var(--bo-text-dimmer)] bg-[var(--bo-accent-10)] hover:bg-[var(--bo-accent-20)] disabled:bg-[var(--bo-accent-5)] border border-[var(--bo-border-accent)] hover:border-[var(--bo-border-accent-hover)] disabled:border-[var(--bo-border)] px-4 py-1.5 transition-all uppercase tracking-wider"
+          >
+            {directivesSaving ? 'Saving...' : 'Save Directives'}
+          </button>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className={`text-xs uppercase tracking-wider ${

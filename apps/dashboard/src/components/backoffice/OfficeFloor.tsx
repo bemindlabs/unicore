@@ -3,7 +3,7 @@
 import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import type { BackofficeAgent } from '@/lib/backoffice/types';
 import { PixelAvatar } from './PixelAvatar';
-import { Settings, X } from 'lucide-react';
+import {} from 'lucide-react';
 import { useChatWebSocket } from '@/hooks/use-chat-ws';
 
 interface Props {
