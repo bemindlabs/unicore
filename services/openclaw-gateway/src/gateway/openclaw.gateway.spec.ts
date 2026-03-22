@@ -385,4 +385,76 @@ describe('OpenClawGateway', () => {
       expect(router.getChannelSubscribers('channel-x')).not.toContain('a1');
     });
   });
+
+  describe('handleSubscribe — reconnect replay', () => {
+    it('sends ack and does not call replay when no lastMessageId', () => {
+      const socket = makeSocket();
+      const persistence = gateway['persistence'] as jest.Mocked<MessagePersistenceService>;
+
+      const msg: SubscribeMessage = {
+        ...baseMsg(),
+        type: 'message:subscribe',
+        payload: { agentId: 'a1', channel: 'chat-backoffice' },
+      };
+
+      gateway.handleSubscribe(socket as unknown as WebSocket, msg);
+
+      const ack = JSON.parse((socket.send as jest.Mock).mock.calls[0][0]);
+      expect(ack.type).toBe('system:ack');
+      expect(persistence.findAfterMessageId).not.toHaveBeenCalled();
+    });
+
+    it('triggers replay when lastMessageId is provided', async () => {
+      const socket = makeSocket();
+      const persistence = gateway['persistence'] as jest.Mocked<MessagePersistenceService>;
+
+      const missed = [
+        { id: '1', messageId: 'old-msg-1', channel: 'chat-backoffice', fromAgentId: 'agent-comms', data: { text: 'Hi' }, createdAt: new Date() },
+        { id: '2', messageId: 'old-msg-2', channel: 'chat-backoffice', fromAgentId: 'agent-comms', data: { text: 'There' }, createdAt: new Date() },
+      ];
+      (persistence.findAfterMessageId as jest.Mock).mockResolvedValue(missed);
+
+      const msg: SubscribeMessage = {
+        ...baseMsg(),
+        type: 'message:subscribe',
+        payload: { agentId: 'a1', channel: 'chat-backoffice', lastMessageId: 'last-seen-id' },
+      };
+
+      gateway.handleSubscribe(socket as unknown as WebSocket, msg);
+
+      // Wait for the async replay to complete
+      await new Promise((r) => setTimeout(r, 10));
+
+      expect(persistence.findAfterMessageId).toHaveBeenCalledWith('chat-backoffice', 'last-seen-id');
+      // ack + 2 replayed messages = 3 sends
+      expect((socket.send as jest.Mock).mock.calls).toHaveLength(3);
+      const replayed = JSON.parse((socket.send as jest.Mock).mock.calls[1][0]);
+      expect(replayed.type).toBe('message:publish');
+      expect(replayed.payload.replay).toBe(true);
+      expect(replayed.payload.originalMessageId).toBe('old-msg-1');
+    });
+  });
+
+  describe('handlePublish — message persistence', () => {
+    it('persists the message after routing', () => {
+      const pubSocket = makeSocket('socket-pub');
+      registry.register({ id: 'pub', name: 'P', type: 'w', version: '1', capabilities: [] }, 'socket-pub');
+      const persistence = gateway['persistence'] as jest.Mocked<MessagePersistenceService>;
+
+      const msg: PublishMessage = {
+        ...baseMsg(),
+        type: 'message:publish',
+        payload: { fromAgentId: 'pub', channel: 'alerts', data: { level: 'info' } },
+      };
+
+      gateway.handlePublish(pubSocket as unknown as WebSocket, msg);
+
+      expect(persistence.save).toHaveBeenCalledWith(
+        msg.messageId,
+        'alerts',
+        'pub',
+        { level: 'info' },
+      );
+    });
+  });
 });
