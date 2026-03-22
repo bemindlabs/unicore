@@ -76,6 +76,23 @@ describe('OpenClawGateway', () => {
             onModuleDestroy: jest.fn(),
           },
         },
+        {
+          provide: RateLimiterService,
+          useValue: {
+            checkAgentLimit: jest.fn().mockReturnValue({ allowed: true }),
+            checkChannelLimit: jest.fn().mockReturnValue({ allowed: true }),
+          },
+        },
+        {
+          provide: MessagePersistenceService,
+          useValue: {
+            save: jest.fn().mockResolvedValue(undefined),
+            findByChannel: jest.fn().mockResolvedValue([]),
+            findAfterMessageId: jest.fn().mockResolvedValue([]),
+            onModuleInit: jest.fn(),
+            onModuleDestroy: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
