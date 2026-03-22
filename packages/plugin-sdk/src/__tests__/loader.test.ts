@@ -1,5 +1,5 @@
 import { PluginLoader, PluginLoadError, PluginManifestError, validateManifest } from '../plugin-loader';
-import type { Plugin, PluginManifest } from '../types';
+import type { PluginManifest } from '../types';
 
 const baseManifest: PluginManifest = {
   id: 'test-plugin',
