@@ -158,11 +158,7 @@ export class RateLimiterService {
     const retryAfterSeconds = Math.ceil(retryAfterMs / 1000);
 
     this.logger.warn(
-      `Rate limit exceeded — key=${Array.from(this.agentBuckets.keys()).includes(
-        Array.from(this.agentBuckets.entries()).find(([, b]) => b === bucket)?.[0] ?? '',
-      )
-        ? 'agent'
-        : 'channel'}, retryAfter=${retryAfterSeconds}s, throttledTotal=${bucket.throttledCount}`,
+      `Rate limit exceeded — retryAfter=${retryAfterSeconds}s throttledTotal=${bucket.throttledCount}`,
     );
 
     return { allowed: false, retryAfterSeconds, throttledCount: bucket.throttledCount };
