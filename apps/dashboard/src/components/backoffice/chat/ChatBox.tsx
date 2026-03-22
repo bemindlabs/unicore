@@ -126,7 +126,22 @@ export function ChatBox() {
   soundEnabledRef.current = soundEnabled;
 
   const handleMessage = useCallback((msg: ChatMessage) => {
-    setMessages((prev) => [...prev.slice(-99), { ...msg, reactions: {} }]);
+    setMessages((prev) => {
+      const updated = [...prev.slice(-99), { ...msg, reactions: {} }];
+      // Auto-save after agent response
+      if (msg.authorType === 'agent' && updated.length >= 2) {
+        const agentId = msg.authorId ?? 'router';
+        const agentName = msg.author ?? 'Agent';
+        api.post('/api/v1/chat-history', {
+          agentId,
+          agentName,
+          messages: updated.map(({ reactions: _r, ...m }) => m),
+          summary: updated.find((m) => m.authorType === 'human')?.text?.slice(0, 100) ?? '',
+          channel: msg.channel,
+        }).catch(() => { /* ignore save errors */ });
+      }
+      return updated;
+    });
     if (!open) setUnread((n) => n + 1);
     // Clear typing indicator when agent responds
     if (msg.authorType === 'agent') {
@@ -159,7 +174,6 @@ export function ChatBox() {
     }
     // Load saved chat history for this channel
     setMessages([]);
-    const agentId = selectedAgent?.id ?? 'general';
     api.get<{ data: Array<{ messages: ChatMessage[]; agentId: string; channel: string }> }>(
       `/api/v1/chat-history?channel=${encodeURIComponent(channel)}&limit=1`,
     )
