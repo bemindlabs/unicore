@@ -18,6 +18,7 @@ import {
 import { RouterAgent } from '../router/router.agent';
 import { PtySessionManager } from '../terminal/pty-session-manager';
 import { MessagePersistenceService } from '../persistence/message-persistence.service';
+import { RateLimiterService } from '../routing/rate-limiter.service';
 import { WebSocket } from 'ws';
 import { v4 as uuidv4 } from 'uuid';
 
