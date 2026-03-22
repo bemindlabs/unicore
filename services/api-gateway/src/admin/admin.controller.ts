@@ -242,4 +242,209 @@ export class AdminController {
 
     return { services, uptime, timestamp: new Date().toISOString(), totalMs: Date.now() - start };
   }
+
+  // ─── Platform Overview ──────────────────────────────────────────────────
+
+  @Get('overview')
+  async overview() {
+    const [userCount, sessionCount] = await Promise.all([
+      this.prisma.user.count(),
+      this.prisma.session.count(),
+    ]);
+
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const newUsersThisWeek = await this.prisma.user.count({
+      where: { createdAt: { gte: oneWeekAgo } },
+    });
+
+    const uptimeSeconds = Math.floor((Date.now() - this.startedAt.getTime()) / 1000);
+
+    return {
+      tenantCount: 1,
+      activeTenantCount: 1,
+      totalUserCount: userCount,
+      activeSessionCount: sessionCount,
+      storageUsageBytes: 0,
+      apiCallsToday: 0,
+      apiCallsThisMonth: 0,
+      newTenantsThisWeek: 0,
+      newUsersThisWeek,
+      uptime: uptimeSeconds,
+      generatedAt: new Date().toISOString(),
+    };
+  }
+
+  // ─── Tenant Management ──────────────────────────────────────────────────
+
+  @Get('tenants')
+  async listTenants(@Query() query: any) {
+    const page = query.page ? parseInt(query.page) : 1;
+    const limit = query.limit ? parseInt(query.limit) : 20;
+
+    const [userCount, sessionCount] = await Promise.all([
+      this.prisma.user.count(),
+      this.prisma.session.count(),
+    ]);
+
+    const tenant = {
+      id: 'tenant-bemind-001',
+      name: 'Bemind Technology Co., Ltd.',
+      slug: 'bemind',
+      displayName: 'Bemind Technology',
+      customDomain: 'labs.bemind.tech',
+      plan: 'ENTERPRISE' as const,
+      status: 'ACTIVE' as const,
+      ownerEmail: 'info@bemind.tech',
+      memberCount: userCount,
+      storageUsageBytes: 0,
+      apiCallsThisMonth: 0,
+      createdAt: this.startedAt.toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const search = query.search?.toLowerCase();
+    const statusFilter = query.status;
+    const planFilter = query.plan;
+
+    let items = [tenant];
+
+    if (search && !tenant.name.toLowerCase().includes(search) && !tenant.slug.includes(search)) {
+      items = [];
+    }
+    if (statusFilter && tenant.status !== statusFilter) {
+      items = [];
+    }
+    if (planFilter && tenant.plan !== planFilter) {
+      items = [];
+    }
+
+    return {
+      items,
+      total: items.length,
+      page,
+      limit,
+    };
+  }
+
+  @Post('tenants/:id/suspend')
+  async suspendTenant(@Param('id') id: string, @Body() body: any) {
+    this.logger.warn(`Tenant suspend requested: ${id} — reason: ${body?.reason ?? 'none'}`);
+    return {
+      id,
+      name: 'Bemind Technology Co., Ltd.',
+      slug: 'bemind',
+      plan: 'ENTERPRISE',
+      status: 'SUSPENDED',
+      ownerEmail: 'info@bemind.tech',
+      memberCount: 0,
+      storageUsageBytes: 0,
+      apiCallsThisMonth: 0,
+      createdAt: this.startedAt.toISOString(),
+      updatedAt: new Date().toISOString(),
+      suspendedAt: new Date().toISOString(),
+      suspendReason: body?.reason ?? 'Administrative action',
+    };
+  }
+
+  @Post('tenants/:id/activate')
+  async activateTenant(@Param('id') id: string) {
+    this.logger.log(`Tenant activate requested: ${id}`);
+    return {
+      id,
+      name: 'Bemind Technology Co., Ltd.',
+      slug: 'bemind',
+      plan: 'ENTERPRISE',
+      status: 'ACTIVE',
+      ownerEmail: 'info@bemind.tech',
+      memberCount: 0,
+      storageUsageBytes: 0,
+      apiCallsThisMonth: 0,
+      createdAt: this.startedAt.toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  // ─── Platform Settings ──────────────────────────────────────────────────
+
+  @Get('settings')
+  getSettings() {
+    return this.platformSettings;
+  }
+
+  @Patch('settings')
+  updateSettings(@Body() body: any, @CurrentUser() currentUser: any) {
+    if (body.defaultPlan !== undefined) this.platformSettings.defaultPlan = body.defaultPlan;
+    if (body.allowedPlans !== undefined) this.platformSettings.allowedPlans = body.allowedPlans;
+    if (body.defaultUserQuota !== undefined) this.platformSettings.defaultUserQuota = body.defaultUserQuota;
+    if (body.defaultStorageQuotaBytes !== undefined) this.platformSettings.defaultStorageQuotaBytes = body.defaultStorageQuotaBytes;
+    if (body.defaultApiCallQuotaPerDay !== undefined) this.platformSettings.defaultApiCallQuotaPerDay = body.defaultApiCallQuotaPerDay;
+    if (body.maintenanceMode !== undefined) this.platformSettings.maintenanceMode = body.maintenanceMode;
+    if (body.registrationEnabled !== undefined) this.platformSettings.registrationEnabled = body.registrationEnabled;
+    if (body.featureToggles !== undefined) {
+      this.platformSettings.featureToggles = { ...this.platformSettings.featureToggles, ...body.featureToggles };
+    }
+    this.platformSettings.updatedAt = new Date().toISOString();
+    this.platformSettings.updatedBy = currentUser?.email ?? 'system';
+
+    this.logger.log(`Platform settings updated by ${this.platformSettings.updatedBy}`);
+    return this.platformSettings;
+  }
+
+  // ─── System Metrics ─────────────────────────────────────────────────────
+
+  @Get('metrics')
+  async metrics() {
+    const cpus = os.cpus();
+    const totalMem = os.totalmem();
+    const freeMem = os.freemem();
+    const usedMem = totalMem - freeMem;
+    const loadAvg = os.loadavg();
+
+    let dbConnections = 0;
+    try {
+      const result: any[] = await this.prisma.$queryRaw`SELECT count(*)::int as count FROM pg_stat_activity WHERE state = 'active'`;
+      dbConnections = result[0]?.count ?? 0;
+    } catch { /* ignore */ }
+
+    let dbMaxConnections = 100;
+    try {
+      const result: any[] = await this.prisma.$queryRaw`SHOW max_connections`;
+      dbMaxConnections = parseInt(result[0]?.max_connections ?? '100');
+    } catch { /* ignore */ }
+
+    const dbLatencyStart = Date.now();
+    try { await this.prisma.$queryRaw`SELECT 1`; } catch { /* ignore */ }
+    const dbLatency = Date.now() - dbLatencyStart;
+
+    return {
+      cpu: {
+        usagePercent: Math.round(loadAvg[0] / cpus.length * 100),
+        coreCount: cpus.length,
+        loadAvg: loadAvg as [number, number, number],
+      },
+      memory: {
+        totalBytes: totalMem,
+        usedBytes: usedMem,
+        freeBytes: freeMem,
+        usagePercent: Math.round((usedMem / totalMem) * 100),
+      },
+      disk: {
+        totalBytes: 0,
+        usedBytes: 0,
+        freeBytes: 0,
+        usagePercent: 0,
+      },
+      network: {
+        activeConnections: 0,
+        bytesInPerSecond: 0,
+        bytesOutPerSecond: 0,
+      },
+      database: {
+        activeConnections: dbConnections,
+        maxConnections: dbMaxConnections,
+        queryLatencyP99Ms: dbLatency,
+      },
+      collectedAt: new Date().toISOString(),
+    };
+  }
 }
