@@ -45,6 +45,9 @@ export class PtySessionManager implements OnModuleDestroy {
 
   setSendFunction(fn: SendFn): void {
     this.sendFn = fn;
+    if (!nodePty) {
+      this.logger.warn('node-pty not available — PTY terminal sessions disabled');
+    }
     this.cleanupTimer = setInterval(() => this.cleanupIdle(), CLEANUP_INTERVAL_MS);
     this.logger.log('PTY session manager initialized');
   }
@@ -54,6 +57,11 @@ export class PtySessionManager implements OnModuleDestroy {
     const userCount = [...this.sessions.values()].filter(s => s.userId === userId).length;
     if (userCount >= MAX_SESSIONS_PER_USER) {
       this.logger.warn(`User ${userId} exceeded max PTY sessions (${MAX_SESSIONS_PER_USER})`);
+      return null;
+    }
+
+    if (!nodePty) {
+      this.logger.warn('PTY session requested but node-pty is not available');
       return null;
     }
 
