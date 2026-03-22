@@ -461,7 +461,7 @@ export class OpenClawGateway
 
   private handlePtyResize(client: WebSocket, message: IncomingMessage): void {
     const tracked = client as TrackedSocket;
-    const { sessionId, cols, rows } = message.payload;
+    const { sessionId, cols, rows } = message.payload as Record<string, any>;
     if (sessionId && cols && rows) {
       this.ptyManager.resize(sessionId, tracked.socketId, cols, rows);
     }
