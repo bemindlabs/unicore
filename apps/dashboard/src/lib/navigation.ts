@@ -1,5 +1,6 @@
 import {
   Activity,
+  BarChart3,
   BookOpen,
   Bot,
   MessageSquare,
@@ -7,6 +8,7 @@ import {
   DollarSign,
   FileText,
   GitBranch,
+  Globe,
   LayoutDashboard,
   Package,
   ScrollText,
