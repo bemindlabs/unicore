@@ -3,6 +3,7 @@ import { InvoicesService } from './invoices.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { EventPublisherService } from '../kafka/event-publisher.service';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { InvoiceStatusFilter } from './dto/query-invoices.dto';
 
 const mockPrisma = {
   invoice: {
