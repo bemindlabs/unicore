@@ -76,7 +76,7 @@ describe('AdminController — health endpoint', () => {
     const result = await controller.health();
 
     const pg = result.services.find((s: any) => s.name === 'PostgreSQL');
-    expect(pg.status).toBe('down');
+    expect(pg!.status).toBe('down');
   });
 
   it('marks ERP Service as healthy when fetch succeeds with ok=true', async () => {
