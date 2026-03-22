@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { SettingsController, TENANT_CONTEXT_PROVIDER } from './settings.controller';
 import { PrismaService } from '../prisma/prisma.service';
+import { LicenseService } from '../license/license.service';
 import * as fs from 'fs';
 import * as path from 'path';
 
