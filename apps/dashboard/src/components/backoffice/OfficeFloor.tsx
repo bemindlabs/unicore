@@ -649,12 +649,14 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
           </div>
 
           {/* Configuration Settings Gear */}
-          <button 
+          <button
              onClick={() => setShowSettings(true)}
              className="absolute bottom-4 left-4 w-10 h-10 border-2 shadow-md bg-[var(--retrodesk-surface)] hover:bg-[var(--retrodesk-blue)] hover:text-white transition-colors flex items-center justify-center z-20 pointer-events-auto"
-             style={{ borderColor: 'var(--retrodesk-border)', color: 'var(--retrodesk-border)' }}
+             style={{ borderColor: 'var(--retrodesk-border)', color: 'var(--retrodesk-text)' }}
+             aria-label="Map settings"
+             title="Map Directives"
           >
-             <span className="text-[9px] font-mono font-bold leading-none uppercase tracking-wider">Settings</span>
+             <Settings className="w-5 h-5" />
           </button>
 
           {showSettings && (
