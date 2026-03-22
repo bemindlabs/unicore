@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { OpenClawGateway } from './gateway/openclaw.gateway';
 import { AgentRegistryService } from './registry/agent-registry.service';
 import { MessageRouterService } from './routing/message-router.service';
+import { RateLimiterService } from './routing/rate-limiter.service';
 import { HeartbeatService } from './health/heartbeat.service';
 import { HealthController } from './health/health.controller';
 import { AgentsController } from './agents/agents.controller';
