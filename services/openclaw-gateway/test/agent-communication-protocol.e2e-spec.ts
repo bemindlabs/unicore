@@ -312,8 +312,6 @@ describe('Agent Communication Protocol (E2E)', () => {
 
   afterAll(async () => {
     await app.close();
-    delete process.env['JWT_SECRET'];
-    delete process.env['INTERNAL_SERVICE_SECRET'];
     delete process.env['HTTP_PORT'];
     delete process.env['HEARTBEAT_INTERVAL_MS'];
     delete process.env['HEARTBEAT_TIMEOUT_MS'];
