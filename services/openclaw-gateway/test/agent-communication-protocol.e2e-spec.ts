@@ -1119,14 +1119,24 @@ describe('Agent Communication Protocol (E2E)', () => {
       const ack = await dash.nextMessage();
       expect(ack.type).toBe('system:ack');
 
-      // Subscriber should receive the AI response (published by router)
-      const aiResponse = await sub.nextMessage(5000);
-      expect(aiResponse.type).toBe('message:publish');
-      expect(aiResponse.payload.channel).toBe('chat-agent-session-abc');
-      expect((aiResponse.payload.data as any).authorType).toBe('agent');
-      expect((aiResponse.payload.data as any).metadata).toBeDefined();
-      expect((aiResponse.payload.data as any).metadata.intent).toBe('finance');
-      expect((aiResponse.payload.data as any).metadata.confidence).toBe(0.9);
+      // Subscriber receives the original user message first (forwarded via pub/sub)
+      // then the AI response from the RouterAgent pipeline.
+      // Collect messages until we find the AI response (has authorType='agent').
+      let aiResponse: ReceivedMessage | undefined;
+      for (let i = 0; i < 5; i++) {
+        const msg = await sub.nextMessage(5000);
+        if (msg.type === 'message:publish' && (msg.payload.data as any)?.authorType === 'agent') {
+          aiResponse = msg;
+          break;
+        }
+      }
+
+      expect(aiResponse).toBeDefined();
+      expect(aiResponse!.payload.channel).toBe('chat-agent-session-abc');
+      expect((aiResponse!.payload.data as any).authorType).toBe('agent');
+      expect((aiResponse!.payload.data as any).metadata).toBeDefined();
+      expect((aiResponse!.payload.data as any).metadata.intent).toBe('finance');
+      expect((aiResponse!.payload.data as any).metadata.confidence).toBe(0.9);
     });
 
     it('should trigger RouterAgent on command-* channels', async () => {
