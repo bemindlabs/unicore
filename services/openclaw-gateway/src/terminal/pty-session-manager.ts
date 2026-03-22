@@ -69,7 +69,7 @@ export class PtySessionManager implements OnModuleDestroy {
     const shell = '/bin/sh';
 
     try {
-      const pty = spawn(shell, [], {
+      const pty = nodePty!.spawn(shell, [], {
         name: 'xterm-256color',
         cols: Math.min(cols || 80, 300),
         rows: Math.min(rows || 24, 100),
