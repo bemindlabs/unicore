@@ -57,22 +57,48 @@ UniCore replaces dozens of SaaS tools with a single AI-driven platform — autom
 
 ## Architecture
 
-```
-                    Cloudflare (SSL)
-                         |
-                    Nginx (port 80)
-                    /    |    \
-            Dashboard  API GW  OpenClaw WS
-            :3000      :4000   :18789
-                       / | \
-                 ERP  AI  RAG  Bootstrap  Workflow
-                :4100 :4200 :4300 :4500   (Kafka)
-                  |              |
-             PostgreSQL      Qdrant
-               :5432         :6333
-                  |
-                Redis
-                :6379
+```mermaid
+graph TD
+    subgraph Edge["Edge Layer"]
+        CF["Cloudflare (SSL)"]
+    end
+
+    subgraph Proxy["Reverse Proxy"]
+        NG["Nginx :80"]
+    end
+
+    subgraph Frontend["Frontend & Gateway"]
+        DASH["Dashboard :3000"]
+        APIGW["API Gateway :4000"]
+        OC["OpenClaw WS :18789"]
+    end
+
+    subgraph Backend["Backend Services"]
+        ERP["ERP :4100"]
+        AI["AI Engine :4200"]
+        RAG["RAG :4300"]
+        BS["Bootstrap :4500"]
+        WF["Workflow (Kafka)"]
+    end
+
+    subgraph Data["Data Stores"]
+        PG["PostgreSQL :5432"]
+        QD["Qdrant :6333"]
+        RD["Redis :6379"]
+    end
+
+    CF --> NG
+    NG --> DASH
+    NG --> APIGW
+    NG --> OC
+    APIGW --> ERP
+    APIGW --> AI
+    APIGW --> RAG
+    APIGW --> BS
+    APIGW --> WF
+    ERP --> PG
+    RAG --> QD
+    PG --> RD
 ```
 
 ## Tech Stack
