@@ -468,6 +468,13 @@ describe('SettingsController with tenant context', () => {
       providers: [
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: TENANT_CONTEXT_PROVIDER, useValue: mockTenantCtx },
+        {
+          provide: LicenseService,
+          useValue: {
+            hasFeature: jest.fn().mockResolvedValue(true),
+            getLicenseStatus: jest.fn().mockResolvedValue({ edition: 'community' }),
+          },
+        },
       ],
     }).compile();
 
