@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MessagePersistenceService, PersistedMessage } from './message-persistence.service';
 import { PrismaClient } from '../generated/prisma';
 
-const mChatMessage = {
+const mockChatMessage = {
   create: jest.fn(),
   findMany: jest.fn(),
   findUnique: jest.fn(),
@@ -13,7 +13,7 @@ jest.mock('../generated/prisma', () => {
     PrismaClient: jest.fn().mockImplementation(function (this: Record<string, unknown>) {
       this.$connect = jest.fn();
       this.$disconnect = jest.fn();
-      this.chatMessage = mChatMessage;
+      this.chatMessage = mockChatMessage;
     }),
   };
 });
