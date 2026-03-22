@@ -209,9 +209,9 @@ export function BackofficeApp({
         />
       )}
 
-      {/* Chat slide-in panel */}
+      {/* Chat slide-in panel (mobile only — desktop uses inline panel) */}
       {chatOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end">
+        <div className="fixed inset-0 z-50 flex justify-end lg:hidden">
           <div className="absolute inset-0 bg-black/30" onClick={toggleChat} />
           <div className="relative w-full max-w-md h-full animate-in slide-in-from-right duration-200">
             <ChatBox />
