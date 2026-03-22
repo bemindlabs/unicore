@@ -31,6 +31,16 @@ export class AgentsController {
     };
   }
 
+  @Get('rate-limits')
+  getRateLimits() {
+    return {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      agents: this.rateLimiter.getAgentMetrics(),
+      channels: this.rateLimiter.getChannelMetrics(),
+    };
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     const agent = this.registry.getAgent(id);
