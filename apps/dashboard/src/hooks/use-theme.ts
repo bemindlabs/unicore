@@ -26,6 +26,10 @@ export function useTheme() {
     const savedId = localStorage.getItem('selected-theme') ?? legacyThemeId();
     const { characterTheme: ct, colorScheme } = resolveTheme(savedId);
 
+    // Check for a saved character skin (e.g. "retrodesk-pepe")
+    const savedSkin = localStorage.getItem('character-skin');
+    const effectiveCt = (savedSkin && isRetroDeskFamily(savedSkin) && isRetroDeskFamily(ct)) ? savedSkin : ct;
+
     const effectiveDark =
       colorScheme === 'system'
         ? window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -34,12 +38,12 @@ export function useTheme() {
     const effectiveTheme: Theme = effectiveDark ? 'dark' : 'light';
 
     setTheme(effectiveTheme);
-    setCharacterThemeState(ct);
+    setCharacterThemeState(effectiveCt);
     setSelectedThemeId(savedId);
 
     document.documentElement.classList.toggle('dark', effectiveDark);
-    if (ct) {
-      document.documentElement.setAttribute('data-character-theme', ct);
+    if (effectiveCt) {
+      document.documentElement.setAttribute('data-character-theme', effectiveCt);
     } else {
       document.documentElement.removeAttribute('data-character-theme');
     }
