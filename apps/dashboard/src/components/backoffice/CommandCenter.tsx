@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Copy, Check, Trash2, BookmarkPlus } from 'lucide-react';
+import { Send, Copy, Check, Trash2, BookmarkPlus, Shield, Cpu, Users } from 'lucide-react';
 import { useChatWebSocket, type ChatMessage } from '@/hooks/use-chat-ws';
 import { getAgents } from '@/lib/backoffice/store';
 import { api } from '@/lib/api';
