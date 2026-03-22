@@ -249,7 +249,8 @@ describe('InventoryConsumerService', () => {
     jest.clearAllMocks();
     mockWorkflowService = makeMockWorkflowService();
     eventHandler = makeRealEventHandler();
-    consumer = new InventoryConsumerService(eventHandler, mockWorkflowService);
+    mockRetryService = makeMockRetryService();
+    consumer = new InventoryConsumerService(eventHandler, mockWorkflowService, mockRetryService);
   });
 
   describe('handleInventoryLow', () => {
