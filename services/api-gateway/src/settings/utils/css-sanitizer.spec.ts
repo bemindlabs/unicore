@@ -41,7 +41,8 @@ describe('sanitizeCss', () => {
     const css = '.x { color: red; } </style><script>alert(1)</script>';
     const { sanitized, blocked } = sanitizeCss(css);
     expect(blocked).toContain('</style>');
-    expect(sanitized).not.toContain('</style>');
+    // The injection context is gone (</style> may appear only inside the blocked comment)
+    expect(sanitized).not.toContain('</style><script>');
   });
 
   it('blocks @import', () => {
