@@ -91,9 +91,75 @@ function wsSend(ws: WebSocket, msg: Record<string, unknown>): void {
 }
 
 /**
- * Wait for the next message on a WebSocket (with timeout).
- * Resolves with the parsed JSON message.
+ * Buffered WebSocket wrapper that captures all incoming messages in a queue.
+ * This prevents race conditions where messages arrive before a listener is attached.
  */
+class BufferedSocket {
+  readonly ws: WebSocket;
+  private queue: ReceivedMessage[] = [];
+  private waiters: Array<(msg: ReceivedMessage) => void> = [];
+
+  constructor(ws: WebSocket) {
+    this.ws = ws;
+    ws.on('message', (raw: Buffer | string) => {
+      try {
+        const msg = JSON.parse(typeof raw === 'string' ? raw : raw.toString());
+        if (this.waiters.length > 0) {
+          const waiter = this.waiters.shift()!;
+          waiter(msg);
+        } else {
+          this.queue.push(msg);
+        }
+      } catch { /* ignore malformed */ }
+    });
+  }
+
+  /** Wait for the next message (from queue or new arrival). */
+  nextMessage(timeoutMs = 3000): Promise<ReceivedMessage> {
+    if (this.queue.length > 0) {
+      return Promise.resolve(this.queue.shift()!);
+    }
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        const idx = this.waiters.indexOf(resolve);
+        if (idx >= 0) this.waiters.splice(idx, 1);
+        reject(new Error(`Timed out waiting for WS message after ${timeoutMs}ms`));
+      }, timeoutMs);
+      this.waiters.push((msg) => {
+        clearTimeout(timer);
+        resolve(msg);
+      });
+    });
+  }
+
+  /** Collect N messages. */
+  async collectMessages(count: number, timeoutMs = 5000): Promise<ReceivedMessage[]> {
+    const messages: ReceivedMessage[] = [];
+    const deadline = Date.now() + timeoutMs;
+    for (let i = 0; i < count; i++) {
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) {
+        throw new Error(`Timed out: received ${messages.length}/${count} messages within ${timeoutMs}ms`);
+      }
+      messages.push(await this.nextMessage(remaining));
+    }
+    return messages;
+  }
+
+  send(msg: Record<string, unknown>): void {
+    wsSend(this.ws, msg);
+  }
+
+  close(): void {
+    this.ws.close();
+  }
+
+  get readyState(): number {
+    return this.ws.readyState;
+  }
+}
+
+// Legacy helpers that delegate to unbuffered ws.once — kept for non-cross-socket tests
 function waitForMessage(ws: WebSocket, timeoutMs = 3000): Promise<ReceivedMessage> {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
@@ -112,9 +178,6 @@ function waitForMessage(ws: WebSocket, timeoutMs = 3000): Promise<ReceivedMessag
   });
 }
 
-/**
- * Collect N messages from a WebSocket (with timeout).
- */
 function collectMessages(ws: WebSocket, count: number, timeoutMs = 5000): Promise<ReceivedMessage[]> {
   return new Promise((resolve, reject) => {
     const messages: ReceivedMessage[] = [];
