@@ -17,6 +17,7 @@ import {
 } from '../routing/interfaces/message.interface';
 import { RouterAgent } from '../router/router.agent';
 import { PtySessionManager } from '../terminal/pty-session-manager';
+import { MessagePersistenceService } from '../persistence/message-persistence.service';
 import { WebSocket } from 'ws';
 import { v4 as uuidv4 } from 'uuid';
 
