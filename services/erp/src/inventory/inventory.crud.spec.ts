@@ -96,9 +96,10 @@ describe('InventoryService — CRUD extensions', () => {
       mockPrisma.$transaction.mockResolvedValue([[product], 1]);
 
       const result = await service.findAll({ page: 1, limit: 20 });
-      expect(result.data[0].quantity).toBe(15);
-      expect(result.data[0].reservedQuantity).toBe(2);
-      expect(result.data[0].availableQuantity).toBe(13);
+      const item = result.data[0] as any;
+      expect(item.quantity).toBe(15);
+      expect(item.reservedQuantity).toBe(2);
+      expect(item.availableQuantity).toBe(13);
     });
   });
 
