@@ -435,7 +435,7 @@ export class OpenClawGateway
   // PTY terminal handlers
   // ---------------------------------------------------------------------------
 
-  private handlePtyCreate(client: WebSocket, message: IncomingMessage): void {
+  private handlePtyCreate(client: WebSocket, message: PtyMessage): void {
     const tracked = client as TrackedSocket;
     if (!tracked.authenticated) return;
     const { cols, rows, cwd } = message.payload as Record<string, any>;
