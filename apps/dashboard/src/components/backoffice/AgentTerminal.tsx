@@ -28,7 +28,7 @@ export function AgentTerminal({ agent, open, onClose }: Props) {
     xtermRef.current?.writeln(`\r\n\x1b[33m[Process exited with code ${exitCode}]\x1b[0m`);
   }, []);
 
-  const { connected, sessionId, createSession, sendInput, sendResize, destroy } = usePtyWebSocket(handleOutput, handleExit);
+  const { connected, sessionId, error, createSession, sendInput, sendResize, destroy } = usePtyWebSocket(handleOutput, handleExit);
 
   // Initialize xterm when panel opens
   useEffect(() => {
