@@ -160,7 +160,7 @@ export function ChannelConfig({
 
   // Determine which field gets the test button (last secret field, or last field)
   const testFieldKey = testConnection
-    ? (fields.findLast((f) => f.secret)?.key ?? fields[fields.length - 1]?.key)
+    ? ([...fields].reverse().find((f) => f.secret)?.key ?? fields[fields.length - 1]?.key)
     : null;
 
   return (
