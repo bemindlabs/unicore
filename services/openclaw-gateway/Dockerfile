@@ -23,6 +23,7 @@ RUN cd services/openclaw-gateway && pnpm run build
 
 ARG VERSION=0.0.0
 FROM --platform=$TARGETPLATFORM node:20.20.1-alpine AS runner
+RUN apk add --no-cache libstdc++ bash
 WORKDIR /app
 ENV NODE_ENV=production
 LABEL org.opencontainers.image.source="https://github.com/bemindlabs/unicore"
