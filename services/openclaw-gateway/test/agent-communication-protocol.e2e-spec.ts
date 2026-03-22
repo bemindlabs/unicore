@@ -308,12 +308,14 @@ describe('Agent Communication Protocol (E2E)', () => {
   let defaultToken: string;
 
   // Track all WebSockets opened during tests for cleanup
-  const openSockets: WebSocket[] = [];
+  const openSockets: (WebSocket | BufferedSocket)[] = [];
 
-  const trackWs = (ws: WebSocket): WebSocket => {
+  function trackWs(ws: WebSocket): WebSocket;
+  function trackWs(ws: BufferedSocket): BufferedSocket;
+  function trackWs(ws: WebSocket | BufferedSocket): WebSocket | BufferedSocket {
     openSockets.push(ws);
     return ws;
-  };
+  }
 
   beforeAll(async () => {
     // Note: JWT_SECRET and INTERNAL_SERVICE_SECRET are evaluated at module-import time
