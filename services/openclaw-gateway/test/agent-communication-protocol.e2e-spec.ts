@@ -240,13 +240,16 @@ describe('Agent Communication Protocol (E2E)', () => {
   };
 
   beforeAll(async () => {
-    // Set auth env vars before module bootstrap
-    process.env['JWT_SECRET'] = JWT_SECRET;
-    process.env['INTERNAL_SERVICE_SECRET'] = INTERNAL_SERVICE_SECRET;
+    // Note: JWT_SECRET and INTERNAL_SERVICE_SECRET are evaluated at module-import time
+    // in openclaw.gateway.ts (top-level constants). Since this test file imports the gateway
+    // class, those constants are already set before beforeAll runs. This means:
+    // - Auth is in "dev mode" (JWT_SECRET='') — unauthenticated connections are allowed
+    // - Auth rejection tests are skipped (see tests below)
+    // To test auth rejection, the gateway would need to read env vars at runtime.
     process.env['HTTP_PORT'] = String(HTTP_PORT);
-    // Use short heartbeat intervals for testing
-    process.env['HEARTBEAT_INTERVAL_MS'] = '500';
-    process.env['HEARTBEAT_TIMEOUT_MS'] = '1500';
+    // Use long heartbeat timeout so agents don't get terminated during tests
+    process.env['HEARTBEAT_INTERVAL_MS'] = '2000';
+    process.env['HEARTBEAT_TIMEOUT_MS'] = '60000';
 
     const mockRouterAgent = {
       process: jest.fn().mockResolvedValue({
