@@ -48,10 +48,20 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     return null;
   }
 
+  const bgClass = isRetroDesk
+    ? 'retrodesk-body'
+    : 'bg-muted/30';
+  const bgStyle = isRetroDesk
+    ? { background: 'var(--retrodesk-bg, #faf8f5)', color: 'var(--retrodesk-text, #2d2d2d)' }
+    : undefined;
+
   return (
-    <>
+    <RetroDeskThemeProvider>
       {demoMode && <DemoBanner />}
-      <div className={`flex h-screen overflow-hidden bg-muted/30${demoMode ? ' pt-9' : ''}`}>
+      <div
+        className={`flex h-screen overflow-hidden ${bgClass}${demoMode ? ' pt-9' : ''}`}
+        style={bgStyle}
+      >
         <Sidebar collapsed={collapsed} onToggle={toggle} />
         <MobileNav open={mobileNavOpen} onOpenChange={setMobileNavOpen} />
         <div className="flex flex-1 flex-col overflow-hidden">
@@ -62,6 +72,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
       </div>
       {demoMode && <DeployButton />}
-    </>
+    </RetroDeskThemeProvider>
   );
 }
