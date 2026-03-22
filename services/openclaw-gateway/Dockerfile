@@ -1,18 +1,19 @@
 # syntax=docker/dockerfile:1
-ARG BUILDPLATFORM=linux/amd64
-ARG TARGETPLATFORM=linux/amd64
 
-FROM --platform=$BUILDPLATFORM node:20.20.1-alpine AS base
+# ─── Base (Debian slim for glibc — required by node-pty prebuilds) ───────────
+FROM node:20.20.1-slim AS base
 RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
 WORKDIR /app
 
+# ─── Dependencies ────────────────────────────────────────────────────────────
 FROM base AS deps
-RUN apk add --no-cache python3 make g++
+RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
 COPY packages/config/package.json ./packages/config/
 COPY services/openclaw-gateway/package.json ./services/openclaw-gateway/
 RUN pnpm install --frozen-lockfile --filter @unicore/openclaw-gateway...
 
+# ─── Build ───────────────────────────────────────────────────────────────────
 FROM base AS build
 COPY packages/config ./packages/config
 COPY services/openclaw-gateway ./services/openclaw-gateway
@@ -21,10 +22,10 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/services/openclaw-gateway/node_modules ./services/openclaw-gateway/node_modules
 RUN cd services/openclaw-gateway && pnpm run build
 
+# ─── Runner ──────────────────────────────────────────────────────────────────
 ARG VERSION=0.0.0
-FROM --platform=$TARGETPLATFORM node:20.20.1-alpine AS runner
-RUN apk add --no-cache libstdc++ bash python3 make g++
-RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
+FROM node:20.20.1-slim AS runner
+RUN apt-get update && apt-get install -y --no-install-recommends bash wget curl tmux && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 ENV NODE_ENV=production
 LABEL org.opencontainers.image.source="https://github.com/bemindlabs/unicore"
@@ -36,15 +37,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/services/openclaw-gateway/node_modules ./services/openclaw-gateway/node_modules
 COPY --from=build /app/services/openclaw-gateway/dist ./services/openclaw-gateway/dist
 COPY --from=build /app/services/openclaw-gateway/package.json ./services/openclaw-gateway/
-COPY --from=deps /app/package.json ./
-COPY --from=deps /app/pnpm-lock.yaml* ./
-COPY --from=deps /app/pnpm-workspace.yaml ./
-# Rebuild native modules (node-pty) for the target platform
-RUN cd /app && pnpm rebuild node-pty 2>/dev/null || npm rebuild node-pty 2>/dev/null || true
-# Remove build tools after native module rebuild
-RUN apk del python3 make g++ 2>/dev/null || true
 WORKDIR /app/services/openclaw-gateway
-RUN addgroup -g 1001 -S nodejs && adduser -S -u 1001 appuser
+RUN groupadd -g 1001 nodejs && useradd -u 1001 -g nodejs -m appuser
 USER appuser
 EXPOSE 18789 18790
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
