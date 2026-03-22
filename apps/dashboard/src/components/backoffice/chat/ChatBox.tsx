@@ -174,13 +174,18 @@ export function ChatBox() {
     }
     // Load saved chat history for this channel
     setMessages([]);
-    api.get<{ items: Array<{ messages: ChatMessage[]; agentId: string; channel: string }> }>(
+    api.get<{ items: Array<{ id: string }> }>(
       `/api/v1/chat-history?channel=${encodeURIComponent(channel)}&limit=1`,
     )
-      .then((res) => {
+      .then(async (res) => {
         const latest = res?.items?.[0];
-        if (latest?.messages?.length) {
-          setMessages(latest.messages.map((m) => ({ ...m, reactions: {} })));
+        if (!latest?.id) return;
+        // Fetch full record with messages
+        const record = await api.get<{ messages?: ChatMessage[] }>(
+          `/api/v1/chat-history/${latest.id}`,
+        );
+        if (record?.messages?.length) {
+          setMessages(record.messages.map((m) => ({ ...m, reactions: {} })));
         }
       })
       .catch(() => { /* no history */ });
