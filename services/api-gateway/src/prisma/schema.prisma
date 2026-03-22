@@ -12,12 +12,32 @@ model User {
   id        String   @id @default(uuid())
   email     String   @unique
   name      String
-  password  String
+  password  String?
   role      Role     @default(VIEWER)
-  sessions      Session[]
-  notifications Notification[]
+  sessions       Session[]
+  notifications  Notification[]
+  oauthAccounts  OAuthAccount[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model OAuthAccount {
+  id                String   @id @default(uuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider          String   // "google" | "github"
+  providerAccountId String
+  email             String?
+  name              String?
+  avatarUrl         String?
+  accessToken       String?
+  refreshToken      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("oauth_accounts")
 }
 
 model Session {
