@@ -5,4 +5,7 @@ export * from './dto/order-events.dto';
 export * from './dto/inventory-events.dto';
 export * from './dto/invoice-events.dto';
 export * from './event-handler.service';
+export * from './dlq/dlq.service';
+export * from './dlq/dlq.controller';
+export * from './retry/retry.service';
 export * from './kafka-consumer.module';
