@@ -69,6 +69,7 @@ describe('OrderConsumerService', () => {
   let consumer: OrderConsumerService;
   let mockWorkflowService: WorkflowService;
   let eventHandler: EventHandlerService;
+  let mockRetryService: ReturnType<typeof makeMockRetryService>;
 
   const validOrderCreatedPayload = {
     orderId: 'ORD-001',
