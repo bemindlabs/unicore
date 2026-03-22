@@ -55,7 +55,7 @@ describe('sanitizeCss', () => {
 
   it('blocks @charset', () => {
     const css = '@charset "UTF-8";';
-    const { sanitized, blocked } = sanitizeCss(css);
+    const { sanitized: _sanitized, blocked } = sanitizeCss(css);
     expect(blocked).toContain('@charset');
   });
 
