@@ -1,32 +1,61 @@
-export interface PluginManifest {
-  id: string;
-  name: string;
-  version: string;
-  description?: string;
-  author?: string;
-  type: 'agent' | 'integration' | 'workflow' | 'theme';
-  entrypoint: string;
-  permissions?: string[];
-}
+// Types
+export type {
+  PluginType,
+  PluginStatus,
+  PluginPermission,
+  JSONSchemaObject,
+  PluginManifest,
+  PluginLogger,
+  PluginSandbox,
+  PluginContext,
+  Plugin,
+  PluginFactory,
+  PluginRegistration,
+  PluginEventType,
+  PluginEvent,
+  PluginEventHandler,
+  ValidationResult,
+} from './types.js';
 
-export interface PluginContext {
-  pluginId: string;
-  config: Record<string, unknown>;
-  logger: PluginLogger;
-}
+// Schema validation
+export { validateSchema, MANIFEST_SCHEMA } from './schema-validator.js';
+export { validateManifest } from './plugin-loader.js';
 
-export interface PluginLogger {
-  info(message: string, ...args: unknown[]): void;
-  warn(message: string, ...args: unknown[]): void;
-  error(message: string, ...args: unknown[]): void;
-}
+// Sandbox
+export { PluginSandboxImpl, PermissionDeniedError, ALL_PERMISSIONS } from './sandbox.js';
 
-export interface Plugin {
-  manifest: PluginManifest;
-  activate(context: PluginContext): Promise<void>;
-  deactivate?(): Promise<void>;
-}
+// Event system
+export { PluginEventEmitter } from './event-system.js';
 
-export function definePlugin(manifest: PluginManifest, activate: (ctx: PluginContext) => Promise<void>): Plugin {
-  return { manifest, activate };
+// Loader
+export { PluginLoader, PluginLoadError, PluginManifestError } from './plugin-loader.js';
+
+// Lifecycle
+export { PluginLifecycleManager, PluginLifecycleError } from './lifecycle-manager.js';
+
+// Dependency resolution
+export {
+  resolveLoadOrder,
+  satisfiesVersion,
+  DependencyResolutionError,
+} from './dependency-resolver.js';
+
+// Convenience factory (backwards-compatible with original API)
+export function definePlugin(
+  manifest: import('./types.js').PluginManifest,
+  activate: (ctx: import('./types.js').PluginContext) => Promise<void>,
+  options?: {
+    deactivate?: () => Promise<void>;
+    configure?: (
+      config: Record<string, unknown>,
+      ctx: import('./types.js').PluginContext,
+    ) => Promise<void>;
+  },
+): import('./types.js').Plugin {
+  return {
+    manifest,
+    activate,
+    deactivate: options?.deactivate,
+    configure: options?.configure,
+  };
 }
