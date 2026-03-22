@@ -1,7 +1,4 @@
 import { defineConfig, devices } from '@playwright/test';
-import * as dotenv from 'dotenv';
-
-dotenv.config({ path: '.env.test' });
 
 const DASHBOARD_URL = process.env.DASHBOARD_URL || 'http://localhost:3000';
 const PLATFORM_URL = process.env.PLATFORM_URL || 'http://localhost:3100';

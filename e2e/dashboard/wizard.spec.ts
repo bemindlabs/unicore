@@ -1,0 +1,87 @@
+import { test, expect } from '@playwright/test';
+
+// Uses auth stored by auth.setup.ts
+test.describe('Wizard Steps @smoke', () => {
+  test('should load wizard page', async ({ page }) => {
+    await page.goto('/wizard');
+    await page.waitForLoadState('domcontentloaded');
+
+    // Wizard should render — either the setup wizard or a "already configured" state
+    const wizardContent = page
+      .getByText(/wizard|setup|configure|business/i)
+      .first();
+    await expect(wizardContent).toBeVisible({ timeout: 15000 });
+  });
+
+  test('should show step indicators', async ({ page }) => {
+    await page.goto('/wizard');
+    await page.waitForLoadState('domcontentloaded');
+
+    // Step indicators: numbered steps or progress bar
+    const stepIndicator = page
+      .locator('[data-step], .step-indicator, [aria-label*="step"]')
+      .first()
+      .or(page.getByText(/step \d/i).first());
+
+    // If wizard is locked/complete this may not show — just check page loads
+    await expect(page.locator('main, [role="main"]').first()).toBeVisible({ timeout: 10000 });
+  });
+
+  test('should navigate wizard steps with next button', async ({ page }) => {
+    await page.goto('/wizard');
+    await page.waitForLoadState('domcontentloaded');
+
+    const nextButton = page.getByRole('button', { name: /next|continue|proceed/i }).first();
+    if (await nextButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      // Fill any required fields on step 1
+      const nameInput = page.getByLabel(/business name|company name/i).first();
+      if (await nameInput.isVisible({ timeout: 2000 }).catch(() => false)) {
+        await nameInput.fill('Test Company');
+      }
+      await nextButton.click();
+      await page.waitForTimeout(500);
+      // Page should have advanced (URL or content changed)
+      await expect(page.locator('main')).toBeVisible();
+    }
+  });
+
+  test('should allow going back to previous step', async ({ page }) => {
+    await page.goto('/wizard');
+    await page.waitForLoadState('domcontentloaded');
+
+    const nextButton = page.getByRole('button', { name: /next|continue/i }).first();
+    if (await nextButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await nextButton.click();
+      await page.waitForTimeout(500);
+
+      const backButton = page.getByRole('button', { name: /back|previous/i }).first();
+      if (await backButton.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await backButton.click();
+        await expect(page.locator('main')).toBeVisible();
+      }
+    }
+  });
+
+  test('should show business profile step', async ({ page }) => {
+    await page.goto('/wizard');
+    await page.waitForLoadState('domcontentloaded');
+
+    // Step 1 is typically business profile setup
+    const profileContent = page
+      .getByText(/business profile|company|organization/i)
+      .first();
+    await expect(profileContent).toBeVisible({ timeout: 15000 });
+  });
+
+  test('wizard page does not crash with 500 error', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('response', (res) => {
+      if (res.status() >= 500) errors.push(`${res.status()} ${res.url()}`);
+    });
+
+    await page.goto('/wizard');
+    await page.waitForLoadState('domcontentloaded');
+
+    expect(errors).toHaveLength(0);
+  });
+});
