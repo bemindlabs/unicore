@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description: 'AI-powered business operations dashboard',
 };
 
-const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem('selected-theme');if(!s){var c=localStorage.getItem('character-theme');if(c)s=c;else{var t=localStorage.getItem('theme');s=t||'default'}}var d=s==='dark'||s==='retrodesk'||s==='crypto'?true:s==='light'?false:window.matchMedia('(prefers-color-scheme:dark)').matches;if(d)document.documentElement.classList.add('dark');if(s==='retrodesk'||s==='crypto')document.documentElement.setAttribute('data-character-theme',s)}catch(e){}})()`;
+const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem('selected-theme');if(!s){var c=localStorage.getItem('character-theme');if(c)s=c;else{var t=localStorage.getItem('theme');s=t||'default'}}var d=s==='dark'||s==='retrodesk'||s==='crypto'?true:s==='light'?false:window.matchMedia('(prefers-color-scheme:dark)').matches;if(d)document.documentElement.classList.add('dark');var ct=s;var skin=localStorage.getItem('character-skin');if(skin&&(skin.startsWith('retrodesk')||skin.startsWith('crypto')))ct=skin;if(ct&&(ct.startsWith('retrodesk')||ct.startsWith('crypto')))document.documentElement.setAttribute('data-character-theme',ct)}catch(e){}})()`;
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const locale = await getLocale();
