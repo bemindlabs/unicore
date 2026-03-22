@@ -3,6 +3,7 @@ import { OrdersService } from './orders.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { EventPublisherService } from '../kafka/event-publisher.service';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { OrderStatusFilter } from './dto/query-orders.dto';
 
 const mockPrisma = {
   contact: { findUnique: jest.fn() },
