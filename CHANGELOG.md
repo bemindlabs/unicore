@@ -2,6 +2,27 @@
 
 Updated: 2026-03-22
 
+
+## [0.1.0] - 2026-03-22
+
+### Added
+- 7 NestJS services fully implemented (API Gateway, ERP, AI Engine, RAG, Bootstrap, Workflow, OpenClaw)
+- Dashboard with Next.js 16, retro-desk theme, 17+ pages
+- Plugin SDK with loader, lifecycle, sandbox, events, dependency resolver
+- 9 OpenClaw AI agents with intent classification and delegation
+- WebSocket message persistence and replay
+- Kafka DLQ with retry and exponential backoff
+- Agent rate limiting (token bucket)
+- 6 shared packages (shared-types, config, ui, integrations, branding, plugin-sdk)
+- 145 test files, 1,160+ tests passing
+- Pre-push quality gate (tests + Trivy + Semgrep)
+
+### Fixed
+- GCM authTagLength in crypto.util.ts
+- Dashboard jest.config portable ts-jest resolution
+- Workflow kafka topic count test
+- Auth controller/service test DI mocks
+
 ## [0.0.3] - 2026-03-21
 
 ### Added
