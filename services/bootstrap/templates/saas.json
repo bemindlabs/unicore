@@ -1,0 +1,27 @@
+{
+  "name": "SaaS",
+  "description": "Software-as-a-Service platform with subscription management, customer success, and growth automation",
+  "erp": {
+    "contacts": true,
+    "orders": true,
+    "inventory": false,
+    "invoicing": true,
+    "expenses": true,
+    "reports": true
+  },
+  "agents": {
+    "comms": true,
+    "finance": true,
+    "growth": true,
+    "ops": true,
+    "research": true,
+    "erp": false,
+    "builder": true,
+    "sentinel": false
+  },
+  "dashboard": {
+    "widgets": ["mrr", "churn", "signups", "ltv", "nps"]
+  },
+  "channels": ["email", "web", "slack", "intercom"],
+  "workflows": ["trial_expiry", "churn_risk", "onboarding", "upsell_opportunity"]
+}
