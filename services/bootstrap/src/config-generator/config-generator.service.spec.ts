@@ -23,6 +23,7 @@ const makeTemplate = (overrides: Partial<Template> = {}): Template => ({
     research: true,
     erp: false,
     builder: true,
+    sentinel: true,
   },
   dashboard: { widgets: ['mrr', 'churn', 'signups'] },
   channels: ['email', 'web', 'slack'],
