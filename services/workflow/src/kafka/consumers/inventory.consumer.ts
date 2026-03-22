@@ -37,12 +37,17 @@ export class InventoryConsumerService {
     const payload = await deserializePayload(InventoryLowPayloadDto, envelope.payload);
     if (!payload) return;
 
-    await this.eventHandler.handle({ ...envelope, payload }, async (p) => {
-      this.logger.log(
-        `inventory.low — sku=${p.sku} qty=${p.currentQuantity}/${p.threshold} warehouse=${p.warehouseId ?? 'default'}`,
-      );
-      await this.workflowService.handleEvent(WORKFLOW_TOPICS.INVENTORY_LOW, p);
-    });
+    await this.retryService.withRetry(
+      async () => {
+        await this.eventHandler.handle({ ...envelope, payload }, async (p) => {
+          this.logger.log(
+            `inventory.low — sku=${p.sku} qty=${p.currentQuantity}/${p.threshold} warehouse=${p.warehouseId ?? 'default'}`,
+          );
+          await this.workflowService.handleEvent(WORKFLOW_TOPICS.INVENTORY_LOW, p);
+        });
+      },
+      { topic: WORKFLOW_TOPICS.INVENTORY_LOW, eventId: envelope.eventId, originalPayload: payload },
+    );
   }
 
   // ---------------------------------------------------------------------------
