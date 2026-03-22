@@ -115,6 +115,11 @@ export interface PingMessage extends BaseMessage {
   type: 'system:ping';
 }
 
+export interface PtyMessage extends BaseMessage {
+  type: 'pty:create' | 'pty:input' | 'pty:resize' | 'pty:destroy';
+  payload: Record<string, unknown>;
+}
+
 export type IncomingMessage =
   | RegisterMessage
   | UnregisterMessage
@@ -125,7 +130,8 @@ export type IncomingMessage =
   | PublishMessage
   | SubscribeMessage
   | UnsubscribeMessage
-  | PingMessage;
+  | PingMessage
+  | PtyMessage;
 
 export interface AckMessage extends BaseMessage {
   type: 'system:ack';
