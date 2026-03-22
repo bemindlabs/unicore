@@ -8,16 +8,22 @@ import { Header } from '@/components/layout/header';
 import { MobileNav } from '@/components/layout/mobile-nav';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { useAuth } from '@/hooks/use-auth';
+import { useTheme } from '@/hooks/use-theme';
 import { useDemoMode } from '@/hooks/use-demo-mode';
 import { DemoBanner } from '@/components/demo/DemoBanner';
 import { DeployButton } from '@/components/demo/DeployButton';
+import { RetroDeskThemeProvider } from '@/components/backoffice/retrodesk/RetroDeskThemeProvider';
+import { isRetroDeskFamily } from '@/lib/backoffice/theme-registry';
+import '@/styles/retrodesk-theme.css';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
+  const { characterTheme } = useTheme();
   const router = useRouter();
   const { collapsed, toggle } = useSidebar();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const demoMode = useDemoMode();
+  const isRetroDesk = isRetroDeskFamily(characterTheme);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {

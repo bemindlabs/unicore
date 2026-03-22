@@ -101,7 +101,8 @@ const STATUS_CONFIG: Record<ServiceStatus, { label: string; icon: React.Componen
 // ---------------------------------------------------------------------------
 
 function ServiceCard({ service }: { service: ServiceHealth }) {
-  const cfg = STATUS_CONFIG[service.status];
+  const normalizedStatus = (service.status?.toUpperCase() ?? 'UNKNOWN') as ServiceStatus;
+  const cfg = STATUS_CONFIG[normalizedStatus] ?? STATUS_CONFIG.UNKNOWN;
   const Icon = cfg.icon;
 
   return (
@@ -165,7 +166,8 @@ function MetricGauge({ label, value, max, format, icon: Icon }: {
 // ---------------------------------------------------------------------------
 
 function OverallBanner({ status }: { status: ServiceStatus }) {
-  const cfg = STATUS_CONFIG[status];
+  const normalizedStatus = (status?.toUpperCase() ?? 'UNKNOWN') as ServiceStatus;
+  const cfg = STATUS_CONFIG[normalizedStatus] ?? STATUS_CONFIG.UNKNOWN;
   const Icon = cfg.icon;
   const bg: Record<ServiceStatus, string> = {
     HEALTHY: 'bg-emerald-50 border-emerald-200',
