@@ -12,22 +12,27 @@
       "types": "./dist/index.d.ts"
     },
     "./types": {
+      "require": "./dist/types.js",
       "import": "./dist/types.js",
       "types": "./dist/types.d.ts"
     },
     "./presets": {
+      "require": "./dist/presets.js",
       "import": "./dist/presets.js",
       "types": "./dist/presets.d.ts"
     },
     "./service": {
+      "require": "./dist/service.js",
       "import": "./dist/service.js",
       "types": "./dist/service.d.ts"
     },
     "./css-generator": {
+      "require": "./dist/css-generator.js",
       "import": "./dist/css-generator.js",
       "types": "./dist/css-generator.d.ts"
     },
     "./tailwind": {
+      "require": "./dist/tailwind.js",
       "import": "./dist/tailwind.js",
       "types": "./dist/tailwind.d.ts"
     }

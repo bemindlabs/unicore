@@ -131,7 +131,7 @@ function TopTable({
   title,
   desc,
   rows,
-  valueLabel,
+  valueLabel: _valueLabel,
   formatVal,
   icon: Icon,
 }: {

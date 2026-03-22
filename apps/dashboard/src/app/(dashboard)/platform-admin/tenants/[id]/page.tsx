@@ -8,7 +8,6 @@ import {
   ArrowLeft,
   Ban,
   CheckCircle2,
-  Clock,
   Globe,
   HardDrive,
   KeyRound,
