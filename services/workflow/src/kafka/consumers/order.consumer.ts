@@ -4,6 +4,7 @@ import { WORKFLOW_TOPICS } from '../constants/kafka.constants';
 import { deserializeEnvelope, deserializePayload } from '../utils/event-deserializer';
 import { EventHandlerService } from '../event-handler.service';
 import { WorkflowService } from '../../workflow/workflow.service';
+import { RetryService } from '../retry/retry.service';
 import {
   OrderCreatedPayloadDto,
   OrderUpdatedPayloadDto,
@@ -14,8 +15,8 @@ import {
  * OrderConsumerService handles all Kafka messages on the order.* topics.
  *
  * Each method is bound to its topic via @MessagePattern, deserializes and
- * validates the event, then delegates to EventHandlerService which forwards
- * the payload into the WorkflowService.handleEvent() pipeline.
+ * validates the event, then delegates to RetryService which wraps the handler
+ * with exponential-backoff retries and DLQ routing on final failure.
  */
 @Controller()
 export class OrderConsumerService {
@@ -24,6 +25,7 @@ export class OrderConsumerService {
   constructor(
     private readonly eventHandler: EventHandlerService,
     private readonly workflowService: WorkflowService,
+    private readonly retryService: RetryService,
   ) {}
 
   // ---------------------------------------------------------------------------
