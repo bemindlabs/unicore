@@ -325,7 +325,7 @@ curl -X POST http://localhost:4000/auth/provision-admin \
 - [x] NestJS API Gateway with JWT/Local auth
 - [x] ERP service (CRM, orders, inventory, invoicing, expenses)
 - [x] OpenClaw multi-agent WebSocket gateway
-- [x] 8 specialist AI agents with autonomy levels
+- [x] 9 specialist AI agents with autonomy levels
 - [x] Agent CRUD API (register, update, delete)
 - [x] RAG service with Qdrant vector search
 - [x] Bootstrap wizard with 7 industry templates
