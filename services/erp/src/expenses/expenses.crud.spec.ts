@@ -71,7 +71,7 @@ describe('ExpensesService — CRUD extensions', () => {
     it('applies status and category filters', async () => {
       mockPrisma.$transaction.mockResolvedValue([[], 0]);
 
-      await service.findAll({ page: 1, limit: 20, status: 'SUBMITTED' as any, category: 'TRAVEL' });
+      await service.findAll({ page: 1, limit: 20, status: ExpenseStatusFilter.SUBMITTED, category: 'TRAVEL' });
       expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1);
     });
   });
