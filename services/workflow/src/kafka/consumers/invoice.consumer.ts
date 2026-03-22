@@ -41,12 +41,17 @@ export class InvoiceConsumerService {
     const payload = await deserializePayload(InvoiceCreatedPayloadDto, envelope.payload);
     if (!payload) return;
 
-    await this.eventHandler.handle({ ...envelope, payload }, async (p) => {
-      this.logger.log(
-        `invoice.created — invoiceId=${p.invoiceId} total=${p.total} ${p.currency} due=${p.dueDate}`,
-      );
-      await this.workflowService.handleEvent(WORKFLOW_TOPICS.INVOICE_CREATED, p);
-    });
+    await this.retryService.withRetry(
+      async () => {
+        await this.eventHandler.handle({ ...envelope, payload }, async (p) => {
+          this.logger.log(
+            `invoice.created — invoiceId=${p.invoiceId} total=${p.total} ${p.currency} due=${p.dueDate}`,
+          );
+          await this.workflowService.handleEvent(WORKFLOW_TOPICS.INVOICE_CREATED, p);
+        });
+      },
+      { topic: WORKFLOW_TOPICS.INVOICE_CREATED, eventId: envelope.eventId, originalPayload: payload },
+    );
   }
 
   // ---------------------------------------------------------------------------
