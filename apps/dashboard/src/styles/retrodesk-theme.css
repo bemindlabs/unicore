@@ -192,8 +192,35 @@
 
 /* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  [data-character-theme="retrodesk"] * {
+  [data-character-theme="retrodesk"] *,
+  [data-character-theme="crypto"] * {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }
+}
+
+/* ─── Crypto Meme Coin Theme ─────────────────────────────────────────────── */
+
+[data-character-theme="crypto"] {
+  --pixel-size: 3px;
+  --pixel-border-width: 2px;
+  --retrodesk-pink: #ff6b9d;
+  --retrodesk-blue: #00d4ff;
+  --retrodesk-yellow: #ffd93d;
+  --retrodesk-green: #00ff88;
+  --retrodesk-orange: #ff8c00;
+  --retrodesk-bg: #0a0e17;
+  --retrodesk-surface: #111827;
+  --retrodesk-text: #e0ffe0;
+  --retrodesk-muted: #6b8a6b;
+  --retrodesk-border: #1e3a1e;
+  --bo-bg-deep: #0a0e17;
+  --bo-border: #1e3a1e;
+  --bo-border-subtle: rgba(0, 255, 136, 0.06);
+}
+
+[data-character-theme="crypto"] .retrodesk-grid-bg {
+  background:
+    linear-gradient(90deg, transparent 49.5%, rgba(0,255,136,0.05) 49.5%, rgba(0,255,136,0.05) 50.5%, transparent 50.5%) 0 0 / 24px 24px,
+    linear-gradient(0deg, transparent 49.5%, rgba(0,255,136,0.05) 49.5%, rgba(0,255,136,0.05) 50.5%, transparent 50.5%) 0 0 / 24px 24px;
 }
