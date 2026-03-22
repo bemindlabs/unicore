@@ -62,6 +62,9 @@ export class OpenClawGateway
     this.heartbeat.setSendFunction((socketId: string, data: string) => {
       this.sendToSocket(socketId, data);
     });
+    this.ptyManager.setSendFunction((socketId: string, data: string) => {
+      this.sendToSocket(socketId, data);
+    });
   }
 
   afterInit(server: Server): void {
