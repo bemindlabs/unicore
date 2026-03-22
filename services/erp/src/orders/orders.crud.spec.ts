@@ -111,7 +111,7 @@ describe('OrdersService — CRUD extensions', () => {
 
     it('applies status filter when provided', async () => {
       mockPrisma.$transaction.mockResolvedValue([[], 0]);
-      await service.findAll({ page: 1, limit: 20, status: 'CONFIRMED' });
+      await service.findAll({ page: 1, limit: 20, status: OrderStatusFilter.CONFIRMED });
       expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1);
     });
   });
