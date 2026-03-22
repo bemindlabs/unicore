@@ -100,6 +100,8 @@ export function useTheme() {
 
     // Persist to localStorage
     localStorage.setItem('selected-theme', id);
+    // Clear saved character skin when switching main theme
+    localStorage.removeItem('character-skin');
     if (colorScheme !== 'system') {
       localStorage.setItem('theme', effectiveTheme);
     } else {
