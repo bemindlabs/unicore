@@ -36,6 +36,13 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/services/openclaw-gateway/node_modules ./services/openclaw-gateway/node_modules
 COPY --from=build /app/services/openclaw-gateway/dist ./services/openclaw-gateway/dist
 COPY --from=build /app/services/openclaw-gateway/package.json ./services/openclaw-gateway/
+COPY --from=deps /app/package.json ./
+COPY --from=deps /app/pnpm-lock.yaml* ./
+COPY --from=deps /app/pnpm-workspace.yaml ./
+# Rebuild native modules (node-pty) for the target platform
+RUN cd /app && pnpm rebuild node-pty 2>/dev/null || npm rebuild node-pty 2>/dev/null || true
+# Remove build tools after native module rebuild
+RUN apk del python3 make g++ 2>/dev/null || true
 WORKDIR /app/services/openclaw-gateway
 RUN addgroup -g 1001 -S nodejs && adduser -S -u 1001 appuser
 USER appuser
