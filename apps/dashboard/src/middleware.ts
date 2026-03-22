@@ -48,10 +48,10 @@ export function middleware(request: NextRequest) {
     return response;
   }
 
-  // Root "/" — redirect to dashboard-home if authenticated, login if not
+  // Root "/" — serve dashboard if authenticated, login if not
   if (pathname === '/') {
     if (token && isValidToken(token)) {
-      return withLocale(NextResponse.rewrite(new URL('/dashboard-home', request.url)));
+      return withLocale(NextResponse.next());
     }
     return withLocale(NextResponse.redirect(new URL('/login', request.url)));
   }
