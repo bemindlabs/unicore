@@ -59,6 +59,7 @@ export class OpenClawGateway
     private readonly heartbeat: HeartbeatService,
     private readonly routerAgent: RouterAgent,
     private readonly ptyManager: PtySessionManager,
+    private readonly persistence: MessagePersistenceService,
   ) {}
 
   onModuleInit(): void {
