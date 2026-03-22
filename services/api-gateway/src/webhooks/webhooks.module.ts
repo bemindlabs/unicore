@@ -3,9 +3,24 @@ import { ConfigModule } from '@nestjs/config';
 import { LicenseModule } from '../license/license.module';
 import { TelegramWebhookController } from './telegram-webhook.controller';
 import { LineWebhookController } from './line-webhook.controller';
+import { FacebookWebhookController } from './facebook-webhook.controller';
+import { InstagramWebhookController } from './instagram-webhook.controller';
+import { WhatsAppWebhookController } from './whatsapp-webhook.controller';
+import { TikTokWebhookController } from './tiktok-webhook.controller';
+import { SlackWebhookController } from './slack-webhook.controller';
+import { DiscordWebhookController } from './discord-webhook.controller';
 
 @Module({
   imports: [ConfigModule, LicenseModule],
-  controllers: [TelegramWebhookController, LineWebhookController],
+  controllers: [
+    TelegramWebhookController,
+    LineWebhookController,
+    FacebookWebhookController,
+    InstagramWebhookController,
+    WhatsAppWebhookController,
+    TikTokWebhookController,
+    SlackWebhookController,
+    DiscordWebhookController,
+  ],
 })
 export class WebhooksModule {}

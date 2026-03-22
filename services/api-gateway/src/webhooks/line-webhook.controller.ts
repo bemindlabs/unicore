@@ -102,7 +102,32 @@ export class LineWebhookController {
         );
       }
 
-      // TODO: Forward to OpenClaw agent pipeline
+      // Forward to OpenClaw agent pipeline (fire-and-forget)
+      if (eventType === 'message' && event.message) {
+        const openclawHost = this.config.get<string>('OPENCLAW_SERVICE_HOST') ?? 'unicore-openclaw-gateway';
+        const openclawPort = this.config.get<string>('OPENCLAW_SERVICE_PORT') ?? '18790';
+        const openclawUrl = `http://${openclawHost}:${openclawPort}/api/v1/channels/inbound`;
+
+        const text = event.message.text ?? `[${event.message.type} message]`;
+
+        const payload = {
+          channel: 'line',
+          senderId: userId,
+          senderName: userId,
+          text,
+          rawPayload: event,
+        };
+
+        fetch(openclawUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        }).catch((err: unknown) => {
+          this.logger.error(
+            `Failed to forward LINE message to OpenClaw: ${err instanceof Error ? err.message : String(err)}`,
+          );
+        });
+      }
     }
 
     return { ok: true };

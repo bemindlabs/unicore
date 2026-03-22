@@ -179,6 +179,78 @@ export class CommsAgent extends SpecialistAgentBase {
           required: ["commentId", "channel", "action"],
         },
       },
+      {
+        name: "send_channel",
+        description:
+          "Send a message to any configured channel (Telegram, LINE, email, etc.).",
+        parameters: {
+          type: "object",
+          properties: {
+            channel: {
+              type: "string",
+              description:
+                "Target channel identifier (e.g. 'telegram', 'line', 'email')",
+            },
+            conversationId: {
+              type: "string",
+              description:
+                "Channel-specific conversation or recipient identifier (chat ID, user ID, email address, etc.)",
+            },
+            text: { type: "string", description: "Message body to send" },
+          },
+          required: ["channel", "conversationId", "text"],
+        },
+      },
+      {
+        name: "send_telegram",
+        description: "Send a Telegram message to a specific chat.",
+        parameters: {
+          type: "object",
+          properties: {
+            chatId: {
+              type: "string",
+              description: "Telegram chat ID to send the message to",
+            },
+            text: { type: "string", description: "Message body to send" },
+          },
+          required: ["chatId", "text"],
+        },
+      },
+      {
+        name: "send_line",
+        description: "Send a LINE message to a specific user.",
+        parameters: {
+          type: "object",
+          properties: {
+            userId: {
+              type: "string",
+              description: "LINE user ID to send the message to",
+            },
+            text: { type: "string", description: "Message body to send" },
+          },
+          required: ["userId", "text"],
+        },
+      },
+      {
+        name: "reply_channel",
+        description:
+          "Reply to an inbound message on the same channel it arrived from.",
+        parameters: {
+          type: "object",
+          properties: {
+            channel: {
+              type: "string",
+              description: "Channel the original message came from",
+            },
+            conversationId: {
+              type: "string",
+              description: "Conversation or recipient identifier on that channel",
+            },
+            text: { type: "string", description: "Reply text" },
+          },
+          required: ["channel", "conversationId", "text"],
+        },
+      },
     ];
   }
 
@@ -188,6 +260,17 @@ export class CommsAgent extends SpecialistAgentBase {
 
   private get ERP_SERVICE_URL(): string {
     return process.env["ERP_SERVICE_URL"] ?? "http://localhost:4100";
+  }
+
+  private get API_GATEWAY_URL(): string {
+    return process.env["API_GATEWAY_URL"] ?? "http://unicore-api-gateway:4000";
+  }
+
+  private get internalHeaders(): Record<string, string> {
+    return {
+      "Content-Type": "application/json",
+      "X-Internal-Service": "openclaw-gateway",
+    };
   }
 
   protected async executeTool(
@@ -213,11 +296,16 @@ export class CommsAgent extends SpecialistAgentBase {
       }
       case "send_email": {
         const res = await fetch(
-          `${this.ERP_SERVICE_URL}/comms/email/send`,
+          `${this.API_GATEWAY_URL}/api/v1/channels/send`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(call.arguments),
+            headers: this.internalHeaders,
+            body: JSON.stringify({
+              channel: "email",
+              conversationId: call.arguments["draftId"],
+              provider: call.arguments["provider"],
+              ...call.arguments,
+            }),
           },
         );
         const data = await res.json();
@@ -261,16 +349,32 @@ export class CommsAgent extends SpecialistAgentBase {
         return { toolName: call.toolName, result: data };
       }
       case "schedule_post": {
-        const res = await fetch(
-          `${this.ERP_SERVICE_URL}/comms/social/schedule`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(call.arguments),
-          },
+        const { channels, content, scheduledAt, mediaUrls } = call.arguments as {
+          channels: string[];
+          content: string;
+          scheduledAt?: string;
+          mediaUrls?: string[];
+        };
+        const results = await Promise.all(
+          channels.map(async (channel) => {
+            const res = await fetch(
+              `${this.API_GATEWAY_URL}/api/v1/channels/send`,
+              {
+                method: "POST",
+                headers: this.internalHeaders,
+                body: JSON.stringify({
+                  channel,
+                  text: content,
+                  scheduled: true,
+                  scheduledAt,
+                  mediaUrls,
+                }),
+              },
+            );
+            return res.json();
+          }),
         );
-        const data = await res.json();
-        return { toolName: call.toolName, result: data };
+        return { toolName: call.toolName, result: { scheduled: results } };
       }
       case "fetch_social_feed": {
         const params = new URLSearchParams();
@@ -303,6 +407,55 @@ export class CommsAgent extends SpecialistAgentBase {
             moderationResult: data,
           },
         };
+      }
+      case "send_channel":
+      case "reply_channel": {
+        const res = await fetch(
+          `${this.API_GATEWAY_URL}/api/v1/channels/send`,
+          {
+            method: "POST",
+            headers: this.internalHeaders,
+            body: JSON.stringify({
+              channel: call.arguments["channel"],
+              conversationId: call.arguments["conversationId"],
+              text: call.arguments["text"],
+            }),
+          },
+        );
+        const data = await res.json();
+        return { toolName: call.toolName, result: data };
+      }
+      case "send_telegram": {
+        const res = await fetch(
+          `${this.API_GATEWAY_URL}/api/v1/channels/send`,
+          {
+            method: "POST",
+            headers: this.internalHeaders,
+            body: JSON.stringify({
+              channel: "telegram",
+              conversationId: call.arguments["chatId"],
+              text: call.arguments["text"],
+            }),
+          },
+        );
+        const data = await res.json();
+        return { toolName: call.toolName, result: data };
+      }
+      case "send_line": {
+        const res = await fetch(
+          `${this.API_GATEWAY_URL}/api/v1/channels/send`,
+          {
+            method: "POST",
+            headers: this.internalHeaders,
+            body: JSON.stringify({
+              channel: "line",
+              conversationId: call.arguments["userId"],
+              text: call.arguments["text"],
+            }),
+          },
+        );
+        const data = await res.json();
+        return { toolName: call.toolName, result: data };
       }
       default:
         return {

@@ -89,7 +89,36 @@ export class TelegramWebhookController {
       );
     }
 
-    // TODO: Forward to OpenClaw agent pipeline
+    // Forward to OpenClaw agent pipeline (fire-and-forget)
+    if (message) {
+      const openclawHost = this.config.get<string>('OPENCLAW_SERVICE_HOST') ?? 'unicore-openclaw-gateway';
+      const openclawPort = this.config.get<string>('OPENCLAW_SERVICE_PORT') ?? '18790';
+      const openclawUrl = `http://${openclawHost}:${openclawPort}/api/v1/channels/inbound`;
+
+      const senderId = message.from?.id?.toString() ?? 'unknown';
+      const senderName = message.from
+        ? `${message.from.first_name}${message.from.last_name ? ' ' + message.from.last_name : ''}`
+        : 'unknown';
+      const text = message.text ?? '[non-text message]';
+
+      const payload = {
+        channel: 'telegram',
+        senderId,
+        senderName,
+        text,
+        rawPayload: update,
+      };
+
+      fetch(openclawUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }).catch((err: unknown) => {
+        this.logger.error(
+          `Failed to forward Telegram message to OpenClaw: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      });
+    }
 
     return { ok: true };
   }
