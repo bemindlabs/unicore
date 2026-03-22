@@ -147,6 +147,7 @@ export interface ErrorMessage extends BaseMessage {
     originalMessageId?: string;
     code: string;
     message: string;
+    retryAfter?: number;
   };
 }
 
