@@ -163,6 +163,8 @@ export class OpenClawGateway
     const socket = client as TrackedSocket;
     this.logger.log(`Client disconnected: ${socket.socketId}`);
 
+    this.ptyManager.destroyAllForSocket(socket.socketId);
+
     const agent = this.registry.unregisterBySocket(socket.socketId);
     if (agent) {
       this.router.unsubscribeAll(agent.metadata.id);
