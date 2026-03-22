@@ -15,6 +15,8 @@ import {
   StateChangeMessage,
   UnregisterMessage,
 } from '../routing/interfaces/message.interface';
+import { RouterAgent } from '../router/router.agent';
+import { PtySessionManager } from '../terminal/pty-session-manager';
 import { WebSocket } from 'ws';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -54,6 +56,22 @@ describe('OpenClawGateway', () => {
             onModuleInit: jest.fn(),
             onModuleDestroy: jest.fn(),
             getStatus: jest.fn().mockReturnValue({}),
+          },
+        },
+        {
+          provide: RouterAgent,
+          useValue: { process: jest.fn() },
+        },
+        {
+          provide: PtySessionManager,
+          useValue: {
+            setSendFunction: jest.fn(),
+            createSession: jest.fn(),
+            writeInput: jest.fn(),
+            resize: jest.fn(),
+            destroySession: jest.fn(),
+            destroyAllForSocket: jest.fn(),
+            onModuleDestroy: jest.fn(),
           },
         },
       ],

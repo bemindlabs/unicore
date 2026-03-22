@@ -157,9 +157,9 @@ describe('ConfigGeneratorService', () => {
   });
 
   describe('generate — agents', () => {
-    it('returns 8 agents total (router + 7 mapped types)', () => {
+    it('returns 9 agents total (router + 8 mapped types)', () => {
       const config = service.generate(makeRequest(), makeTemplate());
-      expect(config.agents).toHaveLength(8);
+      expect(config.agents).toHaveLength(9);
     });
 
     it('places router agent first with full_auto autonomy and enabled=true', () => {

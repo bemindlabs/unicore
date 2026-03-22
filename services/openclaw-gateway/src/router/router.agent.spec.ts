@@ -11,6 +11,7 @@ import { OpsAgent } from '../agents/ops/ops.agent';
 import { ResearchAgent } from '../agents/research/research.agent';
 import { ErpAgent } from '../agents/erp/erp.agent';
 import { BuilderAgent } from '../agents/builder/builder.agent';
+import { SentinelAgent } from '../agents/sentinel/sentinel.agent';
 
 function makeAgentStub(type: string) {
   return {
@@ -50,7 +51,7 @@ describe('RouterAgent', () => {
     mockDelegation = {
       registerAgent: jest.fn(),
       registeredTypes: jest.fn().mockReturnValue([
-        'comms', 'finance', 'growth', 'ops', 'research', 'erp', 'builder',
+        'comms', 'finance', 'growth', 'ops', 'research', 'erp', 'builder', 'sentinel',
       ]),
       delegate: jest.fn().mockResolvedValue({
         response: {
@@ -83,6 +84,7 @@ describe('RouterAgent', () => {
         { provide: ResearchAgent, useValue: makeAgentStub('research') },
         { provide: ErpAgent, useValue: makeAgentStub('erp') },
         { provide: BuilderAgent, useValue: makeAgentStub('builder') },
+        { provide: SentinelAgent, useValue: makeAgentStub('sentinel') },
       ],
     }).compile();
 
@@ -90,9 +92,9 @@ describe('RouterAgent', () => {
   });
 
   describe('onModuleInit', () => {
-    it('registers all 7 specialist agents with the delegation service', () => {
+    it('registers all 8 specialist agents with the delegation service', () => {
       router.onModuleInit();
-      expect(mockDelegation.registerAgent).toHaveBeenCalledTimes(7);
+      expect(mockDelegation.registerAgent).toHaveBeenCalledTimes(8);
     });
   });
 
