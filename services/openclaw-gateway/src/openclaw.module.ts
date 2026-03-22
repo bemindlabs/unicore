@@ -26,6 +26,7 @@ import { PtySessionManager } from './terminal/pty-session-manager';
     AgentRegistryService,
     MessageRouterService,
     HeartbeatService,
+    PtySessionManager,
   ],
   exports: [AgentRegistryService, MessageRouterService],
 })
