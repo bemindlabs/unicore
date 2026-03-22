@@ -48,6 +48,24 @@ export function LineConfig() {
   const [isTesting, setIsTesting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  // Load saved config on mount
+  useEffect(() => {
+    api.get<Record<string, unknown>>('/api/v1/settings/line')
+      .then((data) => {
+        if (data && typeof data === 'object' && (data.channelId || data.channelAccessToken)) {
+          setConfig((prev) => ({
+            ...prev,
+            channelId: String(data.channelId ?? ''),
+            channelSecret: String(data.channelSecret ?? ''),
+            channelAccessToken: String(data.channelAccessToken ?? ''),
+            enabled: Boolean(data.enabled),
+            isConfigured: true,
+          }));
+        }
+      })
+      .catch(() => { /* no saved config */ });
+  }, []);
   const [botInfo, setBotInfo] = useState<LineBotInfo | null>(null);
 
   const handleTestConnection = useCallback(async () => {
