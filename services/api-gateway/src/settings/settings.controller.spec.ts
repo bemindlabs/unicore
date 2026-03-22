@@ -6,6 +6,13 @@ import { LicenseService } from '../license/license.service';
 import * as fs from 'fs';
 import * as path from 'path';
 
+// Mock non-configurable fs methods so jest.spyOn can override them per test
+jest.mock('fs', () => ({
+  ...jest.requireActual('fs'),
+  lstatSync: jest.fn(),
+  unlinkSync: jest.fn(),
+}));
+
 // Set required encryption key before module load
 const originalEncKey = process.env.SETTINGS_ENCRYPTION_KEY;
 process.env.SETTINGS_ENCRYPTION_KEY = 'test-settings-enc-key-for-unit-tests-abc';
