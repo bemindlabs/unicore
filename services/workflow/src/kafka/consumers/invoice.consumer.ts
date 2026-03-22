@@ -70,12 +70,17 @@ export class InvoiceConsumerService {
     const payload = await deserializePayload(InvoiceOverduePayloadDto, envelope.payload);
     if (!payload) return;
 
-    await this.eventHandler.handle({ ...envelope, payload }, async (p) => {
-      this.logger.warn(
-        `invoice.overdue — invoiceId=${p.invoiceId} daysOverdue=${p.daysOverdue} total=${p.total} ${p.currency}`,
-      );
-      await this.workflowService.handleEvent(WORKFLOW_TOPICS.INVOICE_OVERDUE, p);
-    });
+    await this.retryService.withRetry(
+      async () => {
+        await this.eventHandler.handle({ ...envelope, payload }, async (p) => {
+          this.logger.warn(
+            `invoice.overdue — invoiceId=${p.invoiceId} daysOverdue=${p.daysOverdue} total=${p.total} ${p.currency}`,
+          );
+          await this.workflowService.handleEvent(WORKFLOW_TOPICS.INVOICE_OVERDUE, p);
+        });
+      },
+      { topic: WORKFLOW_TOPICS.INVOICE_OVERDUE, eventId: envelope.eventId, originalPayload: payload },
+    );
   }
 
   // ---------------------------------------------------------------------------
