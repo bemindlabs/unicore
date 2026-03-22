@@ -3,7 +3,6 @@
 import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import type { BackofficeAgent } from '@/lib/backoffice/types';
 import { PixelAvatar } from './PixelAvatar';
-import {} from 'lucide-react';
 import { useChatWebSocket } from '@/hooks/use-chat-ws';
 
 interface Props {
@@ -331,7 +330,6 @@ function AgentSpeechBubble({ agent, autonomyEnabled, autonomyInterval, onMoveReq
 
 export function OfficeFloor({ agents, onSelectAgent }: Props) {
   const [currentFloor, setCurrentFloor] = useState<number>(1);
-  const [showSettings, setShowSettings] = useState(false);
   const [autonomyEnabled, setAutonomyEnabled] = useState(false);
   const [autonomyInterval, setAutonomyInterval] = useState(60);
   const [activeTheme, setActiveTheme] = useState('retrodesk');
@@ -341,11 +339,6 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
     const saved = localStorage.getItem('hq_map_theme');
     if (saved) setActiveTheme(saved);
   }, []);
-  
-  const handleThemeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setActiveTheme(e.target.value);
-    localStorage.setItem('hq_map_theme', e.target.value);
-  };
 
   // Redefine zones to take up whole maps based on floor
   const zones = useMemo(() => ({
@@ -647,66 +640,6 @@ export function OfficeFloor({ agents, onSelectAgent }: Props) {
           <div className="absolute bottom-4 right-44 px-3 py-1 bg-[var(--retrodesk-surface)] border-2 border-[var(--retrodesk-border)] text-xs font-mono tracking-widest uppercase font-bold text-[var(--retrodesk-text)] shadow-sm z-20">
             {floors.find(f => f.id === currentFloor)?.name ?? ''} : OPENCLAW HQ
           </div>
-
-          {/* Configuration Settings Gear */}
-          <button
-             onClick={() => setShowSettings(true)}
-             className="absolute bottom-4 left-4 w-10 h-10 border-2 shadow-md bg-[var(--retrodesk-surface)] hover:bg-[var(--retrodesk-blue)] hover:text-white transition-colors flex items-center justify-center z-20 pointer-events-auto"
-             style={{ borderColor: 'var(--retrodesk-border)', color: 'var(--retrodesk-text)' }}
-             aria-label="Map settings"
-             title="Map Directives"
-          >
-             <Settings className="w-5 h-5" />
-          </button>
-
-          {showSettings && (
-             <div className="absolute inset-x-0 bottom-0 top-auto mx-auto w-96 mb-20 bg-[var(--retrodesk-surface)] border-[6px] shadow-2xl p-6 z-[10000] animate-in slide-in-from-bottom" style={{ borderColor: 'var(--retrodesk-border)' }}>
-               <div className="border-b-4 pb-2 mb-4 flex justify-between items-center" style={{ borderColor: 'var(--retrodesk-border)' }}>
-                 <h2 className="font-mono text-[14px] font-black tracking-widest uppercase text-[var(--retrodesk-text)]">Map Directives</h2>
-                 <button onClick={() => setShowSettings(false)} className="p-1 hover:text-red-500 text-[var(--retrodesk-text)] transition-colors" aria-label="Close settings">
-                   <X className="w-4 h-4" />
-                 </button>
-               </div>
-               
-               <div className="flex flex-col gap-6">
-                 <div className="flex items-center justify-between">
-                   <div className="flex flex-col">
-                     <span className="font-mono text-[10px] font-bold uppercase" style={{ color: 'var(--retrodesk-blue)' }}>LLM Spatial Autonomy</span>
-                     <span className="font-mono text-[8px] opacity-70">Allow OpenClaw AI to drive characters.</span>
-                   </div>
-                   <input type="checkbox" checked={autonomyEnabled} onChange={(e) => setAutonomyEnabled(e.target.checked)} className="w-5 h-5 cursor-pointer accent-blue-500" />
-                 </div>
-                 
-                 <div className="flex flex-col gap-2">
-                   <div className="flex justify-between items-center">
-                      <span className="font-mono text-[10px] font-bold uppercase" style={{ color: 'var(--retrodesk-orange)' }}>Think Interval (Sec)</span>
-                      <span className="font-mono text-[12px] font-black">{autonomyInterval}s</span>
-                   </div>
-                   <input type="range" min={10} max={120} step={10} value={autonomyInterval} onChange={(e) => setAutonomyInterval(Number(e.target.value))} className="w-full cursor-pointer" disabled={!autonomyEnabled} />
-                 </div>
-                 
-                 <div className="flex flex-col gap-2 pt-2 border-t-2" style={{ borderColor: 'var(--retrodesk-border)' }}>
-                    <div className="flex justify-between items-center">
-                       <span className="font-mono text-[10px] font-bold uppercase" style={{ color: 'var(--retrodesk-pink)' }}>HQ Protocol Paint</span>
-                    </div>
-                    <select 
-                      value={activeTheme} 
-                      onChange={handleThemeChange}
-                      className="w-full border-[3px] bg-[var(--retrodesk-surface)] text-[var(--retrodesk-text)] font-mono text-[10px] p-2 cursor-pointer outline-none uppercase font-bold tracking-widest" 
-                      style={{ borderColor: 'var(--retrodesk-border)' }}
-                    >
-                      <option value="retrodesk">01 - Classic Vanilla</option>
-                      <option value="retrodesk-dark">02 - Classic Neon (Dark)</option>
-                      <option value="retrodesk-doge">DOGE (2024 Gold Standard)</option>
-                      <option value="retrodesk-shib">SHIB (2024 Shiba Red)</option>
-                      <option value="retrodesk-pepe">PEPE (2025 Frog Green)</option>
-                      <option value="retrodesk-bonk">BONK (2025 Orange Chaos)</option>
-                      <option value="retrodesk-floki">FLOKI (2026 Viking Vault)</option>
-                    </select>
-                 </div>
-               </div>
-             </div>
-          )}
 
           {/* === FLOOR 3 (Exec & Bedroom) === */}
           {currentFloor === 3 && (
