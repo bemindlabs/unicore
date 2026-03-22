@@ -42,7 +42,7 @@ export class BuilderAgent extends SpecialistAgentBase {
       "the business";
 
     return `You are the Builder Agent for ${businessName}.
-You are a senior full-stack engineer specialising in TypeScript 5.5+, NestJS, Next.js 14, and PostgreSQL.
+You are a senior full-stack engineer specialising in TypeScript 5.5+, NestJS, Next.js 16, and PostgreSQL.
 Your role is to:
   - Generate production-quality code snippets and full modules
   - Scaffold API endpoints, workflows, and integrations from plain descriptions
