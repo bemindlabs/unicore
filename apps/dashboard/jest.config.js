@@ -1,12 +1,7 @@
-import { resolve, dirname } from 'path';
+import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-
-const tsJestDir = resolve(
-  __dirname,
-  '../../node_modules/.pnpm/ts-jest@29.4.6_@babel+core@7.29.0_@jest+transform@29.7.0_@jest+types@29.6.3_babel-jest@_974f74af3d68cfb74d63cae3da7e8f31/node_modules/ts-jest',
-);
 
 /** @type {import('jest').Config} */
 const config = {
@@ -19,7 +14,7 @@ const config = {
   },
   transform: {
     '^.+\\.tsx?$': [
-      tsJestDir,
+      'ts-jest',
       {
         useESM: false,
         tsconfig: {
