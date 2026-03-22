@@ -430,4 +430,4 @@ We welcome contributions! Please read our [Contributing Guide](CONTRIBUTING.md) 
 - **Pro Edition** — Requires a valid license key for advanced features
 
 Licensor: [BeMind Technology](https://bemind.tech)
-Contact: license@unicore.dev
+Contact: license@bemind.tech

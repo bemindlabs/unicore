@@ -862,11 +862,11 @@ async function seedAdditionalUsers() {
   console.log('\n👥 Seeding team members...');
 
   const teamMembers = [
-    { email: 'sarah.chen@unicore.dev', password: 'Demo1234!', name: 'Sarah Chen', role: 'OPERATOR' },
-    { email: 'marcus.williams@unicore.dev', password: 'Demo1234!', name: 'Marcus Williams', role: 'OPERATOR' },
-    { email: 'emily.rodriguez@unicore.dev', password: 'Demo1234!', name: 'Emily Rodriguez', role: 'MARKETER' },
-    { email: 'laura.martinez@unicore.dev', password: 'Demo1234!', name: 'Laura Martinez', role: 'FINANCE' },
-    { email: 'viewer@unicore.dev', password: 'Demo1234!', name: 'Demo Viewer', role: 'VIEWER' },
+    { email: 'sarah.chen@bemind.tech', password: 'Demo1234!', name: 'Sarah Chen', role: 'OPERATOR' },
+    { email: 'marcus.williams@bemind.tech', password: 'Demo1234!', name: 'Marcus Williams', role: 'OPERATOR' },
+    { email: 'emily.rodriguez@bemind.tech', password: 'Demo1234!', name: 'Emily Rodriguez', role: 'MARKETER' },
+    { email: 'laura.martinez@bemind.tech', password: 'Demo1234!', name: 'Laura Martinez', role: 'FINANCE' },
+    { email: 'viewer@bemind.tech', password: 'Demo1234!', name: 'Demo Viewer', role: 'VIEWER' },
   ];
 
   for (const user of teamMembers) {
