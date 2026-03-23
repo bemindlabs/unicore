@@ -15,7 +15,7 @@ const retrodeskConfig: Record<AgentStatus, { color: string; label: string; icon:
   offline: { color: '#e5e1dc', label: 'OFFLINE', icon: '☁' },
 };
 
-export function StatusIndicator({ status, showLabel = false }: { status: AgentStatus; showLabel?: boolean }) {
+export function StatusIndicator({ status, showLabel = false }: { status: AgentStatus; showLabel?: boolean }): JSX.Element {
   const { isActive: isRetroDesk } = useRetroDeskTheme();
 
   if (isRetroDesk) {
