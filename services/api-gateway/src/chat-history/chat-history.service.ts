@@ -1,9 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ConversationIntelligenceService } from '../conversation-intelligence/conversation-intelligence.service';
 
 @Injectable()
 export class ChatHistoryService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional() private readonly intelligence: ConversationIntelligenceService,
+  ) {}
 
   async list(options: {
     agentId?: string;
@@ -91,7 +95,7 @@ export class ChatHistoryService {
     const autoSummary =
       data.summary ?? (firstHumanMsg?.text ?? '').slice(0, 120);
 
-    return this.prisma.chatHistory.create({
+    const record = await this.prisma.chatHistory.create({
       data: {
         agentId: data.agentId,
         agentName: data.agentName,
@@ -102,6 +106,13 @@ export class ChatHistoryService {
         channel: data.channel ?? 'command',
       },
     });
+
+    // Fire-and-forget intelligence analysis
+    if (this.intelligence && msgs.length > 0) {
+      this.intelligence.analyze(record.id).catch(() => { /* ignore */ });
+    }
+
+    return record;
   }
 
   async findOne(id: string) {
