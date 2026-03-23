@@ -29,7 +29,7 @@ interface Review {
   date: string;
 }
 
-interface Plugin {
+type PluginItem = {
   id: string;
   slug: string;
   name: string;
@@ -81,8 +81,8 @@ describe('formatCount', () => {
 // Plugin type shape
 // ---------------------------------------------------------------------------
 
-describe('Plugin interface', () => {
-  const plugin: Plugin = {
+describe('PluginItem type', () => {
+  const plugin: PluginItem = {
     id: '1',
     slug: 'gpt-4o-agent',
     name: 'GPT-4o Agent',
@@ -149,7 +149,7 @@ describe('Plugin interface', () => {
   });
 
   it('optional featured flag defaults to undefined', () => {
-    const minPlugin: Plugin = { ...plugin, featured: undefined };
+    const minPlugin: PluginItem = { ...plugin, featured: undefined };
     expect(minPlugin.featured).toBeUndefined();
   });
 });

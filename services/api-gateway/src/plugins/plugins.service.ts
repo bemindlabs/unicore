@@ -4,6 +4,7 @@ import {
   ConflictException,
   BadRequestException,
 } from '@nestjs/common';
+import type { Prisma } from '../generated/prisma';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { BrowsePluginsDto } from './dto/browse-plugins.dto';
@@ -121,7 +122,7 @@ export class PluginsService {
             artifactUrl: data.artifactUrl,
             checksum: data.checksum,
             changelog: data.changelog,
-            compatibility: data.compatibility ?? {},
+            compatibility: (data.compatibility ?? {}) as Prisma.InputJsonValue,
           },
         },
       },
@@ -159,7 +160,7 @@ export class PluginsService {
         instanceId,
         pluginId,
         version,
-        config: dto.config ?? {},
+        config: (dto.config ?? {}) as Prisma.InputJsonValue,
       },
     });
 
@@ -249,7 +250,7 @@ export class PluginsService {
 
     const updated = await this.prisma.pluginInstallation.update({
       where: { instanceId_pluginId: { instanceId, pluginId } },
-      data: { config: dto.config },
+      data: { config: dto.config as Prisma.InputJsonValue },
     });
 
     await this.auditService.log({

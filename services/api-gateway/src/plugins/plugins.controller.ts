@@ -48,7 +48,7 @@ export class PluginsController {
 
   @Post()
   @Roles('OWNER')
-  create(@Body() body: any, @CurrentUser() user: any) {
+  create(@Body() body: any, @CurrentUser() _user: any) {
     return this.pluginsService.create(body);
   }
 

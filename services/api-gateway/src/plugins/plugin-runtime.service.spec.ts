@@ -8,7 +8,7 @@ import { PluginLoadError } from '@unicore/plugin-sdk';
 const mockLifecycleRegister = jest.fn();
 const mockLifecycleActivate = jest.fn();
 const mockLifecycleDeactivateAll = jest.fn();
-const mockLifecycleGetActive = jest.fn(() => []);
+const mockLifecycleGetActive = jest.fn((): unknown[] => []);
 const mockLoaderLoadFromFile = jest.fn();
 
 jest.mock('@unicore/plugin-sdk', () => {
@@ -35,6 +35,7 @@ jest.mock('@unicore/plugin-sdk', () => {
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
 const makeInstallation = (overrides: Partial<{
+  id: string;
   pluginId: string;
   version: string;
   enabled: boolean;

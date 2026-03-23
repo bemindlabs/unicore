@@ -4,21 +4,26 @@ import { createHash } from 'crypto';
 import { PLUGINS_BASE_DIR, PluginArtifactService } from './plugin-artifact.service';
 
 // ─── fs mock ──────────────────────────────────────────────────────────────────
-const fsMock = {
-  mkdir: jest.fn(),
-  writeFile: jest.fn(),
-  unlink: jest.fn(),
-  rm: jest.fn(),
-};
-jest.mock('fs', () => ({ promises: fsMock }));
+jest.mock('fs', () => ({
+  promises: {
+    mkdir: jest.fn(),
+    writeFile: jest.fn(),
+    unlink: jest.fn(),
+    rm: jest.fn(),
+  },
+}));
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const fsMock = (require('fs') as { promises: { mkdir: jest.Mock; writeFile: jest.Mock; unlink: jest.Mock; rm: jest.Mock } }).promises;
 
 // ─── child_process mock ───────────────────────────────────────────────────────
-const execAsyncMock = jest.fn();
 jest.mock('child_process', () => ({ exec: jest.fn() }));
 jest.mock('util', () => ({
   ...jest.requireActual('util'),
-  promisify: () => execAsyncMock,
+  promisify: () => jest.requireMock('util').__execAsync,
+  __execAsync: jest.fn(),
 }));
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const execAsyncMock = (require('util') as { __execAsync: jest.Mock }).__execAsync;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -46,7 +51,7 @@ const makeFetchResponse = (opts: {
     status,
     statusText,
     headers: { get: (h: string) => (h === 'content-type' ? contentType : null) },
-    arrayBuffer: jest.fn().mockResolvedValue(body.buffer),
+    arrayBuffer: jest.fn().mockResolvedValue(body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength)),
   } as unknown as Response;
 };
 
