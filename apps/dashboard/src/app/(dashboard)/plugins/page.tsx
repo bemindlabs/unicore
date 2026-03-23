@@ -299,12 +299,10 @@ function PluginDetailDialog({
   plugin,
   open,
   onClose,
-  isPreview,
 }: {
   plugin: Plugin | null;
   open: boolean;
   onClose: () => void;
-  isPreview: boolean;
 }) {
   if (!plugin) return null;
 
@@ -376,11 +374,6 @@ function PluginDetailDialog({
             </div>
           </div>
 
-          {isPreview && (
-            <p className="text-xs italic text-muted-foreground">
-              This is sample data. Live plugin details will be available when the Plugin API is connected.
-            </p>
-          )}
         </div>
       </DialogContent>
     </Dialog>
@@ -585,7 +578,6 @@ export default function PluginsMarketplacePage() {
         plugin={selectedPlugin}
         open={detailOpen}
         onClose={() => setDetailOpen(false)}
-        isPreview={false}
       />
     </div>
   );
