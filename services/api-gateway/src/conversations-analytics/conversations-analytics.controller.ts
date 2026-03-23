@@ -16,15 +16,15 @@ export class ConversationsAnalyticsController {
     @Query('days') days?: string,
     @Query('scope') scope?: string,
   ) {
-    // OWNER/OPERATOR can request all-users analytics; others see only their own
-    const userId =
+    // OWNER/OPERATOR can request global analytics; others see only conversations assigned to them
+    const assigneeId =
       scope === 'all' &&
       (user.role === 'OWNER' || user.role === 'OPERATOR')
         ? undefined
         : user.id;
 
     return this.analyticsService.getAnalytics({
-      userId,
+      assigneeId,
       from,
       to,
       days: days ? parseInt(days, 10) : undefined,
