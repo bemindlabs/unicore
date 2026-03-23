@@ -83,7 +83,7 @@ const SETTINGS_LINKS = [
   },
 ] as const;
 
-export default function SettingsPage() {
+export default function SettingsPage(): JSX.Element {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
