@@ -157,12 +157,10 @@ describe('InboundRouterService', () => {
       expect(mockPrisma.message.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           conversationId: 'conv-123',
-          channel: 'telegram',
-          senderId: 'user-789',
-          senderName: 'Alice',
-          text: 'Hello!',
-          externalMessageId: 'tg-msg-1',
-          routedTo: 'pending',
+          direction: 'INBOUND',
+          type: 'TEXT',
+          content: 'Hello!',
+          externalId: 'tg-msg-1',
         }) as unknown,
       });
       expect(result).toEqual(mockMessage);
