@@ -16,18 +16,26 @@ export function TerminalModal({ open, onClose, onConnected }: TerminalModalProps
   const wsRef = useRef<WebSocket | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
+  const updateConnected = useCallback(
+    (value: boolean) => {
+      setConnected(value);
+      onConnected?.(value);
+    },
+    [onConnected],
+  );
+
   const checkConnection = useCallback(() => {
     try {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const ws = new WebSocket(`${protocol}//${window.location.host}/ssh/`);
       wsRef.current = ws;
-      ws.onopen = () => setConnected(true);
-      ws.onerror = () => setConnected(false);
-      ws.onclose = () => setConnected(false);
+      ws.onopen = () => updateConnected(true);
+      ws.onerror = () => updateConnected(false);
+      ws.onclose = () => updateConnected(false);
     } catch {
-      setConnected(false);
+      updateConnected(false);
     }
-  }, []);
+  }, [updateConnected]);
 
   useEffect(() => {
     if (open) {
