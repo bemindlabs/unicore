@@ -42,12 +42,12 @@ export function TerminalModal({ open, onClose, onConnected }: TerminalModalProps
       checkConnection();
     } else {
       wsRef.current?.close();
-      setConnected(false);
+      updateConnected(false);
     }
     return () => {
       wsRef.current?.close();
     };
-  }, [open, checkConnection]);
+  }, [open, checkConnection, updateConnected]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
