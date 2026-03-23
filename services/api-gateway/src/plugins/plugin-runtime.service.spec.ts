@@ -4,31 +4,32 @@ import { PrismaService } from '../prisma/prisma.service';
 
 // ─── SDK mocks ────────────────────────────────────────────────────────────────
 
-class MockPluginLoadError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'PluginLoadError';
-  }
-}
-
 const mockLifecycleRegister = jest.fn();
 const mockLifecycleActivate = jest.fn();
 const mockLifecycleDeactivateAll = jest.fn();
 const mockLifecycleGetActive = jest.fn(() => []);
 const mockLoaderLoadFromFile = jest.fn();
 
-jest.mock('@unicore/plugin-sdk', () => ({
-  PluginLifecycleManager: jest.fn().mockImplementation(() => ({
-    register: mockLifecycleRegister,
-    activate: mockLifecycleActivate,
-    deactivateAll: mockLifecycleDeactivateAll,
-    getActive: mockLifecycleGetActive,
-  })),
-  PluginLoader: jest.fn().mockImplementation(() => ({
-    loadFromFile: mockLoaderLoadFromFile,
-  })),
-  PluginLoadError: MockPluginLoadError,
-}));
+jest.mock('@unicore/plugin-sdk', () => {
+  class PluginLoadError extends Error {
+    constructor(message: string) {
+      super(message);
+      this.name = 'PluginLoadError';
+    }
+  }
+  return {
+    PluginLifecycleManager: jest.fn().mockImplementation(() => ({
+      register: mockLifecycleRegister,
+      activate: mockLifecycleActivate,
+      deactivateAll: mockLifecycleDeactivateAll,
+      getActive: mockLifecycleGetActive,
+    })),
+    PluginLoader: jest.fn().mockImplementation(() => ({
+      loadFromFile: mockLoaderLoadFromFile,
+    })),
+    PluginLoadError,
+  };
+});
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
