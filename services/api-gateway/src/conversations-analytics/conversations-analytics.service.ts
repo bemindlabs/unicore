@@ -23,7 +23,7 @@ export interface AgentStat {
   agentId: string;
   agentName: string;
   conversations: number;
-  avgMessages: number;
+  avgResponseTimeSec: number;
   lastActive: string | null;
 }
 
@@ -35,11 +35,16 @@ export interface ConversationsAnalyticsResult {
 }
 
 const CHANNEL_LABELS: Record<string, string> = {
-  command: 'Commander',
-  telegram: 'Telegram',
-  line: 'LINE',
-  web: 'Web',
-  api: 'API',
+  TELEGRAM: 'Telegram',
+  LINE: 'LINE',
+  FACEBOOK: 'Facebook',
+  INSTAGRAM: 'Instagram',
+  WHATSAPP: 'WhatsApp',
+  SLACK: 'Slack',
+  DISCORD: 'Discord',
+  EMAIL: 'Email',
+  SMS: 'SMS',
+  LIVE_CHAT: 'Live Chat',
 };
 
 @Injectable()
@@ -47,7 +52,7 @@ export class ConversationsAnalyticsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getAnalytics(options: {
-    userId?: string;
+    assigneeId?: string;
     from?: string;
     to?: string;
     days?: number;
@@ -61,7 +66,7 @@ export class ConversationsAnalyticsService {
     const where: Record<string, unknown> = {
       createdAt: { gte: from, lte: to },
     };
-    if (options.userId) where.userId = options.userId;
+    if (options.assigneeId) where.assigneeId = options.assigneeId;
 
     const [summary, channels, trend, agents] = await Promise.all([
       this.computeSummary(where),
@@ -76,92 +81,57 @@ export class ConversationsAnalyticsService {
   private async computeSummary(
     where: Record<string, unknown>,
   ): Promise<ConversationSummary> {
-    const [totalConversations, agentGroups, sample] = await Promise.all([
-      this.prisma.chatHistory.count({ where }),
-      this.prisma.chatHistory.groupBy({
-        by: ['agentId'],
-        where,
-        _count: { agentId: true },
+    const [total, resolvedCount, assignees, resolvedSample] = await Promise.all([
+      this.prisma.conversation.count({ where }),
+      this.prisma.conversation.count({
+        where: { ...where, status: { in: ['RESOLVED', 'CLOSED'] } },
       }),
-      // Sample last 200 records to compute response time & resolution rate
-      this.prisma.chatHistory.findMany({
-        where,
+      this.prisma.conversation.groupBy({
+        by: ['assigneeId'],
+        where: { ...where, assigneeId: { not: null } },
+        _count: { assigneeId: true },
+      }),
+      // Sample resolved conversations to compute avg response time
+      this.prisma.conversation.findMany({
+        where: {
+          ...where,
+          status: { in: ['RESOLVED', 'CLOSED'] },
+          resolvedAt: { not: null },
+        },
+        select: { createdAt: true, resolvedAt: true },
+        take: 500,
         orderBy: { createdAt: 'desc' },
-        take: 200,
-        select: { messages: true, summary: true },
       }),
     ]);
 
-    const activeAgents = agentGroups.length;
-
-    // Resolution rate: % of conversations that have a summary or last message from agent
-    let resolvedCount = 0;
-    let totalResponseSec = 0;
-    let responseCount = 0;
-
-    for (const record of sample) {
-      const msgs = Array.isArray(record.messages) ? (record.messages as Array<{
-        authorId?: string;
-        authorType?: string;
-        timestamp?: string;
-      }>) : [];
-
-      // Resolution: conversation has a summary or the last message is from agent
-      const lastMsg = msgs[msgs.length - 1];
-      const isResolved =
-        !!record.summary ||
-        (lastMsg &&
-          lastMsg.authorId !== 'human-user' &&
-          lastMsg.authorId !== 'user' &&
-          lastMsg.authorType !== 'human');
-      if (isResolved) resolvedCount++;
-
-      // Response time: first agent reply timestamp - first human message timestamp
-      const firstHuman = msgs.find(
-        (m) => m.authorId === 'human-user' || m.authorId === 'user' || m.authorType === 'human',
-      );
-      const firstAgentAfterHuman =
-        firstHuman &&
-        msgs.find(
-          (m, i) =>
-            i > msgs.indexOf(firstHuman) &&
-            m.authorId !== 'human-user' &&
-            m.authorId !== 'user' &&
-            m.authorType !== 'human',
-        );
-
-      if (
-        firstHuman?.timestamp &&
-        firstAgentAfterHuman?.timestamp
-      ) {
-        const diff =
-          (new Date(firstAgentAfterHuman.timestamp).getTime() -
-            new Date(firstHuman.timestamp).getTime()) /
-          1000;
-        if (diff > 0 && diff < 600) {
-          totalResponseSec += diff;
-          responseCount++;
+    // Avg response time: createdAt → resolvedAt for resolved conversations
+    let totalSec = 0;
+    let count = 0;
+    for (const conv of resolvedSample) {
+      if (conv.resolvedAt) {
+        const diffSec =
+          (conv.resolvedAt.getTime() - conv.createdAt.getTime()) / 1000;
+        if (diffSec > 0) {
+          totalSec += diffSec;
+          count++;
         }
       }
     }
 
-    const resolutionRate =
-      sample.length > 0 ? resolvedCount / sample.length : 0;
-    const avgResponseTimeSec =
-      responseCount > 0 ? totalResponseSec / responseCount : 0;
-
     return {
-      totalConversations,
-      avgResponseTimeSec: Math.round(avgResponseTimeSec * 10) / 10,
-      resolutionRate: Math.round(resolutionRate * 1000) / 1000,
-      activeAgents,
+      totalConversations: total,
+      avgResponseTimeSec:
+        count > 0 ? Math.round((totalSec / count) * 10) / 10 : 0,
+      resolutionRate:
+        total > 0 ? Math.round((resolvedCount / total) * 1000) / 1000 : 0,
+      activeAgents: assignees.length,
     };
   }
 
   private async computeChannels(
     where: Record<string, unknown>,
   ): Promise<ChannelBreakdown[]> {
-    const groups = await this.prisma.chatHistory.groupBy({
+    const groups = await this.prisma.conversation.groupBy({
       by: ['channel'],
       where,
       _count: { channel: true },
@@ -180,16 +150,16 @@ export class ConversationsAnalyticsService {
     from: Date,
     to: Date,
   ): Promise<TrendPoint[]> {
-    const records = await this.prisma.chatHistory.findMany({
+    const records = await this.prisma.conversation.findMany({
       where,
       select: { createdAt: true },
       orderBy: { createdAt: 'asc' },
     });
 
-    // Build a day-keyed map
-    const dayMap = new Map<string, number>();
     const dayMs = 24 * 60 * 60 * 1000;
     const totalDays = Math.ceil((to.getTime() - from.getTime()) / dayMs);
+
+    const dayMap = new Map<string, number>();
     for (let i = 0; i <= totalDays; i++) {
       const d = new Date(from.getTime() + i * dayMs);
       const key = d.toISOString().slice(0, 10);
@@ -209,53 +179,82 @@ export class ConversationsAnalyticsService {
   private async computeAgents(
     where: Record<string, unknown>,
   ): Promise<AgentStat[]> {
-    const [groups, lastActives] = await Promise.all([
-      this.prisma.chatHistory.groupBy({
-        by: ['agentId', 'agentName'],
-        where,
-        _count: { agentId: true },
-        orderBy: { _count: { agentId: 'desc' } },
+    // Get participant stats from ConversationParticipant
+    const [assigneeGroups, participantGroups] = await Promise.all([
+      // Conversations grouped by assigneeId with latest activity
+      this.prisma.conversation.groupBy({
+        by: ['assigneeId'],
+        where: { ...where, assigneeId: { not: null } },
+        _count: { assigneeId: true },
+        _max: { lastMessageAt: true, createdAt: true },
+        orderBy: { _count: { assigneeId: 'desc' } },
       }),
-      // Get latest record per agent for lastActive
-      this.prisma.chatHistory.findMany({
-        where,
-        select: { agentId: true, createdAt: true, messages: true },
-        orderBy: { createdAt: 'desc' },
-        take: 1000,
+      // Participant display names
+      this.prisma.conversationParticipant.findMany({
+        where: {
+          conversation: where,
+        },
+        select: {
+          participantId: true,
+          participantName: true,
+          participantType: true,
+        },
+        distinct: ['participantId'],
+        take: 100,
       }),
     ]);
 
-    // Compute per-agent stats
-    const agentLastActive = new Map<string, string>();
-    const agentTotalMsgs = new Map<string, number>();
-    const agentConvCount = new Map<string, number>();
-
-    for (const r of lastActives) {
-      if (!agentLastActive.has(r.agentId)) {
-        agentLastActive.set(r.agentId, r.createdAt.toISOString());
+    const nameMap = new Map<string, string>();
+    for (const p of participantGroups) {
+      if (!nameMap.has(p.participantId)) {
+        nameMap.set(p.participantId, p.participantName);
       }
-      const msgs = Array.isArray(r.messages) ? r.messages : [];
-      agentTotalMsgs.set(
-        r.agentId,
-        (agentTotalMsgs.get(r.agentId) ?? 0) + msgs.length,
-      );
-      agentConvCount.set(r.agentId, (agentConvCount.get(r.agentId) ?? 0) + 1);
     }
 
-    return groups.map((g) => {
-      const count = g._count.agentId;
-      const totalMsgs = agentTotalMsgs.get(g.agentId) ?? 0;
-      const convCount = agentConvCount.get(g.agentId) ?? count;
-      return {
-        agentId: g.agentId,
-        agentName: g.agentName,
-        conversations: count,
-        avgMessages:
-          convCount > 0
-            ? Math.round((totalMsgs / convCount) * 10) / 10
-            : 0,
-        lastActive: agentLastActive.get(g.agentId) ?? null,
-      };
+    // Also fetch resolved convs to compute per-agent response time
+    const resolvedConvs = await this.prisma.conversation.findMany({
+      where: {
+        ...where,
+        assigneeId: { not: null },
+        status: { in: ['RESOLVED', 'CLOSED'] },
+        resolvedAt: { not: null },
+      },
+      select: { assigneeId: true, createdAt: true, resolvedAt: true },
+      take: 1000,
+      orderBy: { createdAt: 'desc' },
     });
+
+    const agentResolved = new Map<string, { total: number; count: number }>();
+    for (const conv of resolvedConvs) {
+      if (!conv.assigneeId || !conv.resolvedAt) continue;
+      const diffSec =
+        (conv.resolvedAt.getTime() - conv.createdAt.getTime()) / 1000;
+      if (diffSec <= 0) continue;
+      const entry = agentResolved.get(conv.assigneeId) ?? {
+        total: 0,
+        count: 0,
+      };
+      entry.total += diffSec;
+      entry.count++;
+      agentResolved.set(conv.assigneeId, entry);
+    }
+
+    return assigneeGroups
+      .filter((g) => g.assigneeId)
+      .map((g) => {
+        const id = g.assigneeId!;
+        const resolved = agentResolved.get(id);
+        return {
+          agentId: id,
+          agentName: nameMap.get(id) ?? id,
+          conversations: g._count.assigneeId,
+          avgResponseTimeSec:
+            resolved && resolved.count > 0
+              ? Math.round((resolved.total / resolved.count) * 10) / 10
+              : 0,
+          lastActive:
+            (g._max.lastMessageAt ?? g._max.createdAt)?.toISOString() ?? null,
+        };
+      });
   }
 }
