@@ -49,7 +49,6 @@ export function TerminalModal({ open, onClose, onConnected, title = 'Terminal' }
   const [dockedHeight, setDockedHeight] = useState(readDockedHeight);
   const [popoutPos, setPopoutPos] = useState(readPopoutPos);
 
-  const wsRef = useRef<WebSocket | null>(null);
   const resizeDragRef = useRef<{ startY: number; startH: number } | null>(null);
   const moveDragRef = useRef<{ sx: number; sy: number; px: number; py: number } | null>(null);
 
