@@ -59,7 +59,7 @@ describe('ConversationsService', () => {
       providers: [
         ConversationsService,
         { provide: PrismaService, useValue: mockPrisma },
-        { provide: 'ConfigService', useValue: mockConfigService },
+        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
 
