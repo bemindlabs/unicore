@@ -56,9 +56,8 @@ interface InstalledPlugin {
   configSchema?: JsonSchema;
 }
 
-const _MOCK_INSTALLED_REMOVED = null; // mock data removed — UNC-1041
-
-if (false) { const _unused = {
+const MOCK_INSTALLED_stub = null; void MOCK_INSTALLED_stub;
+if (false) { const _x = {
     id: '1',
     slug: 'gpt-4o-agent',
     name: 'GPT-4o Agent',
