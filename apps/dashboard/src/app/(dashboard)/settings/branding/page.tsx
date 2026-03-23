@@ -196,6 +196,7 @@ function LivePreview({ config }: { config: BrandingConfig }) {
 // ── Page ──────────────────────────────────────────────────────────────────
 
 export default function BrandingSettingsPage() {
+  const { isPro } = useLicense();
   const [config, setConfig] = useState<BrandingConfig>(DEFAULT_CONFIG);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
