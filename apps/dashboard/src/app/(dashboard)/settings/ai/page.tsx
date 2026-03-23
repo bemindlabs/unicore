@@ -369,51 +369,64 @@ export default function AiSettingsPage() {
                 <div className="flex items-center justify-between">
                   <Label htmlFor={p.keyField} className="text-sm flex items-center gap-2">
                     {p.name}
-                    {hasKey && <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500" title="Configured" />}
+                    {hasKey && !isLocked && <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500" title="Configured" />}
                     {p.description && <span className="text-[10px] text-muted-foreground font-normal">({p.description})</span>}
-                  </Label>
-                  <div className="flex items-center gap-2">
-                    <button
-                      className={`text-[10px] ${showUrls[p.id] || hasCustomUrl ? 'text-primary font-medium' : 'text-muted-foreground hover:text-foreground'}`}
-                      onClick={() => setShowUrls((prev) => ({ ...prev, [p.id]: !prev[p.id] }))}
-                    >
-                      {hasCustomUrl ? 'Custom URL' : 'Base URL'}
-                    </button>
-                    {p.getKeyUrl && (
-                      <Button variant="link" size="sm" className="h-auto p-0 text-xs gap-1" onClick={() => window.open(p.getKeyUrl, '_blank')}>
-                        Get Key <ExternalLink className="h-2.5 w-2.5" />
-                      </Button>
+                    {isLocked && (
+                      <span className="inline-flex items-center gap-0.5 text-[10px] text-amber-600 font-normal">
+                        <Lock className="h-2.5 w-2.5" /> Pro
+                      </span>
                     )}
-                  </div>
+                  </Label>
+                  {!isLocked && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        className={`text-[10px] ${showUrls[p.id] || hasCustomUrl ? 'text-primary font-medium' : 'text-muted-foreground hover:text-foreground'}`}
+                        onClick={() => setShowUrls((prev) => ({ ...prev, [p.id]: !prev[p.id] }))}
+                      >
+                        {hasCustomUrl ? 'Custom URL' : 'Base URL'}
+                      </button>
+                      {p.getKeyUrl && (
+                        <Button variant="link" size="sm" className="h-auto p-0 text-xs gap-1" onClick={() => window.open(p.getKeyUrl, '_blank')}>
+                          Get Key <ExternalLink className="h-2.5 w-2.5" />
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="flex gap-1.5">
                   <Input
                     id={p.keyField}
                     type={showKeys[p.keyField] ? 'text' : 'password'}
-                    value={keys[p.keyField] || ''}
-                    onChange={(e) => setKeys((prev) => ({ ...prev, [p.keyField]: e.target.value }))}
-                    placeholder={p.keyOptional ? (hasKey ? 'Saved (optional)' : 'Optional — for authenticated servers') : (hasKey ? 'Saved (enter new to replace)' : 'sk-...')}
+                    value={isLocked ? '' : (keys[p.keyField] || '')}
+                    onChange={(e) => !isLocked && setKeys((prev) => ({ ...prev, [p.keyField]: e.target.value }))}
+                    placeholder={isLocked ? 'Available in Pro' : (p.keyOptional ? (hasKey ? 'Saved (optional)' : 'Optional — for authenticated servers') : (hasKey ? 'Saved (enter new to replace)' : 'sk-...'))}
                     className="font-mono text-xs h-9"
+                    disabled={isLocked}
+                    title={isLocked ? 'Available in Pro' : undefined}
                   />
-                  <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => setShowKeys((prev) => ({ ...prev, [p.keyField]: !prev[p.keyField] }))}>
-                    {showKeys[p.keyField] ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                  </Button>
-                  {hasKey && (
-                    <Button
-                      variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-red-500 hover:text-red-600"
-                      title="Delete key"
-                      onClick={async () => {
-                        if (!window.confirm(`Delete ${p.name} API key?`)) return;
-                        try {
-                          await api.put('/api/v1/settings/ai-config', { [p.keyField]: '__DELETE__' });
-                          setKeys((prev) => ({ ...prev, [p.keyField]: '' }));
-                          fetchConfig();
-                          setStatus({ type: 'success', message: `${p.name} key deleted` });
-                        } catch { /* ignore */ }
-                      }}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+                  {!isLocked && (
+                    <>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => setShowKeys((prev) => ({ ...prev, [p.keyField]: !prev[p.keyField] }))}>
+                        {showKeys[p.keyField] ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                      </Button>
+                      {hasKey && (
+                        <Button
+                          variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-red-500 hover:text-red-600"
+                          title="Delete key"
+                          onClick={async () => {
+                            if (!window.confirm(`Delete ${p.name} API key?`)) return;
+                            try {
+                              await api.put('/api/v1/settings/ai-config', { [p.keyField]: '__DELETE__' });
+                              setKeys((prev) => ({ ...prev, [p.keyField]: '' }));
+                              fetchConfig();
+                              setStatus({ type: 'success', message: `${p.name} key deleted` });
+                            } catch { /* ignore */ }
+                          }}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                    </>
                   )}
                 </div>
                 {(showUrls[p.id] || hasCustomUrl) && (
