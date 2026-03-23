@@ -150,12 +150,12 @@ describe('InboundRouterService', () => {
     };
 
     it('creates a new message', async () => {
-      mockPrisma.inboundMessage.findFirst.mockResolvedValue(null);
-      mockPrisma.inboundMessage.create.mockResolvedValue(mockMessage);
+      mockPrisma.message.findFirst.mockResolvedValue(null);
+      mockPrisma.message.create.mockResolvedValue(mockMessage);
 
       const result = await service.saveMessage('conv-123', dto);
 
-      expect(mockPrisma.inboundMessage.create).toHaveBeenCalledWith({
+      expect(mockPrisma.message.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           conversationId: 'conv-123',
           channel: 'telegram',
@@ -170,22 +170,22 @@ describe('InboundRouterService', () => {
     });
 
     it('returns existing message when externalMessageId is a duplicate', async () => {
-      mockPrisma.inboundMessage.findFirst.mockResolvedValue(mockMessage);
+      mockPrisma.message.findFirst.mockResolvedValue(mockMessage);
 
       const result = await service.saveMessage('conv-123', dto);
 
-      expect(mockPrisma.inboundMessage.create).not.toHaveBeenCalled();
+      expect(mockPrisma.message.create).not.toHaveBeenCalled();
       expect(result).toEqual(mockMessage);
     });
 
     it('creates message without dedup check when no externalMessageId', async () => {
       const dtoNoId = { ...dto, externalMessageId: undefined };
-      mockPrisma.inboundMessage.create.mockResolvedValue({ ...mockMessage, externalMessageId: null });
+      mockPrisma.message.create.mockResolvedValue({ ...mockMessage, externalMessageId: null });
 
       await service.saveMessage('conv-123', dtoNoId);
 
-      expect(mockPrisma.inboundMessage.findFirst).not.toHaveBeenCalled();
-      expect(mockPrisma.inboundMessage.create).toHaveBeenCalled();
+      expect(mockPrisma.message.findFirst).not.toHaveBeenCalled();
+      expect(mockPrisma.message.create).toHaveBeenCalled();
     });
   });
 
@@ -202,10 +202,10 @@ describe('InboundRouterService', () => {
 
     beforeEach(() => {
       mockPrisma.conversation.findFirst.mockResolvedValue(mockConversation);
-      mockPrisma.inboundMessage.findFirst.mockResolvedValue(null);
-      mockPrisma.inboundMessage.create.mockResolvedValue(mockMessage);
+      mockPrisma.message.findFirst.mockResolvedValue(null);
+      mockPrisma.message.create.mockResolvedValue(mockMessage);
       mockPrisma.conversation.update.mockResolvedValue(mockConversation);
-      mockPrisma.inboundMessage.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.message.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.settings.findUnique.mockResolvedValue(null);
 
       // Mock fetch globally
