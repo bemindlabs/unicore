@@ -551,7 +551,7 @@ export function SystemTerminal({ embedded = false }: { embedded?: boolean } = {}
 
   return (
     <div
-      className={`flex flex-col h-full overflow-hidden ${embedded ? '' : 'rounded-lg border border-[#30363d]'}`}
+      className={`flex flex-col h-full min-h-0 overflow-hidden ${embedded ? '' : 'rounded-lg border border-[#30363d]'}`}
       style={{ background: '#0d1117', fontFamily: 'JetBrains Mono, Menlo, Monaco, Courier New, monospace' }}
       onClick={() => inputRef.current?.focus()}
     >
