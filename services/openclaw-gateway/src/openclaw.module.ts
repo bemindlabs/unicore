@@ -10,6 +10,7 @@ import { RouterModule } from './router/router.module';
 import { PtySessionManager } from './terminal/pty-session-manager';
 import { MessagePersistenceService } from './persistence/message-persistence.service';
 import { MessagesController } from './messages/messages.controller';
+import { HandoffNotifierService } from './handoff/handoff-notifier.service';
 
 /**
  * OpenClawModule — WebSocket hub for multi-agent communication.
