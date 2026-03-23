@@ -2,7 +2,10 @@
 
 import { useRef, useEffect, useCallback, useState } from 'react';
 import type { BackofficeAgent } from '@/lib/backoffice/types';
+import { defaultAgents } from '@/lib/backoffice/agents';
 import { usePtyWebSocket } from '@/hooks/use-pty-ws';
+import { useChatWebSocket } from '@/hooks/use-chat-ws';
+import type { ChatMessage } from '@/hooks/use-chat-ws';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
@@ -19,6 +22,8 @@ import {
   type TerminalThemeId,
   type TerminalFontId,
 } from '@/components/terminal/themes';
+import { runCommand } from '@/components/terminal/commands';
+import { renderMarkdown } from '@/components/terminal/markdown';
 
 interface Props {
   agent: BackofficeAgent;
