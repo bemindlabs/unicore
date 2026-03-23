@@ -43,6 +43,8 @@ import {
   DialogDescription,
   DialogClose,
 } from '@unicore/ui';
+import { Settings2 } from 'lucide-react';
+import { PluginConfigForm, type JsonSchema } from '@/components/plugins/plugin-config-form';
 
 type PluginCategory = 'all' | 'agents' | 'apps' | 'workflows' | 'channels' | 'analytics' | 'security';
 
