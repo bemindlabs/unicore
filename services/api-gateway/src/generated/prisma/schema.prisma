@@ -278,10 +278,10 @@ enum ConversationStatus {
 }
 
 model Conversation {
-  id               String                @id @default(uuid())
+  id               String                    @id @default(uuid())
   title            String?
-  status           ConversationStatus    @default(OPEN)
-  channel          String                @default("web") // web, telegram, line, email, whatsapp, etc.
+  status           ConversationStatus        @default(OPEN)
+  channel          String                    @default("web") // web, telegram, line, email, whatsapp, etc.
   assigneeId       String?
   assigneeName     String?
   contactId        String?
@@ -290,10 +290,11 @@ model Conversation {
   userId           String
   messages         ConversationMessage[]
   outboundMessages OutboundMessage[]
-  metadata         Json                  @default("{}")
+  participants     ConversationParticipant[]
+  metadata         Json                      @default("{}")
   closedAt         DateTime?
-  createdAt        DateTime              @default(now())
-  updatedAt        DateTime              @updatedAt
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
 
   @@index([status])
   @@index([assigneeId])
@@ -343,6 +344,57 @@ model OutboundMessage {
   @@index([channelType])
   @@index([conversationId, createdAt])
   @@map("outbound_messages")
+}
+
+// ---------------------------------------------------------------------------
+// Conversation Participants (UNC-1026) — AI agents + humans as participants
+// Supports /invite @agent commands and auto-assign via Router Agent
+// ---------------------------------------------------------------------------
+
+enum ParticipantType {
+  USER
+  AGENT
+}
+
+enum ParticipantRole {
+  OWNER
+  MEMBER
+}
+
+model ConversationParticipant {
+  id              String          @id @default(uuid())
+  conversationId  String
+  conversation    Conversation    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  participantId   String
+  participantType ParticipantType
+  participantName String
+  role            ParticipantRole @default(MEMBER)
+  autoAssigned    Boolean         @default(false)
+  invitedBy       String?
+  joinedAt        DateTime        @default(now())
+  leftAt          DateTime?
+
+  @@unique([conversationId, participantId, participantType])
+  @@index([conversationId])
+  @@index([participantId])
+  @@map("conversation_participants")
+}
+
+// ---------------------------------------------------------------------------
+// Canned Responses (UNC-1020) — pre-written reply shortcuts for the composer
+// ---------------------------------------------------------------------------
+
+model CannedResponse {
+  id        String   @id @default(uuid())
+  shortcut  String   @unique // e.g. "greeting" → triggered by /greeting
+  text      String
+  category  String?
+  createdBy String? // userId of creator
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([shortcut])
+  @@map("canned_responses")
 }
 
 // ---------------------------------------------------------------------------

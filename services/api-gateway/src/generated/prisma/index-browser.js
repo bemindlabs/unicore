@@ -322,6 +322,29 @@ exports.Prisma.OutboundMessageScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.ConversationParticipantScalarFieldEnum = {
+  id: 'id',
+  conversationId: 'conversationId',
+  participantId: 'participantId',
+  participantType: 'participantType',
+  participantName: 'participantName',
+  role: 'role',
+  autoAssigned: 'autoAssigned',
+  invitedBy: 'invitedBy',
+  joinedAt: 'joinedAt',
+  leftAt: 'leftAt'
+};
+
+exports.Prisma.CannedResponseScalarFieldEnum = {
+  id: 'id',
+  shortcut: 'shortcut',
+  text: 'text',
+  category: 'category',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.NotificationScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -413,6 +436,16 @@ exports.ConversationStatus = exports.$Enums.ConversationStatus = {
   CLOSED: 'CLOSED'
 };
 
+exports.ParticipantType = exports.$Enums.ParticipantType = {
+  USER: 'USER',
+  AGENT: 'AGENT'
+};
+
+exports.ParticipantRole = exports.$Enums.ParticipantRole = {
+  OWNER: 'OWNER',
+  MEMBER: 'MEMBER'
+};
+
 exports.Prisma.ModelName = {
   User: 'User',
   OAuthAccount: 'OAuthAccount',
@@ -430,6 +463,8 @@ exports.Prisma.ModelName = {
   Conversation: 'Conversation',
   ConversationMessage: 'ConversationMessage',
   OutboundMessage: 'OutboundMessage',
+  ConversationParticipant: 'ConversationParticipant',
+  CannedResponse: 'CannedResponse',
   Notification: 'Notification',
   Handoff: 'Handoff',
   AgentNote: 'AgentNote',
