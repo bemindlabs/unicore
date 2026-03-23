@@ -86,7 +86,7 @@ export function validateField(key: string, schema: JsonSchemaProperty, value: un
   return null;
 }
 
-function validateAll(
+export function validateAll(
   schema: JsonSchema,
   values: Record<string, unknown>,
 ): Record<string, string> {
