@@ -576,11 +576,11 @@ export function SystemTerminal({ embedded = false }: { embedded?: boolean } = {}
       )}
 
       {/* Output area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-0.5 min-h-0">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 sm:px-4 py-3 space-y-0.5 min-h-0 overscroll-contain">
         {output.map((l) => (
           <div
             key={l.id}
-            className={`text-xs leading-5 ${COLOR_CLASS[l.color]} ${l.pre ? 'whitespace-pre' : 'whitespace-pre-wrap'}`}
+            className={`text-[11px] sm:text-xs leading-5 ${COLOR_CLASS[l.color]} ${l.pre ? 'whitespace-pre overflow-x-auto' : 'whitespace-pre-wrap break-words'}`}
           >
             {l.text || '\u00A0'}
           </div>
@@ -590,36 +590,38 @@ export function SystemTerminal({ embedded = false }: { embedded?: boolean } = {}
       {/* Confirm restart banner */}
       {confirmRestart && (
         <div
-          className="shrink-0 flex items-center gap-3 px-4 py-2 border-t border-[#d29922]/30 text-xs"
+          className="shrink-0 flex flex-wrap items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 border-t border-[#d29922]/30 text-xs"
           style={{ background: '#1a1400' }}
         >
-          <span className="text-[#d29922]">
-            ⚠ Restart <strong>{confirmRestart}</strong>? This will briefly interrupt service.
+          <span className="text-[#d29922] text-[11px] sm:text-xs">
+            Restart <strong>{confirmRestart}</strong>?
           </span>
-          <button
-            onClick={() => doRestart(confirmRestart)}
-            className="px-3 py-1 rounded bg-red-600 text-white hover:bg-red-500 text-xs font-bold"
-          >
-            Confirm
-          </button>
-          <button
-            onClick={() => {
-              setConfirmRestart(null);
-              push(line(`Restart of ${confirmRestart} cancelled.`, 'dim'));
-              push(line(''));
-            }}
-            className="px-3 py-1 rounded border border-[#484f58] text-[#c9d1d9] hover:border-[#c9d1d9] text-xs"
-          >
-            Cancel
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => doRestart(confirmRestart)}
+              className="px-3 py-1.5 sm:py-1 rounded bg-red-600 text-white hover:bg-red-500 text-xs font-bold"
+            >
+              Confirm
+            </button>
+            <button
+              onClick={() => {
+                setConfirmRestart(null);
+                push(line(`Restart of ${confirmRestart} cancelled.`, 'dim'));
+                push(line(''));
+              }}
+              className="px-3 py-1.5 sm:py-1 rounded border border-[#484f58] text-[#c9d1d9] hover:border-[#c9d1d9] text-xs"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       )}
 
       {/* Input area */}
-      <div className="shrink-0 border-t border-[#21262d] px-4 py-2" style={{ background: '#161b22' }}>
-        {/* Autocomplete */}
+      <div className="shrink-0 border-t border-[#21262d] px-3 sm:px-4 py-2 sm:py-2" style={{ background: '#161b22' }}>
+        {/* Autocomplete suggestions — scrollable on mobile */}
         {suggestions.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-2">
+          <div className="flex flex-wrap gap-1.5 sm:gap-1 mb-2 max-h-20 overflow-y-auto">
             {suggestions.map((s, i) => (
               <button
                 key={s}
@@ -630,7 +632,7 @@ export function SystemTerminal({ embedded = false }: { embedded?: boolean } = {}
                   setSuggIdx(-1);
                   inputRef.current?.focus();
                 }}
-                className={`text-[10px] px-2 py-0.5 rounded border font-mono ${
+                className={`text-[11px] sm:text-[10px] px-2.5 sm:px-2 py-1 sm:py-0.5 rounded border font-mono ${
                   i === suggIdx
                     ? 'bg-[#39c5cf]/20 border-[#39c5cf] text-[#39c5cf]'
                     : 'border-[#30363d] text-[#484f58] hover:border-[#8b949e] hover:text-[#c9d1d9]'
@@ -643,7 +645,7 @@ export function SystemTerminal({ embedded = false }: { embedded?: boolean } = {}
         )}
 
         <div className="flex items-center gap-2">
-          <span className="text-[#7ee787] text-xs shrink-0">unicore&gt;</span>
+          <span className="text-[#7ee787] text-xs shrink-0">$</span>
           <input
             ref={inputRef}
             type="text"
@@ -655,8 +657,9 @@ export function SystemTerminal({ embedded = false }: { embedded?: boolean } = {}
             autoCorrect="off"
             autoCapitalize="off"
             spellCheck={false}
-            placeholder={running ? 'Running…' : 'Type /help for commands…'}
-            className="flex-1 bg-transparent text-[#c9d1d9] text-xs outline-none placeholder:text-[#484f58] disabled:opacity-40"
+            enterKeyHint="send"
+            placeholder={running ? 'Running…' : '/help'}
+            className="flex-1 bg-transparent text-[#c9d1d9] text-sm sm:text-xs h-8 sm:h-auto outline-none placeholder:text-[#484f58] disabled:opacity-40"
           />
         </div>
       </div>
