@@ -14,6 +14,18 @@ import { OpenAiProvider } from '../providers/openai.provider';
 import { AnthropicProvider } from '../providers/anthropic.provider';
 import { OllamaProvider } from '../providers/ollama.provider';
 
+export interface ProviderInfo {
+  id: string;
+  name: string;
+  keyField: string;
+  getKeyUrl: string;
+  models: string[];
+  description?: string;
+  defaultBaseUrl: string;
+  keyOptional?: boolean;
+  configured: boolean;
+}
+
 export class ProviderUnavailableError extends Error {
   constructor(
     public readonly attemptedProviders: string[],
