@@ -263,4 +263,99 @@ export class PluginsService {
 
     return updated;
   }
+
+  async submit(dto: SubmitPluginDto, userId: string) {
+    const existing = await this.prisma.plugin.findUnique({ where: { slug: dto.slug } });
+    if (existing) {
+      throw new ConflictException(`Plugin slug '${dto.slug}' is already taken`);
+    }
+
+    return this.prisma.plugin.create({
+      data: {
+        ...dto,
+        status: 'draft',
+        submittedBy: userId,
+      },
+    });
+  }
+
+  async getMyPlugins(userId: string) {
+    return this.prisma.plugin.findMany({
+      where: { submittedBy: userId },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        type: true,
+        description: true,
+        version: true,
+        author: true,
+        icon: true,
+        status: true,
+        rejectionReason: true,
+        downloads: true,
+        rating: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  }
+
+  async getPending() {
+    return this.prisma.plugin.findMany({
+      where: { status: 'pending' },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        type: true,
+        description: true,
+        version: true,
+        author: true,
+        icon: true,
+        status: true,
+        submittedBy: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  }
+
+  async approve(id: string, adminId: string) {
+    const plugin = await this.prisma.plugin.findUnique({ where: { id } });
+    if (!plugin) throw new NotFoundException('Plugin not found');
+    if (plugin.status !== 'pending') {
+      throw new BadRequestException(`Plugin is not pending review (current status: ${plugin.status})`);
+    }
+
+    return this.prisma.plugin.update({
+      where: { id },
+      data: {
+        status: 'approved',
+        reviewedBy: adminId,
+        reviewedAt: new Date(),
+        rejectionReason: null,
+      },
+    });
+  }
+
+  async reject(id: string, adminId: string, reason: string) {
+    const plugin = await this.prisma.plugin.findUnique({ where: { id } });
+    if (!plugin) throw new NotFoundException('Plugin not found');
+    if (plugin.status !== 'pending') {
+      throw new BadRequestException(`Plugin is not pending review (current status: ${plugin.status})`);
+    }
+
+    return this.prisma.plugin.update({
+      where: { id },
+      data: {
+        status: 'rejected',
+        reviewedBy: adminId,
+        reviewedAt: new Date(),
+        rejectionReason: reason,
+      },
+    });
+  }
 }
