@@ -391,21 +391,26 @@ export default function PluginsMarketplacePage() {
   const [category, setCategory] = useState<PluginCategory>('all');
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('popular');
-  const [plugins, setPlugins] = useState<Plugin[]>(MOCK_PLUGINS);
-  const [isPreview, setIsPreview] = useState(true);
+  const [plugins, setPlugins] = useState<Plugin[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedPlugin, setSelectedPlugin] = useState<Plugin | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [page, setPage] = useState(1);
 
   useEffect(() => {
     let cancelled = false;
-    fetchPluginsFromAPI().then((data) => {
-      if (cancelled) return;
-      if (data) {
-        setPlugins(data);
-        setIsPreview(false);
-      }
-    });
+    setLoading(true);
+    api.get<Plugin[]>('/api/v1/plugins')
+      .then((data) => {
+        if (cancelled) return;
+        setPlugins(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        if (!cancelled) setPlugins([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
     return () => { cancelled = true; };
   }, []);
 
