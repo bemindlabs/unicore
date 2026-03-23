@@ -667,7 +667,7 @@ export function ContactProfileSidebar({
                             type="checkbox"
                             id={`merge-${c.id}`}
                             checked={selectedDuplicates.has(c.id)}
-                            onChange={(e) => {
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                               setSelectedDuplicates((prev) => {
                                 const next = new Set(prev);
                                 if (e.target.checked) next.add(c.id);
