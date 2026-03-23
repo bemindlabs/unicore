@@ -34,9 +34,18 @@ export class PluginRuntimeService implements OnModuleInit, OnApplicationShutdown
   // ─── Lifecycle hooks ───────────────────────────────────────────────────────
 
   async onModuleInit(): Promise<void> {
-    const installations = await this.prisma.pluginInstallation.findMany({
-      where: { enabled: true },
-    });
+    let installations: any[];
+    try {
+      installations = await this.prisma.pluginInstallation.findMany({
+        where: { enabled: true },
+      });
+    } catch (err) {
+      this.logger.warn(
+        `Could not load plugin installations (table may not exist yet): ${(err as Error).message}. ` +
+          'Skipping plugin loading — run "prisma db push" to create the table.',
+      );
+      return;
+    }
 
     if (installations.length === 0) {
       this.logger.log('Plugin runtime ready — no enabled plugins found');
