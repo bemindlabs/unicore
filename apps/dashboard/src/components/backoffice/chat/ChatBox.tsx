@@ -480,8 +480,16 @@ export function ChatBox() {
                         : 'bg-[var(--bo-bg-bubble)] text-[var(--bo-text-body-soft)] border border-[var(--bo-border-subtle)]'
                     }`}
                   >
-                    {renderMessageText(msg.text)}
+                    {msg.text != null && renderMessageText(msg.text)}
+                    {msg.toolCalls != null && msg.toolCalls.length > 0 && (
+                      <div className={msg.text ? 'mt-2' : ''}>
+                        {msg.toolCalls.map((tc, i) => <ToolCallCard key={i} toolCall={tc} />)}
+                      </div>
+                    )}
                   </div>
+                  {msg.suggestedActions != null && msg.suggestedActions.length > 0 && (
+                    <SuggestedActions actions={msg.suggestedActions} onAction={handleSuggestedAction} disabled={!connected} />
+                  )}
 
                   {/* UNC-103: Reaction picker on hover */}
                   {isHovered && (
