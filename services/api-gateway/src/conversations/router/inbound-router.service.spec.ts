@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { InboundRouterService } from './inbound-router.service';
 import { PrismaService } from '../../prisma/prisma.service';
-import { ConversationsGateway } from '../gateway/conversations.gateway';
+import { ConversationsGateway } from '../conversations.gateway';
 import { KafkaProducerService } from '../kafka/kafka-producer.service';
 import { NormalizedMessageDto } from '../dto/normalized-message.dto';
 
