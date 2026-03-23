@@ -30,9 +30,9 @@ export class ContactProfileService {
     return res.json() as Promise<T>;
   }
 
-  private async erpPut<T = unknown>(path: string, body: unknown): Promise<T> {
+  private async erpPatch<T = unknown>(path: string, body: unknown): Promise<T> {
     const res = await fetch(`${ERP_BASE}/api/v1${path}`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: INTERNAL_HEADER,
       body: JSON.stringify(body),
     });
