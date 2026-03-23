@@ -2,40 +2,61 @@ import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ChannelsService } from '../../channels/channels.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { ConversationsGateway } from '../conversations.gateway';
 import type { SendOutboundDto, SwitchChannelDto } from './dto/send-outbound.dto';
 import { OutboundSenderService } from './outbound-sender.service';
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Test fixtures ────────────────────────────────────────────────────────────
+
+const CONVERSATION_ID = 'conv-aaa';
 
 const mockConversation = {
-  id: 'conv-1',
-  channel: 'telegram',
+  id: CONVERSATION_ID,
+  channel: 'TELEGRAM',
   status: 'OPEN',
+  metadata: {},
 };
 
-const mockOutboundMessage = {
-  id: 'out-1',
-  conversationId: 'conv-1',
-  channelType: 'telegram',
-  text: 'Hello!',
-  recipientId: null,
-  fromAgentId: null,
-  externalId: 'ext-42',
-  status: 'sent',
-  error: null,
-  metadata: {},
+const mockMessage = {
+  id: 'msg-001',
+  conversationId: CONVERSATION_ID,
+  direction: 'OUTBOUND',
+  type: 'TEXT',
+  content: 'Hello!',
+  sender: { id: 'agent-1', name: 'Agent', type: 'bot' },
+  externalId: null,
+  deliveredAt: null,
+  failedAt: null,
+  errorMessage: null,
+  metadata: { channelType: 'telegram', deliveryStatus: 'pending' },
   createdAt: new Date('2026-01-01T00:00:00Z'),
 };
 
-// ─── Mocks ───────────────────────────────────────────────────────────────────
+const mockMessageDelivered = {
+  ...mockMessage,
+  externalId: 'tg-42',
+  deliveredAt: new Date('2026-01-01T00:00:01Z'),
+  metadata: { ...mockMessage.metadata, deliveryStatus: 'delivered' },
+};
+
+const mockMessageFailed = {
+  ...mockMessage,
+  failedAt: new Date('2026-01-01T00:00:01Z'),
+  errorMessage: 'Telegram API error 400',
+  metadata: { ...mockMessage.metadata, deliveryStatus: 'failed' },
+};
+
+// ─── Mocks ────────────────────────────────────────────────────────────────────
 
 const prismaMock = {
   conversation: {
     findUnique: jest.fn(),
     update: jest.fn(),
   },
-  outboundMessage: {
+  message: {
     create: jest.fn(),
+    update: jest.fn(),
+    findUnique: jest.fn(),
     findMany: jest.fn(),
   },
   $transaction: jest.fn(),
@@ -45,11 +66,16 @@ const channelsMock = {
   send: jest.fn(),
 };
 
-const configMock = {
-  get: jest.fn((key: string, fallback?: string) => fallback ?? ''),
+const gatewayMock = {
+  emitMessageAdded: jest.fn(),
+  emitConversationUpdated: jest.fn(),
 };
 
-// ─── Tests ────────────────────────────────────────────────────────────────────
+const configMock = {
+  get: jest.fn((_key: string, fallback = '') => fallback),
+};
+
+// ─── Suite ────────────────────────────────────────────────────────────────────
 
 describe('OutboundSenderService', () => {
   let service: OutboundSenderService;
@@ -62,6 +88,7 @@ describe('OutboundSenderService', () => {
         OutboundSenderService,
         { provide: PrismaService, useValue: prismaMock },
         { provide: ChannelsService, useValue: channelsMock },
+        { provide: ConversationsGateway, useValue: gatewayMock },
         { provide: 'ConfigService', useValue: configMock },
       ],
     })
@@ -69,7 +96,6 @@ describe('OutboundSenderService', () => {
       .useValue(configMock)
       .compile();
 
-    // ConfigService token varies — grab it by class name via get
     service = module.get<OutboundSenderService>(OutboundSenderService);
   });
 
@@ -77,81 +103,121 @@ describe('OutboundSenderService', () => {
 
   describe('send()', () => {
     const dto: SendOutboundDto = {
-      conversationId: 'conv-1',
+      conversationId: CONVERSATION_ID,
       channelType: 'telegram',
       text: 'Hello!',
       recipientId: '123456',
+      fromAgentId: 'agent-1',
     };
 
     it('throws NotFoundException when conversation does not exist', async () => {
       prismaMock.conversation.findUnique.mockResolvedValue(null);
 
       await expect(service.send(dto)).rejects.toThrow(NotFoundException);
-      expect(prismaMock.outboundMessage.create).not.toHaveBeenCalled();
+      expect(prismaMock.message.create).not.toHaveBeenCalled();
+    });
+
+    it('creates an OUTBOUND message record before calling channel adapter', async () => {
+      prismaMock.conversation.findUnique.mockResolvedValue(mockConversation);
+      prismaMock.message.create.mockResolvedValue(mockMessage);
+      channelsMock.send.mockResolvedValue({ success: true, externalId: 'tg-42', timestamp: '2026-01-01T00:00:00Z' });
+      prismaMock.message.update.mockResolvedValue(mockMessageDelivered);
+      prismaMock.conversation.update.mockResolvedValue({});
+
+      await service.send(dto);
+
+      expect(prismaMock.message.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            conversationId: CONVERSATION_ID,
+            direction: 'OUTBOUND',
+            type: 'TEXT',
+            content: 'Hello!',
+          }),
+        }),
+      );
     });
 
     it('calls ChannelsService.send with correct arguments', async () => {
       prismaMock.conversation.findUnique.mockResolvedValue(mockConversation);
-      channelsMock.send.mockResolvedValue({ success: true, externalId: 'ext-42', timestamp: '2026-01-01T00:00:00Z' });
-      prismaMock.outboundMessage.create.mockResolvedValue(mockOutboundMessage);
+      prismaMock.message.create.mockResolvedValue(mockMessage);
+      channelsMock.send.mockResolvedValue({ success: true, externalId: 'tg-42', timestamp: '2026-01-01T00:00:00Z' });
+      prismaMock.message.update.mockResolvedValue(mockMessageDelivered);
+      prismaMock.conversation.update.mockResolvedValue({});
 
       await service.send(dto);
 
-      expect(channelsMock.send).toHaveBeenCalledWith('telegram', 'conv-1', 'Hello!', '123456');
+      expect(channelsMock.send).toHaveBeenCalledWith('telegram', CONVERSATION_ID, 'Hello!', '123456');
     });
 
-    it('persists a "sent" outbound message on success', async () => {
+    it('updates message with deliveredAt and externalId on success', async () => {
       prismaMock.conversation.findUnique.mockResolvedValue(mockConversation);
-      channelsMock.send.mockResolvedValue({ success: true, externalId: 'ext-42', timestamp: '2026-01-01T00:00:00Z' });
-      prismaMock.outboundMessage.create.mockResolvedValue(mockOutboundMessage);
+      prismaMock.message.create.mockResolvedValue(mockMessage);
+      channelsMock.send.mockResolvedValue({ success: true, externalId: 'tg-42', timestamp: '2026-01-01T00:00:00Z' });
+      prismaMock.message.update.mockResolvedValue(mockMessageDelivered);
+      prismaMock.conversation.update.mockResolvedValue({});
 
       const result = await service.send(dto);
 
-      expect(prismaMock.outboundMessage.create).toHaveBeenCalledWith(
+      expect(prismaMock.message.update).toHaveBeenCalledWith(
         expect.objectContaining({
+          where: { id: mockMessage.id },
           data: expect.objectContaining({
-            conversationId: 'conv-1',
-            channelType: 'telegram',
-            text: 'Hello!',
-            status: 'sent',
-            externalId: 'ext-42',
+            externalId: 'tg-42',
+            deliveredAt: expect.any(Date),
+            failedAt: null,
+            errorMessage: null,
           }),
         }),
       );
       expect(result.success).toBe(true);
-      expect(result.id).toBe('out-1');
-      expect(result.externalId).toBe('ext-42');
+      expect(result.id).toBe(mockMessage.id);
     });
 
-    it('persists a "failed" outbound message on channel error', async () => {
+    it('updates message with failedAt and errorMessage on channel failure', async () => {
       prismaMock.conversation.findUnique.mockResolvedValue(mockConversation);
+      prismaMock.message.create.mockResolvedValue(mockMessage);
       channelsMock.send.mockResolvedValue({
         success: false,
         timestamp: '2026-01-01T00:00:00Z',
         error: 'Telegram API error 400',
       });
-      prismaMock.outboundMessage.create.mockResolvedValue({
-        ...mockOutboundMessage,
-        status: 'failed',
-        error: 'Telegram API error 400',
-        externalId: null,
-      });
+      prismaMock.message.update.mockResolvedValue(mockMessageFailed);
+      prismaMock.conversation.update.mockResolvedValue({});
 
       const result = await service.send(dto);
 
-      expect(prismaMock.outboundMessage.create).toHaveBeenCalledWith(
+      expect(prismaMock.message.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ status: 'failed', error: 'Telegram API error 400' }),
+          data: expect.objectContaining({
+            failedAt: expect.any(Date),
+            deliveredAt: null,
+            errorMessage: 'Telegram API error 400',
+          }),
         }),
       );
       expect(result.success).toBe(false);
       expect(result.error).toBe('Telegram API error 400');
     });
 
+    it('emits WebSocket event after delivery', async () => {
+      prismaMock.conversation.findUnique.mockResolvedValue(mockConversation);
+      prismaMock.message.create.mockResolvedValue(mockMessage);
+      channelsMock.send.mockResolvedValue({ success: true, externalId: 'tg-42', timestamp: '2026-01-01T00:00:00Z' });
+      prismaMock.message.update.mockResolvedValue(mockMessageDelivered);
+      prismaMock.conversation.update.mockResolvedValue({});
+
+      await service.send(dto);
+
+      expect(gatewayMock.emitMessageAdded).toHaveBeenCalledWith(CONVERSATION_ID, mockMessageDelivered);
+    });
+
     it('falls back to conversation.channel when dto.channelType is empty', async () => {
-      prismaMock.conversation.findUnique.mockResolvedValue({ ...mockConversation, channel: 'line' });
+      prismaMock.conversation.findUnique.mockResolvedValue({ ...mockConversation, channel: 'LINE' });
+      prismaMock.message.create.mockResolvedValue(mockMessage);
       channelsMock.send.mockResolvedValue({ success: true, timestamp: '2026-01-01T00:00:00Z' });
-      prismaMock.outboundMessage.create.mockResolvedValue({ ...mockOutboundMessage, channelType: 'line' });
+      prismaMock.message.update.mockResolvedValue(mockMessageDelivered);
+      prismaMock.conversation.update.mockResolvedValue({});
 
       await service.send({ ...dto, channelType: '' });
 
@@ -163,9 +229,8 @@ describe('OutboundSenderService', () => {
 
   describe('switchChannel()', () => {
     const dto: SwitchChannelDto = {
-      conversationId: 'conv-1',
+      conversationId: CONVERSATION_ID,
       newChannelType: 'line',
-      recipientId: 'uid-789',
     };
 
     it('throws NotFoundException when conversation does not exist', async () => {
@@ -174,62 +239,101 @@ describe('OutboundSenderService', () => {
       await expect(service.switchChannel(dto)).rejects.toThrow(NotFoundException);
     });
 
-    it('updates conversation channel and persists channel_switch record', async () => {
+    it('throws NotFoundException for invalid channel type', async () => {
       prismaMock.conversation.findUnique.mockResolvedValue(mockConversation);
-      prismaMock.$transaction.mockResolvedValue([]);
+
+      await expect(service.switchChannel({ ...dto, newChannelType: 'invalid_xyz' })).rejects.toThrow(NotFoundException);
+    });
+
+    it('updates conversation channel and creates SYSTEM message in a transaction', async () => {
+      prismaMock.conversation.findUnique.mockResolvedValue(mockConversation);
+      const systemMessage = { ...mockMessage, type: 'SYSTEM', content: 'Channel switched from TELEGRAM to LINE' };
+      prismaMock.conversation.update.mockReturnValue({});
+      prismaMock.message.create.mockReturnValue(systemMessage);
+      prismaMock.$transaction.mockResolvedValue([{}, systemMessage]);
 
       await service.switchChannel(dto);
 
-      expect(prismaMock.$transaction).toHaveBeenCalledWith([
-        undefined, // conversation.update result (mocked as undefined)
-        undefined, // outboundMessage.create result (mocked as undefined)
-      ]);
-
+      expect(prismaMock.$transaction).toHaveBeenCalled();
       expect(prismaMock.conversation.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 'conv-1' },
-          data: { channel: 'line' },
+          where: { id: CONVERSATION_ID },
+          data: { channel: 'LINE' },
         }),
       );
-
-      expect(prismaMock.outboundMessage.create).toHaveBeenCalledWith(
+      expect(prismaMock.message.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            conversationId: 'conv-1',
-            channelType: 'line',
-            status: 'channel_switch',
+            conversationId: CONVERSATION_ID,
+            direction: 'OUTBOUND',
+            type: 'SYSTEM',
           }),
         }),
       );
     });
+
+    it('emits WebSocket conversation updated and message added events', async () => {
+      prismaMock.conversation.findUnique.mockResolvedValue(mockConversation);
+      const systemMessage = { ...mockMessage, type: 'SYSTEM' };
+      prismaMock.conversation.update.mockReturnValue({});
+      prismaMock.message.create.mockReturnValue(systemMessage);
+      prismaMock.$transaction.mockResolvedValue([{}, systemMessage]);
+
+      await service.switchChannel(dto);
+
+      expect(gatewayMock.emitConversationUpdated).toHaveBeenCalledWith(
+        CONVERSATION_ID,
+        expect.objectContaining({ channel: 'LINE' }),
+      );
+      expect(gatewayMock.emitMessageAdded).toHaveBeenCalledWith(CONVERSATION_ID, systemMessage);
+    });
   });
 
-  // ─── listForConversation() ─────────────────────────────────────────────────
+  // ─── retryFailed() ─────────────────────────────────────────────────────────
 
-  describe('listForConversation()', () => {
-    it('queries outbound messages ordered by createdAt desc', async () => {
-      prismaMock.outboundMessage.findMany.mockResolvedValue([mockOutboundMessage]);
+  describe('retryFailed()', () => {
+    it('throws NotFoundException when message does not exist', async () => {
+      prismaMock.message.findUnique.mockResolvedValue(null);
 
-      const result = await service.listForConversation('conv-1', 20, 0);
+      await expect(service.retryFailed('msg-not-found')).rejects.toThrow(NotFoundException);
+    });
 
-      expect(prismaMock.outboundMessage.findMany).toHaveBeenCalledWith({
-        where: { conversationId: 'conv-1' },
+    it('throws NotFoundException for non-outbound messages', async () => {
+      prismaMock.message.findUnique.mockResolvedValue({ ...mockMessage, direction: 'INBOUND' });
+
+      await expect(service.retryFailed('msg-001')).rejects.toThrow(NotFoundException);
+    });
+
+    it('delegates to send() with original message data', async () => {
+      const failedMsg = { ...mockMessageFailed, metadata: { channelType: 'telegram', recipientId: '123' } };
+      prismaMock.message.findUnique.mockResolvedValue(failedMsg);
+      prismaMock.conversation.findUnique.mockResolvedValue(mockConversation);
+      prismaMock.message.create.mockResolvedValue(mockMessage);
+      channelsMock.send.mockResolvedValue({ success: true, externalId: 'tg-99', timestamp: '2026-01-01T00:00:00Z' });
+      prismaMock.message.update.mockResolvedValue(mockMessageDelivered);
+      prismaMock.conversation.update.mockResolvedValue({});
+
+      await service.retryFailed('msg-001');
+
+      expect(channelsMock.send).toHaveBeenCalledWith('telegram', CONVERSATION_ID, 'Hello!', '123');
+    });
+  });
+
+  // ─── listOutbound() ────────────────────────────────────────────────────────
+
+  describe('listOutbound()', () => {
+    it('queries OUTBOUND messages ordered by createdAt desc', async () => {
+      prismaMock.message.findMany.mockResolvedValue([mockMessage]);
+
+      const result = await service.listOutbound(CONVERSATION_ID, 20, 0);
+
+      expect(prismaMock.message.findMany).toHaveBeenCalledWith({
+        where: { conversationId: CONVERSATION_ID, direction: 'OUTBOUND' },
         orderBy: { createdAt: 'desc' },
         take: 20,
         skip: 0,
       });
       expect(result).toHaveLength(1);
-      expect(result[0].id).toBe('out-1');
-    });
-
-    it('applies custom limit and offset', async () => {
-      prismaMock.outboundMessage.findMany.mockResolvedValue([]);
-
-      await service.listForConversation('conv-1', 5, 10);
-
-      expect(prismaMock.outboundMessage.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ take: 5, skip: 10 }),
-      );
     });
   });
 });

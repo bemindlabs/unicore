@@ -213,6 +213,12 @@ exports.Prisma.ChatHistoryScalarFieldEnum = {
   messages: 'messages',
   summary: 'summary',
   channel: 'channel',
+  aiSummary: 'aiSummary',
+  sentimentOverall: 'sentimentOverall',
+  messageSentiments: 'messageSentiments',
+  intentHistory: 'intentHistory',
+  keyEntities: 'keyEntities',
+  intelligenceAt: 'intelligenceAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -279,19 +285,37 @@ exports.Prisma.PluginInstallationScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ContactChannelScalarFieldEnum = {
+  id: 'id',
+  channel: 'channel',
+  externalId: 'externalId',
+  displayName: 'displayName',
+  avatarUrl: 'avatarUrl',
+  metadata: 'metadata',
+  erpContactId: 'erpContactId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.ConversationScalarFieldEnum = {
   id: 'id',
-  title: 'title',
-  status: 'status',
   channel: 'channel',
-  assigneeId: 'assigneeId',
+  status: 'status',
+  subject: 'subject',
+  title: 'title',
+  userId: 'userId',
   assigneeName: 'assigneeName',
   contactId: 'contactId',
   contactName: 'contactName',
   contactEmail: 'contactEmail',
-  userId: 'userId',
-  metadata: 'metadata',
+  externalId: 'externalId',
+  assigneeId: 'assigneeId',
+  autoRespond: 'autoRespond',
+  contactChannelId: 'contactChannelId',
+  resolvedAt: 'resolvedAt',
   closedAt: 'closedAt',
+  lastMessageAt: 'lastMessageAt',
+  metadata: 'metadata',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -308,6 +332,41 @@ exports.Prisma.ConversationMessageScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.MessageScalarFieldEnum = {
+  id: 'id',
+  conversationId: 'conversationId',
+  direction: 'direction',
+  type: 'type',
+  content: 'content',
+  attachments: 'attachments',
+  externalId: 'externalId',
+  sender: 'sender',
+  isRead: 'isRead',
+  readAt: 'readAt',
+  deliveredAt: 'deliveredAt',
+  failedAt: 'failedAt',
+  errorMessage: 'errorMessage',
+  isAiGenerated: 'isAiGenerated',
+  metadata: 'metadata',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ConversationParticipantScalarFieldEnum = {
+  id: 'id',
+  conversationId: 'conversationId',
+  participantId: 'participantId',
+  participantType: 'participantType',
+  participantName: 'participantName',
+  participantColor: 'participantColor',
+  role: 'role',
+  autoRespond: 'autoRespond',
+  addedBy: 'addedBy',
+  isActive: 'isActive',
+  joinedAt: 'joinedAt',
+  leftAt: 'leftAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.NotificationScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -316,6 +375,34 @@ exports.Prisma.NotificationScalarFieldEnum = {
   message: 'message',
   read: 'read',
   link: 'link',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.HandoffScalarFieldEnum = {
+  id: 'id',
+  conversationId: 'conversationId',
+  channel: 'channel',
+  userId: 'userId',
+  trigger: 'trigger',
+  confidence: 'confidence',
+  status: 'status',
+  assignedTo: 'assignedTo',
+  contextSummary: 'contextSummary',
+  slaMinutes: 'slaMinutes',
+  slaDeadline: 'slaDeadline',
+  slaBreached: 'slaBreached',
+  resolvedAt: 'resolvedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CannedResponseScalarFieldEnum = {
+  id: 'id',
+  shortcut: 'shortcut',
+  text: 'text',
+  category: 'category',
+  createdBy: 'createdBy',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -352,12 +439,42 @@ exports.Role = exports.$Enums.Role = {
   VIEWER: 'VIEWER'
 };
 
+exports.ConversationChannel = exports.$Enums.ConversationChannel = {
+  TELEGRAM: 'TELEGRAM',
+  LINE: 'LINE',
+  FACEBOOK: 'FACEBOOK',
+  INSTAGRAM: 'INSTAGRAM',
+  WHATSAPP: 'WHATSAPP',
+  SLACK: 'SLACK',
+  DISCORD: 'DISCORD',
+  EMAIL: 'EMAIL',
+  SMS: 'SMS',
+  LIVE_CHAT: 'LIVE_CHAT'
+};
+
 exports.ConversationStatus = exports.$Enums.ConversationStatus = {
   OPEN: 'OPEN',
-  ASSIGNED: 'ASSIGNED',
   PENDING: 'PENDING',
+  ASSIGNED: 'ASSIGNED',
   RESOLVED: 'RESOLVED',
   CLOSED: 'CLOSED'
+};
+
+exports.MessageDirection = exports.$Enums.MessageDirection = {
+  INBOUND: 'INBOUND',
+  OUTBOUND: 'OUTBOUND'
+};
+
+exports.MessageType = exports.$Enums.MessageType = {
+  TEXT: 'TEXT',
+  IMAGE: 'IMAGE',
+  FILE: 'FILE',
+  AUDIO: 'AUDIO',
+  VIDEO: 'VIDEO',
+  STICKER: 'STICKER',
+  LOCATION: 'LOCATION',
+  TEMPLATE: 'TEMPLATE',
+  SYSTEM: 'SYSTEM'
 };
 
 exports.Prisma.ModelName = {
@@ -374,9 +491,14 @@ exports.Prisma.ModelName = {
   Plugin: 'Plugin',
   PluginVersion: 'PluginVersion',
   PluginInstallation: 'PluginInstallation',
+  ContactChannel: 'ContactChannel',
   Conversation: 'Conversation',
   ConversationMessage: 'ConversationMessage',
-  Notification: 'Notification'
+  Message: 'Message',
+  ConversationParticipant: 'ConversationParticipant',
+  Notification: 'Notification',
+  Handoff: 'Handoff',
+  CannedResponse: 'CannedResponse'
 };
 
 /**
