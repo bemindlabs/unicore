@@ -203,4 +203,41 @@ export class ConversationsController {
     this.gateway.emitParticipantsUpdated(id, { action: 'added', participant });
     return participant;
   }
+
+  // ─── Auto-Respond (UNC-1021) ─────────────────────────────────────────────────
+
+  /**
+   * PATCH /api/v1/conversations/:id/auto-respond
+   * Toggle the conversation-level auto-respond flag.
+   * Body: { autoRespond: boolean }
+   */
+  @Patch(':id/auto-respond')
+  @HttpCode(HttpStatus.OK)
+  async setAutoRespond(
+    @Param('id') id: string,
+    @Body('autoRespond') autoRespond: boolean,
+    @CurrentUser() user: any,
+    @Req() req: Request,
+  ) {
+    const conversation = await this.conversationsService.findOne(id);
+    if (conversation.userId !== user.id) throw new ForbiddenException('Access denied');
+
+    const result = await this.conversationsService.setAutoRespond(id, Boolean(autoRespond));
+
+    await this.audit.log({
+      userId: user.id,
+      userEmail: user.email,
+      action: 'update',
+      resource: 'conversations',
+      resourceId: id,
+      detail: `Auto-respond ${autoRespond ? 'enabled' : 'disabled'} for conversation ${id}`,
+      ip: req.ip,
+      success: true,
+    });
+
+    this.gateway.emitConversationUpdated(id, { autoRespond: result.autoRespond });
+
+    return result;
+  }
+
 }
