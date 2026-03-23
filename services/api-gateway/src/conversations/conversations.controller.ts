@@ -16,6 +16,7 @@ import { Request } from 'express';
 import { ConversationsService } from './conversations.service';
 import { ConversationsGateway } from './conversations.gateway';
 import { CreateConversationDto } from './dto/create-conversation.dto';
+import { InviteParticipantDto, InviteCommandDto, UpdateParticipantDto } from './dto/invite-participant.dto';
 import { UpdateConversationDto, TransitionStatusDto } from './dto/update-conversation.dto';
 import { AddMessageDto } from './dto/add-message.dto';
 import { InviteParticipantDto, InviteCommandDto } from './dto/invite-participant.dto';
@@ -206,6 +207,99 @@ export class ConversationsController {
 
     this.gateway.emitMessageAdded(id, message);
     return message;
+  }
+
+  // ─── Participants (UNC-1031) ──────────────────────────────────────────────
+
+  @Get(':id/participants')
+  async listParticipants(@Param('id') id: string, @CurrentUser() user: any) {
+    const conversation = await this.conversationsService.findOne(id);
+    if (conversation.userId !== user.id) throw new ForbiddenException('Access denied');
+    return this.conversationsService.listParticipants(id);
+  }
+
+  @Post(':id/participants')
+  async addParticipant(
+    @Param('id') id: string,
+    @Body() dto: InviteParticipantDto,
+    @CurrentUser() user: any,
+    @Req() req: Request,
+  ) {
+    const conversation = await this.conversationsService.findOne(id);
+    if (conversation.userId !== user.id) throw new ForbiddenException('Access denied');
+
+    const participant = await this.conversationsService.inviteParticipant(id, dto, user.id);
+
+    await this.audit.log({
+      userId: user.id,
+      userEmail: user.email,
+      action: 'create',
+      resource: 'conversation_participants',
+      resourceId: participant.id,
+      detail: `Added ${dto.participantType} participant "${dto.participantName}" to conversation ${id}`,
+      ip: req.ip,
+      success: true,
+    });
+
+    this.gateway.emitParticipantsUpdated(id, { action: 'added', participant });
+    return participant;
+  }
+
+  @Patch(':id/participants/:participantId')
+  async updateParticipant(
+    @Param('id') id: string,
+    @Param('participantId') participantId: string,
+    @Body() dto: UpdateParticipantDto,
+    @CurrentUser() user: any,
+  ) {
+    const conversation = await this.conversationsService.findOne(id);
+    if (conversation.userId !== user.id) throw new ForbiddenException('Access denied');
+
+    const updated = await this.conversationsService.updateParticipant(id, participantId, dto);
+    this.gateway.emitParticipantsUpdated(id, { action: 'updated', participant: updated });
+    return updated;
+  }
+
+  @Delete(':id/participants/:participantId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeParticipant(
+    @Param('id') id: string,
+    @Param('participantId') participantId: string,
+    @CurrentUser() user: any,
+    @Req() req: Request,
+  ) {
+    const conversation = await this.conversationsService.findOne(id);
+    if (conversation.userId !== user.id) throw new ForbiddenException('Access denied');
+
+    const removed = await this.conversationsService.removeParticipant(id, participantId);
+
+    await this.audit.log({
+      userId: user.id,
+      userEmail: user.email,
+      action: 'delete',
+      resource: 'conversation_participants',
+      resourceId: participantId,
+      detail: `Removed participant "${participantId}" from conversation ${id}`,
+      ip: req.ip,
+      success: true,
+    });
+
+    this.gateway.emitParticipantsUpdated(id, { action: 'removed', participantId });
+    return removed;
+  }
+
+  @Post(':id/invite')
+  async processInviteCommand(
+    @Param('id') id: string,
+    @Body() dto: InviteCommandDto,
+    @CurrentUser() user: any,
+  ) {
+    const conversation = await this.conversationsService.findOne(id);
+    if (conversation.userId !== user.id) throw new ForbiddenException('Access denied');
+
+    const participant = await this.conversationsService.processInviteCommand(id, dto.command, user.id);
+    this.gateway.emitParticipantsUpdated(id, { action: 'added', participant });
+    return participant;
   }
 
   @Delete(':id')

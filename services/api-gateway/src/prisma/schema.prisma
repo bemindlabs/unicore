@@ -341,6 +341,14 @@ model Conversation {
   channel          ConversationChannel
   status           ConversationStatus        @default(OPEN)
   subject          String?
+  title            String?
+  /// The dashboard user who owns / created this conversation
+  userId           String?
+  /// Assigned operator name
+  assigneeName     String?
+  contactId        String?
+  contactName      String?
+  contactEmail     String?
   /// External conversation/room ID from the originating channel
   externalId       String?
   /// Assigned operator user ID
@@ -350,6 +358,7 @@ model Conversation {
   contactChannelId String?
   contactChannel   ContactChannel?           @relation(fields: [contactChannelId], references: [id])
   messages         Message[]
+  convMessages     ConversationMessage[]
   participants     ConversationParticipant[]
   resolvedAt       DateTime?
   closedAt         DateTime?
@@ -360,11 +369,32 @@ model Conversation {
 
   @@index([channel])
   @@index([status])
+  @@index([userId])
   @@index([assigneeId])
   @@index([externalId])
   @@index([contactChannelId])
   @@index([lastMessageAt])
   @@map("conversations")
+}
+
+/// Operator/agent messages in a conversation (simple model for dashboard hub)
+model ConversationMessage {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  content        String?
+  /// 'user' | 'assistant' | 'system'
+  role           String       @default("user")
+  authorId       String?
+  authorName     String?
+  /// 'human' | 'agent' | 'system'
+  authorType     String       @default("human")
+  metadata       Json         @default("{}")
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+  @@index([conversationId, createdAt])
+  @@map("conversation_messages")
 }
 
 /// A single message within a conversation (inbound or outbound)
