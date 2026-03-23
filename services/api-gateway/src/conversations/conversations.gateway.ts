@@ -1,116 +1,82 @@
-import { Logger } from '@nestjs/common';
 import {
-  OnGatewayConnection,
-  OnGatewayDisconnect,
-  OnGatewayInit,
-  SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
+  SubscribeMessage,
   MessageBody,
   ConnectedSocket,
 } from '@nestjs/websockets';
-import { Server, WebSocket } from 'ws';
-
-interface ConversationSocket extends WebSocket {
-  socketId: string;
-  conversationIds: Set<string>;
-}
+import { Server, Socket } from 'socket.io';
 
 /**
- * WebSocket gateway for real-time conversation updates.
- * Clients connect and subscribe to specific conversation rooms.
+ * ConversationsGateway — real-time WebSocket gateway for conversation events.
  *
- * Client → Server events:
- *   subscribe   { conversationId }  — join a conversation room
- *   unsubscribe { conversationId }  — leave a conversation room
+ * Namespace: /conversations (socket.io)
  *
- * Server → Client events:
- *   message     { conversationId, message }   — new message in conversation
- *   update      { conversationId, changes }   — conversation status/assignment change
+ * Emitted events:
+ *   - conversation:created       { conversation }
+ *   - conversation:updated       { ...data }
+ *   - conversation:status        { conversationId, status }
+ *   - conversation:assigned      { conversationId, agentId }
+ *   - conversation:message       { message }
+ *   - participant:invited        { conversationId, participant }
+ *   - participant:left           { conversationId, participantId }
  */
-@WebSocketGateway(4001, { path: '/ws/conversations', transports: ['websocket'] })
-export class ConversationsGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
-{
-  private readonly logger = new Logger(ConversationsGateway.name);
-
+@WebSocketGateway({ namespace: '/conversations', cors: { origin: '*' } })
+export class ConversationsGateway {
   @WebSocketServer()
   server!: Server;
 
-  /** conversationId → set of connected socketIds */
-  private rooms = new Map<string, Set<string>>();
-  /** socketId → socket instance */
-  private sockets = new Map<string, ConversationSocket>();
-
-  afterInit() {
-    this.logger.log('Conversations WebSocket gateway initialized on port 4001');
+  @SubscribeMessage('join')
+  handleJoin(@MessageBody() conversationId: string, @ConnectedSocket() client: Socket): void {
+    void client.join(`conv:${conversationId}`);
   }
 
-  handleConnection(socket: ConversationSocket) {
-    socket.socketId = `conv-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    socket.conversationIds = new Set();
-    this.sockets.set(socket.socketId, socket);
-    this.logger.debug(`Client connected: ${socket.socketId}`);
+  @SubscribeMessage('leave')
+  handleLeave(@MessageBody() conversationId: string, @ConnectedSocket() client: Socket): void {
+    void client.leave(`conv:${conversationId}`);
   }
 
-  handleDisconnect(socket: ConversationSocket) {
-    // Remove from all rooms
-    for (const convId of socket.conversationIds) {
-      const room = this.rooms.get(convId);
-      if (room) {
-        room.delete(socket.socketId);
-        if (room.size === 0) this.rooms.delete(convId);
-      }
-    }
-    this.sockets.delete(socket.socketId);
-    this.logger.debug(`Client disconnected: ${socket.socketId}`);
+  // ─── Broadcast helpers ────────────────────────────────────────────────────────
+
+  emitConversationCreated(conversation: any): void {
+    this.server?.emit('conversation:created', conversation);
   }
 
-  @SubscribeMessage('subscribe')
-  handleSubscribe(
-    @ConnectedSocket() socket: ConversationSocket,
-    @MessageBody() data: { conversationId: string },
-  ) {
-    const { conversationId } = data;
-    if (!this.rooms.has(conversationId)) {
-      this.rooms.set(conversationId, new Set());
-    }
-    this.rooms.get(conversationId)!.add(socket.socketId);
-    socket.conversationIds.add(conversationId);
-    this.logger.debug(`Socket ${socket.socketId} subscribed to ${conversationId}`);
-    return { subscribed: true, conversationId };
+  emitConversationUpdated(conversationId: string, data: any): void {
+    this.server?.to(`conv:${conversationId}`).emit('conversation:updated', data);
   }
 
-  @SubscribeMessage('unsubscribe')
-  handleUnsubscribe(
-    @ConnectedSocket() socket: ConversationSocket,
-    @MessageBody() data: { conversationId: string },
-  ) {
-    const { conversationId } = data;
-    this.rooms.get(conversationId)?.delete(socket.socketId);
-    socket.conversationIds.delete(conversationId);
-    return { unsubscribed: true, conversationId };
+  emitStatusChanged(conversationId: string, status: string): void {
+    this.server
+      ?.to(`conv:${conversationId}`)
+      .emit('conversation:status', { conversationId, status });
   }
 
-  /** Broadcast a new message to all subscribers of a conversation */
-  emitMessage(conversationId: string, message: any) {
-    this.broadcast(conversationId, { event: 'message', conversationId, message });
+  emitConversationAssigned(conversationId: string, agentId: string): void {
+    this.server
+      ?.to(`conv:${conversationId}`)
+      .emit('conversation:assigned', { conversationId, agentId });
   }
 
-  /** Broadcast a conversation state change to all subscribers */
-  emitConversationUpdate(conversationId: string, changes: Record<string, any>) {
-    this.broadcast(conversationId, { event: 'update', conversationId, changes });
+  emitMessageAdded(conversationId: string, message: any): void {
+    this.server?.to(`conv:${conversationId}`).emit('conversation:message', message);
   }
 
-  private broadcast(conversationId: string, payload: any) {
-    const room = this.rooms.get(conversationId);
-    if (!room || room.size === 0) return;
-    const json = JSON.stringify(payload);
-    for (const socketId of room) {
-      const socket = this.sockets.get(socketId);
-      if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(json);
-      }
-    }
+  emitMessageInbound(conversationId: string, message: any): void {
+    this.server?.to(`conv:${conversationId}`).emit('message:inbound', { conversationId, message });
+  }
+
+  // ─── Participant events ───────────────────────────────────────────────────────
+
+  emitParticipantInvited(conversationId: string, participant: any): void {
+    this.server
+      ?.to(`conv:${conversationId}`)
+      .emit('participant:invited', { conversationId, participant });
+  }
+
+  emitParticipantLeft(conversationId: string, participantId: string): void {
+    this.server
+      ?.to(`conv:${conversationId}`)
+      .emit('participant:left', { conversationId, participantId });
   }
 }
