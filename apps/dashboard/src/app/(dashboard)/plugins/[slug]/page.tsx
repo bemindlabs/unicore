@@ -717,6 +717,12 @@ export default function PluginDetailPage() {
                     {plugin.reviewCount}
                   </Badge>
                 </TabsTrigger>
+                {installed && (
+                  <TabsTrigger value="configure">
+                    <Settings2 className="mr-1.5 h-3.5 w-3.5" />
+                    Configure
+                  </TabsTrigger>
+                )}
               </TabsList>
 
               <TabsContent value="overview" className="mt-4 space-y-4">
