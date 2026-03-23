@@ -105,9 +105,9 @@ describe('HandoffService', () => {
         'need a real person',
         'this is not helpful',
       ];
-      EXPLICIT_ESCALATION_PATTERNS.forEach((re, i) => {
+      EXPLICIT_ESCALATION_PATTERNS.forEach((re) => {
         const matched = samples.some((s) => re.test(s));
-        expect(matched).toBe(true); // pattern index ${i} should match at least one sample
+        expect(matched).toBe(true);
       });
     });
   });
