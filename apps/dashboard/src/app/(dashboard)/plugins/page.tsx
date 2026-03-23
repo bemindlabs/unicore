@@ -520,7 +520,7 @@ export default function PluginsMarketplacePage() {
       )}
 
       {/* Category Tabs */}
-      <Tabs value={category} onValueChange={(v) => setCategory(v as PluginCategory)}>
+      {!loading && <Tabs value={category} onValueChange={(v) => setCategory(v as PluginCategory)}>
         <TabsList className="flex h-auto flex-wrap gap-1 bg-transparent p-0">
           {CATEGORIES.map(({ value, label, icon: Icon }) => (
             <TabsTrigger
