@@ -137,7 +137,7 @@ export const menuSections: NavSection[] = [
       {
         label: 'Custom Domains',
         icon: Globe,
-        href: '/admin/domains',
+        href: '/settings/domains',
         roles: [UserRole.Owner],
         license: { tier: 'pro', feature: 'customDomains', upgradeLabel: 'Pro' },
       },
