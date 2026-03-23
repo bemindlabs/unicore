@@ -546,10 +546,9 @@ export default function WorkflowsPage() {
     api
       .get<DefinitionsResponse>('/api/proxy/workflow/definitions')
       .then((raw) => {
-        const defs = unwrapDefinitions(raw);
-        setDefinitions(defs.length > 0 ? defs : DEMO_WORKFLOWS);
+        setDefinitions(unwrapDefinitions(raw));
       })
-      .catch(() => setDefinitions(DEMO_WORKFLOWS))
+      .catch(() => setDefinitions([]))
       .finally(() => setIsLoading(false));
   }, []);
 
