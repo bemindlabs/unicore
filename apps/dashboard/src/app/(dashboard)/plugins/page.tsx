@@ -455,14 +455,7 @@ export default function PluginsMarketplacePage() {
             <Puzzle className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold tracking-tight">Plugin Marketplace</h1>
-              {isPreview && (
-                <Badge variant="secondary" className="text-xs font-normal">
-                  Preview
-                </Badge>
-              )}
-            </div>
+            <h1 className="text-2xl font-bold tracking-tight">Plugin Marketplace</h1>
             <p className="text-muted-foreground">Extend UniCore with community and official plugins</p>
           </div>
         </div>
