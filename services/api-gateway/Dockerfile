@@ -37,6 +37,7 @@ LABEL org.opencontainers.image.title="unicore-api-gateway"
 LABEL org.opencontainers.image.description="NestJS REST API gateway and authentication service"
 LABEL org.opencontainers.image.version="${VERSION}"
 COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/packages/plugin-sdk ./packages/plugin-sdk
 COPY --from=build /app/services/api-gateway/node_modules ./services/api-gateway/node_modules
 COPY --from=build /app/services/api-gateway/dist ./services/api-gateway/dist
 COPY --from=build /app/services/api-gateway/package.json ./services/api-gateway/
