@@ -206,17 +206,6 @@ export const menuSections: NavSection[] = [
     ],
   },
   {
-    label: 'Tools',
-    items: [
-      {
-        label: 'Terminal',
-        icon: Terminal,
-        href: '/terminal',
-        roles: [UserRole.Owner, UserRole.Operator],
-      },
-    ],
-  },
-  {
     label: 'Add-ons',
     items: [
       {
