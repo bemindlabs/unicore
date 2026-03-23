@@ -10,12 +10,14 @@ FROM base AS deps
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
 COPY packages/config/package.json ./packages/config/
 COPY packages/shared-types/package.json ./packages/shared-types/
+COPY packages/plugin-sdk/package.json ./packages/plugin-sdk/
 COPY services/api-gateway/package.json ./services/api-gateway/
 RUN pnpm install --frozen-lockfile --filter @unicore/api-gateway...
 
 FROM base AS build
 COPY packages/config ./packages/config
 COPY packages/shared-types ./packages/shared-types
+COPY packages/plugin-sdk ./packages/plugin-sdk
 COPY services/api-gateway ./services/api-gateway
 COPY tsconfig.json ./
 COPY --from=deps /app/node_modules ./node_modules
