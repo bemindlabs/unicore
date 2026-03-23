@@ -261,6 +261,7 @@ export default function SettingsLicensePage() {
 
         setLicense(mapped);
         setUsersUsed(teamData.count);
+        if (raw.machineId) setMachineId(raw.machineId);
         setIsLoading(false);
       })
       .catch(() => {
