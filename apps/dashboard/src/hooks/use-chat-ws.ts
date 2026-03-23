@@ -108,7 +108,7 @@ export function useChatWebSocket(
           if (
             msg.type === 'message:publish' &&
             msg.payload?.channel === channelRef.current &&
-            msg.payload?.data?.text
+            (msg.payload?.data?.text || msg.payload?.data?.toolCalls || msg.payload?.data?.suggestedActions)
           ) {
             const chatMsg = msg.payload.data as ChatMessage;
             // Skip own messages (already shown via send())
