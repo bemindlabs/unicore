@@ -6,7 +6,7 @@ import { PixelStar } from './PixelDecorations';
 
 const mascot = findCharacterByRole('mascot')!;
 
-export function RetroDeskLoadingState() {
+export function RetroDeskLoadingState(): JSX.Element {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center" style={{ background: 'var(--retrodesk-bg, #faf8f5)' }}>
       <div className="relative">
