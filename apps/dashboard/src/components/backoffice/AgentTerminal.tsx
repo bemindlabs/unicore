@@ -41,6 +41,14 @@ export function AgentTerminal({ agent, open, onClose }: Props) {
   const [themeId, setThemeId] = useState<TerminalThemeId>(getStoredTheme);
   const [fontId, setFontId] = useState<TerminalFontId>(getStoredFont);
 
+  // Agent command state
+  const [activeChat, setActiveChat] = useState<string | null>(null);
+  const [cmdHistory, setCmdHistory] = useState<string[]>([]);
+  const activeChatRef = useRef<string | null>(null);
+  const cmdHistoryRef = useRef<string[]>([]);
+  activeChatRef.current = activeChat;
+  cmdHistoryRef.current = cmdHistory;
+
   const handleOutput = useCallback((data: string) => {
     xtermRef.current?.write(data);
   }, []);
@@ -51,6 +59,23 @@ export function AgentTerminal({ agent, open, onClose }: Props) {
 
   const { connected, sessionId, error, createSession, sendInput, sendResize, destroy } =
     usePtyWebSocket(handleOutput, handleExit);
+
+  // Chat WebSocket for /ask command (routes through Router Agent)
+  const handleAgentMessage = useCallback((msg: ChatMessage) => {
+    const term = xtermRef.current;
+    if (!term) return;
+    const author = msg.author ?? 'Agent';
+    term.writeln('');
+    term.writeln(`\x1b[1m\x1b[36m${author}\x1b[0m\x1b[90m responded:\x1b[0m`);
+    term.writeln('\x1b[90m────────────────────────────────\x1b[0m');
+    const rendered = renderMarkdown(msg.text);
+    for (const line of rendered.split('\r\n')) {
+      term.writeln(line);
+    }
+    term.writeln('');
+  }, []);
+
+  const { send: sendChat } = useChatWebSocket('chat-backoffice', handleAgentMessage);
 
   // Initialize xterm when panel opens
   useEffect(() => {
