@@ -62,6 +62,7 @@
     "@types/supertest": "^6.0.0",
     "@types/ws": "^8.5.0",
     "@unicore/config": "workspace:*",
+    "@unicore/plugin-sdk": "workspace:*",
     "jest": "^29.7.0",
     "prisma": "^6.0.0",
     "source-map-support": "^0.5.21",
