@@ -89,6 +89,22 @@ export function ChatBox() {
 
   const channel = selectedAgent ? agentChannel(selectedAgent.id) : GENERAL_CHANNEL;
 
+  // UNC-1027: Handoff state
+  const {
+    handoff,
+    slaSecondsRemaining,
+    claimHandoff,
+    resolveHandoff,
+    resumeAI,
+    setHandoffFromMessage,
+  } = useHandoff(channel);
+  const [handoffDismissed, setHandoffDismissed] = useState(false);
+
+  // Reset dismiss when channel or handoff changes
+  useEffect(() => {
+    setHandoffDismissed(false);
+  }, [channel, handoff?.id]);
+
   // Persist sound preference
   useEffect(() => {
     if (typeof window !== 'undefined') {
