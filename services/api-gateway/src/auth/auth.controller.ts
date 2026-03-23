@@ -26,12 +26,14 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { LoginDto } from './dto/login.dto';
 import { AuditService } from '../audit/audit.service';
+import { LicenseService } from '../license/license.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly auditService: AuditService,
+    private readonly licenseService: LicenseService,
   ) {}
 
   @Public()
