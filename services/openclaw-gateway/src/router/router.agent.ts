@@ -49,6 +49,7 @@ export class RouterAgent implements OnModuleInit {
   constructor(
     private readonly classifier: IntentClassifierService,
     private readonly delegation: DelegationService,
+    private readonly mentionParser: MentionParserService,
     // Specialist agents injected by NestJS DI
     private readonly commsAgent: CommsAgent,
     private readonly financeAgent: FinanceAgent,
