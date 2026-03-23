@@ -27,8 +27,8 @@ describe('validateField', () => {
       expect(validateField('name', schema, 'toolongvalue')).toMatch(/at most 10/);
     });
 
-    it('returns null for empty string (required check is separate)', () => {
-      expect(validateField('name', schema, '')).toBeNull();
+    it('returns minLength error for empty string when minLength > 0', () => {
+      expect(validateField('name', schema, '')).toMatch(/at least 3/);
     });
   });
 
