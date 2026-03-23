@@ -463,7 +463,7 @@ export function PluginConfigForm({
 
     setIsSaving(true);
     try {
-      await api.put(`/api/v1/plugins/${pluginId}/config`, values);
+      await api.put(`/api/v1/plugins/${pluginId}/configure`, values);
       toast({ title: 'Configuration saved', description: `${pluginName} settings have been updated.` });
       onSaved?.();
       onClose();
