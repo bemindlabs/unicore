@@ -122,11 +122,11 @@ describe('InboundRouterService', () => {
 
       expect(mockPrisma.conversation.create).toHaveBeenCalledWith({
         data: {
-          channel: 'telegram',
+          channel: 'TELEGRAM',
           externalId: 'chat-456',
-          status: 'unassigned',
+          status: 'OPEN',
           contactName: 'Alice',
-          contactExternalId: 'user-789',
+          contactId: 'user-789',
           lastMessageAt: expect.any(Date) as Date,
         },
       });
