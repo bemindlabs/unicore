@@ -8,7 +8,7 @@ import {
   LlmStreamChunk,
   ProviderHealthStatus,
 } from './interfaces/llm-provider.interface';
-import { ProviderFactoryService } from './factory/provider-factory.service';
+import { ProviderFactoryService, ProviderInfo } from './factory/provider-factory.service';
 import { TokenTrackingService } from '../token-tracking/token-tracking.service';
 
 export interface LlmRequestContext {
