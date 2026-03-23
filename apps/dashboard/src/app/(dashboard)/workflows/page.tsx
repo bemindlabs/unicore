@@ -662,9 +662,15 @@ export default function WorkflowsPage() {
       </div>
 
       {definitions.length === 0 ? (
-        <div className="flex h-64 flex-col items-center justify-center gap-4 rounded-lg border border-dashed text-muted-foreground">
-          <p>No workflow definitions found</p>
-          <Button variant="outline" onClick={handleCreate}>
+        <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-lg border border-dashed text-muted-foreground">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+            <GitBranch className="h-6 w-6" />
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-medium text-foreground">No workflows yet</p>
+            <p className="text-xs">Automate your business processes with workflow rules</p>
+          </div>
+          <Button onClick={handleCreate}>
             <Plus className="mr-2 h-4 w-4" />
             Create your first workflow
           </Button>
