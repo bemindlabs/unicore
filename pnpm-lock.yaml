@@ -466,6 +466,9 @@ importers:
       helmet:
         specifier: ^7.1.0
         version: 7.2.0
+      kafkajs:
+        specifier: ^2.2.4
+        version: 2.2.4
       multer:
         specifier: '>=2.1.1'
         version: 2.1.1

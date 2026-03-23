@@ -61,7 +61,7 @@ export class InboundRouterService {
     });
 
     // 4. Publish to Kafka (fire-and-forget, graceful degradation)
-    const routedTo = conversation.assigneeId ? 'agent' : 'unassigned';
+    const routedTo: 'agent' | 'unassigned' = conversation.assigneeId ? 'agent' : 'unassigned';
     const kafkaEvent = {
       conversationId: conversation.id,
       messageId: savedMsg.id,
