@@ -146,16 +146,22 @@ model Task {
 // ---------------------------------------------------------------------------
 
 model ChatHistory {
-  id        String   @id @default(uuid())
-  agentId   String
-  agentName String
-  userId    String
-  userName  String
-  messages  Json     @default("[]")
-  summary   String?
-  channel   String   @default("command")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String    @id @default(uuid())
+  agentId           String
+  agentName         String
+  userId            String
+  userName          String
+  messages          Json      @default("[]")
+  summary           String?
+  channel           String    @default("command")
+  aiSummary         String?
+  sentimentOverall  String?   // 'positive' | 'neutral' | 'negative'
+  messageSentiments Json      @default("[]")
+  intentHistory     Json      @default("[]")
+  keyEntities       Json      @default("[]")
+  intelligenceAt    DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   @@index([agentId])
   @@index([userId])

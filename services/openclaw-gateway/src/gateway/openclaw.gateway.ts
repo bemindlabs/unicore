@@ -61,6 +61,7 @@ export class OpenClawGateway
     private readonly routerAgent: RouterAgent,
     private readonly ptyManager: PtySessionManager,
     private readonly persistence: MessagePersistenceService,
+    private readonly handoffNotifier: HandoffNotifierService,
   ) {}
 
   onModuleInit(): void {
