@@ -6,7 +6,7 @@ import type { WidgetComponentProps } from './widget-registry';
 import { MetricCard } from './metric-card';
 import { WidgetSkeleton, WidgetErrorCard } from './widget-skeleton';
 
-export function RevenueWidget({ config }: WidgetComponentProps): JSX.Element {
+export function RevenueWidget({ config }: WidgetComponentProps): JSX.Element | null {
   const { data, loading, error } = useRevenueData(config.refreshInterval);
 
   if (loading) return <WidgetSkeleton />;
