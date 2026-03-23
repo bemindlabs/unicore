@@ -11,6 +11,7 @@ import { PtySessionManager } from './terminal/pty-session-manager';
 import { MessagePersistenceService } from './persistence/message-persistence.service';
 import { MessagesController } from './messages/messages.controller';
 import { HandoffNotifierService } from './handoff/handoff-notifier.service';
+import { ConversationService } from './conversations/conversation.service';
 
 /**
  * OpenClawModule — WebSocket hub for multi-agent communication.
@@ -36,6 +37,7 @@ import { HandoffNotifierService } from './handoff/handoff-notifier.service';
     PtySessionManager,
     MessagePersistenceService,
     HandoffNotifierService,
+    ConversationService,
   ],
   exports: [AgentRegistryService, MessageRouterService, RateLimiterService, MessagePersistenceService],
 })
