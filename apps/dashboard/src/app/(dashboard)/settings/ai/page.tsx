@@ -346,15 +346,26 @@ export default function AiSettingsPage() {
       {/* API Keys & Base URLs — all providers */}
       <Card>
         <CardHeader>
-          <CardTitle>API Keys & Endpoints</CardTitle>
-          <CardDescription>Keys are encrypted (AES-256-GCM). Custom base URLs let you use proxies or self-hosted instances.</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>API Keys & Endpoints</CardTitle>
+              <CardDescription>Keys are encrypted (AES-256-GCM). Custom base URLs let you use proxies or self-hosted instances.</CardDescription>
+            </div>
+            {!isPro && (
+              <Badge variant="secondary" className="gap-1 shrink-0 bg-amber-500/10 text-amber-600 border-amber-300/40">
+                <Crown className="h-3 w-3" />
+                {COMMUNITY_PROVIDER_IDS.size} / {PROVIDERS.length} providers
+              </Badge>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="space-y-5">
           {PROVIDERS.filter((p) => p.keyField).map((p) => {
             const hasKey = config?.[`has${p.keyField[0].toUpperCase()}${p.keyField.slice(1)}`];
             const hasCustomUrl = !!baseUrls[p.id]?.trim();
+            const isLocked = !isPro && !COMMUNITY_PROVIDER_IDS.has(p.id);
             return (
-              <div key={p.id} className="space-y-1.5">
+              <div key={p.id} className={`space-y-1.5 ${isLocked ? 'opacity-50' : ''}`}>
                 <div className="flex items-center justify-between">
                   <Label htmlFor={p.keyField} className="text-sm flex items-center gap-2">
                     {p.name}
