@@ -25,7 +25,7 @@ const ANIMATION_MAP: Record<AnimationType, string | undefined> = {
   none: undefined,
 };
 
-export function PixelCharacter({ character, size = 'md', animation = 'idle', flipped, speechBubble, className = '' }: Props) {
+export function PixelCharacter({ character, size = 'md', animation = 'idle', flipped, speechBubble, className = '' }: Props): JSX.Element {
   const { animationLevel } = useRetroDeskTheme();
   const px = SCALES[size];
   const cols = character.grid[0]?.length ?? 12;
