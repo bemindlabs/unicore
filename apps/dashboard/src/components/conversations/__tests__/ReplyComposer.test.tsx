@@ -109,7 +109,7 @@ describe('ReplyComposer', () => {
 
   describe('canned response filtering', () => {
     it('shows all canned responses when text is exactly "/"', () => {
-      const text = '/';
+      const text: string = '/';
       const canned = [
         { id: '1', shortcut: 'greeting', text: 'Hello', category: 'general' },
         { id: '2', shortcut: 'closing', text: 'Goodbye', category: 'general' },
@@ -125,7 +125,7 @@ describe('ReplyComposer', () => {
     });
 
     it('filters canned responses by shortcut prefix', () => {
-      const text = '/greet';
+      const text: string = '/greet';
       const canned = [
         { id: '1', shortcut: 'greeting', text: 'Hello', category: 'general' },
         { id: '2', shortcut: 'closing', text: 'Goodbye', category: 'general' },
@@ -140,13 +140,13 @@ describe('ReplyComposer', () => {
     });
 
     it('shows canned picker when text starts with "/"', () => {
-      const text = '/he';
+      const text: string = '/he';
       const showCanned = text === '/' || text.startsWith('/');
       expect(showCanned).toBe(true);
     });
 
     it('hides canned picker for normal text', () => {
-      const text = 'Hello there';
+      const text: string = 'Hello there';
       const showCanned = text === '/' || text.startsWith('/');
       expect(showCanned).toBe(false);
     });
