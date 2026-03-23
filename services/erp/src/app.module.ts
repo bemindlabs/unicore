@@ -28,6 +28,7 @@ import { ErpEventInterceptor } from './kafka/erp-event.interceptor';
     ExpensesModule,
     ReportsModule,
     CommsModule,
+    DashboardModule,
   ],
   providers: [
     {
