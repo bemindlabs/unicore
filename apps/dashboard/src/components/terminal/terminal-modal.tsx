@@ -61,24 +61,14 @@ export function TerminalModal({ open, onClose, onConnected, title = 'Terminal' }
     [onConnected],
   );
 
-  // WebSocket connection probe
+  // Mark connected when modal opens (PTY connects internally)
   useEffect(() => {
-    if (!open) {
-      wsRef.current?.close();
-      setConnectedState(false);
-      return;
+    if (open) {
+      // Small delay to allow emulator to establish WebSocket
+      const t = setTimeout(() => setConnectedState(true), 1000);
+      return () => clearTimeout(t);
     }
-    try {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const ws = new WebSocket(`${protocol}//${window.location.host}/ssh/`);
-      wsRef.current = ws;
-      ws.onopen = () => setConnectedState(true);
-      ws.onerror = () => setConnectedState(false);
-      ws.onclose = () => setConnectedState(false);
-    } catch {
-      setConnectedState(false);
-    }
-    return () => wsRef.current?.close();
+    setConnectedState(false);
   }, [open, setConnectedState]);
 
   // Escape key closes modal mode
