@@ -361,10 +361,10 @@ describe('ConversationsService', () => {
     });
   });
 
-  // ─── inviteParticipant with autoRespond + participantColor (UNC-1031) ──────
+  // ─── inviteParticipant with participantColor (UNC-1031) ────────────────────
 
   describe('inviteParticipant (UNC-1031 fields)', () => {
-    it('persists participantColor and autoRespond when provided', async () => {
+    it('persists participantColor when provided', async () => {
       mockPrisma.conversation.findUnique.mockResolvedValue(makeConversation());
       mockPrisma.conversationParticipant.findFirst.mockResolvedValue(null);
       mockPrisma.conversationParticipant.create.mockResolvedValue({
@@ -373,7 +373,6 @@ describe('ConversationsService', () => {
         participantType: 'AGENT',
         participantName: 'Finance Agent',
         participantColor: '#f59e0b',
-        autoRespond: false,
       });
       mockPrisma.conversation.update.mockResolvedValue({});
 
@@ -384,7 +383,6 @@ describe('ConversationsService', () => {
           participantType: InviteParticipantType.AGENT,
           participantName: 'Finance Agent',
           participantColor: '#f59e0b',
-          autoRespond: false,
         },
         'user-1',
       );
@@ -393,31 +391,10 @@ describe('ConversationsService', () => {
         expect.objectContaining({
           data: expect.objectContaining({
             participantColor: '#f59e0b',
-            autoRespond: false,
-            addedBy: 'user-1',
+            invitedBy: 'user-1',
           }),
         }),
       );
-    });
-
-    it('defaults autoRespond to true for AGENT participants', async () => {
-      mockPrisma.conversation.findUnique.mockResolvedValue(makeConversation());
-      mockPrisma.conversationParticipant.findFirst.mockResolvedValue(null);
-      mockPrisma.conversationParticipant.create.mockResolvedValue({ id: 'p-1', autoRespond: true });
-      mockPrisma.conversation.update.mockResolvedValue({});
-
-      await service.inviteParticipant(
-        'conv-1',
-        {
-          participantId: 'router-agent',
-          participantType: InviteParticipantType.AGENT,
-          participantName: 'Router Agent',
-        },
-        'user-1',
-      );
-
-      const callData = mockPrisma.conversationParticipant.create.mock.calls[0][0].data;
-      expect(callData.autoRespond).toBe(true);
     });
   });
 
