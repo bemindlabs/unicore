@@ -56,20 +56,20 @@ interface InstalledPlugin {
   configSchema?: JsonSchema;
 }
 
-const MOCK_INSTALLED_stub = null; void MOCK_INSTALLED_stub;
-if (false) { const _x = {
+const MOCK_INSTALLED: InstalledPlugin[] = [
+  {
     id: '1',
     slug: 'gpt-4o-agent',
     name: 'GPT-4o Agent',
-    description: 'placeholder',
-    author: 'placeholder',
-    version: '0',
-    latestVersion: '0',
+    description: 'Deploy a powerful GPT-4o powered agent with advanced reasoning and multimodal capabilities.',
+    author: 'OpenAI Labs',
+    version: '2.1.0',
+    latestVersion: '2.2.0',
     category: 'agents',
     icon: '🤖',
-    status: 'active' as const,
-    installedAt: '',
-    updatedAt: '',
+    status: 'active',
+    installedAt: '2026-02-10T08:00:00Z',
+    updatedAt: '2026-03-01T12:00:00Z',
     hasUpdate: true,
     configSchema: {
       title: 'GPT-4o Agent Configuration',
