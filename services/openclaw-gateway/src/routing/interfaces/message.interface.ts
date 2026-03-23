@@ -15,7 +15,11 @@ export type MessageType =
   | 'pty:create'
   | 'pty:input'
   | 'pty:resize'
-  | 'pty:destroy';
+  | 'pty:destroy'
+  | 'conversation:new'
+  | 'conversation:message'
+  | 'conversation:assigned'
+  | 'conversation:typing';
 
 export interface BaseMessage {
   type: MessageType;
