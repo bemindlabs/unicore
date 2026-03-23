@@ -122,7 +122,7 @@ describe('InboundRouterService', () => {
 
       expect(mockPrisma.conversation.create).toHaveBeenCalledWith({
         data: {
-          channel: 'TELEGRAM',
+          channel: 'telegram',
           externalId: 'chat-456',
           status: 'OPEN',
           contactName: 'Alice',
