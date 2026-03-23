@@ -48,7 +48,7 @@ export class ConversationsService {
     const conversation = await this.prisma.conversation.create({
       data: {
         title: dto.title,
-        channel: dto.channel ?? 'web',
+        channel: (dto.channel ?? 'LIVE_CHAT') as any,
         userId,
         contactId: dto.contactId,
         contactName: dto.contactName,

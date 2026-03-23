@@ -45,7 +45,7 @@ export class ConversationService implements OnModuleInit, OnModuleDestroy {
         agentId,
         userId,
         userChannel,
-        metadata: metadata ?? ({} as Record<string, unknown>),
+        metadata: (metadata ?? {}) as object,
       },
     }) as Promise<ConversationRecord>;
   }
