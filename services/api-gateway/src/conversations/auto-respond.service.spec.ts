@@ -163,7 +163,7 @@ describe('ConversationsService — auto-respond (UNC-1021)', () => {
           }) as unknown,
         }),
       );
-      expect(result?.isAiGenerated).toBe(true);
+      expect((result as any)?.isAiGenerated).toBe(true);
     });
 
     it('returns null gracefully when OpenClaw is unreachable', async () => {
