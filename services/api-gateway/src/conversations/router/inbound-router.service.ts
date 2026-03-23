@@ -245,7 +245,7 @@ export class InboundRouterService {
   ): Promise<void> {
     await this.prisma.conversation.update({
       where: { id: conversationId },
-      data: { assignedAgentId: agentId, status: 'assigned' },
+      data: { assigneeId: agentId, status: 'ASSIGNED' },
     });
 
     this.gateway.emitConversationAssigned(conversationId, agentId);
