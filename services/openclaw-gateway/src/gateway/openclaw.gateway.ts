@@ -17,6 +17,7 @@ import { MessageRouterService } from '../routing/message-router.service';
 import { RateLimiterService } from '../routing/rate-limiter.service';
 import { HeartbeatService } from '../health/heartbeat.service';
 import { RouterAgent } from '../router/router.agent';
+import { getAgentLabel } from '../router/agent-labels';
 import { PtySessionManager } from '../terminal/pty-session-manager';
 import {
   IncomingMessage,
