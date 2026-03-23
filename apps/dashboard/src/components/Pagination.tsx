@@ -15,7 +15,7 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
-export function Pagination({ meta, onPageChange }: PaginationProps) {
+export function Pagination({ meta, onPageChange }: PaginationProps): JSX.Element | null {
   const { page, total, totalPages } = meta;
 
   if (totalPages <= 1) return null;
