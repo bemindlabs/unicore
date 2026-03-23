@@ -71,7 +71,18 @@ export class ChatHistoryService {
     agentName: string;
     userId: string;
     userName: string;
-    messages?: Array<{ id: string; text: string; author: string; authorId: string; authorType?: string; authorColor?: string; channel?: string; timestamp?: string }>;
+    messages?: Array<{
+      id: string;
+      text?: string;
+      author: string;
+      authorId: string;
+      authorType?: string;
+      authorColor?: string;
+      channel?: string;
+      timestamp?: string;
+      toolCalls?: Array<{ toolName: string; arguments: Record<string, unknown>; result?: unknown; error?: string; status: string }>;
+      suggestedActions?: Array<{ label: string; value: string; variant?: string }>;
+    }>;
     summary?: string;
     channel?: string;
   }) {
