@@ -86,15 +86,18 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
   }, [logout, router]);
 
   return (
-    <header className="flex h-14 items-center gap-4 border-b bg-card/30 backdrop-blur-sm px-4 lg:px-6">
-      <Button variant="ghost" size="icon" className="lg:hidden" onClick={onMobileMenuToggle}>
+    <header className="flex h-14 items-center gap-2 sm:gap-4 border-b bg-card/30 backdrop-blur-sm px-3 sm:px-4 lg:px-6">
+      <Button variant="ghost" size="icon" className="lg:hidden shrink-0" onClick={onMobileMenuToggle}>
         <Menu className="h-5 w-5" />
       </Button>
 
-      <Breadcrumb />
+      <div className="hidden sm:block">
+        <Breadcrumb />
+      </div>
 
       <div className="flex-1" />
 
+      {/* Search — desktop only */}
       <div className="hidden md:flex items-center">
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -105,14 +108,16 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
         </div>
       </div>
 
-      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={toggleTheme}>
+      {/* Theme toggle — hidden on small mobile */}
+      <Button variant="ghost" size="icon" className="h-8 w-8 hidden sm:inline-flex" onClick={toggleTheme}>
         {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
       </Button>
 
+      {/* Terminal button */}
       <Button
         variant="ghost"
         size="icon"
-        className="relative h-8 w-8"
+        className="relative h-8 w-8 shrink-0"
         onClick={toggleTerminal}
         title="Terminal (Ctrl+`)"
       >
@@ -122,8 +127,9 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
         )}
       </Button>
 
+      {/* Notifications */}
       <div className="relative">
-        <Button variant="ghost" size="icon" className="relative h-8 w-8" onClick={toggleNotifPanel}>
+        <Button variant="ghost" size="icon" className="relative h-8 w-8 shrink-0" onClick={toggleNotifPanel}>
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
             <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">
