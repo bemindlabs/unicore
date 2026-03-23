@@ -411,6 +411,17 @@ export class SettingsController {
   }
 
   @Roles('OWNER')
+  @Put('erp-modules')
+  async putErpModules(@Body() body: any) {
+    const settings = await this.prisma.settings.upsert({
+      where: { id: 'erp-modules' },
+      create: { id: 'erp-modules', data: body },
+      update: { data: body },
+    });
+    return settings.data;
+  }
+
+  @Roles('OWNER')
   @ProFeatureRequired('allAgents')
   @UseGuards(LicenseGuard)
   @Put(':key')
