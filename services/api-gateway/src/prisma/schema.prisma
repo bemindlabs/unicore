@@ -345,8 +345,9 @@ model Conversation {
   contactName  String?
   contactEmail String?
   userId       String
-  messages     ConversationMessage[]
-  metadata     Json               @default("{}")
+  messages         ConversationMessage[]
+  outboundMessages OutboundMessage[]
+  metadata         Json               @default("{}")
   closedAt     DateTime?
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
