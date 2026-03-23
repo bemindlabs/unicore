@@ -339,3 +339,44 @@ model Notification {
   @@index([userId, createdAt])
   @@map("notifications")
 }
+
+// ---------------------------------------------------------------------------
+// Agent Handoff (UNC-1027)
+// Tracks escalations from AI to human and back, with SLA timers.
+// ---------------------------------------------------------------------------
+
+model Handoff {
+  id             String    @id @default(uuid())
+  /// Link to Conversation record (optional)
+  conversationId String?
+  /// WebSocket channel / session ID (e.g. "chat-agent-router")
+  channel        String
+  /// The end-user's ID whose conversation is being escalated
+  userId         String
+  /// What triggered the handoff
+  trigger        String    // 'low_confidence' | 'explicit_request' | 'user_request'
+  /// AI confidence score at time of escalation (0–1); null for non-AI triggers
+  confidence     Float?
+  /// Current lifecycle state
+  status         String    @default("pending")  // 'pending' | 'active' | 'resolved' | 'ai_resumed'
+  /// Human operator who claimed this handoff
+  assignedTo     String?
+  /// AI-generated context summary passed to the human agent
+  contextSummary String?
+  /// SLA window in minutes (default 15)
+  slaMinutes     Int       @default(15)
+  /// Hard deadline — computed as createdAt + slaMinutes
+  slaDeadline    DateTime
+  /// Set to true once the deadline passes without resolution
+  slaBreached    Boolean   @default(false)
+  resolvedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([status])
+  @@index([userId])
+  @@index([channel])
+  @@index([assignedTo])
+  @@index([slaDeadline])
+  @@map("handoffs")
+}
