@@ -1,6 +1,6 @@
 'use client';
 
-export function TerminalLauncher() {
+export function TerminalLauncher(): JSX.Element {
   const openTerminal = () => {
     window.open('/ssh/', '_blank', 'width=1024,height=768,menubar=no,toolbar=no');
   };
