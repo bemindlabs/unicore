@@ -350,6 +350,25 @@ export default function ChatHistoryPage() {
   const [filterAgent, setFilterAgent] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Contact profile sidebar
+  const [profileContactId, setProfileContactId] = useState<string | null>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+  // Current user id — loaded from JWT stored in localStorage
+  const [currentUserId, setCurrentUserId] = useState('');
+
+  useEffect(() => {
+    // Decode userId from stored JWT (header.payload.sig — payload is base64url)
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+      if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+        setCurrentUserId((payload as { sub?: string; id?: string }).sub ?? (payload as { sub?: string; id?: string }).id ?? '');
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
   const fetchData = useCallback(async (search: string, agent: string) => {
     try {
       const params = new URLSearchParams();
