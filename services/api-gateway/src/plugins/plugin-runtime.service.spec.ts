@@ -142,7 +142,7 @@ describe('PluginRuntimeService', () => {
       const installation = makeInstallation();
       prisma.pluginInstallation.findMany.mockResolvedValue([installation]);
       mockLoaderLoadFromFile.mockRejectedValue(
-        new MockPluginLoadError("Cannot read manifest at '/app/plugins/plugin-a/1.0.0/manifest.json'"),
+        new PluginLoadError("Cannot read manifest at '/app/plugins/plugin-a/1.0.0/manifest.json'"),
       );
 
       await expect(service.onModuleInit()).resolves.not.toThrow();
