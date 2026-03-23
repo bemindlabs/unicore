@@ -9,6 +9,7 @@ import { AuditService } from '../audit/audit.service';
 import { BrowsePluginsDto } from './dto/browse-plugins.dto';
 import { InstallPluginDto } from './dto/install-plugin.dto';
 import { ConfigurePluginDto } from './dto/configure-plugin.dto';
+import { SubmitPluginDto } from './dto/submit-plugin.dto';
 
 @Injectable()
 export class PluginsService {
