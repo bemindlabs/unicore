@@ -102,8 +102,8 @@ export class MessageNormalizerService extends EventEmitter {
           replyToId: message.replyToId ?? null,
           isBot: message.isBot,
           timestamp: message.timestamp,
-          metadata: message.metadata,
-          rawPayload: message.rawPayload as object,
+          metadata: message.metadata as unknown as import('../../generated/prisma').Prisma.InputJsonValue,
+          rawPayload: message.rawPayload as unknown as import('../../generated/prisma').Prisma.InputJsonValue,
         },
       });
     } catch (err: unknown) {
