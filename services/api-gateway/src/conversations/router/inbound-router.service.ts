@@ -260,11 +260,7 @@ export class InboundRouterService {
    * Mark the conversation as unassigned (waiting for human or agent pickup).
    */
   private async routeToUnassigned(conversationId: string): Promise<void> {
-    await this.prisma.inboundMessage.updateMany({
-      where: { conversationId, routedTo: 'pending' },
-      data: { routedTo: 'unassigned' },
-    });
-
+    // Messages are tracked in the Message model; log for monitoring
     this.logger.log(
       `Conversation ${conversationId} placed in unassigned queue`,
     );
