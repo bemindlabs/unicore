@@ -308,6 +308,20 @@ exports.Prisma.ConversationMessageScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.OutboundMessageScalarFieldEnum = {
+  id: 'id',
+  conversationId: 'conversationId',
+  channelType: 'channelType',
+  text: 'text',
+  recipientId: 'recipientId',
+  fromAgentId: 'fromAgentId',
+  externalId: 'externalId',
+  status: 'status',
+  error: 'error',
+  metadata: 'metadata',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.NotificationScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -316,6 +330,45 @@ exports.Prisma.NotificationScalarFieldEnum = {
   message: 'message',
   read: 'read',
   link: 'link',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.HandoffScalarFieldEnum = {
+  id: 'id',
+  conversationId: 'conversationId',
+  channel: 'channel',
+  userId: 'userId',
+  trigger: 'trigger',
+  confidence: 'confidence',
+  status: 'status',
+  assignedTo: 'assignedTo',
+  contextSummary: 'contextSummary',
+  slaMinutes: 'slaMinutes',
+  slaDeadline: 'slaDeadline',
+  slaBreached: 'slaBreached',
+  resolvedAt: 'resolvedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AgentNoteScalarFieldEnum = {
+  id: 'id',
+  contactId: 'contactId',
+  authorId: 'authorId',
+  authorName: 'authorName',
+  body: 'body',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ContactChannelScalarFieldEnum = {
+  id: 'id',
+  contactId: 'contactId',
+  channel: 'channel',
+  channelUserId: 'channelUserId',
+  displayName: 'displayName',
+  isActive: 'isActive',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -376,7 +429,11 @@ exports.Prisma.ModelName = {
   PluginInstallation: 'PluginInstallation',
   Conversation: 'Conversation',
   ConversationMessage: 'ConversationMessage',
-  Notification: 'Notification'
+  OutboundMessage: 'OutboundMessage',
+  Notification: 'Notification',
+  Handoff: 'Handoff',
+  AgentNote: 'AgentNote',
+  ContactChannel: 'ContactChannel'
 };
 
 /**
