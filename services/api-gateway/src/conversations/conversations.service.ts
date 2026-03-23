@@ -336,11 +336,11 @@ export class ConversationsService {
     });
   }
 
-  /** UNC-1031: Toggle autoRespond or update participantColor for an agent participant */
+  /** UNC-1031: Update participantColor for a participant */
   async updateParticipant(
     conversationId: string,
     participantId: string,
-    dto: { autoRespond?: boolean; participantColor?: string },
+    dto: { participantColor?: string },
   ) {
     await this.findOne(conversationId);
 
@@ -357,7 +357,6 @@ export class ConversationsService {
     return this.prisma.conversationParticipant.update({
       where: { id: participant.id },
       data: {
-        ...(dto.autoRespond !== undefined && { autoRespond: dto.autoRespond }),
         ...(dto.participantColor !== undefined && { participantColor: dto.participantColor }),
       },
     });
