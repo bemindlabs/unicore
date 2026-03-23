@@ -209,3 +209,19 @@ export type {
 
 export { Progress } from "./components/progress";
 export type { ProgressProps } from "./components/progress";
+
+export {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverAnchor,
+} from "./components/popover";
+export type { PopoverContentProps } from "./components/popover";
+
+export {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "./components/tooltip";
+export type { TooltipContentProps } from "./components/tooltip";
