@@ -33,6 +33,8 @@ import {
   DialogClose,
 } from '@unicore/ui';
 import { api } from '@/lib/api';
+import { PluginConfigForm } from '@/components/plugins/plugin-config-form';
+import type { JsonSchema } from '@/components/plugins/plugin-config-form';
 
 // Updated: 2026-03-23
 
@@ -53,6 +55,7 @@ interface InstalledPlugin {
   updatedAt: string;
   errorMessage?: string;
   hasUpdate?: boolean;
+  configSchema?: JsonSchema;
 }
 
 const MOCK_INSTALLED: InstalledPlugin[] = [
