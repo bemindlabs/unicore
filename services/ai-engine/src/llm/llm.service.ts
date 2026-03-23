@@ -123,7 +123,11 @@ export class LlmService {
     return this.factory.reloadProviders();
   }
 
-  async listModels(): Promise<string[]> {
-    return this.factory.listModels();
+  listProviders(): ProviderInfo[] {
+    return this.factory.listProviders();
+  }
+
+  async listModels(providerId?: string): Promise<string[]> {
+    return this.factory.listModels(providerId);
   }
 }
