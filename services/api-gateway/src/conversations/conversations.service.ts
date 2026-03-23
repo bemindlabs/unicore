@@ -303,8 +303,6 @@ export class ConversationsService {
         participantType: dto.participantType,
         participantName: dto.participantName,
         participantColor: dto.participantColor ?? '#6366f1',
-        autoRespond: dto.autoRespond ?? (dto.participantType === InviteParticipantType.AGENT),
-        addedBy: invitedBy,
         role: 'MEMBER',
         autoAssigned: dto.autoAssigned ?? false,
         invitedBy,
