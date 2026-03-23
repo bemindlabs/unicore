@@ -20,6 +20,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useNotifications } from '@/hooks/use-notifications';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { NotificationPanel } from '@/components/layout/notification-panel';
+import { LicenseBadge } from '@/components/license/license-badge';
 
 interface HeaderProps {
   onMobileMenuToggle: () => void;
