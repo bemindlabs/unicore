@@ -605,27 +605,15 @@ export default function InstalledPluginsPage() {
       </Dialog>
 
       {/* Configure dialog */}
-      <Dialog open={!!configureTarget} onOpenChange={open => !open && setConfigureTarget(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Configure — {configureTarget?.name}
-            </DialogTitle>
-            <DialogDescription>
-              Plugin configuration UI for <strong>{configureTarget?.name}</strong> v{configureTarget?.version}.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="rounded-lg border border-dashed bg-muted/30 py-10 text-center text-sm text-muted-foreground">
-            Configuration schema coming soon.
-          </div>
-          <div className="flex justify-end pt-2">
-            <DialogClose asChild>
-              <Button variant="outline" size="sm">Close</Button>
-            </DialogClose>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {configureTarget && (
+        <PluginConfigForm
+          pluginId={configureTarget.id}
+          pluginName={configureTarget.name}
+          configSchema={configureTarget.configSchema ?? { properties: {} }}
+          open={!!configureTarget}
+          onClose={() => setConfigureTarget(null)}
+        />
+      )}
     </div>
   );
 }

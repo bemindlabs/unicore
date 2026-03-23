@@ -25,6 +25,17 @@ export class PluginsController {
 
   constructor(private readonly pluginsService: PluginsService) {}
 
+  @Post('submit')
+  async submit(@Body() dto: SubmitPluginDto, @CurrentUser() currentUser: any) {
+    this.logger.log(`Plugin submit by user ${currentUser.id}: ${dto.slug}`);
+    return this.pluginsService.submit(dto, currentUser.id);
+  }
+
+  @Get('my-plugins')
+  async myPlugins(@CurrentUser() currentUser: any) {
+    return this.pluginsService.getMyPlugins(currentUser.id);
+  }
+
   @Get()
   browse(@Query() query: BrowsePluginsDto) {
     return this.pluginsService.browse(query);
