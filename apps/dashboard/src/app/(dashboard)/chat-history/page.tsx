@@ -557,12 +557,21 @@ export default function ChatHistoryPage() {
               expanded={expandedIds.has(record.id)}
               onToggle={() => toggleExpand(record.id)}
               onDelete={handleDelete}
+              onOpenProfile={handleOpenProfile}
               agents={agents}
               deleting={deletingIds.has(record.id)}
             />
           ))}
         </div>
       )}
+
+      {/* Contact profile sidebar */}
+      <ContactProfileSidebar
+        contactId={profileContactId}
+        currentUserId={currentUserId}
+        open={profileOpen}
+        onClose={() => { setProfileOpen(false); setProfileContactId(null); }}
+      />
     </div>
   );
 }
