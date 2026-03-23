@@ -13,11 +13,13 @@ import {
   Clock,
   Filter,
   MessagesSquare,
+  UserCircle,
 } from 'lucide-react';
 import { toast, Badge, Button, Input, Skeleton } from '@unicore/ui';
 import { api } from '@/lib/api';
 import { getAgents } from '@/lib/backoffice/store';
 import type { BackofficeAgent } from '@/lib/backoffice/types';
+import { ContactProfileSidebar } from '@/components/conversations/contact-profile-sidebar';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
