@@ -90,12 +90,9 @@ describe('OutboundSenderService', () => {
         { provide: PrismaService, useValue: prismaMock },
         { provide: ChannelsService, useValue: channelsMock },
         { provide: ConversationsGateway, useValue: gatewayMock },
-        { provide: 'ConfigService', useValue: configMock },
+        { provide: ConfigService, useValue: configMock },
       ],
-    })
-      .overrideProvider('ConfigService')
-      .useValue(configMock)
-      .compile();
+    }).compile();
 
     service = module.get<OutboundSenderService>(OutboundSenderService);
   });
