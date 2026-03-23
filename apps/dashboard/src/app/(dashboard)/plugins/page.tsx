@@ -343,86 +343,111 @@ function PluginDetailDialog({
   onClose: () => void;
   isPreview: boolean;
 }) {
+  const [configOpen, setConfigOpen] = useState(false);
   if (!plugin) return null;
 
+  const canConfigure = plugin.installed && !!plugin.configSchema;
+
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <div className="flex items-start gap-4">
-            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 text-3xl">
-              {plugin.icon}
+    <>
+      <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <div className="flex items-start gap-4">
+              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 text-3xl">
+                {plugin.icon}
+              </div>
+              <div className="min-w-0 flex-1">
+                <DialogTitle className="text-xl">{plugin.name}</DialogTitle>
+                <DialogDescription className="mt-1">
+                  by {plugin.author} &middot; v{plugin.version}
+                </DialogDescription>
+              </div>
             </div>
-            <div className="min-w-0 flex-1">
-              <DialogTitle className="text-xl">{plugin.name}</DialogTitle>
-              <DialogDescription className="mt-1">
-                by {plugin.author} &middot; v{plugin.version}
-              </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-2">
+            <p className="text-sm text-foreground">{plugin.description}</p>
+
+            <div className="flex items-center gap-4 text-sm">
+              <div className="flex items-center gap-1">
+                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                <span className="font-medium">{plugin.rating}</span>
+                <span className="text-muted-foreground">({plugin.reviewCount} reviews)</span>
+              </div>
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <Download className="h-4 w-4" />
+                <span>{plugin.installCount.toLocaleString()} installs</span>
+              </div>
             </div>
-          </div>
-        </DialogHeader>
 
-        <div className="space-y-4 pt-2">
-          <p className="text-sm text-foreground">{plugin.description}</p>
-
-          <div className="flex items-center gap-4 text-sm">
-            <div className="flex items-center gap-1">
-              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              <span className="font-medium">{plugin.rating}</span>
-              <span className="text-muted-foreground">({plugin.reviewCount} reviews)</span>
-            </div>
-            <div className="flex items-center gap-1 text-muted-foreground">
-              <Download className="h-4 w-4" />
-              <span>{plugin.installCount.toLocaleString()} installs</span>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-1.5">
-            {plugin.tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-            <Badge variant="outline" className="text-xs capitalize">
-              {plugin.category}
-            </Badge>
-          </div>
-
-          <div className="flex items-center justify-between border-t pt-4">
-            <span className="text-xs text-muted-foreground">
-              Published {new Date(plugin.createdAt).toLocaleDateString()}
-            </span>
-            <div className="flex gap-2">
-              <DialogClose asChild>
-                <Button variant="outline" size="sm">
-                  Close
-                </Button>
-              </DialogClose>
-              <Button
-                size="sm"
-                disabled
-                className="relative"
-                title="Plugin installation is coming soon"
-              >
-                Install
-                <Badge
-                  variant="secondary"
-                  className="ml-2 px-1.5 py-0 text-[10px] font-normal"
-                >
-                  Coming Soon
+            <div className="flex flex-wrap gap-1.5">
+              {plugin.tags.map((tag) => (
+                <Badge key={tag} variant="secondary" className="text-xs">
+                  {tag}
                 </Badge>
-              </Button>
+              ))}
+              <Badge variant="outline" className="text-xs capitalize">
+                {plugin.category}
+              </Badge>
             </div>
-          </div>
 
-          {isPreview && (
-            <p className="text-xs text-muted-foreground italic">
-              This is sample data. Live plugin details will be available when the Plugin API is connected.
-            </p>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+            <div className="flex items-center justify-between border-t pt-4">
+              <span className="text-xs text-muted-foreground">
+                Published {new Date(plugin.createdAt).toLocaleDateString()}
+              </span>
+              <div className="flex gap-2">
+                <DialogClose asChild>
+                  <Button variant="outline" size="sm">
+                    Close
+                  </Button>
+                </DialogClose>
+                {canConfigure && (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => setConfigOpen(true)}
+                  >
+                    <Settings2 className="mr-1.5 h-3.5 w-3.5" />
+                    Configure
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  disabled
+                  className="relative"
+                  title="Plugin installation is coming soon"
+                >
+                  Install
+                  <Badge
+                    variant="secondary"
+                    className="ml-2 px-1.5 py-0 text-[10px] font-normal"
+                  >
+                    Coming Soon
+                  </Badge>
+                </Button>
+              </div>
+            </div>
+
+            {isPreview && (
+              <p className="text-xs text-muted-foreground italic">
+                This is sample data. Live plugin details will be available when the Plugin API is connected.
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {canConfigure && plugin.configSchema && (
+        <PluginConfigForm
+          pluginId={plugin.id}
+          pluginName={plugin.name}
+          configSchema={plugin.configSchema}
+          open={configOpen}
+          onClose={() => setConfigOpen(false)}
+        />
+      )}
+    </>
   );
 }
 
