@@ -19,7 +19,6 @@ import {
   TrendingUp,
   Sparkles,
   ArrowUpDown,
-  Info,
   Database,
   Code2,
   Palette,
