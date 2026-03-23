@@ -10,6 +10,9 @@ import {
   CheckCheck,
   Circle,
   Inbox,
+  Zap,
+  ZapOff,
+  Sparkles,
 } from 'lucide-react';
 import { Badge, Button, Input, Skeleton, cn } from '@unicore/ui';
 import { api } from '@/lib/api';
@@ -25,6 +28,7 @@ interface ConvMessage {
   author: string;
   authorId: string;
   authorType: string;
+  isAiGenerated: boolean;
   channel: string;
   timestamp: string;
 }
@@ -40,6 +44,7 @@ interface Conversation {
   title: string | null;
   userId: string | null;
   status: string;
+  autoRespond: boolean;
   unreadCount: number;
   lastMessage: string | null;
   lastMessageAt: string | null;
@@ -256,16 +261,19 @@ function ConvListItem({
 
 function MessageBubble({ msg, channel }: { msg: ConvMessage; channel: string }) {
   const isUser = msg.authorType === 'human';
+  const isAi = msg.isAiGenerated;
   const color = channelColor(channel);
 
   return (
     <div className={cn('flex gap-2.5', isUser ? 'flex-row-reverse' : 'flex-row')}>
       <div
         className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white mt-0.5"
-        style={{ background: isUser ? '#64748b' : color }}
+        style={{ background: isUser ? '#64748b' : isAi ? '#6366f1' : color }}
       >
         {isUser ? (
           <User className="h-4 w-4" />
+        ) : isAi ? (
+          <Sparkles className="h-4 w-4" />
         ) : (
           <ChannelIcon channel={channel} size={16} />
         )}
@@ -274,6 +282,12 @@ function MessageBubble({ msg, channel }: { msg: ConvMessage; channel: string }) 
       <div className={cn('flex flex-col gap-0.5 max-w-[75%]', isUser ? 'items-end' : 'items-start')}>
         <div className="flex items-center gap-1.5">
           <span className="text-[10px] font-medium text-muted-foreground">{msg.author}</span>
+          {isAi && (
+            <span className="inline-flex items-center gap-0.5 text-[9px] px-1.5 py-0 rounded-full bg-violet-500/10 text-violet-500 border border-violet-500/20 font-medium">
+              <Sparkles className="h-2.5 w-2.5" />
+              AI
+            </span>
+          )}
           {msg.timestamp && (
             <span className="text-[9px] text-muted-foreground/50">{formatTime(msg.timestamp)}</span>
           )}
@@ -283,9 +297,11 @@ function MessageBubble({ msg, channel }: { msg: ConvMessage; channel: string }) 
             'rounded-2xl px-3.5 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words',
             isUser
               ? 'bg-primary text-primary-foreground rounded-tr-sm'
+              : isAi
+              ? 'bg-violet-500/5 text-foreground rounded-tl-sm border border-violet-500/20'
               : 'bg-muted text-foreground rounded-tl-sm',
           )}
-          style={!isUser ? { borderLeft: `3px solid ${color}` } : undefined}
+          style={!isUser && !isAi ? { borderLeft: `3px solid ${color}` } : undefined}
         >
           {msg.text || <span className="italic text-muted-foreground/60">(empty)</span>}
         </div>
@@ -305,6 +321,7 @@ interface RawMessage {
   authorId?: string | null;
   authorName?: string | null;
   authorType?: string;
+  isAiGenerated?: boolean;
   createdAt?: string;
 }
 
@@ -315,6 +332,7 @@ function rawToConvMessage(raw: RawMessage, channel: string): ConvMessage {
     author: raw.authorName ?? raw.authorId ?? (raw.authorType === 'human' ? 'You' : 'Agent'),
     authorId: raw.authorId ?? '',
     authorType: raw.authorType ?? raw.role ?? 'human',
+    isAiGenerated: raw.isAiGenerated ?? false,
     channel,
     timestamp: raw.createdAt ?? new Date().toISOString(),
   };
@@ -327,16 +345,33 @@ function rawToConvMessage(raw: RawMessage, channel: string): ConvMessage {
 function ConversationThread({
   conv,
   onStatusChange,
+  onAutoRespondChange,
 }: {
   conv: Conversation;
   onStatusChange: (id: string, status: string) => void;
+  onAutoRespondChange: (id: string, enabled: boolean) => void;
 }) {
   const [messages, setMessages] = useState<ConvMessage[]>([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [loadingMsgs, setLoadingMsgs] = useState(true);
+  const [togglingAutoRespond, setTogglingAutoRespond] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const color = channelColor(conv.channel);
+
+  async function handleToggleAutoRespond() {
+    setTogglingAutoRespond(true);
+    try {
+      await api.patch(`/api/v1/conversations/${conv.id}/auto-respond`, {
+        autoRespond: !conv.autoRespond,
+      });
+      onAutoRespondChange(conv.id, !conv.autoRespond);
+    } catch {
+      // ignore — optimistic update not applied
+    } finally {
+      setTogglingAutoRespond(false);
+    }
+  }
 
   useEffect(() => {
     setLoadingMsgs(true);
@@ -416,6 +451,20 @@ function ConversationThread({
             title={connected ? 'Connected' : 'Disconnected'}
           />
           <StatusBadge status={conv.status} />
+          <Button
+            variant={conv.autoRespond ? 'default' : 'outline'}
+            size="sm"
+            className={cn('h-7 text-xs gap-1', conv.autoRespond && 'bg-violet-600 hover:bg-violet-700 text-white border-transparent')}
+            onClick={handleToggleAutoRespond}
+            disabled={togglingAutoRespond}
+            title={conv.autoRespond ? 'Auto-respond ON — click to disable' : 'Auto-respond OFF — click to enable'}
+          >
+            {conv.autoRespond ? (
+              <><Zap className="h-3 w-3" />Auto</>
+            ) : (
+              <><ZapOff className="h-3 w-3" />Auto</>
+            )}
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -674,6 +723,14 @@ export default function ConversationsPage() {
             key={selected.id}
             conv={selected}
             onStatusChange={handleStatusChange}
+            onAutoRespondChange={(id, enabled) => {
+              setConversations((prev) =>
+                prev.map((c) => (c.id === id ? { ...c, autoRespond: enabled } : c)),
+              );
+              if (selected?.id === id) {
+                setSelected((prev) => (prev ? { ...prev, autoRespond: enabled } : null));
+              }
+            }}
           />
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-center">

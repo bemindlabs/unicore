@@ -48,6 +48,8 @@ function makeConversation(overrides: Record<string, unknown> = {}) {
   };
 }
 
+const mockConfigService = { get: jest.fn().mockReturnValue('localhost') };
+
 describe('ConversationsService', () => {
   let service: ConversationsService;
 
@@ -56,6 +58,7 @@ describe('ConversationsService', () => {
       providers: [
         ConversationsService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: 'ConfigService', useValue: mockConfigService },
       ],
     }).compile();
 
