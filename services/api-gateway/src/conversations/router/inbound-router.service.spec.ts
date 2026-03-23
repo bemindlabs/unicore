@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { InboundRouterService } from './inbound-router.service';
 import { PrismaService } from '../../prisma/prisma.service';
-import { ConversationsGateway } from '../gateway/conversations.gateway';
+import { ConversationsGateway } from '../conversations.gateway';
 import { KafkaProducerService } from '../kafka/kafka-producer.service';
 import { NormalizedMessageDto } from '../dto/normalized-message.dto';
 
@@ -10,12 +10,12 @@ import { NormalizedMessageDto } from '../dto/normalized-message.dto';
 
 const mockConversation = {
   id: 'conv-123',
-  channel: 'telegram',
+  channel: 'TELEGRAM',
   externalId: 'chat-456',
-  status: 'unassigned',
-  assignedAgentId: null,
+  status: 'OPEN',
+  assigneeId: null,
   contactName: 'Alice',
-  contactExternalId: 'user-789',
+  contactId: 'user-789',
   lastMessageAt: new Date(),
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -24,13 +24,14 @@ const mockConversation = {
 const mockMessage = {
   id: 'msg-001',
   conversationId: 'conv-123',
-  channel: 'telegram',
-  senderId: 'user-789',
-  senderName: 'Alice',
-  text: 'Hello!',
-  externalMessageId: 'tg-msg-1',
-  rawPayload: {},
-  routedTo: 'pending',
+  direction: 'INBOUND',
+  type: 'TEXT',
+  content: 'Hello!',
+  externalId: 'tg-msg-1',
+  sender: { id: 'user-789', name: 'Alice', type: 'contact' },
+  metadata: { channel: 'telegram', rawPayload: {} },
+  isRead: false,
+  isAiGenerated: false,
   createdAt: new Date(),
 };
 
@@ -40,10 +41,9 @@ const mockPrisma = {
     create: jest.fn(),
     update: jest.fn(),
   },
-  inboundMessage: {
+  message: {
     findFirst: jest.fn(),
     create: jest.fn(),
-    updateMany: jest.fn(),
   },
   settings: {
     findUnique: jest.fn(),
@@ -100,7 +100,7 @@ describe('InboundRouterService', () => {
       mockPrisma.conversation.findFirst.mockResolvedValue(mockConversation);
 
       const result = await service.findOrCreateConversation(
-        'telegram',
+        'TELEGRAM',
         'chat-456',
         'Alice',
         'user-789',
@@ -115,7 +115,7 @@ describe('InboundRouterService', () => {
       mockPrisma.conversation.create.mockResolvedValue(mockConversation);
 
       const result = await service.findOrCreateConversation(
-        'telegram',
+        'TELEGRAM',
         'chat-456',
         'Alice',
         'user-789',
@@ -123,11 +123,11 @@ describe('InboundRouterService', () => {
 
       expect(mockPrisma.conversation.create).toHaveBeenCalledWith({
         data: {
-          channel: 'telegram',
+          channel: 'TELEGRAM',
           externalId: 'chat-456',
-          status: 'unassigned',
+          status: 'OPEN',
           contactName: 'Alice',
-          contactExternalId: 'user-789',
+          contactId: 'user-789',
           lastMessageAt: expect.any(Date) as Date,
         },
       });
@@ -149,43 +149,42 @@ describe('InboundRouterService', () => {
       rawPayload: {},
     };
 
-    it('creates a new message', async () => {
-      mockPrisma.inboundMessage.findFirst.mockResolvedValue(null);
-      mockPrisma.inboundMessage.create.mockResolvedValue(mockMessage);
+    it('creates a new message in the message table', async () => {
+      mockPrisma.message.findFirst.mockResolvedValue(null);
+      mockPrisma.message.create.mockResolvedValue(mockMessage);
 
       const result = await service.saveMessage('conv-123', dto);
 
-      expect(mockPrisma.inboundMessage.create).toHaveBeenCalledWith({
+      expect(mockPrisma.message.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           conversationId: 'conv-123',
-          channel: 'telegram',
-          senderId: 'user-789',
-          senderName: 'Alice',
-          text: 'Hello!',
-          externalMessageId: 'tg-msg-1',
-          routedTo: 'pending',
+          direction: 'INBOUND',
+          type: 'TEXT',
+          content: 'Hello!',
+          externalId: 'tg-msg-1',
+          sender: { id: 'user-789', name: 'Alice', type: 'contact' },
         }) as unknown,
       });
       expect(result).toEqual(mockMessage);
     });
 
     it('returns existing message when externalMessageId is a duplicate', async () => {
-      mockPrisma.inboundMessage.findFirst.mockResolvedValue(mockMessage);
+      mockPrisma.message.findFirst.mockResolvedValue(mockMessage);
 
       const result = await service.saveMessage('conv-123', dto);
 
-      expect(mockPrisma.inboundMessage.create).not.toHaveBeenCalled();
+      expect(mockPrisma.message.create).not.toHaveBeenCalled();
       expect(result).toEqual(mockMessage);
     });
 
     it('creates message without dedup check when no externalMessageId', async () => {
       const dtoNoId = { ...dto, externalMessageId: undefined };
-      mockPrisma.inboundMessage.create.mockResolvedValue({ ...mockMessage, externalMessageId: null });
+      mockPrisma.message.create.mockResolvedValue({ ...mockMessage, externalId: null });
 
       await service.saveMessage('conv-123', dtoNoId);
 
-      expect(mockPrisma.inboundMessage.findFirst).not.toHaveBeenCalled();
-      expect(mockPrisma.inboundMessage.create).toHaveBeenCalled();
+      expect(mockPrisma.message.findFirst).not.toHaveBeenCalled();
+      expect(mockPrisma.message.create).toHaveBeenCalled();
     });
   });
 
@@ -202,10 +201,9 @@ describe('InboundRouterService', () => {
 
     beforeEach(() => {
       mockPrisma.conversation.findFirst.mockResolvedValue(mockConversation);
-      mockPrisma.inboundMessage.findFirst.mockResolvedValue(null);
-      mockPrisma.inboundMessage.create.mockResolvedValue(mockMessage);
+      mockPrisma.message.findFirst.mockResolvedValue(null);
+      mockPrisma.message.create.mockResolvedValue(mockMessage);
       mockPrisma.conversation.update.mockResolvedValue(mockConversation);
-      mockPrisma.inboundMessage.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.settings.findUnique.mockResolvedValue(null);
 
       // Mock fetch globally
@@ -228,8 +226,8 @@ describe('InboundRouterService', () => {
       expect(mockGateway.emitMessageInbound).toHaveBeenCalled();
     });
 
-    it('routes to assigned agent when conversation has assignedAgentId', async () => {
-      const assignedConversation = { ...mockConversation, assignedAgentId: 'agent-42', status: 'assigned' };
+    it('routes to assigned agent when conversation has assigneeId', async () => {
+      const assignedConversation = { ...mockConversation, assigneeId: 'agent-42', status: 'ASSIGNED' };
       mockPrisma.conversation.findFirst.mockResolvedValue(assignedConversation);
 
       const result = await service.route(dto);
@@ -249,8 +247,8 @@ describe('InboundRouterService', () => {
       });
       mockPrisma.conversation.update.mockResolvedValue({
         ...mockConversation,
-        assignedAgentId: 'default-agent-1',
-        status: 'assigned',
+        assigneeId: 'default-agent-1',
+        status: 'ASSIGNED',
       });
 
       const result = await service.route(dto);
