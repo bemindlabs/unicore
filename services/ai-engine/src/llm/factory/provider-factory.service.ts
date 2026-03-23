@@ -87,9 +87,24 @@ export class ProviderFactoryService implements OnModuleInit {
   }
 
   /**
-   * List available models from all registered providers that support /models endpoint.
+   * List all known providers with their static metadata and configured status.
    */
-  async listModels(): Promise<string[]> {
+  listProviders(): ProviderInfo[] {
+    return ProviderFactoryService.PROVIDER_CATALOG.map((p) => ({
+      ...p,
+      configured: this.registry.has(p.id),
+    }));
+  }
+
+  /**
+   * List available models. If providerId is given, returns models for that provider only
+   * (tries live API, falls back to static catalog). Otherwise returns all live models.
+   */
+  async listModels(providerId?: string): Promise<string[]> {
+    if (providerId) {
+      return this.listModelsForProvider(providerId);
+    }
+
     const models: string[] = [];
     for (const [id, provider] of this.registry) {
       try {
@@ -107,6 +122,26 @@ export class ProviderFactoryService implements OnModuleInit {
       }
     }
     return models.sort();
+  }
+
+  private async listModelsForProvider(providerId: string): Promise<string[]> {
+    const catalog = ProviderFactoryService.PROVIDER_CATALOG.find((p) => p.id === providerId);
+    const provider = this.registry.get(providerId);
+    if (provider) {
+      try {
+        const p = provider as any;
+        if (p.client?.models?.list) {
+          const response = await p.client.models.list();
+          const data = response?.data ?? response?.body?.data ?? [];
+          if (data.length > 0) {
+            return data.map((m: any) => m.id ?? m.name ?? String(m)).sort();
+          }
+        }
+      } catch (err) {
+        this.logger.debug(`Could not list models from ${providerId}: ${err instanceof Error ? err.message : err}`);
+      }
+    }
+    return catalog?.models ?? [];
   }
 
   /**
