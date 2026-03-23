@@ -362,8 +362,19 @@ exports.Prisma.ConversationParticipantScalarFieldEnum = {
   autoAssigned: 'autoAssigned',
   invitedBy: 'invitedBy',
   isActive: 'isActive',
+  autoRespond: 'autoRespond',
   joinedAt: 'joinedAt',
   leftAt: 'leftAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AgentNoteScalarFieldEnum = {
+  id: 'id',
+  contactId: 'contactId',
+  body: 'body',
+  authorId: 'authorId',
+  authorName: 'authorName',
+  createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
 
@@ -515,6 +526,7 @@ exports.Prisma.ModelName = {
   ConversationMessage: 'ConversationMessage',
   Message: 'Message',
   ConversationParticipant: 'ConversationParticipant',
+  AgentNote: 'AgentNote',
   ChannelMessage: 'ChannelMessage',
   Notification: 'Notification',
   Handoff: 'Handoff',
