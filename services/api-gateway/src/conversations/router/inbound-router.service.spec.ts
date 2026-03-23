@@ -233,6 +233,7 @@ describe('InboundRouterService', () => {
 
       expect(result.routedTo).toBe('agent');
       expect(result.agentId).toBe('agent-42');
+
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('/api/v1/channels/inbound') as string,
         expect.objectContaining({ method: 'POST' }) as unknown,
