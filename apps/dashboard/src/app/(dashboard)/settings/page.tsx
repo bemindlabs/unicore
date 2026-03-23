@@ -52,6 +52,18 @@ const SETTINGS_LINKS = [
     description: 'Add and verify custom domains with SSL certificate management',
   },
   {
+    href: '/settings/sso',
+    icon: Shield,
+    title: 'Single Sign-On',
+    description: 'Configure SAML 2.0 / OIDC identity providers for your team',
+  },
+  {
+    href: '/settings/channels',
+    icon: MessageCircle,
+    title: 'Messaging Channels',
+    description: 'Connect Telegram, LINE, WhatsApp, Slack, and more',
+  },
+  {
     href: '/settings/license',
     icon: Crown,
     title: 'License',
