@@ -3,21 +3,27 @@ import {
   BarChart3,
   BookOpen,
   Bot,
-  MessageSquare,
+  Building2,
   ClipboardList,
   DollarSign,
   FileText,
   GitBranch,
   Globe,
+  KeyRound,
   LayoutDashboard,
+  MessageSquare,
+  Megaphone,
   Package,
   ScrollText,
   Settings,
   Shield,
   ShoppingCart,
+  Terminal,
   TrendingUp,
   Users,
   UsersRound,
+  Wand2,
+  Zap,
 } from 'lucide-react';
 import { UserRole } from '@unicore/shared-types';
 import type { NavItem, NavSection } from '@/types/navigation';
@@ -29,10 +35,18 @@ export const menuSections: NavSection[] = [
       { label: 'Dashboard', icon: LayoutDashboard, href: '/', roles: ['*'] },
       { label: 'AI Agents', icon: Bot, href: '/agents', roles: [UserRole.Owner, UserRole.Operator] },
       {
+        label: 'Agent Builder',
+        icon: Wand2,
+        href: '/agent-builder',
+        roles: [UserRole.Owner, UserRole.Operator],
+        license: { tier: 'pro', feature: 'agentBuilder', upgradeLabel: 'Pro' },
+      },
+      {
         label: 'Workflows',
         icon: GitBranch,
         href: '/workflows',
         roles: [UserRole.Owner, UserRole.Operator],
+        license: { tier: 'pro', feature: 'advancedWorkflows', upgradeLabel: 'Pro' },
       },
       {
         label: 'Tasks Board',
@@ -47,10 +61,17 @@ export const menuSections: NavSection[] = [
         roles: [UserRole.Owner, UserRole.Operator],
       },
       {
-        label: 'Chat History',
+        label: 'AI Chat',
         icon: MessageSquare,
         href: '/chat-history',
         roles: [UserRole.Owner, UserRole.Operator],
+      },
+      {
+        label: 'All Channels',
+        icon: Megaphone,
+        href: '/channels',
+        roles: [UserRole.Owner, UserRole.Operator],
+        license: { tier: 'pro', feature: 'channels', upgradeLabel: 'Pro' },
       },
     ],
   },
@@ -99,8 +120,34 @@ export const menuSections: NavSection[] = [
     label: 'Admin',
     items: [
       { label: 'Users', icon: UsersRound, href: '/admin/users', roles: [UserRole.Owner] },
-      { label: 'Roles & Access', icon: Shield, href: '/admin/roles', roles: [UserRole.Owner] },
-      { label: 'Audit Logs', icon: ScrollText, href: '/admin/audit-logs', roles: [UserRole.Owner] },
+      {
+        label: 'Roles & Access',
+        icon: Shield,
+        href: '/admin/roles',
+        roles: [UserRole.Owner],
+        license: { tier: 'pro', feature: 'rbac', upgradeLabel: 'Pro' },
+      },
+      {
+        label: 'SSO',
+        icon: KeyRound,
+        href: '/admin/sso',
+        roles: [UserRole.Owner],
+        license: { tier: 'pro', feature: 'sso', upgradeLabel: 'Pro' },
+      },
+      {
+        label: 'Custom Domains',
+        icon: Globe,
+        href: '/admin/domains',
+        roles: [UserRole.Owner],
+        license: { tier: 'pro', feature: 'customDomains', upgradeLabel: 'Pro' },
+      },
+      {
+        label: 'Audit Logs',
+        icon: ScrollText,
+        href: '/admin/audit-logs',
+        roles: [UserRole.Owner],
+        license: { tier: 'pro', feature: 'audit', upgradeLabel: 'Pro' },
+      },
       { label: 'System Health', icon: Activity, href: '/admin/health', roles: [UserRole.Owner] },
     ],
   },
@@ -113,11 +160,67 @@ export const menuSections: NavSection[] = [
   {
     label: 'Enterprise',
     items: [
-      { label: 'Platform Overview', icon: Globe, href: '/platform-admin', roles: [UserRole.Owner] },
-      { label: 'Tenants', icon: UsersRound, href: '/platform-admin/tenants', roles: [UserRole.Owner] },
-      { label: 'Health Monitor', icon: Activity, href: '/platform-admin/health', roles: [UserRole.Owner] },
-      { label: 'Analytics', icon: BarChart3, href: '/platform-admin/analytics', roles: [UserRole.Owner] },
-      { label: 'Platform Settings', icon: Shield, href: '/platform-admin/settings', roles: [UserRole.Owner] },
+      {
+        label: 'Platform Overview',
+        icon: Globe,
+        href: '/platform-admin',
+        roles: [UserRole.Owner],
+        license: { tier: 'enterprise', upgradeLabel: 'Enterprise' },
+      },
+      {
+        label: 'Multi-Tenancy',
+        icon: Building2,
+        href: '/platform-admin/tenants',
+        roles: [UserRole.Owner],
+        license: { tier: 'enterprise', upgradeLabel: 'Enterprise' },
+      },
+      {
+        label: 'Compliance',
+        icon: Shield,
+        href: '/platform-admin/compliance',
+        roles: [UserRole.Owner],
+        license: { tier: 'enterprise', upgradeLabel: 'Enterprise' },
+      },
+      {
+        label: 'HA Cluster',
+        icon: Activity,
+        href: '/platform-admin/health',
+        roles: [UserRole.Owner],
+        license: { tier: 'enterprise', upgradeLabel: 'Enterprise' },
+      },
+      {
+        label: 'Analytics',
+        icon: BarChart3,
+        href: '/platform-admin/analytics',
+        roles: [UserRole.Owner],
+        license: { tier: 'enterprise', upgradeLabel: 'Enterprise' },
+      },
+      {
+        label: 'Platform Settings',
+        icon: Shield,
+        href: '/platform-admin/settings',
+        roles: [UserRole.Owner],
+        license: { tier: 'enterprise', upgradeLabel: 'Enterprise' },
+      },
+    ],
+  },
+  {
+    label: 'Add-ons',
+    items: [
+      {
+        label: 'Geek CLI',
+        icon: Terminal,
+        href: '/geek',
+        roles: [UserRole.Owner, UserRole.Operator],
+        license: { tier: 'pro', feature: 'featGeekCli', upgradeLabel: 'Pro' },
+      },
+      {
+        label: 'AI-DLC',
+        icon: Zap,
+        href: '/ai-dlc',
+        roles: [UserRole.Owner, UserRole.Operator],
+        license: { tier: 'pro', feature: 'featAiDlc', upgradeLabel: 'Pro' },
+      },
     ],
   },
 ];
@@ -137,4 +240,22 @@ export function filterSectionsByRole(role: UserRole): NavSection[] {
       ),
     }))
     .filter((section) => section.items.length > 0);
+}
+
+/**
+ * Returns true when a nav item should be shown as locked (upgrade required).
+ */
+export function isNavItemLocked(
+  item: NavItem,
+  isPro: boolean,
+  edition: string,
+  hasFeature: (f: string) => boolean,
+): boolean {
+  if (!item.license) return false;
+  if (item.license.tier === 'enterprise') return edition !== 'enterprise';
+  if (item.license.tier === 'pro') {
+    if (item.license.feature) return !hasFeature(item.license.feature);
+    return !isPro;
+  }
+  return false;
 }
