@@ -410,6 +410,29 @@ export function SystemTerminal() {
       return;
     }
 
+    if (verb === '/erp') {
+      const erpArgs = parts.slice(1);
+      setRunning(true);
+      push(line(`Running /erp ${erpArgs.join(' ')}…`, 'dim'));
+      try {
+        const output = await handleErpCommand(erpArgs);
+        for (const l of output.split('\n')) {
+          const color: LineColor =
+            l.includes('!LOW') ? 'red' :
+            l.startsWith('+') || l.startsWith('|') ? 'cyan' :
+            l.startsWith('>') ? 'dim' :
+            'white';
+          push(line(l, color));
+        }
+        push(line(''));
+      } catch (err: unknown) {
+        pushError(err instanceof Error ? err.message : 'ERP command failed');
+      } finally {
+        setRunning(false);
+      }
+      return;
+    }
+
     // Unknown command
     push(line(`Unknown command: ${cmd}`, 'red'));
     push(line('Type /help for available commands.', 'dim'));
