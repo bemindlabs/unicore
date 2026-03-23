@@ -140,7 +140,7 @@ export function defaultForSchema(schema: JsonSchemaProperty): unknown {
   }
 }
 
-function buildDefaults(schema: JsonSchema): Record<string, unknown> {
+export function buildDefaults(schema: JsonSchema): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [key, propSchema] of Object.entries(schema.properties ?? {})) {
     out[key] = defaultForSchema(propSchema);
