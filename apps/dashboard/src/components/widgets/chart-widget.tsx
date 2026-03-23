@@ -66,7 +66,7 @@ function ChartSkeleton() {
   );
 }
 
-export function ChartWidget({ config }: WidgetComponentProps): JSX.Element {
+export function ChartWidget({ config }: WidgetComponentProps): JSX.Element | null {
   const { data, loading, error } = useChartData(config.options, config.refreshInterval);
 
   if (loading) return <ChartSkeleton />;
