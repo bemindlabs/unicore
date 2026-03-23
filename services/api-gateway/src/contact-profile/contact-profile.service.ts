@@ -57,7 +57,7 @@ export class ContactProfileService {
   async getProfile(contactId: string) {
     const [erpContact, channels, notes, conversationHistory] = await Promise.all([
       this.erpGet(`/contacts/${contactId}`),
-      this.prisma.contactChannel.findMany({ where: { contactId }, orderBy: { createdAt: 'asc' } }),
+      this.prisma.contactChannel.findMany({ where: { erpContactId: contactId }, orderBy: { createdAt: 'asc' } }),
       this.prisma.agentNote.findMany({ where: { contactId }, orderBy: { createdAt: 'desc' } }),
       this.prisma.conversation.findMany({
         where: { contactId },
