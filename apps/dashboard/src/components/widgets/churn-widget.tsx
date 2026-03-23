@@ -7,7 +7,7 @@ import { MetricCard } from './metric-card';
 import { WidgetSkeleton, WidgetErrorCard } from './widget-skeleton';
 import { Progress } from '@unicore/ui';
 
-export function ChurnWidget({ config }: WidgetComponentProps) {
+export function ChurnWidget({ config }: WidgetComponentProps): JSX.Element {
   const { data, loading, error } = useChurnData(config.refreshInterval);
 
   if (loading) return <WidgetSkeleton />;
