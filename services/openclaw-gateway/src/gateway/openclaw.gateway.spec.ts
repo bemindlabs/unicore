@@ -95,6 +95,24 @@ describe('OpenClawGateway', () => {
             onModuleDestroy: jest.fn(),
           },
         },
+        {
+          provide: HandoffNotifierService,
+          useValue: {
+            detectTrigger: jest.fn().mockReturnValue(null),
+            createHandoff: jest.fn().mockResolvedValue(null),
+          },
+        },
+        {
+          provide: ConversationService,
+          useValue: {
+            create: jest.fn().mockResolvedValue({}),
+            assign: jest.fn().mockResolvedValue({}),
+            findByAgent: jest.fn().mockResolvedValue([]),
+            findById: jest.fn().mockResolvedValue(null),
+            onModuleInit: jest.fn(),
+            onModuleDestroy: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
