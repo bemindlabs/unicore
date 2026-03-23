@@ -109,8 +109,8 @@ export function TerminalModal({ open, onClose, onConnected }: TerminalModalProps
           src="/ssh/"
           className="flex-1 w-full border-0"
           title="SSH Terminal"
-          onLoad={() => setConnected(true)}
-          onError={() => setConnected(false)}
+          onLoad={() => updateConnected(true)}
+          onError={() => updateConnected(false)}
         />
       </div>
     </div>
