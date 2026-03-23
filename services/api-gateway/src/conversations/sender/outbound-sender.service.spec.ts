@@ -1,4 +1,5 @@
 import { NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ChannelsService } from '../../channels/channels.service';
 import { PrismaService } from '../../prisma/prisma.service';
