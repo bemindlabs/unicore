@@ -40,7 +40,7 @@ const mockPrisma = {
     create: jest.fn(),
     update: jest.fn(),
   },
-  inboundMessage: {
+  message: {
     findFirst: jest.fn(),
     create: jest.fn(),
     updateMany: jest.fn(),
