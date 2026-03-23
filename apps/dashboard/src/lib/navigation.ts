@@ -9,6 +9,7 @@ import {
   FileText,
   GitBranch,
   Globe,
+  Inbox,
   KeyRound,
   LayoutDashboard,
   MessageSquare,
