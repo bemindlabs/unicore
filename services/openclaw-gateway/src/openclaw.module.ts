@@ -35,6 +35,7 @@ import { HandoffNotifierService } from './handoff/handoff-notifier.service';
     HeartbeatService,
     PtySessionManager,
     MessagePersistenceService,
+    HandoffNotifierService,
   ],
   exports: [AgentRegistryService, MessageRouterService, RateLimiterService, MessagePersistenceService],
 })
