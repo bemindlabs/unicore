@@ -7,6 +7,7 @@ import { Button } from '@unicore/ui';
 interface TerminalModalProps {
   open: boolean;
   onClose: () => void;
+  onConnected?: (connected: boolean) => void;
 }
 
 export function TerminalModal({ open, onClose }: TerminalModalProps) {
