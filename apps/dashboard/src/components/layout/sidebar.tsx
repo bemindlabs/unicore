@@ -107,31 +107,9 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                     ? item.label
                     : undefined;
 
+                  // Hide menu items that require a higher license tier
                   if (locked) {
-                    return (
-                      <button
-                        key={item.href}
-                        type="button"
-                        onClick={() => openUpgradeModal(item)}
-                        title={tooltip}
-                        className={cn(
-                          'w-full flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
-                          'text-muted-foreground/50 hover:bg-muted/30 cursor-pointer',
-                          collapsed && 'justify-center px-2',
-                        )}
-                      >
-                        <Icon className="h-4 w-4 shrink-0 opacity-50" />
-                        {!collapsed && (
-                          <>
-                            <span className="truncate flex-1 text-left">{item.label}</span>
-                            <Lock className="h-3 w-3 shrink-0 opacity-60" />
-                          </>
-                        )}
-                        {collapsed && (
-                          <span className="sr-only">{item.label} (locked)</span>
-                        )}
-                      </button>
-                    );
+                    return null;
                   }
 
                   return (
