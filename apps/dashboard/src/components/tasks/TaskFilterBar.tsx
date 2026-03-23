@@ -20,7 +20,7 @@ interface Props {
   onChange: (filters: TaskFilters) => void;
 }
 
-export function TaskFilterBar({ filters, onChange }: Props) {
+export function TaskFilterBar({ filters, onChange }: Props): JSX.Element {
   return (
     <div className="flex flex-wrap items-center gap-2">
       <input
