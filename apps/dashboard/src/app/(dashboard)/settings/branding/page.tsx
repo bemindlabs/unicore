@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Paintbrush, Save, RotateCcw, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Paintbrush, Save, RotateCcw, CheckCircle, AlertCircle, Loader2, Crown, Lock } from 'lucide-react';
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
-  Button, Input, Label, Switch,
+  Button, Input, Label, Switch, Badge,
 } from '@unicore/ui';
 import { api } from '@/lib/api';
+import { useLicense } from '@/hooks/use-license';
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
