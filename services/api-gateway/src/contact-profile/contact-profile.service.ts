@@ -184,7 +184,7 @@ export class ContactProfileService {
         data: { contactId: dto.primaryId },
       }),
       this.prisma.contactChannel.deleteMany({
-        where: { contactId: { in: dto.duplicateIds } },
+        where: { erpContactId: { in: dto.duplicateIds } },
       }),
       this.prisma.conversation.updateMany({
         where: { contactId: { in: dto.duplicateIds } },
