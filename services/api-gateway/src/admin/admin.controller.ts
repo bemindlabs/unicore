@@ -198,9 +198,9 @@ export class AdminController {
     const dbStart = Date.now();
     try {
       await this.prisma.$queryRaw`SELECT 1`;
-      services.push({ name: 'PostgreSQL', status: 'HEALTHY', latencyMs: Date.now() - dbStart, lastCheckedAt: now });
+      services.push({ name: 'PostgreSQL', status: 'healthy', latencyMs: Date.now() - dbStart, lastCheckedAt: now });
     } catch (err: any) {
-      services.push({ name: 'PostgreSQL', status: 'UNHEALTHY', latencyMs: Date.now() - dbStart, lastCheckedAt: now, errorMessage: err?.message });
+      services.push({ name: 'PostgreSQL', status: 'down', latencyMs: Date.now() - dbStart, lastCheckedAt: now, errorMessage: err?.message });
     }
 
     // Check services in parallel
