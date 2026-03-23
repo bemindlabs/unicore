@@ -116,14 +116,14 @@ export class InboundRouterService {
     channel: string,
     externalId: string,
     contactName: string,
-    contactExternalId: string,
+    contactId: string,
   ) {
     // Look for an existing non-closed conversation on this channel+externalId
     const existing = await this.prisma.conversation.findFirst({
       where: {
         channel,
         externalId,
-        status: { not: 'closed' },
+        status: { not: 'CLOSED' },
       },
       orderBy: { lastMessageAt: 'desc' },
     });
@@ -137,9 +137,9 @@ export class InboundRouterService {
       data: {
         channel,
         externalId,
-        status: 'unassigned',
+        status: 'OPEN',
         contactName,
-        contactExternalId,
+        contactId,
         lastMessageAt: new Date(),
       },
     });
