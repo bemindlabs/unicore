@@ -427,7 +427,7 @@ export function PluginConfigForm({
     let cancelled = false;
     setIsLoading(true);
     api
-      .get<Record<string, unknown>>(`/api/v1/plugins/${pluginId}/config`)
+      .get<Record<string, unknown>>(`/api/v1/plugins/${pluginId}/configure`)
       .then((data) => {
         if (cancelled) return;
         setValues({ ...buildDefaults(configSchema), ...data });
