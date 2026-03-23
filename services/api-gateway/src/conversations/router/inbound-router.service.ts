@@ -87,8 +87,8 @@ export class InboundRouterService {
     });
 
     // 6. Route to AI agent or unassigned queue
-    if (conversation.assignedAgentId) {
-      await this.routeToAgent(conversation.id, conversation.assignedAgentId, msg);
+    if (conversation.assigneeId) {
+      await this.routeToAgent(conversation.id, conversation.assigneeId, msg);
     } else {
       const defaultAgentId = await this.getDefaultAgentId();
       if (defaultAgentId) {
@@ -102,7 +102,7 @@ export class InboundRouterService {
       conversationId: conversation.id,
       messageId: savedMsg.id,
       routedTo,
-      agentId: conversation.assignedAgentId ?? undefined,
+      agentId: conversation.assigneeId ?? undefined,
     };
   }
 
