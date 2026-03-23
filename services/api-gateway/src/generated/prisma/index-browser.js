@@ -361,6 +361,7 @@ exports.Prisma.ConversationParticipantScalarFieldEnum = {
   role: 'role',
   autoAssigned: 'autoAssigned',
   invitedBy: 'invitedBy',
+  addedBy: 'addedBy',
   isActive: 'isActive',
   autoRespond: 'autoRespond',
   joinedAt: 'joinedAt',

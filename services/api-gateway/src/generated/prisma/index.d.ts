@@ -22233,6 +22233,7 @@ export namespace Prisma {
     role: string | null
     autoAssigned: boolean | null
     invitedBy: string | null
+    addedBy: string | null
     isActive: boolean | null
     autoRespond: boolean | null
     joinedAt: Date | null
@@ -22250,6 +22251,7 @@ export namespace Prisma {
     role: string | null
     autoAssigned: boolean | null
     invitedBy: string | null
+    addedBy: string | null
     isActive: boolean | null
     autoRespond: boolean | null
     joinedAt: Date | null
@@ -22267,6 +22269,7 @@ export namespace Prisma {
     role: number
     autoAssigned: number
     invitedBy: number
+    addedBy: number
     isActive: number
     autoRespond: number
     joinedAt: number
@@ -22286,6 +22289,7 @@ export namespace Prisma {
     role?: true
     autoAssigned?: true
     invitedBy?: true
+    addedBy?: true
     isActive?: true
     autoRespond?: true
     joinedAt?: true
@@ -22303,6 +22307,7 @@ export namespace Prisma {
     role?: true
     autoAssigned?: true
     invitedBy?: true
+    addedBy?: true
     isActive?: true
     autoRespond?: true
     joinedAt?: true
@@ -22320,6 +22325,7 @@ export namespace Prisma {
     role?: true
     autoAssigned?: true
     invitedBy?: true
+    addedBy?: true
     isActive?: true
     autoRespond?: true
     joinedAt?: true
@@ -22410,6 +22416,7 @@ export namespace Prisma {
     role: string
     autoAssigned: boolean
     invitedBy: string | null
+    addedBy: string | null
     isActive: boolean
     autoRespond: boolean
     joinedAt: Date
@@ -22444,6 +22451,7 @@ export namespace Prisma {
     role?: boolean
     autoAssigned?: boolean
     invitedBy?: boolean
+    addedBy?: boolean
     isActive?: boolean
     autoRespond?: boolean
     joinedAt?: boolean
@@ -22462,6 +22470,7 @@ export namespace Prisma {
     role?: boolean
     autoAssigned?: boolean
     invitedBy?: boolean
+    addedBy?: boolean
     isActive?: boolean
     autoRespond?: boolean
     joinedAt?: boolean
@@ -22480,6 +22489,7 @@ export namespace Prisma {
     role?: boolean
     autoAssigned?: boolean
     invitedBy?: boolean
+    addedBy?: boolean
     isActive?: boolean
     autoRespond?: boolean
     joinedAt?: boolean
@@ -22498,6 +22508,7 @@ export namespace Prisma {
     role?: boolean
     autoAssigned?: boolean
     invitedBy?: boolean
+    addedBy?: boolean
     isActive?: boolean
     autoRespond?: boolean
     joinedAt?: boolean
@@ -22505,7 +22516,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type ConversationParticipantOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "conversationId" | "participantId" | "participantType" | "participantName" | "participantColor" | "role" | "autoAssigned" | "invitedBy" | "isActive" | "autoRespond" | "joinedAt" | "leftAt" | "updatedAt", ExtArgs["result"]["conversationParticipant"]>
+  export type ConversationParticipantOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "conversationId" | "participantId" | "participantType" | "participantName" | "participantColor" | "role" | "autoAssigned" | "invitedBy" | "addedBy" | "isActive" | "autoRespond" | "joinedAt" | "leftAt" | "updatedAt", ExtArgs["result"]["conversationParticipant"]>
   export type ConversationParticipantInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     conversation?: boolean | ConversationDefaultArgs<ExtArgs>
   }
@@ -22549,6 +22560,10 @@ export namespace Prisma {
        * Who invited this participant (userId), null if self-joined or auto
        */
       invitedBy: string | null
+      /**
+       * Alias for invitedBy — userId who added this participant (UNC-1031)
+       */
+      addedBy: string | null
       isActive: boolean
       /**
        * When true, this AI agent will auto-respond to incoming messages (UNC-1031)
@@ -22990,6 +23005,7 @@ export namespace Prisma {
     readonly role: FieldRef<"ConversationParticipant", 'String'>
     readonly autoAssigned: FieldRef<"ConversationParticipant", 'Boolean'>
     readonly invitedBy: FieldRef<"ConversationParticipant", 'String'>
+    readonly addedBy: FieldRef<"ConversationParticipant", 'String'>
     readonly isActive: FieldRef<"ConversationParticipant", 'Boolean'>
     readonly autoRespond: FieldRef<"ConversationParticipant", 'Boolean'>
     readonly joinedAt: FieldRef<"ConversationParticipant", 'DateTime'>
@@ -29218,6 +29234,7 @@ export namespace Prisma {
     role: 'role',
     autoAssigned: 'autoAssigned',
     invitedBy: 'invitedBy',
+    addedBy: 'addedBy',
     isActive: 'isActive',
     autoRespond: 'autoRespond',
     joinedAt: 'joinedAt',
@@ -30932,6 +30949,7 @@ export namespace Prisma {
     role?: StringFilter<"ConversationParticipant"> | string
     autoAssigned?: BoolFilter<"ConversationParticipant"> | boolean
     invitedBy?: StringNullableFilter<"ConversationParticipant"> | string | null
+    addedBy?: StringNullableFilter<"ConversationParticipant"> | string | null
     isActive?: BoolFilter<"ConversationParticipant"> | boolean
     autoRespond?: BoolFilter<"ConversationParticipant"> | boolean
     joinedAt?: DateTimeFilter<"ConversationParticipant"> | Date | string
@@ -30950,6 +30968,7 @@ export namespace Prisma {
     role?: SortOrder
     autoAssigned?: SortOrder
     invitedBy?: SortOrderInput | SortOrder
+    addedBy?: SortOrderInput | SortOrder
     isActive?: SortOrder
     autoRespond?: SortOrder
     joinedAt?: SortOrder
@@ -30972,6 +30991,7 @@ export namespace Prisma {
     role?: StringFilter<"ConversationParticipant"> | string
     autoAssigned?: BoolFilter<"ConversationParticipant"> | boolean
     invitedBy?: StringNullableFilter<"ConversationParticipant"> | string | null
+    addedBy?: StringNullableFilter<"ConversationParticipant"> | string | null
     isActive?: BoolFilter<"ConversationParticipant"> | boolean
     autoRespond?: BoolFilter<"ConversationParticipant"> | boolean
     joinedAt?: DateTimeFilter<"ConversationParticipant"> | Date | string
@@ -30990,6 +31010,7 @@ export namespace Prisma {
     role?: SortOrder
     autoAssigned?: SortOrder
     invitedBy?: SortOrderInput | SortOrder
+    addedBy?: SortOrderInput | SortOrder
     isActive?: SortOrder
     autoRespond?: SortOrder
     joinedAt?: SortOrder
@@ -31013,6 +31034,7 @@ export namespace Prisma {
     role?: StringWithAggregatesFilter<"ConversationParticipant"> | string
     autoAssigned?: BoolWithAggregatesFilter<"ConversationParticipant"> | boolean
     invitedBy?: StringNullableWithAggregatesFilter<"ConversationParticipant"> | string | null
+    addedBy?: StringNullableWithAggregatesFilter<"ConversationParticipant"> | string | null
     isActive?: BoolWithAggregatesFilter<"ConversationParticipant"> | boolean
     autoRespond?: BoolWithAggregatesFilter<"ConversationParticipant"> | boolean
     joinedAt?: DateTimeWithAggregatesFilter<"ConversationParticipant"> | Date | string
@@ -33079,6 +33101,7 @@ export namespace Prisma {
     role?: string
     autoAssigned?: boolean
     invitedBy?: string | null
+    addedBy?: string | null
     isActive?: boolean
     autoRespond?: boolean
     joinedAt?: Date | string
@@ -33097,6 +33120,7 @@ export namespace Prisma {
     role?: string
     autoAssigned?: boolean
     invitedBy?: string | null
+    addedBy?: string | null
     isActive?: boolean
     autoRespond?: boolean
     joinedAt?: Date | string
@@ -33113,6 +33137,7 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     autoAssigned?: BoolFieldUpdateOperationsInput | boolean
     invitedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    addedBy?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     autoRespond?: BoolFieldUpdateOperationsInput | boolean
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -33131,6 +33156,7 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     autoAssigned?: BoolFieldUpdateOperationsInput | boolean
     invitedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    addedBy?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     autoRespond?: BoolFieldUpdateOperationsInput | boolean
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -33148,6 +33174,7 @@ export namespace Prisma {
     role?: string
     autoAssigned?: boolean
     invitedBy?: string | null
+    addedBy?: string | null
     isActive?: boolean
     autoRespond?: boolean
     joinedAt?: Date | string
@@ -33164,6 +33191,7 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     autoAssigned?: BoolFieldUpdateOperationsInput | boolean
     invitedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    addedBy?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     autoRespond?: BoolFieldUpdateOperationsInput | boolean
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -33181,6 +33209,7 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     autoAssigned?: BoolFieldUpdateOperationsInput | boolean
     invitedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    addedBy?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     autoRespond?: BoolFieldUpdateOperationsInput | boolean
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -34834,6 +34863,7 @@ export namespace Prisma {
     role?: SortOrder
     autoAssigned?: SortOrder
     invitedBy?: SortOrder
+    addedBy?: SortOrder
     isActive?: SortOrder
     autoRespond?: SortOrder
     joinedAt?: SortOrder
@@ -34851,6 +34881,7 @@ export namespace Prisma {
     role?: SortOrder
     autoAssigned?: SortOrder
     invitedBy?: SortOrder
+    addedBy?: SortOrder
     isActive?: SortOrder
     autoRespond?: SortOrder
     joinedAt?: SortOrder
@@ -34868,6 +34899,7 @@ export namespace Prisma {
     role?: SortOrder
     autoAssigned?: SortOrder
     invitedBy?: SortOrder
+    addedBy?: SortOrder
     isActive?: SortOrder
     autoRespond?: SortOrder
     joinedAt?: SortOrder
@@ -36843,6 +36875,7 @@ export namespace Prisma {
     role?: string
     autoAssigned?: boolean
     invitedBy?: string | null
+    addedBy?: string | null
     isActive?: boolean
     autoRespond?: boolean
     joinedAt?: Date | string
@@ -36859,6 +36892,7 @@ export namespace Prisma {
     role?: string
     autoAssigned?: boolean
     invitedBy?: string | null
+    addedBy?: string | null
     isActive?: boolean
     autoRespond?: boolean
     joinedAt?: Date | string
@@ -37009,6 +37043,7 @@ export namespace Prisma {
     role?: StringFilter<"ConversationParticipant"> | string
     autoAssigned?: BoolFilter<"ConversationParticipant"> | boolean
     invitedBy?: StringNullableFilter<"ConversationParticipant"> | string | null
+    addedBy?: StringNullableFilter<"ConversationParticipant"> | string | null
     isActive?: BoolFilter<"ConversationParticipant"> | boolean
     autoRespond?: BoolFilter<"ConversationParticipant"> | boolean
     joinedAt?: DateTimeFilter<"ConversationParticipant"> | Date | string
@@ -37768,6 +37803,7 @@ export namespace Prisma {
     role?: string
     autoAssigned?: boolean
     invitedBy?: string | null
+    addedBy?: string | null
     isActive?: boolean
     autoRespond?: boolean
     joinedAt?: Date | string
@@ -37871,6 +37907,7 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     autoAssigned?: BoolFieldUpdateOperationsInput | boolean
     invitedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    addedBy?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     autoRespond?: BoolFieldUpdateOperationsInput | boolean
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -37887,6 +37924,7 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     autoAssigned?: BoolFieldUpdateOperationsInput | boolean
     invitedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    addedBy?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     autoRespond?: BoolFieldUpdateOperationsInput | boolean
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -37903,6 +37941,7 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     autoAssigned?: BoolFieldUpdateOperationsInput | boolean
     invitedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    addedBy?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     autoRespond?: BoolFieldUpdateOperationsInput | boolean
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string

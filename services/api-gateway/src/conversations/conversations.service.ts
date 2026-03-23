@@ -303,6 +303,7 @@ export class ConversationsService {
       );
     }
 
+    const isAgent = dto.participantType === InviteParticipantType.AGENT;
     const participant = await this.prisma.conversationParticipant.create({
       data: {
         conversationId,
@@ -313,6 +314,8 @@ export class ConversationsService {
         role: 'MEMBER',
         autoAssigned: dto.autoAssigned ?? false,
         invitedBy,
+        addedBy: invitedBy,
+        autoRespond: dto.autoRespond !== undefined ? dto.autoRespond : isAgent,
       },
     });
 

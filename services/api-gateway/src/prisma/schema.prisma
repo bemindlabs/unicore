@@ -446,6 +446,8 @@ model ConversationParticipant {
   autoAssigned     Boolean      @default(false)
   /// Who invited this participant (userId), null if self-joined or auto
   invitedBy        String?
+  /// Alias for invitedBy — userId who added this participant (UNC-1031)
+  addedBy          String?
   isActive         Boolean      @default(true)
   /// When true, this AI agent will auto-respond to incoming messages (UNC-1031)
   autoRespond      Boolean      @default(true)
