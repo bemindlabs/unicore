@@ -251,6 +251,11 @@ export function AgentTerminal({ agent, open, onClose }: Props) {
           <span className="font-mono text-xs uppercase tracking-wider" style={{ color: accentColor }}>
             {agent.name}
           </span>
+          {activeChat && (
+            <span className="font-mono text-[9px] text-cyan-400 uppercase tracking-wider">
+              ↔ {activeChat}
+            </span>
+          )}
           <span
             className={`font-mono text-[9px] ${
               connected
