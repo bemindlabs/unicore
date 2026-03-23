@@ -10,6 +10,7 @@ global.fetch = mockFetch;
 const mockPrisma = {
   contactChannel: {
     findMany: jest.fn(),
+    findFirst: jest.fn(),
     findUnique: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
