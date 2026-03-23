@@ -41,6 +41,9 @@ const PROVIDERS: ProviderDef[] = [
   { id: 'ollama',     name: 'Ollama (local)',        keyField: 'ollamaToken',   getKeyUrl: '',                                              models: ['llama3.2', 'llama3.1', 'mistral', 'codellama', 'phi3'], description: 'Free, runs locally',                               defaultBaseUrl: 'http://localhost:11434', keyOptional: true },
 ];
 
+/** Provider IDs available in Community edition */
+const COMMUNITY_PROVIDER_IDS = new Set(['openai', 'anthropic', 'deepseek', 'groq', 'ollama']);
+
 // ── Searchable Model Selector ─────────────────────────────────────────────
 
 function ModelSearch({ models, value, onChange, placeholder }: {
