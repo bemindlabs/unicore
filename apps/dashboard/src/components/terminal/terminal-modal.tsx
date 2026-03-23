@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { X, Minus, Plus, Maximize2, PanelBottomClose } from 'lucide-react';
-import { cn } from '@unicore/ui';
 import { SystemTerminal } from './SystemTerminal';
 
 export type TerminalMode = 'modal' | 'docked';
@@ -16,6 +15,7 @@ interface TerminalModalProps {
 const MODE_KEY = 'unicore:terminal:mode';
 const DOCKED_HEIGHT_KEY = 'unicore:terminal:docked-h';
 const DEFAULT_DOCKED_HEIGHT = 360;
+const MOBILE_BREAKPOINT = 768;
 
 function readMode(): TerminalMode {
   if (typeof window === 'undefined') return 'docked';
@@ -29,21 +29,28 @@ function readDockedHeight(): number {
   return isNaN(v) ? DEFAULT_DOCKED_HEIGHT : Math.max(200, Math.min(700, v));
 }
 
-function isMobile(): boolean {
-  if (typeof window === 'undefined') return false;
-  return window.innerWidth < 768;
+function useIsMobile() {
+  const [mobile, setMobile] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth < MOBILE_BREAKPOINT,
+  );
+  useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+    const handler = (e: MediaQueryListEvent) => setMobile(e.matches);
+    mql.addEventListener('change', handler);
+    setMobile(mql.matches);
+    return () => mql.removeEventListener('change', handler);
+  }, []);
+  return mobile;
 }
 
 export function TerminalModal({ open, onClose, onConnected }: TerminalModalProps) {
+  const isMobile = useIsMobile();
   const [mode, setModeState] = useState<TerminalMode>(readMode);
   const [minimized, setMinimized] = useState(false);
   const [dockedHeight, setDockedHeight] = useState(readDockedHeight);
   const resizeDragRef = useRef<{ startY: number; startH: number } | null>(null);
 
-  // On mobile, always use fullscreen modal
-  const effectiveMode = isMobile() ? 'modal' : mode;
-
-  // Notify parent that terminal is active
+  // Notify parent
   useEffect(() => {
     onConnected?.(open && !minimized);
   }, [open, minimized, onConnected]);
@@ -58,19 +65,20 @@ export function TerminalModal({ open, onClose, onConnected }: TerminalModalProps
     return () => window.removeEventListener('keydown', handler);
   }, [open, onClose]);
 
-  // Prevent body scroll when terminal is open on mobile
+  // Lock body scroll on mobile
   useEffect(() => {
-    if (!open || !isMobile()) return;
+    if (!open || !isMobile) return;
+    const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
-  }, [open]);
+    return () => { document.body.style.overflow = prev; };
+  }, [open, isMobile]);
 
   const setMode = useCallback((m: TerminalMode) => {
     setModeState(m);
     localStorage.setItem(MODE_KEY, m);
   }, []);
 
-  // Docked resize (desktop only)
+  // Docked resize (desktop)
   const startDockedResize = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
@@ -94,9 +102,9 @@ export function TerminalModal({ open, onClose, onConnected }: TerminalModalProps
 
   if (!open) return null;
 
-  /* ── Title bar ─────────────────────────────────────────────────────── */
+  /* ── Title bar ───────────────────────────────────────────────────── */
   const titleBar = (
-    <div className="flex items-center justify-between h-10 sm:h-10 px-3 border-b border-border/40 bg-muted/30 backdrop-blur-sm shrink-0 select-none">
+    <div className="flex items-center justify-between h-11 sm:h-10 px-3 border-b border-border/40 bg-muted/30 backdrop-blur-sm shrink-0 select-none">
       <div className="flex items-center gap-2 min-w-0">
         <div className="hidden sm:flex gap-1">
           <span className="h-3 w-3 rounded-full bg-red-500/80" />
@@ -111,36 +119,29 @@ export function TerminalModal({ open, onClose, onConnected }: TerminalModalProps
         </span>
       </div>
       <div className="flex items-center gap-0.5 ml-2 shrink-0">
-        {/* Mode toggle — hidden on mobile (always fullscreen) */}
-        <div className="hidden md:flex items-center gap-0.5">
-          {effectiveMode === 'modal' ? (
-            <button
-              onClick={() => setMode('docked')}
-              className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-              title="Dock to bottom"
+        {/* Desktop-only controls */}
+        {!isMobile && (
+          <>
+            {mode === 'modal' ? (
+              <TitleButton onClick={() => setMode('docked')} title="Dock to bottom">
+                <PanelBottomClose className="h-3.5 w-3.5" />
+              </TitleButton>
+            ) : (
+              <TitleButton onClick={() => setMode('modal')} title="Expand">
+                <Maximize2 className="h-3.5 w-3.5" />
+              </TitleButton>
+            )}
+            <TitleButton
+              onClick={() => setMinimized((v) => !v)}
+              title={minimized ? 'Restore' : 'Minimize'}
             >
-              <PanelBottomClose className="h-3.5 w-3.5" />
-            </button>
-          ) : (
-            <button
-              onClick={() => setMode('modal')}
-              className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-              title="Expand to modal"
-            >
-              <Maximize2 className="h-3.5 w-3.5" />
-            </button>
-          )}
-          <button
-            onClick={() => setMinimized((v) => !v)}
-            className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-            title={minimized ? 'Restore' : 'Minimize'}
-          >
-            {minimized ? <Plus className="h-3.5 w-3.5" /> : <Minus className="h-3.5 w-3.5" />}
-          </button>
-        </div>
+              {minimized ? <Plus className="h-3.5 w-3.5" /> : <Minus className="h-3.5 w-3.5" />}
+            </TitleButton>
+          </>
+        )}
         <button
           onClick={onClose}
-          className="p-2 sm:p-1.5 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+          className="p-2 sm:p-1.5 -mr-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
           title="Close"
         >
           <X className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
@@ -149,24 +150,27 @@ export function TerminalModal({ open, onClose, onConnected }: TerminalModalProps
     </div>
   );
 
-  const terminalContent = !minimized && (
-    <div className="flex-1 min-h-0 overflow-hidden">
+  const terminalBody = !minimized && (
+    <div className="flex-1 min-h-0 overflow-hidden" style={{ contain: 'size layout' }}>
       <SystemTerminal embedded />
     </div>
   );
 
-  /* ── MOBILE: fullscreen sheet ─────────────────────────────────────── */
-  if (isMobile()) {
+  /* ── MOBILE: fullscreen ──────────────────────────────────────────── */
+  if (isMobile) {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col bg-background animate-in slide-in-from-bottom duration-200">
+      <div
+        className="fixed inset-0 z-50 flex flex-col bg-background"
+        style={{ height: '100dvh' }}
+      >
         {titleBar}
-        {terminalContent}
+        {terminalBody}
       </div>
     );
   }
 
-  /* ── DESKTOP MODAL ─────────────────────────────────────────────────── */
-  if (effectiveMode === 'modal') {
+  /* ── DESKTOP MODAL ───────────────────────────────────────────────── */
+  if (mode === 'modal') {
     return (
       <>
         <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={onClose} />
@@ -181,13 +185,13 @@ export function TerminalModal({ open, onClose, onConnected }: TerminalModalProps
           }}
         >
           {titleBar}
-          {terminalContent}
+          {terminalBody}
         </div>
       </>
     );
   }
 
-  /* ── DESKTOP DOCKED ────────────────────────────────────────────────── */
+  /* ── DESKTOP DOCKED ──────────────────────────────────────────────── */
   return (
     <div
       className="fixed bottom-0 left-0 right-0 z-50 flex flex-col border-t shadow-[0_-4px_20px_rgba(0,0,0,0.15)] bg-background"
@@ -195,14 +199,35 @@ export function TerminalModal({ open, onClose, onConnected }: TerminalModalProps
     >
       {!minimized && (
         <div
-          className="h-1 w-full shrink-0 cursor-ns-resize group"
+          className="h-1.5 w-full shrink-0 cursor-ns-resize group"
           onMouseDown={startDockedResize}
         >
-          <div className="h-full w-16 mx-auto rounded-full bg-muted-foreground/20 group-hover:bg-muted-foreground/40 transition-colors mt-px" />
+          <div className="h-0.5 w-16 mx-auto rounded-full bg-muted-foreground/20 group-hover:bg-muted-foreground/40 transition-colors mt-0.5" />
         </div>
       )}
       {titleBar}
-      {terminalContent}
+      {terminalBody}
     </div>
+  );
+}
+
+/* ── Reusable title bar button ──────────────────────────────────────── */
+function TitleButton({
+  onClick,
+  title,
+  children,
+}: {
+  onClick: () => void;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+    >
+      {children}
+    </button>
   );
 }
