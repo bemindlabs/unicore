@@ -401,26 +401,6 @@ describe('ConversationsService', () => {
   // ─── updateParticipant (UNC-1031) ─────────────────────────────────────────
 
   describe('updateParticipant', () => {
-    it('toggles autoRespond for an AI agent', async () => {
-      mockPrisma.conversation.findUnique.mockResolvedValue(makeConversation());
-      mockPrisma.conversationParticipant.findFirst.mockResolvedValue({
-        id: 'p-1', participantId: 'finance-agent', autoRespond: true, leftAt: null,
-      });
-      mockPrisma.conversationParticipant.update.mockResolvedValue({
-        id: 'p-1', autoRespond: false,
-      });
-
-      const result = await service.updateParticipant('conv-1', 'finance-agent', { autoRespond: false });
-
-      expect(mockPrisma.conversationParticipant.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { id: 'p-1' },
-          data: expect.objectContaining({ autoRespond: false }),
-        }),
-      );
-      expect(result.autoRespond).toBe(false);
-    });
-
     it('updates participantColor', async () => {
       mockPrisma.conversation.findUnique.mockResolvedValue(makeConversation());
       mockPrisma.conversationParticipant.findFirst.mockResolvedValue({
@@ -434,6 +414,7 @@ describe('ConversationsService', () => {
 
       expect(mockPrisma.conversationParticipant.update).toHaveBeenCalledWith(
         expect.objectContaining({
+          where: { id: 'p-1' },
           data: expect.objectContaining({ participantColor: '#f59e0b' }),
         }),
       );
@@ -445,7 +426,7 @@ describe('ConversationsService', () => {
       mockPrisma.conversationParticipant.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.updateParticipant('conv-1', 'unknown-agent', { autoRespond: false }),
+        service.updateParticipant('conv-1', 'unknown-agent', { participantColor: '#fff' }),
       ).rejects.toThrow(NotFoundException);
     });
   });
