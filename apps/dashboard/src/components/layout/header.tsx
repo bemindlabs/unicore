@@ -50,6 +50,27 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
     deleteNotification,
   } = useNotifications();
   const [notifOpen, setNotifOpen] = useState(false);
+  const [terminalOpen, setTerminalOpen] = useState(false);
+  const [terminalConnected, setTerminalConnected] = useState(false);
+
+  const toggleTerminal = useCallback(() => {
+    setTerminalOpen((prev) => !prev);
+  }, []);
+
+  const closeTerminal = useCallback(() => {
+    setTerminalOpen(false);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === '`') {
+        e.preventDefault();
+        setTerminalOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const toggleNotifPanel = useCallback(() => {
     setNotifOpen((prev) => !prev);
