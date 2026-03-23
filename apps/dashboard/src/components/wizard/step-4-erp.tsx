@@ -15,7 +15,7 @@ import {
 import { useWizardState } from '@/hooks/use-wizard-state';
 import { ERP_MODULES } from '@/types/wizard';
 
-export function StepErp() {
+export function StepErp(): JSX.Element {
   const { state, dispatch } = useWizardState();
 
   function toggleModule(key: keyof ErpModulesConfig) {
