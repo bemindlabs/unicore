@@ -171,11 +171,16 @@ export function ChatBox() {
         typingTimeoutRef.current = null;
       }
     }
+    // UNC-1027: Detect handoff metadata in AI response
+    if (msg.metadata?.handoff) {
+      setHandoffDismissed(false);
+      setHandoffFromMessage(msg.metadata.handoff);
+    }
     // Play beep on incoming messages from others
     if (msg.authorId !== 'human-user' && soundEnabledRef.current) {
       playBeep();
     }
-  }, [open]);
+  }, [open, setHandoffFromMessage]);
 
   const { connected, send } = useChatWebSocket(channel, handleMessage);
 
