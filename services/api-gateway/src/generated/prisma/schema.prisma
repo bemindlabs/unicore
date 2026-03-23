@@ -428,24 +428,24 @@ model Message {
 }
 
 /// Operators or agents participating in a conversation
-// UNC-1031: extended with participantType, participantColor, autoRespond, addedBy, isActive
+// UNC-1031: extended with participantType, participantColor, autoAssigned, invitedBy, isActive
 model ConversationParticipant {
   id               String       @id @default(uuid())
   conversationId   String
   conversation     Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   /// Agent ID (OpenClaw registry) or User ID
   participantId    String
-  /// "human" | "ai"
+  /// "human" | "ai" | "USER" | "AGENT"
   participantType  String       @default("human")
   participantName  String
   /// Hex colour for avatar badge (e.g. "#6366f1")
   participantColor String       @default("#6366f1")
-  /// Legacy role field
+  /// Role in the conversation: 'OWNER' | 'MEMBER' | 'operator'
   role             String       @default("operator")
-  /// AI-only: when true the agent replies automatically without human approval
-  autoRespond      Boolean      @default(true)
-  /// Who added this participant (userId)
-  addedBy          String       @default("")
+  /// True when the participant was auto-assigned (not manually invited)
+  autoAssigned     Boolean      @default(false)
+  /// Who invited this participant (userId), null if self-joined or auto
+  invitedBy        String?
   isActive         Boolean      @default(true)
   joinedAt         DateTime     @default(now())
   leftAt           DateTime?

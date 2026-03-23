@@ -79,4 +79,14 @@ export class ConversationsGateway {
       ?.to(`conv:${conversationId}`)
       .emit('participant:left', { conversationId, participantId });
   }
+
+  /** UNC-1031: Unified participant update broadcast (add/remove/autoRespond toggle) */
+  emitParticipantsUpdated(
+    conversationId: string,
+    data: { action: 'added' | 'removed' | 'updated'; participant?: any; participantId?: string },
+  ): void {
+    this.server
+      ?.to(`conv:${conversationId}`)
+      .emit('participants:update', { conversationId, ...data });
+  }
 }

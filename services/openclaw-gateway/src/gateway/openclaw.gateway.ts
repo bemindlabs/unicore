@@ -401,6 +401,8 @@ export class OpenClawGateway
   ): Promise<void> {
     const result = await this.routerAgent.process(text, sessionId, userId);
 
+    const targetAgent = result.decision.targetAgent ?? 'router';
+    const agentLabel = getAgentLabel(targetAgent);
     const confidence = result.decision.classification?.confidence ?? 1;
     const intent = result.decision.classification?.intent ?? 'unknown';
 
@@ -432,22 +434,23 @@ export class OpenClawGateway
       messageId: uuidv4(),
       timestamp: new Date().toISOString(),
       payload: {
-        fromAgentId: result.decision.targetAgent ?? 'router',
+        fromAgentId: targetAgent,
         channel,
         data: {
           id: uuidv4(),
           text: result.response.content,
-          author: result.decision.targetAgent
-            ? `${result.decision.targetAgent.charAt(0).toUpperCase()}${result.decision.targetAgent.slice(1)} Agent`
-            : 'Router Agent',
-          authorId: result.decision.targetAgent ?? 'router',
+          author: agentLabel.displayName,
+          authorIcon: agentLabel.icon,
+          authorId: targetAgent,
           authorType: 'agent',
+          agentLabel: { displayName: agentLabel.displayName, icon: agentLabel.icon },
           channel,
           timestamp: new Date().toISOString(),
           metadata: {
             processingTimeMs: result.processingTimeMs,
             intent,
             confidence,
+            mentionRouted: result.decision.mentionRouted ?? false,
             // Include handoff info in message metadata so the dashboard can show the banner
             handoff: handoffData ?? undefined,
           },
