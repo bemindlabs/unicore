@@ -479,3 +479,20 @@ model Handoff {
   @@index([slaDeadline])
   @@map("handoffs")
 }
+
+// ---------------------------------------------------------------------------
+// Canned Responses (UNC-1020) — pre-written reply shortcuts for the composer
+// ---------------------------------------------------------------------------
+
+model CannedResponse {
+  id        String   @id @default(uuid())
+  shortcut  String   @unique
+  text      String
+  category  String?
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([shortcut])
+  @@map("canned_responses")
+}

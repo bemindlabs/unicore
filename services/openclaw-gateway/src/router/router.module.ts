@@ -34,8 +34,9 @@ import { AgentsModule } from '../agents/agents.module';
     // Router infrastructure
     IntentClassifierService,
     DelegationService,
+    MentionParserService,
     RouterAgent,
   ],
-  exports: [RouterAgent, DelegationService, AgentsModule],
+  exports: [RouterAgent, DelegationService, MentionParserService, AgentsModule],
 })
 export class RouterModule {}
