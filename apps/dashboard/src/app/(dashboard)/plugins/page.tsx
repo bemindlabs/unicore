@@ -466,20 +466,6 @@ export default function PluginsMarketplacePage() {
         </div>
       </div>
 
-      {/* Preview Banner */}
-      {isPreview && (
-        <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950/50">
-          <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600 dark:text-blue-400" />
-          <div className="flex-1 text-sm text-blue-800 dark:text-blue-300">
-            <p className="font-medium">Plugin Marketplace (Preview)</p>
-            <p className="mt-0.5 text-blue-700 dark:text-blue-400">
-              You are viewing sample plugins. The marketplace will be connected to the Plugin API in a future update.
-              Plugin installation is not yet available.
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* Search + Sort */}
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
