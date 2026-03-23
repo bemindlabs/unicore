@@ -10,6 +10,8 @@ import {
   Settings,
   Puzzle,
   Wand2,
+  Shield,
+  MessageCircle,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@unicore/ui';
 const SETTINGS_LINKS = [
