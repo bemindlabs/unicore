@@ -24,6 +24,7 @@ import {
   UsersRound,
   Wand2,
   Zap,
+  LineChart,
 } from 'lucide-react';
 import { UserRole } from '@unicore/shared-types';
 import type { NavItem, NavSection } from '@/types/navigation';
