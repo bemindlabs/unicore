@@ -28,8 +28,9 @@ import { GamificationModule } from './gamification/gamification.module';
 import { ChannelsModule } from './channels/channels.module';
 import { ConversationsAnalyticsModule } from './conversations-analytics/conversations-analytics.module';
 import { ConversationsModule } from './conversations/conversations.module';
+import { ContactProfileModule } from './contact-profile/contact-profile.module';
 @Module({
-  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule, AdminModule, AuditModule, SettingsModule, TasksModule, WebhooksModule, ChatHistoryModule, NotificationsModule, GamificationModule, ChannelsModule, ConversationsAnalyticsModule, ConversationsModule],
+  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule, AdminModule, AuditModule, SettingsModule, TasksModule, WebhooksModule, ChatHistoryModule, NotificationsModule, GamificationModule, ChannelsModule, ConversationsAnalyticsModule, ConversationsModule, ContactProfileModule],
   controllers: [AppController],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
