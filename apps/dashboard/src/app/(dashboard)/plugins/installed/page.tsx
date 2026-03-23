@@ -200,13 +200,7 @@ if (false) { const _x = {
         scanInterval: { type: 'string', title: 'Scan Interval', enum: ['hourly', 'daily', 'weekly'], default: 'daily' },
         severityThreshold: { type: 'string', title: 'Alert Threshold', enum: ['low', 'medium', 'high', 'critical'], default: 'high' },
         notifyEmail: { type: 'string', title: 'Notification Email', description: 'Email for scan reports.' },
-        autoRemediate: { type: 'boolean', title: 'Auto-Remediate', description: 'Automatically apply safe fixes.', default: false },
-      },
-    },
-  },
-];
-
-function StatusBadge({ status }: { status: PluginStatus }) {
+    function StatusBadge({ status }: { status: PluginStatus }) {
   if (status === 'active') {
     return (
       <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
