@@ -23,8 +23,6 @@ import {
   Badge,
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
   Dialog,
   DialogContent,
   DialogHeader,
