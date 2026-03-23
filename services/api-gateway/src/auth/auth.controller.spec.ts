@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AuditService } from '../audit/audit.service';
+import { LicenseService } from '../license/license.service';
 
 const mockAuthService = {
   register: jest.fn(),
@@ -15,6 +16,20 @@ const mockAuditService = {
   log: jest.fn().mockResolvedValue(undefined),
 };
 
+const mockLicenseStatus = {
+  valid: true,
+  edition: 'community' as const,
+  key: null,
+  features: ['auditLogs'] as any[],
+  expiresAt: null,
+  validatedAt: new Date(),
+  nextRevalidationAt: new Date(),
+};
+
+const mockLicenseService = {
+  getLicenseStatus: jest.fn().mockResolvedValue(mockLicenseStatus),
+};
+
 describe('AuthController', () => {
   let controller: AuthController;
 
@@ -24,6 +39,7 @@ describe('AuthController', () => {
       providers: [
         { provide: AuthService, useValue: mockAuthService },
         { provide: AuditService, useValue: mockAuditService },
+        { provide: LicenseService, useValue: mockLicenseService },
       ],
     }).compile();
 
