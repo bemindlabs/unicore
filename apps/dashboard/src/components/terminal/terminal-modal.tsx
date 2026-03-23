@@ -10,7 +10,7 @@ interface TerminalModalProps {
   onConnected?: (connected: boolean) => void;
 }
 
-export function TerminalModal({ open, onClose }: TerminalModalProps) {
+export function TerminalModal({ open, onClose, onConnected }: TerminalModalProps) {
   const [connected, setConnected] = useState(false);
   const [maximized, setMaximized] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
