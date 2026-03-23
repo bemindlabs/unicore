@@ -266,6 +266,146 @@ model PluginInstallation {
 }
 
 // ---------------------------------------------------------------------------
+// Omni-Channel Conversation Hub (UNC-1014)
+// ---------------------------------------------------------------------------
+
+/// Channel type for conversations (matches unicore-pro/channels providers)
+enum ConversationChannel {
+  TELEGRAM
+  LINE
+  FACEBOOK
+  INSTAGRAM
+  WHATSAPP
+  SLACK
+  DISCORD
+  EMAIL
+  SMS
+  LIVE_CHAT
+}
+
+enum ConversationStatus {
+  OPEN
+  PENDING
+  RESOLVED
+  CLOSED
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  AUDIO
+  VIDEO
+  STICKER
+  LOCATION
+  TEMPLATE
+  SYSTEM
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+/// A customer conversation thread originating from any channel
+model Conversation {
+  id             String                    @id @default(uuid())
+  channel        ConversationChannel
+  status         ConversationStatus        @default(OPEN)
+  subject        String?
+  /// External conversation/room ID from the originating channel (e.g. Telegram chat_id)
+  externalId     String?
+  /// Assigned operator user ID
+  assigneeId     String?
+  /// Primary contact channel record
+  contactChannelId String?
+  contactChannel ContactChannel?          @relation(fields: [contactChannelId], references: [id])
+  messages       Message[]
+  participants   ConversationParticipant[]
+  resolvedAt     DateTime?
+  closedAt       DateTime?
+  lastMessageAt  DateTime?
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+
+  @@index([channel])
+  @@index([status])
+  @@index([assigneeId])
+  @@index([externalId])
+  @@index([contactChannelId])
+  @@index([lastMessageAt])
+  @@map("conversations")
+}
+
+/// A single message within a conversation
+model Message {
+  id             String           @id @default(uuid())
+  conversationId String
+  conversation   Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  direction      MessageDirection
+  type           MessageType      @default(TEXT)
+  content        String?
+  /// Raw payload from the channel (images, files, location, etc.)
+  attachments    Json             @default("[]")
+  /// External message ID from the originating channel
+  externalId     String?
+  /// Sender info: { id, name, avatarUrl } — contact or operator
+  sender         Json             @default("{}")
+  isRead         Boolean          @default(false)
+  readAt         DateTime?
+  deliveredAt    DateTime?
+  failedAt       DateTime?
+  errorMessage   String?
+  createdAt      DateTime         @default(now())
+
+  @@index([conversationId])
+  @@index([conversationId, createdAt])
+  @@index([externalId])
+  @@map("messages")
+}
+
+/// A contact's presence on a specific channel (e.g. a Telegram user record)
+model ContactChannel {
+  id            String              @id @default(uuid())
+  channel       ConversationChannel
+  /// Contact identifier on the channel (e.g. Telegram user_id, LINE userId)
+  externalId    String
+  /// Display name from the channel
+  displayName   String?
+  avatarUrl     String?
+  /// Raw profile metadata from the channel
+  metadata      Json                @default("{}")
+  /// Link to the ERP contact (optional — set after de-duplication)
+  erpContactId  String?
+  conversations Conversation[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@unique([channel, externalId])
+  @@index([channel])
+  @@index([erpContactId])
+  @@map("contact_channels")
+}
+
+/// Operators or agents participating in a conversation
+model ConversationParticipant {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  /// User ID from the User table (operator/agent)
+  userId         String
+  /// 'operator' | 'agent' | 'bot'
+  role           String       @default("operator")
+  joinedAt       DateTime     @default(now())
+  leftAt         DateTime?
+
+  @@unique([conversationId, userId])
+  @@index([conversationId])
+  @@index([userId])
+  @@map("conversation_participants")
+}
+
+// ---------------------------------------------------------------------------
 // Notifications
 // ---------------------------------------------------------------------------
 
