@@ -3,7 +3,7 @@
 import Script from 'next/script';
 import { GA_MEASUREMENT_ID } from '@/lib/firebase';
 
-export function Analytics() {
+export function Analytics(): JSX.Element | null {
   if (!GA_MEASUREMENT_ID) return null;
 
   return (
