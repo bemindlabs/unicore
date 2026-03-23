@@ -1,6 +1,6 @@
 import { SystemTerminal } from '@/components/terminal/SystemTerminal';
 
-export default function AdminTerminalPage() {
+export default function AdminTerminalPage(): JSX.Element {
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)]">
       <div className="shrink-0 mb-4">
