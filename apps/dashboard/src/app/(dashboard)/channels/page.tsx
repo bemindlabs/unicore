@@ -13,8 +13,6 @@ import {
   Mail,
   MessageCircle,
   MessageSquare,
-  Plug,
-  Send,
   Settings2,
   Smartphone,
   Video,
@@ -68,7 +66,7 @@ const CHANNELS: ChannelDef[] = [
     id: 'telegram',
     name: 'Telegram',
     description: 'Connect a Telegram bot for AI-powered conversations',
-    icon: Send,
+    icon: MessageCircle,
     pro: true,
     webhookPath: '/api/v1/channels/telegram/webhook',
     color: 'text-sky-500',
@@ -80,7 +78,7 @@ const CHANNELS: ChannelDef[] = [
     id: 'whatsapp',
     name: 'WhatsApp Business',
     description: 'Connect WhatsApp Business API for customer messaging',
-    icon: MessageCircle,
+    icon: MessageSquare,
     pro: true,
     webhookPath: '/api/v1/channels/whatsapp/webhook',
     color: 'text-green-500',
@@ -223,16 +221,16 @@ const CHANNELS: ChannelDef[] = [
   },
 ];
 
-// ── Sparkline Bar Chart ────────────────────────────────────────────────────
+// ── Sparkline bar chart ────────────────────────────────────────────────────
 
-function SparkBar({ data, color }: { data: number[]; color: string }) {
+function SparkBar({ data, colorClass }: { data: number[]; colorClass: string }) {
   const max = Math.max(...data, 1);
   return (
     <div className="flex items-end gap-0.5 h-8">
       {data.map((v, i) => (
         <div
           key={i}
-          className={`flex-1 rounded-sm opacity-70 ${color}`}
+          className={`flex-1 rounded-sm opacity-60 ${colorClass}`}
           style={{ height: `${Math.max(4, (v / max) * 32)}px`, backgroundColor: 'currentColor' }}
         />
       ))}
@@ -240,7 +238,7 @@ function SparkBar({ data, color }: { data: number[]; color: string }) {
   );
 }
 
-// ── Seed deterministic fake stats ─────────────────────────────────────────
+// ── Deterministic fake stats ───────────────────────────────────────────────
 
 function seedStats(id: string, connected: boolean): ChannelStats {
   const hash = id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
@@ -256,28 +254,38 @@ function seedStats(id: string, connected: boolean): ChannelStats {
 
 // ── Channel Card ──────────────────────────────────────────────────────────
 
-interface ChannelCardProps {
+function ChannelCard({
+  channel,
+  stats,
+  locked,
+  onConfigure,
+  onUpgrade,
+}: {
   channel: ChannelDef;
   stats: ChannelStats;
   locked: boolean;
   onConfigure: () => void;
   onUpgrade: () => void;
-}
-
-function ChannelCard({ channel, stats, locked, onConfigure, onUpgrade }: ChannelCardProps) {
+}) {
   const Icon = channel.icon;
 
   return (
     <Card
-      className={`relative transition-all ${locked ? 'border-dashed opacity-60' : 'cursor-pointer hover:shadow-md hover:border-primary/30'}`}
+      className={`relative transition-all ${
+        locked
+          ? 'border-dashed opacity-60'
+          : 'cursor-pointer hover:shadow-md hover:border-primary/30'
+      }`}
       onClick={locked ? undefined : onConfigure}
     >
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 ${channel.color}`}>
+          <div
+            className={`flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 ${channel.color}`}
+          >
             <Icon className="h-5 w-5" />
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 flex-wrap justify-end">
             {channel.pro && (
               <Badge
                 variant="secondary"
@@ -301,7 +309,7 @@ function ChannelCard({ channel, stats, locked, onConfigure, onUpgrade }: Channel
                 ) : (
                   <XCircle className="h-2.5 w-2.5" />
                 )}
-                {stats.connected ? 'Connected' : 'Disconnected'}
+                {stats.connected ? 'Connected' : 'Off'}
               </Badge>
             )}
           </div>
@@ -321,7 +329,7 @@ function ChannelCard({ channel, stats, locked, onConfigure, onUpgrade }: Channel
               </span>
               <Settings2 className="h-3 w-3 opacity-40" />
             </div>
-            <SparkBar data={stats.weeklyData} color={channel.color} />
+            <SparkBar data={stats.weeklyData} colorClass={channel.color} />
           </>
         )}
 
@@ -330,7 +338,10 @@ function ChannelCard({ channel, stats, locked, onConfigure, onUpgrade }: Channel
             variant="outline"
             size="sm"
             className="w-full gap-1.5 border-amber-400/50 text-amber-700 hover:bg-amber-500/10 dark:text-amber-400"
-            onClick={(e) => { e.stopPropagation(); onUpgrade(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onUpgrade();
+            }}
           >
             <Lock className="h-3.5 w-3.5" />
             Available in Pro
@@ -340,7 +351,10 @@ function ChannelCard({ channel, stats, locked, onConfigure, onUpgrade }: Channel
             variant="outline"
             size="sm"
             className="w-full gap-1.5"
-            onClick={(e) => { e.stopPropagation(); onConfigure(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onConfigure();
+            }}
           >
             <Settings2 className="h-3.5 w-3.5" />
             Manage
@@ -349,7 +363,10 @@ function ChannelCard({ channel, stats, locked, onConfigure, onUpgrade }: Channel
           <Button
             size="sm"
             className="w-full gap-1.5"
-            onClick={(e) => { e.stopPropagation(); onConfigure(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onConfigure();
+            }}
           >
             <Zap className="h-3.5 w-3.5" />
             Connect
@@ -360,39 +377,44 @@ function ChannelCard({ channel, stats, locked, onConfigure, onUpgrade }: Channel
   );
 }
 
-// ── Config Dialog ─────────────────────────────────────────────────────────
+// ── Config dialog ─────────────────────────────────────────────────────────
 
-interface ConfigDialogProps {
+function ConfigDialog({
+  channel,
+  onClose,
+  onConnected,
+}: {
   channel: ChannelDef | null;
   onClose: () => void;
   onConnected: (id: string) => void;
-}
-
-function ConfigDialog({ channel, onClose, onConnected }: ConfigDialogProps) {
+}) {
   if (!channel) return null;
   const Icon = channel.icon;
 
-  const testConnection = channel.fields.length > 0
-    ? async (values: Record<string, string>) => {
-        try {
-          const res = await api.post<{ success: boolean; message: string }>(
-            `/api/v1/channels/${channel.id}/test`,
-            values,
-          );
-          if (res.success) onConnected(channel.id);
-          return res;
-        } catch (err: any) {
-          return { success: false, message: err?.message ?? 'Connection failed' };
+  const testConnection =
+    channel.fields.length > 0
+      ? async (values: Record<string, string>) => {
+          try {
+            const res = await api.post<{ success: boolean; message: string }>(
+              `/api/v1/channels/${channel.id}/test`,
+              values,
+            );
+            if (res.success) onConnected(channel.id);
+            return res;
+          } catch (err: any) {
+            return { success: false, message: err?.message ?? 'Connection failed' };
+          }
         }
-      }
-    : undefined;
+      : undefined;
 
   return (
     <Dialog open={!!channel} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-2">
-            <div className={`flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 ${channel.color}`}>
+            <div
+              className={`flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 ${channel.color}`}
+            >
               <Icon className="h-4 w-4" />
             </div>
             <DialogTitle>{channel.name}</DialogTitle>
@@ -422,15 +444,12 @@ export default function ChannelsPage() {
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [selected, setSelected] = useState<ChannelDef | null>(null);
   const [connectedIds, setConnectedIds] = useState<Set<string>>(
-    () => new Set(['web-widget', 'webhook']), // demo defaults
+    () => new Set(['web-widget', 'webhook']),
   );
 
-  // Derive stats per channel
   const statsMap = useMemo<Record<string, ChannelStats>>(
     () =>
-      Object.fromEntries(
-        CHANNELS.map((ch) => [ch.id, seedStats(ch.id, connectedIds.has(ch.id))]),
-      ),
+      Object.fromEntries(CHANNELS.map((ch) => [ch.id, seedStats(ch.id, connectedIds.has(ch.id))])),
     [connectedIds],
   );
 
@@ -463,8 +482,6 @@ export default function ChannelsPage() {
         .reduce((sum, s) => sum + s.messageCount, 0),
     [statsMap],
   );
-
-  const connectedCount = connectedIds.size;
 
   return (
     <div className="space-y-6">
@@ -501,7 +518,7 @@ export default function ChannelsPage() {
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <Card className="p-4">
           <p className="text-xs text-muted-foreground uppercase tracking-wide">Connected</p>
-          <p className="text-2xl font-bold mt-1">{connectedCount}</p>
+          <p className="text-2xl font-bold mt-1">{connectedIds.size}</p>
           <p className="text-xs text-muted-foreground">of {CHANNELS.length} channels</p>
         </Card>
         <Card className="p-4">
