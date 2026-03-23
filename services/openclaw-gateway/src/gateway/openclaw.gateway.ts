@@ -17,6 +17,7 @@ import { MessageRouterService } from '../routing/message-router.service';
 import { RateLimiterService } from '../routing/rate-limiter.service';
 import { HeartbeatService } from '../health/heartbeat.service';
 import { RouterAgent } from '../router/router.agent';
+import { getAgentLabel } from '../router/agent-labels';
 import { PtySessionManager } from '../terminal/pty-session-manager';
 import {
   IncomingMessage,
@@ -28,6 +29,14 @@ import {
 } from '../routing/interfaces/message.interface';
 import { AgentMetadata } from '../registry/interfaces/agent.interface';
 import { MessagePersistenceService } from '../persistence/message-persistence.service';
+import { HandoffNotifierService } from '../handoff/handoff-notifier.service';
+import { ConversationService } from '../conversations/conversation.service';
+import {
+  ConversationNewMessage,
+  ConversationMessageEvent,
+  ConversationAssignedMessage,
+  ConversationTypingMessage,
+} from '../routing/interfaces/message.interface';
 
 // Extend the WebSocket type to carry our correlation id and auth context
 interface TrackedSocket extends WebSocket {
@@ -60,6 +69,8 @@ export class OpenClawGateway
     private readonly routerAgent: RouterAgent,
     private readonly ptyManager: PtySessionManager,
     private readonly persistence: MessagePersistenceService,
+    private readonly handoffNotifier: HandoffNotifierService,
+    private readonly conversationService: ConversationService,
   ) {}
 
   onModuleInit(): void {
@@ -145,6 +156,10 @@ export class OpenClawGateway
             case 'pty:input':          this.handlePtyInput(socket, msg as PtyMessage); break;
             case 'pty:resize':         this.handlePtyResize(socket, msg as PtyMessage); break;
             case 'pty:destroy':        this.handlePtyDestroy(socket, msg as PtyMessage); break;
+            case 'conversation:new':       this.handleConversationNew(socket, msg as ConversationNewMessage); break;
+            case 'conversation:message':   this.handleConversationMessage(socket, msg as ConversationMessageEvent); break;
+            case 'conversation:assigned':  this.handleConversationAssigned(socket, msg as ConversationAssignedMessage); break;
+            case 'conversation:typing':    this.handleConversationTyping(socket, msg as ConversationTypingMessage); break;
             default:
               socket.send(JSON.stringify({
                 type: 'system:error',
@@ -379,6 +394,8 @@ export class OpenClawGateway
   /**
    * Process a chat message through the RouterAgent and publish the response
    * back to the originating channel so the dashboard receives it.
+   * Includes handoff detection: escalates to human when confidence is low
+   * or the user explicitly requests a human agent.
    */
   private async processChat(
     text: string,
@@ -388,27 +405,58 @@ export class OpenClawGateway
   ): Promise<void> {
     const result = await this.routerAgent.process(text, sessionId, userId);
 
+    const targetAgent = result.decision.targetAgent ?? 'router';
+    const agentLabel = getAgentLabel(targetAgent);
+    const confidence = result.decision.classification?.confidence ?? 1;
+    const intent = result.decision.classification?.intent ?? 'unknown';
+
+    // --- Handoff detection ---
+    const handoffTrigger = this.handoffNotifier.detectTrigger(text, confidence);
+    let handoffData: { id: string; slaDeadline: string; trigger: string } | null = null;
+
+    if (handoffTrigger) {
+      const summary = this.handoffNotifier.buildContextSummary(
+        text,
+        result.response.content,
+        intent,
+        confidence,
+      );
+      const created = await this.handoffNotifier.createHandoff({
+        channel,
+        userId,
+        trigger: handoffTrigger,
+        confidence,
+        contextSummary: summary,
+      });
+      if (created) {
+        handoffData = { id: created.id, slaDeadline: created.slaDeadline, trigger: created.trigger };
+      }
+    }
+
     const responseMessage: IncomingMessage = {
       type: 'message:publish',
       messageId: uuidv4(),
       timestamp: new Date().toISOString(),
       payload: {
-        fromAgentId: result.decision.targetAgent ?? 'router',
+        fromAgentId: targetAgent,
         channel,
         data: {
           id: uuidv4(),
           text: result.response.content,
-          author: result.decision.targetAgent
-            ? `${result.decision.targetAgent.charAt(0).toUpperCase()}${result.decision.targetAgent.slice(1)} Agent`
-            : 'Router Agent',
-          authorId: result.decision.targetAgent ?? 'router',
+          author: agentLabel.displayName,
+          authorIcon: agentLabel.icon,
+          authorId: targetAgent,
           authorType: 'agent',
+          agentLabel: { displayName: agentLabel.displayName, icon: agentLabel.icon },
           channel,
           timestamp: new Date().toISOString(),
           metadata: {
             processingTimeMs: result.processingTimeMs,
-            intent: result.decision.classification?.intent,
-            confidence: result.decision.classification?.confidence,
+            intent,
+            confidence,
+            mentionRouted: result.decision.mentionRouted ?? false,
+            // Include handoff info in message metadata so the dashboard can show the banner
+            handoff: handoffData ?? undefined,
           },
         },
       },
@@ -515,6 +563,86 @@ export class OpenClawGateway
       },
     };
     this.send(client, pong);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Conversation event handlers (UNC-1025)
+  // ---------------------------------------------------------------------------
+
+  @SubscribeMessage('conversation:new')
+  handleConversationNew(
+    @ConnectedSocket() client: WebSocket,
+    @MessageBody() message: ConversationNewMessage,
+  ): void {
+    const { conversationId, agentId, userId, channel, metadata } = message.payload;
+    const agentChannel = `conversation-${agentId}`;
+
+    this.conversationService
+      .create(conversationId, agentId, userId, channel, metadata)
+      .then(() => {
+        const envelope = JSON.stringify(message);
+        this.router.routePublish(agentChannel, 'system', envelope, (socketId, data) =>
+          this.sendToSocket(socketId, data),
+        );
+        this.send(client, this.ack(message.messageId, { conversationId }));
+      })
+      .catch((err) => {
+        this.logger.error(`conversation:new failed: ${String(err)}`);
+        this.send(client, this.error(message.messageId, 'CONVERSATION_ERROR', String(err)));
+      });
+  }
+
+  @SubscribeMessage('conversation:message')
+  handleConversationMessage(
+    @ConnectedSocket() client: WebSocket,
+    @MessageBody() message: ConversationMessageEvent,
+  ): void {
+    const { conversationId, agentId, fromId } = message.payload;
+    const agentChannel = `conversation-${agentId}`;
+
+    const envelope = JSON.stringify(message);
+    const count = this.router.routePublish(agentChannel, fromId, envelope, (socketId, data) =>
+      this.sendToSocket(socketId, data),
+    );
+    this.send(client, this.ack(message.messageId, { conversationId, deliveredTo: count }));
+  }
+
+  @SubscribeMessage('conversation:assigned')
+  handleConversationAssigned(
+    @ConnectedSocket() client: WebSocket,
+    @MessageBody() message: ConversationAssignedMessage,
+  ): void {
+    const { conversationId, agentId, assignedTo, assignedToName } = message.payload;
+    const agentChannel = `conversation-${agentId}`;
+
+    this.conversationService
+      .assign(conversationId, assignedTo, assignedToName)
+      .then(() => {
+        const envelope = JSON.stringify(message);
+        this.router.routePublish(agentChannel, 'system', envelope, (socketId, data) =>
+          this.sendToSocket(socketId, data),
+        );
+        this.send(client, this.ack(message.messageId, { conversationId, assignedTo }));
+      })
+      .catch((err) => {
+        this.logger.error(`conversation:assigned failed: ${String(err)}`);
+        this.send(client, this.error(message.messageId, 'CONVERSATION_ERROR', String(err)));
+      });
+  }
+
+  @SubscribeMessage('conversation:typing')
+  handleConversationTyping(
+    @ConnectedSocket() client: WebSocket,
+    @MessageBody() message: ConversationTypingMessage,
+  ): void {
+    const { conversationId, agentId, fromId } = message.payload;
+    const agentChannel = `conversation-${agentId}`;
+
+    const envelope = JSON.stringify(message);
+    const count = this.router.routePublish(agentChannel, fromId, envelope, (socketId, data) =>
+      this.sendToSocket(socketId, data),
+    );
+    this.send(client, this.ack(message.messageId, { conversationId, deliveredTo: count }));
   }
 
   // ---------------------------------------------------------------------------

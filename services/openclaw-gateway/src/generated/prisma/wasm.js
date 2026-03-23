@@ -102,6 +102,19 @@ exports.Prisma.ChatMessageScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.ConversationScalarFieldEnum = {
+  id: 'id',
+  agentId: 'agentId',
+  userId: 'userId',
+  userChannel: 'userChannel',
+  status: 'status',
+  assignedTo: 'assignedTo',
+  assignedName: 'assignedName',
+  metadata: 'metadata',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -122,9 +135,15 @@ exports.Prisma.JsonNullValueFilter = {
   AnyNull: Prisma.AnyNull
 };
 
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
+
 
 exports.Prisma.ModelName = {
-  ChatMessage: 'ChatMessage'
+  ChatMessage: 'ChatMessage',
+  Conversation: 'Conversation'
 };
 /**
  * Create the Client
@@ -173,13 +192,13 @@ const config = {
       }
     }
   },
-  "inlineSchema": "datasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/generated/prisma\"\n}\n\n// Individual persisted WebSocket messages for history, replay, and dashboard load.\nmodel ChatMessage {\n  id          String   @id @default(uuid())\n  messageId   String   @unique\n  channel     String\n  fromAgentId String\n  data        Json     @default(\"{}\")\n  createdAt   DateTime @default(now())\n\n  @@index([channel])\n  @@index([channel, createdAt])\n  @@index([fromAgentId])\n  @@map(\"chat_messages\")\n}\n",
-  "inlineSchemaHash": "5cd359e71c7e4a93a8cd70d65fd51c15e71ddd4dcbce685ad612d1d54ea84522",
+  "inlineSchema": "datasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/generated/prisma\"\n}\n\n// Individual persisted WebSocket messages for history, replay, and dashboard load.\nmodel ChatMessage {\n  id          String   @id @default(uuid())\n  messageId   String   @unique\n  channel     String\n  fromAgentId String\n  data        Json     @default(\"{}\")\n  createdAt   DateTime @default(now())\n\n  @@index([channel])\n  @@index([channel, createdAt])\n  @@index([fromAgentId])\n  @@map(\"chat_messages\")\n}\n\n// Conversation records for the Omni-Channel Conversation Hub (UNC-1025).\n// Tracks WebSocket-level conversation lifecycle per agent.\nmodel Conversation {\n  id           String   @id @default(uuid())\n  agentId      String\n  userId       String\n  userChannel  String\n  // OPEN | ASSIGNED | RESOLVED | CLOSED\n  status       String   @default(\"OPEN\")\n  assignedTo   String?\n  assignedName String?\n  metadata     Json     @default(\"{}\")\n  createdAt    DateTime @default(now())\n  updatedAt    DateTime @updatedAt\n\n  @@index([agentId])\n  @@index([userId])\n  @@index([status])\n  @@index([agentId, status])\n  @@map(\"conversations\")\n}\n",
+  "inlineSchemaHash": "974328d53dd110c4cd65a265db48b3ca140f688c6a6e1f417daa160942c44b2f",
   "copyEngine": true
 }
 config.dirname = '/'
 
-config.runtimeDataModel = JSON.parse("{\"models\":{\"ChatMessage\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"messageId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"channel\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"fromAgentId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"data\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":\"chat_messages\"}},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"ChatMessage\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"messageId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"channel\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"fromAgentId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"data\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":\"chat_messages\"},\"Conversation\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"agentId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userChannel\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"status\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"assignedTo\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"assignedName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"metadata\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":\"conversations\"}},\"enums\":{},\"types\":{}}")
 defineDmmfProperty(exports.Prisma, config.runtimeDataModel)
 config.engineWasm = {
   getRuntime: async () => require('./query_engine_bg.js'),

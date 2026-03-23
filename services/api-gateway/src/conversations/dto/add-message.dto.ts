@@ -1,26 +1,24 @@
-import { IsString, IsOptional, MaxLength, IsIn } from 'class-validator';
+import { IsString, IsOptional, MaxLength } from 'class-validator';
 
 export class AddMessageDto {
   @IsString()
-  @MaxLength(10000)
+  @MaxLength(50000)
   content!: string;
 
-  @IsOptional()
   @IsString()
-  @IsIn(['user', 'agent', 'system'])
+  @IsOptional()
   role?: string;
 
-  @IsOptional()
   @IsString()
+  @IsOptional()
   authorId?: string;
 
-  @IsOptional()
   @IsString()
+  @IsOptional()
   @MaxLength(200)
   authorName?: string;
 
-  @IsOptional()
   @IsString()
-  @IsIn(['human', 'agent', 'system'])
+  @IsOptional()
   authorType?: string;
 }

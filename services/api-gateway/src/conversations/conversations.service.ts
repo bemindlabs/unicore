@@ -1,8 +1,29 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { UpdateConversationDto } from './dto/update-conversation.dto';
 import { AddMessageDto } from './dto/add-message.dto';
+import { InviteParticipantDto, InviteParticipantType } from './dto/invite-participant.dto';
+
+// Known agent types for /invite @<agentType> command resolution
+const AGENT_TYPE_MAP: Record<string, { id: string; name: string }> = {
+  finance:     { id: 'finance-agent',     name: 'Finance Agent' },
+  crm:         { id: 'crm-agent',         name: 'CRM Agent' },
+  erp:         { id: 'erp-agent',         name: 'ERP Agent' },
+  support:     { id: 'support-agent',     name: 'Support Agent' },
+  sales:       { id: 'sales-agent',       name: 'Sales Agent' },
+  marketing:   { id: 'marketing-agent',   name: 'Marketing Agent' },
+  router:      { id: 'router-agent',      name: 'Router Agent' },
+  inventory:   { id: 'inventory-agent',   name: 'Inventory Agent' },
+  billing:     { id: 'billing-agent',     name: 'Billing Agent' },
+};
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
   OPEN:     ['ASSIGNED', 'PENDING', 'CLOSED'],
@@ -14,19 +35,42 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
 
 @Injectable()
 export class ConversationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(ConversationsService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly config: ConfigService,
+  ) {}
+
+  // ─── Conversations CRUD ───────────────────────────────────────────────────────
 
   async create(userId: string, dto: CreateConversationDto) {
     const conversation = await this.prisma.conversation.create({
       data: {
         title: dto.title,
-        channel: dto.channel ?? 'web',
+        channel: (dto.channel ?? 'LIVE_CHAT') as any,
         userId,
         contactId: dto.contactId,
         contactName: dto.contactName,
         contactEmail: dto.contactEmail,
       },
-      include: { messages: true },
+      include: {
+        messages: true,
+        participants: true,
+      },
+    });
+
+    // Auto-add the creating user as OWNER participant
+    await this.prisma.conversationParticipant.create({
+      data: {
+        conversationId: conversation.id,
+        participantId: userId,
+        participantType: 'USER',
+        participantName: 'User',
+        role: 'OWNER',
+        autoAssigned: false,
+        invitedBy: null,
+      },
     });
 
     if (dto.initialMessage) {
@@ -96,7 +140,7 @@ export class ConversationsService {
           closedAt: true,
           createdAt: true,
           updatedAt: true,
-          _count: { select: { messages: true } },
+          _count: { select: { messages: true, participants: true } },
         },
       }),
       this.prisma.conversation.count({ where }),
@@ -111,10 +155,13 @@ export class ConversationsService {
     };
   }
 
-  async findOne(id: string, userId?: string) {
+  async findOne(id: string, _userId?: string) {
     const conversation = await this.prisma.conversation.findUnique({
       where: { id },
-      include: { messages: { orderBy: { createdAt: 'asc' } } },
+      include: {
+        messages: { orderBy: { createdAt: 'asc' } },
+        participants: { orderBy: { joinedAt: 'asc' } },
+      },
     });
     if (!conversation) throw new NotFoundException(`Conversation ${id} not found`);
     return conversation;
@@ -129,7 +176,10 @@ export class ConversationsService {
         ...(dto.assigneeId !== undefined && { assigneeId: dto.assigneeId }),
         ...(dto.assigneeName !== undefined && { assigneeName: dto.assigneeName }),
       },
-      include: { messages: { orderBy: { createdAt: 'asc' } } },
+      include: {
+        messages: { orderBy: { createdAt: 'asc' } },
+        participants: { orderBy: { joinedAt: 'asc' } },
+      },
     });
   }
 
@@ -137,12 +187,11 @@ export class ConversationsService {
     await this.findOne(id);
     return this.prisma.conversation.update({
       where: { id },
-      data: {
-        assigneeId,
-        assigneeName,
-        status: 'ASSIGNED',
+      data: { assigneeId, assigneeName, status: 'ASSIGNED' },
+      include: {
+        messages: { orderBy: { createdAt: 'asc' } },
+        participants: { orderBy: { joinedAt: 'asc' } },
       },
-      include: { messages: { orderBy: { createdAt: 'asc' } } },
     });
   }
 
@@ -164,7 +213,10 @@ export class ConversationsService {
     return this.prisma.conversation.update({
       where: { id },
       data,
-      include: { messages: { orderBy: { createdAt: 'asc' } } },
+      include: {
+        messages: { orderBy: { createdAt: 'asc' } },
+        participants: { orderBy: { joinedAt: 'asc' } },
+      },
     });
   }
 
@@ -217,4 +269,294 @@ export class ConversationsService {
     await this.findOne(id);
     await this.prisma.conversation.delete({ where: { id } });
   }
+
+  // ─── Participant Management ───────────────────────────────────────────────────
+
+  async listParticipants(conversationId: string) {
+    await this.findOne(conversationId);
+    return this.prisma.conversationParticipant.findMany({
+      where: { conversationId, leftAt: null },
+      orderBy: { joinedAt: 'asc' },
+    });
+  }
+
+  async inviteParticipant(
+    conversationId: string,
+    dto: InviteParticipantDto,
+    invitedBy: string,
+  ) {
+    await this.findOne(conversationId);
+
+    // Check for duplicate active participant
+    const existing = await this.prisma.conversationParticipant.findFirst({
+      where: {
+        conversationId,
+        participantId: dto.participantId,
+        participantType: dto.participantType,
+        leftAt: null,
+      },
+    });
+
+    if (existing) {
+      throw new ConflictException(
+        `${dto.participantType} "${dto.participantId}" is already a participant`,
+      );
+    }
+
+    const participant = await this.prisma.conversationParticipant.create({
+      data: {
+        conversationId,
+        participantId: dto.participantId,
+        participantType: dto.participantType,
+        participantName: dto.participantName,
+        participantColor: dto.participantColor ?? '#6366f1',
+        role: 'MEMBER',
+        autoAssigned: dto.autoAssigned ?? false,
+        invitedBy,
+      },
+    });
+
+    await this.prisma.conversation.update({
+      where: { id: conversationId },
+      data: { updatedAt: new Date() },
+    });
+
+    return participant;
+  }
+
+  async removeParticipant(conversationId: string, participantId: string) {
+    await this.findOne(conversationId);
+
+    const participant = await this.prisma.conversationParticipant.findFirst({
+      where: { conversationId, participantId, leftAt: null },
+    });
+
+    if (!participant) {
+      throw new NotFoundException(
+        `Participant "${participantId}" not found in conversation ${conversationId}`,
+      );
+    }
+
+    return this.prisma.conversationParticipant.update({
+      where: { id: participant.id },
+      data: { leftAt: new Date(), isActive: false },
+    });
+  }
+
+  /** UNC-1031: Update participantColor for a participant */
+  async updateParticipant(
+    conversationId: string,
+    participantId: string,
+    dto: { participantColor?: string },
+  ) {
+    await this.findOne(conversationId);
+
+    const participant = await this.prisma.conversationParticipant.findFirst({
+      where: { conversationId, participantId, leftAt: null },
+    });
+
+    if (!participant) {
+      throw new NotFoundException(
+        `Participant "${participantId}" not found in conversation ${conversationId}`,
+      );
+    }
+
+    return this.prisma.conversationParticipant.update({
+      where: { id: participant.id },
+      data: {
+        ...(dto.participantColor !== undefined && { participantColor: dto.participantColor }),
+      },
+    });
+  }
+
+  /**
+   * Parse and execute /invite @agentType commands.
+   *
+   * Format: `/invite @<agentType>` (e.g. `/invite @finance`)
+   * Returns the created participant or throws if the agent type is unknown.
+   */
+  async processInviteCommand(
+    conversationId: string,
+    command: string,
+    invitedBy: string,
+  ) {
+    const match = command.trim().match(/^\/invite\s+@(\w+)/i);
+    if (!match) {
+      throw new BadRequestException(
+        'Invalid invite command. Format: /invite @agentType',
+      );
+    }
+
+    const agentType = match[1].toLowerCase();
+    const agentDef = AGENT_TYPE_MAP[agentType];
+
+    if (!agentDef) {
+      throw new BadRequestException(
+        `Unknown agent type "@${agentType}". Available: ${Object.keys(AGENT_TYPE_MAP).join(', ')}`,
+      );
+    }
+
+    return this.inviteParticipant(
+      conversationId,
+      {
+        participantId: agentDef.id,
+        participantType: InviteParticipantType.AGENT,
+        participantName: agentDef.name,
+        autoAssigned: false,
+      },
+      invitedBy,
+    );
+  }
+
+  /**
+   * Auto-assign agents to a conversation via Router Agent logic.
+   * Determines the best agent(s) based on conversation channel and metadata.
+   */
+  async autoAssign(conversationId: string, userId: string) {
+    const conversation = await this.findOne(conversationId);
+
+    // Determine default agent based on channel
+    const channelAgentMap: Record<string, string> = {
+      telegram: 'support-agent',
+      whatsapp: 'support-agent',
+      line:     'support-agent',
+      email:    'crm-agent',
+      web:      'router-agent',
+      chat:     'router-agent',
+    };
+
+    const defaultAgentId = channelAgentMap[conversation.channel] ?? 'router-agent';
+    const agentName =
+      Object.values(AGENT_TYPE_MAP).find((a) => a.id === defaultAgentId)?.name ??
+      'Router Agent';
+
+    // Skip if already assigned
+    const already = await this.prisma.conversationParticipant.findFirst({
+      where: { conversationId, participantType: 'AGENT', leftAt: null },
+    });
+
+    if (already) return already;
+
+    return this.inviteParticipant(
+      conversationId,
+      {
+        participantId: defaultAgentId,
+        participantType: InviteParticipantType.AGENT,
+        participantName: agentName,
+        autoAssigned: true,
+      },
+      userId,
+    );
+  }
+
+  // ─── Auto-Respond (UNC-1021) ─────────────────────────────────────────────────
+
+  /**
+   * Toggle the conversation-level auto-respond flag.
+   * When true, any inbound message triggers the Router Agent automatically.
+   */
+  async setAutoRespond(id: string, autoRespond: boolean) {
+    await this.findOne(id);
+    return this.prisma.conversation.update({
+      where: { id },
+      data: { autoRespond },
+      select: { id: true, autoRespond: true },
+    });
+  }
+
+  /**
+   * Handle auto-respond for an inbound message.
+   *
+   * Flow:
+   *   1. Check that conversation.autoRespond === true.
+   *   2. Call OpenClaw Router Agent via HTTP to get AI response.
+   *   3. Save AI response as a ConversationMessage with isAiGenerated=true.
+   *   4. Return the persisted AI message.
+   */
+  async handleAutoRespond(
+    conversationId: string,
+    inboundText: string,
+    senderId: string,
+  ) {
+    const conversation = await this.prisma.conversation.findUnique({
+      where: { id: conversationId },
+      select: { id: true, autoRespond: true, externalId: true, channel: true },
+    });
+
+    if (!conversation || !conversation.autoRespond) return null;
+
+    // ── Call OpenClaw RouterAgent ───────────────────────────────────────────
+    const aiText = await this.callRouterAgent(conversationId, inboundText, senderId);
+    if (!aiText) return null;
+
+    // ── Persist AI response as ConversationMessage ──────────────────────────
+    const aiMessage = await this.prisma.conversationMessage.create({
+      data: {
+        conversationId,
+        content: aiText,
+        role: 'assistant',
+        authorId: 'router-agent',
+        authorName: 'Router Agent',
+        authorType: 'agent',
+      },
+    });
+
+    await this.prisma.conversation.update({
+      where: { id: conversationId },
+      data: { updatedAt: new Date() },
+    });
+
+    this.logger.log(
+      `Auto-respond: conversationId=${conversationId} AI message saved id=${aiMessage.id}`,
+    );
+
+    return aiMessage;
+  }
+
+  /**
+   * Forward a message to the OpenClaw Router Agent via HTTP and return the text response.
+   * Returns null on failure (graceful degradation).
+   */
+  private async callRouterAgent(
+    conversationId: string,
+    text: string,
+    userId: string,
+  ): Promise<string | null> {
+    const host = this.config.get<string>('OPENCLAW_SERVICE_HOST', 'unicore-openclaw-gateway');
+    const port = this.config.get<string>('OPENCLAW_SERVICE_PORT', '18790');
+    const url = `http://${host}:${port}/api/v1/channels/inbound`;
+
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Internal-Service': process.env['INTERNAL_SERVICE_SECRET'] ?? 'internal',
+        },
+        body: JSON.stringify({
+          conversationId,
+          senderId: userId,
+          senderName: userId,
+          text,
+          channel: 'web',
+          timestamp: new Date().toISOString(),
+        }),
+      });
+
+      if (!res.ok) {
+        this.logger.warn(`OpenClaw Router returned ${res.status} for conversationId=${conversationId}`);
+        return null;
+      }
+
+      const body = (await res.json()) as { response?: string; text?: string };
+      return body.response ?? body.text ?? null;
+    } catch (err: unknown) {
+      this.logger.warn(
+        `Auto-respond: OpenClaw call failed for conversationId=${conversationId}: ` +
+          `${err instanceof Error ? err.message : String(err)}`,
+      );
+      return null;
+    }
+  }
+
 }

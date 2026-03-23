@@ -213,6 +213,12 @@ exports.Prisma.ChatHistoryScalarFieldEnum = {
   messages: 'messages',
   summary: 'summary',
   channel: 'channel',
+  aiSummary: 'aiSummary',
+  sentimentOverall: 'sentimentOverall',
+  messageSentiments: 'messageSentiments',
+  intentHistory: 'intentHistory',
+  keyEntities: 'keyEntities',
+  intelligenceAt: 'intelligenceAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -279,19 +285,37 @@ exports.Prisma.PluginInstallationScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ContactChannelScalarFieldEnum = {
+  id: 'id',
+  channel: 'channel',
+  externalId: 'externalId',
+  displayName: 'displayName',
+  avatarUrl: 'avatarUrl',
+  metadata: 'metadata',
+  erpContactId: 'erpContactId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.ConversationScalarFieldEnum = {
   id: 'id',
-  title: 'title',
-  status: 'status',
   channel: 'channel',
-  assigneeId: 'assigneeId',
+  status: 'status',
+  subject: 'subject',
+  title: 'title',
+  userId: 'userId',
   assigneeName: 'assigneeName',
   contactId: 'contactId',
   contactName: 'contactName',
   contactEmail: 'contactEmail',
-  userId: 'userId',
-  metadata: 'metadata',
+  externalId: 'externalId',
+  assigneeId: 'assigneeId',
+  autoRespond: 'autoRespond',
+  contactChannelId: 'contactChannelId',
+  resolvedAt: 'resolvedAt',
   closedAt: 'closedAt',
+  lastMessageAt: 'lastMessageAt',
+  metadata: 'metadata',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -308,16 +332,21 @@ exports.Prisma.ConversationMessageScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
-exports.Prisma.OutboundMessageScalarFieldEnum = {
+exports.Prisma.MessageScalarFieldEnum = {
   id: 'id',
   conversationId: 'conversationId',
-  channelType: 'channelType',
-  text: 'text',
-  recipientId: 'recipientId',
-  fromAgentId: 'fromAgentId',
+  direction: 'direction',
+  type: 'type',
+  content: 'content',
+  attachments: 'attachments',
   externalId: 'externalId',
-  status: 'status',
-  error: 'error',
+  sender: 'sender',
+  isRead: 'isRead',
+  readAt: 'readAt',
+  deliveredAt: 'deliveredAt',
+  failedAt: 'failedAt',
+  errorMessage: 'errorMessage',
+  isAiGenerated: 'isAiGenerated',
   metadata: 'metadata',
   createdAt: 'createdAt'
 };
@@ -328,21 +357,33 @@ exports.Prisma.ConversationParticipantScalarFieldEnum = {
   participantId: 'participantId',
   participantType: 'participantType',
   participantName: 'participantName',
+  participantColor: 'participantColor',
   role: 'role',
   autoAssigned: 'autoAssigned',
   invitedBy: 'invitedBy',
+  isActive: 'isActive',
   joinedAt: 'joinedAt',
-  leftAt: 'leftAt'
+  leftAt: 'leftAt',
+  updatedAt: 'updatedAt'
 };
 
-exports.Prisma.CannedResponseScalarFieldEnum = {
+exports.Prisma.ChannelMessageScalarFieldEnum = {
   id: 'id',
-  shortcut: 'shortcut',
+  channel: 'channel',
+  externalId: 'externalId',
+  conversationId: 'conversationId',
+  senderId: 'senderId',
+  senderName: 'senderName',
+  senderAvatar: 'senderAvatar',
   text: 'text',
-  category: 'category',
-  createdBy: 'createdBy',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  contentType: 'contentType',
+  attachments: 'attachments',
+  replyToId: 'replyToId',
+  isBot: 'isBot',
+  timestamp: 'timestamp',
+  metadata: 'metadata',
+  rawPayload: 'rawPayload',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.NotificationScalarFieldEnum = {
@@ -375,23 +416,12 @@ exports.Prisma.HandoffScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.AgentNoteScalarFieldEnum = {
+exports.Prisma.CannedResponseScalarFieldEnum = {
   id: 'id',
-  contactId: 'contactId',
-  authorId: 'authorId',
-  authorName: 'authorName',
-  body: 'body',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
-exports.Prisma.ContactChannelScalarFieldEnum = {
-  id: 'id',
-  contactId: 'contactId',
-  channel: 'channel',
-  channelUserId: 'channelUserId',
-  displayName: 'displayName',
-  isActive: 'isActive',
+  shortcut: 'shortcut',
+  text: 'text',
+  category: 'category',
+  createdBy: 'createdBy',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -428,22 +458,42 @@ exports.Role = exports.$Enums.Role = {
   VIEWER: 'VIEWER'
 };
 
+exports.ConversationChannel = exports.$Enums.ConversationChannel = {
+  TELEGRAM: 'TELEGRAM',
+  LINE: 'LINE',
+  FACEBOOK: 'FACEBOOK',
+  INSTAGRAM: 'INSTAGRAM',
+  WHATSAPP: 'WHATSAPP',
+  SLACK: 'SLACK',
+  DISCORD: 'DISCORD',
+  EMAIL: 'EMAIL',
+  SMS: 'SMS',
+  LIVE_CHAT: 'LIVE_CHAT'
+};
+
 exports.ConversationStatus = exports.$Enums.ConversationStatus = {
   OPEN: 'OPEN',
-  ASSIGNED: 'ASSIGNED',
   PENDING: 'PENDING',
+  ASSIGNED: 'ASSIGNED',
   RESOLVED: 'RESOLVED',
   CLOSED: 'CLOSED'
 };
 
-exports.ParticipantType = exports.$Enums.ParticipantType = {
-  USER: 'USER',
-  AGENT: 'AGENT'
+exports.MessageDirection = exports.$Enums.MessageDirection = {
+  INBOUND: 'INBOUND',
+  OUTBOUND: 'OUTBOUND'
 };
 
-exports.ParticipantRole = exports.$Enums.ParticipantRole = {
-  OWNER: 'OWNER',
-  MEMBER: 'MEMBER'
+exports.MessageType = exports.$Enums.MessageType = {
+  TEXT: 'TEXT',
+  IMAGE: 'IMAGE',
+  FILE: 'FILE',
+  AUDIO: 'AUDIO',
+  VIDEO: 'VIDEO',
+  STICKER: 'STICKER',
+  LOCATION: 'LOCATION',
+  TEMPLATE: 'TEMPLATE',
+  SYSTEM: 'SYSTEM'
 };
 
 exports.Prisma.ModelName = {
@@ -460,15 +510,15 @@ exports.Prisma.ModelName = {
   Plugin: 'Plugin',
   PluginVersion: 'PluginVersion',
   PluginInstallation: 'PluginInstallation',
+  ContactChannel: 'ContactChannel',
   Conversation: 'Conversation',
   ConversationMessage: 'ConversationMessage',
-  OutboundMessage: 'OutboundMessage',
+  Message: 'Message',
   ConversationParticipant: 'ConversationParticipant',
-  CannedResponse: 'CannedResponse',
+  ChannelMessage: 'ChannelMessage',
   Notification: 'Notification',
   Handoff: 'Handoff',
-  AgentNote: 'AgentNote',
-  ContactChannel: 'ContactChannel'
+  CannedResponse: 'CannedResponse'
 };
 
 /**

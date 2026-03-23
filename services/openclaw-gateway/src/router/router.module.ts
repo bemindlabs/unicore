@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { RouterAgent } from './router.agent';
 import { IntentClassifierService } from './intent-classifier.service';
 import { DelegationService } from './delegation.service';
+import { MentionParserService } from './mention-parser.service';
 import { LLM_CLIENT } from '../common/llm-client.interface';
 import { MockLlmClient } from '../common/mock-llm-client';
 import { AgentsModule } from '../agents/agents.module';
@@ -33,8 +34,9 @@ import { AgentsModule } from '../agents/agents.module';
     // Router infrastructure
     IntentClassifierService,
     DelegationService,
+    MentionParserService,
     RouterAgent,
   ],
-  exports: [RouterAgent, DelegationService, AgentsModule],
+  exports: [RouterAgent, DelegationService, MentionParserService, AgentsModule],
 })
 export class RouterModule {}

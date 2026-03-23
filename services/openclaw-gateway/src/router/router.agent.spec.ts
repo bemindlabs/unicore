@@ -12,6 +12,7 @@ import { ResearchAgent } from '../agents/research/research.agent';
 import { ErpAgent } from '../agents/erp/erp.agent';
 import { BuilderAgent } from '../agents/builder/builder.agent';
 import { SentinelAgent } from '../agents/sentinel/sentinel.agent';
+import { MentionParserService } from './mention-parser.service';
 
 function makeAgentStub(type: string) {
   return {
@@ -85,6 +86,7 @@ describe('RouterAgent', () => {
         { provide: ErpAgent, useValue: makeAgentStub('erp') },
         { provide: BuilderAgent, useValue: makeAgentStub('builder') },
         { provide: SentinelAgent, useValue: makeAgentStub('sentinel') },
+        MentionParserService,
       ],
     }).compile();
 
@@ -170,4 +172,64 @@ describe('RouterAgent', () => {
       );
     });
   });
+  describe('@mention routing (UNC-1028)', () => {
+    it('bypasses classifier when @mention is present', async () => {
+      await router.process('@finance what is Q3 burn rate?', 'session-1', 'user-1');
+      expect(mockClassifier.classify).not.toHaveBeenCalled();
+    });
+
+    it('delegates directly to the mentioned agent type', async () => {
+      mockDelegation.delegate.mockResolvedValueOnce({
+        response: {
+          requestId: 'test-id',
+          agentType: 'finance',
+          content: 'Q3 burn rate is $120k',
+          done: true,
+          timestamp: new Date().toISOString(),
+        },
+        decision: {
+          messageId: 'test-id',
+          classification: { intent: 'finance', confidence: 1.0, reasoning: 'Direct @mention routing to finance', alternates: [] },
+          targetAgent: 'finance',
+          isFallback: false,
+          decidedAt: new Date().toISOString(),
+        },
+      });
+      await router.process('@finance what is Q3 burn rate?', 'session-1', 'user-1');
+      expect(mockDelegation.delegate).toHaveBeenCalledWith(
+        expect.objectContaining({ content: 'what is Q3 burn rate?' }),
+        expect.objectContaining({ intent: 'finance', confidence: 1.0 }),
+        expect.any(Object),
+      );
+    });
+
+    it('sets mentionRouted: true in the routing decision', async () => {
+      const result = await router.process('@comms draft an update', 'session-1', 'user-1');
+      expect(result.decision.mentionRouted).toBe(true);
+    });
+
+    it('uses LLM classification for messages without @mention', async () => {
+      await router.process('what is revenue this month?', 'session-1', 'user-1');
+      expect(mockClassifier.classify).toHaveBeenCalledWith('what is revenue this month?');
+    });
+
+    it('strips the @mention from content passed to the agent', async () => {
+      await router.process('@erp list low stock items', 'session-1', 'user-1');
+      expect(mockDelegation.delegate).toHaveBeenCalledWith(
+        expect.objectContaining({ content: 'list low stock items' }),
+        expect.any(Object),
+        expect.any(Object),
+      );
+    });
+
+    it('routes @builder mention to builder agent', async () => {
+      await router.process('@builder create a workflow', 'session-1', 'user-1');
+      expect(mockDelegation.delegate).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({ intent: 'builder' }),
+        expect.any(Object),
+      );
+    });
+  });
+
 });

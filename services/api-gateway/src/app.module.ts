@@ -26,9 +26,12 @@ import { ChatHistoryModule } from './chat-history/chat-history.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { GamificationModule } from './gamification/gamification.module';
 import { ChannelsModule } from './channels/channels.module';
-import { HandoffModule } from './handoff/handoff.module';
+import { ConversationIntelligenceModule } from './conversation-intelligence/conversation-intelligence.module';
+import { ConversationsModule } from './conversations/conversations.module';
+import { ConversationsAnalyticsModule } from './conversations-analytics/conversations-analytics.module';
+import { ContactProfileModule } from './contact-profile/contact-profile.module';
 @Module({
-  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule, AdminModule, AuditModule, SettingsModule, TasksModule, WebhooksModule, ChatHistoryModule, NotificationsModule, GamificationModule, ChannelsModule, HandoffModule],
+  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule, AdminModule, AuditModule, SettingsModule, TasksModule, WebhooksModule, ChatHistoryModule, NotificationsModule, GamificationModule, ChannelsModule, ConversationsAnalyticsModule, ConversationsModule, ContactProfileModule, ConversationIntelligenceModule],
   controllers: [AppController],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },

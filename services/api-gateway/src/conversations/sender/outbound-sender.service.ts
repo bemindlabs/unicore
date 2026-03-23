@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ChannelsService } from '../../channels/channels.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { ConversationsGateway } from '../conversations.gateway';
 import type { OutboundResult, SendOutboundDto, SwitchChannelDto } from './dto/send-outbound.dto';
 
 /**
@@ -9,11 +10,12 @@ import type { OutboundResult, SendOutboundDto, SwitchChannelDto } from './dto/se
  *
  * Responsibilities:
  *  1. Transform a unified SendOutboundDto into a channel-specific payload.
- *  2. Delegate to ChannelsService (channel adapter) to deliver the message.
- *  3. Persist every send attempt as an OutboundMessage record.
- *  4. Notify OpenClaw gateway for real-time WebSocket fanout.
- *  5. Support channel switching (persists a channel_switch sentinel record
- *     and updates the parent Conversation.channel field).
+ *  2. Delegate to ChannelsService (channel adapter) for actual delivery.
+ *  3. Persist the send attempt as an OUTBOUND Message record.
+ *  4. Update delivery status (externalId / deliveredAt / failedAt / errorMessage).
+ *  5. Emit a real-time WebSocket event via ConversationsGateway.
+ *  6. Support channel switching (update Conversation.channel + persist a SYSTEM message).
+ *  7. Fire-and-forget notification to OpenClaw for multi-agent awareness.
  */
 @Injectable()
 export class OutboundSenderService {
@@ -22,20 +24,22 @@ export class OutboundSenderService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly channels: ChannelsService,
+    private readonly gateway: ConversationsGateway,
     private readonly config: ConfigService,
   ) {}
 
   // ─── Public API ────────────────────────────────────────────────────────────
 
   /**
-   * Send a message to a channel on behalf of a conversation.
+   * Send a message to the conversation's current channel.
    *
    * Flow:
-   *   1. Verify the conversation exists.
-   *   2. Resolve effective channelType (dto.channelType or conversation.channel).
-   *   3. Delegate to ChannelsService.send().
-   *   4. Persist OutboundMessage.
-   *   5. Fire-and-forget notification to OpenClaw.
+   *   1. Verify conversation exists — throw NotFoundException if not.
+   *   2. Create OUTBOUND Message record (status = pending in metadata).
+   *   3. Call ChannelsService.send() to deliver on the channel.
+   *   4. Update Message with delivery result (externalId / deliveredAt / failedAt).
+   *   5. Emit `conversation:message` WebSocket event.
+   *   6. Fire-and-forget OpenClaw notification.
    */
   async send(dto: SendOutboundDto): Promise<OutboundResult> {
     const conversation = await this.prisma.conversation.findUnique({
@@ -45,45 +49,80 @@ export class OutboundSenderService {
       throw new NotFoundException(`Conversation ${dto.conversationId} not found`);
     }
 
-    const channelType = dto.channelType || conversation.channel;
-    const recipientId = dto.recipientId;
+    const channelType = dto.channelType || String(conversation.channel).toLowerCase();
 
-    // Delegate to channel adapter
-    const sendResult = await this.channels.send(channelType, dto.conversationId, dto.text, recipientId);
-
-    // Persist the outbound message
-    const saved = await this.prisma.outboundMessage.create({
+    // ── 1. Persist OUTBOUND message record ──────────────────────────────────
+    const message = await this.prisma.message.create({
       data: {
         conversationId: dto.conversationId,
-        channelType,
-        text: dto.text,
-        recipientId: recipientId ?? null,
-        fromAgentId: dto.fromAgentId ?? null,
-        externalId: sendResult.externalId ?? null,
-        status: sendResult.success ? 'sent' : 'failed',
-        error: sendResult.error ?? null,
-        metadata: (dto.metadata ?? {}) as object,
+        direction: 'OUTBOUND' as any,
+        type: 'TEXT' as any,
+        content: dto.text,
+        sender: {
+          id: dto.fromAgentId ?? 'system',
+          name: dto.fromAgentId ? 'Agent' : 'System',
+          type: dto.fromAgentId ? 'bot' : 'operator',
+        } as object,
+        metadata: {
+          ...(dto.metadata ?? {}),
+          recipientId: dto.recipientId,
+          channelType,
+          deliveryStatus: 'pending',
+        } as object,
       },
     });
 
-    // Real-time notification (fire-and-forget)
+    // ── 2. Deliver via channel adapter ──────────────────────────────────────
+    const sendResult = await this.channels.send(channelType, dto.conversationId, dto.text, dto.recipientId);
+
+    // ── 3. Update message with delivery result ───────────────────────────────
+    const now = new Date();
+    const updated = await this.prisma.message.update({
+      where: { id: message.id },
+      data: {
+        externalId: sendResult.externalId ?? null,
+        deliveredAt: sendResult.success ? now : null,
+        failedAt: sendResult.success ? null : now,
+        errorMessage: sendResult.error ?? null,
+        metadata: {
+          ...(message.metadata as object),
+          deliveryStatus: sendResult.success ? 'delivered' : 'failed',
+        } as object,
+      },
+    });
+
+    // Update conversation's lastMessageAt
+    await this.prisma.conversation.update({
+      where: { id: dto.conversationId },
+      data: { lastMessageAt: now },
+    });
+
+    // ── 4. WebSocket real-time event ─────────────────────────────────────────
+    this.gateway.emitMessageAdded(dto.conversationId, updated);
+
+    // ── 5. OpenClaw notification (fire-and-forget) ───────────────────────────
     this.notifyOpenClaw({
       event: 'outbound_message',
       conversationId: dto.conversationId,
       channelType,
       text: dto.text,
       fromAgentId: dto.fromAgentId,
+      messageId: updated.id,
       externalId: sendResult.externalId,
-      status: sendResult.success ? 'sent' : 'failed',
-      outboundMessageId: saved.id,
-      timestamp: saved.createdAt.toISOString(),
+      status: sendResult.success ? 'delivered' : 'failed',
+      timestamp: now.toISOString(),
     });
 
+    this.logger.log(
+      `Outbound message sent: conversation=${dto.conversationId} channel=${channelType} ` +
+        `success=${sendResult.success} externalId=${sendResult.externalId ?? 'n/a'}`,
+    );
+
     return {
-      id: saved.id,
+      id: updated.id,
       success: sendResult.success,
       externalId: sendResult.externalId,
-      timestamp: sendResult.timestamp,
+      timestamp: now.toISOString(),
       error: sendResult.error,
     };
   }
@@ -91,8 +130,8 @@ export class OutboundSenderService {
   /**
    * Switch the active channel for a conversation.
    *
-   * Updates Conversation.channel, persists a channel_switch sentinel record,
-   * and notifies OpenClaw so connected clients receive the channel change.
+   * Updates Conversation.channel, creates a SYSTEM message recording the switch,
+   * and notifies connected WebSocket clients.
    */
   async switchChannel(dto: SwitchChannelDto): Promise<void> {
     const conversation = await this.prisma.conversation.findUnique({
@@ -102,50 +141,93 @@ export class OutboundSenderService {
       throw new NotFoundException(`Conversation ${dto.conversationId} not found`);
     }
 
-    const previousChannel = conversation.channel;
+    const previousChannel = String(conversation.channel);
+    const newChannel = dto.newChannelType.toUpperCase();
 
-    // Update conversation channel in a single transaction
-    await this.prisma.$transaction([
+    // Validate target channel against the enum
+    const validChannels = [
+      'TELEGRAM', 'LINE', 'FACEBOOK', 'INSTAGRAM',
+      'WHATSAPP', 'SLACK', 'DISCORD', 'EMAIL', 'SMS', 'LIVE_CHAT',
+    ];
+    if (!validChannels.includes(newChannel)) {
+      throw new NotFoundException(`Channel "${dto.newChannelType}" is not a valid ConversationChannel`);
+    }
+
+    // Atomic: update channel + insert SYSTEM message
+    const [, systemMessage] = await this.prisma.$transaction([
       this.prisma.conversation.update({
         where: { id: dto.conversationId },
-        data: { channel: dto.newChannelType },
+        data: { channel: newChannel as any },
       }),
-      this.prisma.outboundMessage.create({
+      this.prisma.message.create({
         data: {
           conversationId: dto.conversationId,
-          channelType: dto.newChannelType,
-          text: '',
-          recipientId: dto.recipientId ?? null,
-          status: 'channel_switch',
+          direction: 'OUTBOUND' as any,
+          type: 'SYSTEM' as any,
+          content: `Channel switched from ${previousChannel} to ${newChannel}`,
+          sender: { id: 'system', name: 'System', type: 'operator' } as object,
           metadata: {
             event: 'channel_switch',
             previousChannel,
-            newChannelType: dto.newChannelType,
+            newChannel,
+            recipientId: dto.recipientId,
           } as object,
         },
       }),
     ]);
 
     this.logger.log(
-      `Conversation ${dto.conversationId}: channel switched ${previousChannel} → ${dto.newChannelType}`,
+      `Conversation ${dto.conversationId}: channel switched ${previousChannel} → ${newChannel}`,
     );
 
-    // Notify OpenClaw
+    // WebSocket notification
+    this.gateway.emitConversationUpdated(dto.conversationId, {
+      channel: newChannel,
+      channelSwitch: { previousChannel, newChannel },
+    });
+    this.gateway.emitMessageAdded(dto.conversationId, systemMessage);
+
+    // OpenClaw notification
     this.notifyOpenClaw({
       event: 'channel_switch',
       conversationId: dto.conversationId,
       previousChannel,
-      newChannelType: dto.newChannelType,
+      newChannel,
       timestamp: new Date().toISOString(),
+    });
+  }
+
+  /**
+   * Retry delivery for a previously failed outbound message.
+   */
+  async retryFailed(messageId: string): Promise<OutboundResult> {
+    const message = await this.prisma.message.findUnique({ where: { id: messageId } });
+    if (!message) {
+      throw new NotFoundException(`Message ${messageId} not found`);
+    }
+    if ((message.direction as string) !== 'OUTBOUND') {
+      throw new NotFoundException(`Message ${messageId} is not an outbound message`);
+    }
+
+    const meta = message.metadata as Record<string, unknown>;
+    const channelType = (meta['channelType'] as string) ?? 'unknown';
+    const recipientId = meta['recipientId'] as string | undefined;
+
+    return this.send({
+      conversationId: message.conversationId,
+      channelType,
+      text: message.content ?? '',
+      recipientId,
+      metadata: { retryOf: messageId },
     });
   }
 
   /**
    * List outbound messages for a conversation (newest first).
    */
-  async listForConversation(conversationId: string, limit = 50, offset = 0) {
-    return this.prisma.outboundMessage.findMany({
-      where: { conversationId },
+  async listOutbound(conversationId: string, limit = 50, offset = 0) {
+    return this.prisma.message.findMany({
+      where: { conversationId, direction: 'OUTBOUND' as any },
       orderBy: { createdAt: 'desc' },
       take: limit,
       skip: offset,
@@ -154,10 +236,6 @@ export class OutboundSenderService {
 
   // ─── Private helpers ───────────────────────────────────────────────────────
 
-  /**
-   * Post a JSON event to the OpenClaw outbound-relay endpoint.
-   * Runs fire-and-forget — failures are logged but never propagate.
-   */
   private notifyOpenClaw(payload: Record<string, unknown>): void {
     const host = this.config.get<string>('OPENCLAW_SERVICE_HOST', 'openclaw-gateway');
     const port = this.config.get<string>('OPENCLAW_SERVICE_PORT', '18790');
@@ -171,7 +249,7 @@ export class OutboundSenderService {
       },
       body: JSON.stringify(payload),
     }).catch((err: Error) =>
-      this.logger.warn(`OpenClaw outbound notify failed (${url}): ${err.message}`),
+      this.logger.warn(`OpenClaw outbound notify failed: ${err.message}`),
     );
   }
 }

@@ -31,6 +31,14 @@ export interface ChatMessage {
   timestamp: string;
   toolCalls?: ToolCallEntry[];
   suggestedActions?: SuggestedAction[];
+  metadata?: {
+    processingTimeMs?: number;
+    intent?: string;
+    confidence?: number;
+    /** Present when the AI escalated this message to a human agent */
+    handoff?: { id: string; slaDeadline: string; trigger: string };
+    [key: string]: unknown;
+  };
 }
 
 export function useChatWebSocket(

@@ -9,6 +9,7 @@ import {
   FileText,
   GitBranch,
   Globe,
+  Inbox,
   KeyRound,
   LayoutDashboard,
   MessageSquare,
@@ -24,6 +25,7 @@ import {
   UsersRound,
   Wand2,
   Zap,
+  LineChart,
 } from 'lucide-react';
 import { UserRole } from '@unicore/shared-types';
 import type { NavItem, NavSection } from '@/types/navigation';
@@ -67,11 +69,23 @@ export const menuSections: NavSection[] = [
         roles: [UserRole.Owner, UserRole.Operator],
       },
       {
+        label: 'Conversations',
+        icon: Inbox,
+        href: '/conversations',
+        roles: [UserRole.Owner, UserRole.Operator],
+      },
+      {
         label: 'All Channels',
         icon: Megaphone,
         href: '/channels',
         roles: [UserRole.Owner, UserRole.Operator],
         license: { tier: 'pro', feature: 'channels', upgradeLabel: 'Pro' },
+      },
+      {
+        label: 'Conv. Analytics',
+        icon: LineChart,
+        href: '/conversations/analytics',
+        roles: [UserRole.Owner, UserRole.Operator],
       },
     ],
   },

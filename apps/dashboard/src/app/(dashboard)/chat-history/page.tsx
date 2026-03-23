@@ -13,11 +13,15 @@ import {
   Clock,
   Filter,
   MessagesSquare,
+  UserCircle,
 } from 'lucide-react';
 import { toast, Badge, Button, Input, Skeleton } from '@unicore/ui';
 import { api } from '@/lib/api';
 import { getAgents } from '@/lib/backoffice/store';
 import type { BackofficeAgent } from '@/lib/backoffice/types';
+import { ConversationIntelligenceSidebar } from '@/components/chat-intelligence/ConversationIntelligenceSidebar';
+import { useIntelligenceStream } from '@/hooks/use-intelligence-stream';
+import { ContactProfileSidebar } from '@/components/conversations/contact-profile-sidebar';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -184,16 +188,32 @@ function MessageBubble({ msg, agentColor: color, agentName }: MessageBubbleProps
   );
 }
 
+function IntelligencePanel({ chatHistoryId }: { chatHistoryId: string }) {
+  const [token, setToken] = useState<string | null>(null);
+  useEffect(() => {
+    setToken(typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null);
+  }, []);
+  const { intelligence, loading, refresh } = useIntelligenceStream(chatHistoryId, token);
+  return (
+    <ConversationIntelligenceSidebar
+      intelligence={intelligence}
+      loading={loading}
+      onRefresh={refresh}
+    />
+  );
+}
+
 interface ConversationRowProps {
   record: ChatHistoryRecord;
   expanded: boolean;
   onToggle: () => void;
   onDelete: (id: string) => void;
+  onOpenProfile: (userName: string) => void;
   agents: BackofficeAgent[];
   deleting: boolean;
 }
 
-function ConversationRow({ record, expanded, onToggle, onDelete, agents, deleting }: ConversationRowProps) {
+function ConversationRow({ record, expanded, onToggle, onDelete, onOpenProfile, agents, deleting }: ConversationRowProps) {
   const color = agentColor(record.agentId, agents);
   const msgCount = Array.isArray(record.messages) ? record.messages.length : 0;
   const preview =
@@ -271,6 +291,18 @@ function ConversationRow({ record, expanded, onToggle, onDelete, agents, deletin
                   <span title={formatAbsolute(record.createdAt)}>{formatAbsolute(record.createdAt)}</span>
                 </div>
                 <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs gap-1 text-muted-foreground hover:text-foreground"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenProfile(record.userName);
+                    }}
+                  >
+                    <UserCircle className="h-3 w-3" />
+                    Contact Profile
+                  </Button>
                   <a
                     href={`/backoffice?agent=${record.agentId}`}
                     className="inline-flex items-center gap-1 text-xs text-primary hover:underline px-2 py-1 rounded hover:bg-primary/10 transition-colors"
@@ -294,24 +326,32 @@ function ConversationRow({ record, expanded, onToggle, onDelete, agents, deletin
                 </div>
               </div>
 
-              {/* Messages */}
-              <div className="px-4 py-4">
-                {Array.isArray(record.messages) && record.messages.length > 0 ? (
-                  <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
-                    {record.messages.map((msg, idx) => (
-                      <MessageBubble
-                        key={msg.id ?? idx}
-                        msg={msg}
-                        agentColor={color}
-                        agentName={record.agentName}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground text-center py-6">
-                    No messages in this conversation.
-                  </p>
-                )}
+              {/* Messages + Intelligence */}
+              <div className="px-4 py-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {/* Messages — takes 2/3 */}
+                <div className="lg:col-span-2">
+                  {Array.isArray(record.messages) && record.messages.length > 0 ? (
+                    <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
+                      {record.messages.map((msg, idx) => (
+                        <MessageBubble
+                          key={msg.id ?? idx}
+                          msg={msg}
+                          agentColor={color}
+                          agentName={record.agentName}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground text-center py-6">
+                      No messages in this conversation.
+                    </p>
+                  )}
+                </div>
+
+                {/* Intelligence sidebar — 1/3 */}
+                <div className="lg:col-span-1">
+                  <IntelligencePanel chatHistoryId={record.id} />
+                </div>
               </div>
             </div>
           )}
@@ -334,6 +374,25 @@ export default function ChatHistoryPage() {
   const [searchText, setSearchText] = useState('');
   const [filterAgent, setFilterAgent] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Contact profile sidebar
+  const [profileContactId, setProfileContactId] = useState<string | null>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+  // Current user id — loaded from JWT stored in localStorage
+  const [currentUserId, setCurrentUserId] = useState('');
+
+  useEffect(() => {
+    // Decode userId from stored JWT (header.payload.sig — payload is base64url)
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+      if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+        setCurrentUserId((payload as { sub?: string; id?: string }).sub ?? (payload as { sub?: string; id?: string }).id ?? '');
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   const fetchData = useCallback(async (search: string, agent: string) => {
     try {
@@ -405,6 +464,33 @@ export default function ChatHistoryPage() {
       else next.add(id);
       return next;
     });
+  }
+
+  async function handleOpenProfile(userName: string) {
+    // Search ERP contacts by userName to resolve the contactId
+    try {
+      const data = await api.get<{ items: Array<{ id: string; name: string }> }>(
+        `/api/v1/contact-profile/search?q=${encodeURIComponent(userName)}`,
+      );
+      const results = data.items ?? [];
+      if (results.length === 0) {
+        toast({
+          title: 'No contact found',
+          description: `No CRM contact matching "${userName}".`,
+          variant: 'destructive',
+        });
+        return;
+      }
+      // Use the first (best) match
+      setProfileContactId(results[0].id);
+      setProfileOpen(true);
+    } catch {
+      toast({
+        title: 'Could not load contact',
+        description: 'Make sure the ERP service is running.',
+        variant: 'destructive',
+      });
+    }
   }
 
   // Unique agent options for filter dropdown
@@ -496,12 +582,21 @@ export default function ChatHistoryPage() {
               expanded={expandedIds.has(record.id)}
               onToggle={() => toggleExpand(record.id)}
               onDelete={handleDelete}
+              onOpenProfile={handleOpenProfile}
               agents={agents}
               deleting={deletingIds.has(record.id)}
             />
           ))}
         </div>
       )}
+
+      {/* Contact profile sidebar */}
+      <ContactProfileSidebar
+        contactId={profileContactId}
+        currentUserId={currentUserId}
+        open={profileOpen}
+        onClose={() => { setProfileOpen(false); setProfileContactId(null); }}
+      />
     </div>
   );
 }

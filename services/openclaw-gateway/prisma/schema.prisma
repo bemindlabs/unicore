@@ -22,3 +22,25 @@ model ChatMessage {
   @@index([fromAgentId])
   @@map("chat_messages")
 }
+
+// Conversation records for the Omni-Channel Conversation Hub (UNC-1025).
+// Tracks WebSocket-level conversation lifecycle per agent.
+model Conversation {
+  id           String   @id @default(uuid())
+  agentId      String
+  userId       String
+  userChannel  String
+  // OPEN | ASSIGNED | RESOLVED | CLOSED
+  status       String   @default("OPEN")
+  assignedTo   String?
+  assignedName String?
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([agentId])
+  @@index([userId])
+  @@index([status])
+  @@index([agentId, status])
+  @@map("conversations")
+}
