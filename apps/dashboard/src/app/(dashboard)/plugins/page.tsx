@@ -1,7 +1,10 @@
 'use client';
 
+// Updated: 2026-03-23
+
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import { api } from '@/lib/api';
 import {
   Bot,
   Search,
