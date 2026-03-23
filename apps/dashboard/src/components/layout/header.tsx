@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bell, LogOut, Menu, Moon, Search, Sun, User } from 'lucide-react';
+import { Bell, LogOut, Menu, Moon, Search, Sun, Terminal, User } from 'lucide-react';
 import {
   Avatar,
   AvatarFallback,
