@@ -9,23 +9,23 @@ generator client {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String
-  password  String?
-  role      Role     @default(VIEWER)
-  sessions       Session[]
-  notifications  Notification[]
-  oauthAccounts  OAuthAccount[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String         @id @default(uuid())
+  email         String         @unique
+  name          String
+  password      String?
+  role          Role           @default(VIEWER)
+  sessions      Session[]
+  notifications Notification[]
+  oauthAccounts OAuthAccount[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 }
 
 model OAuthAccount {
   id                String   @id @default(uuid())
   userId            String
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  provider          String   // "google" | "github"
+  provider          String // "google" | "github"
   providerAccountId String
   email             String?
   name              String?
@@ -89,10 +89,10 @@ model AuditLog {
   timestamp  DateTime @default(now())
   userId     String?
   userEmail  String?
-  action     String   // create, update, delete, login, logout
-  resource   String   // contacts, orders, users, auth
+  action     String // create, update, delete, login, logout
+  resource   String // contacts, orders, users, auth
   resourceId String?
-  detail     String?  // e.g. "Created contact John Doe"
+  detail     String? // e.g. "Created contact John Doe"
   ip         String?
   success    Boolean  @default(true)
   createdAt  DateTime @default(now())
@@ -146,16 +146,22 @@ model Task {
 // ---------------------------------------------------------------------------
 
 model ChatHistory {
-  id        String   @id @default(uuid())
-  agentId   String
-  agentName String
-  userId    String
-  userName  String
-  messages  Json     @default("[]")
-  summary   String?
-  channel   String   @default("command")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String    @id @default(uuid())
+  agentId           String
+  agentName         String
+  userId            String
+  userName          String
+  messages          Json      @default("[]")
+  summary           String?
+  channel           String    @default("command")
+  aiSummary         String?
+  sentimentOverall  String? // 'positive' | 'neutral' | 'negative'
+  messageSentiments Json      @default("[]")
+  intentHistory     Json      @default("[]")
+  keyEntities       Json      @default("[]")
+  intelligenceAt    DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   @@index([agentId])
   @@index([userId])
@@ -182,63 +188,6 @@ model ChatMessage {
   @@index([channel, createdAt])
   @@index([fromAgentId])
   @@map("chat_messages")
-}
-
-// ---------------------------------------------------------------------------
-// Conversations (UNC-1026) — Omni-Channel Conversation Hub
-// Multi-agent conversations with participant management
-// ---------------------------------------------------------------------------
-
-enum ConversationStatus {
-  ACTIVE
-  ARCHIVED
-  CLOSED
-}
-
-enum ParticipantType {
-  USER
-  AGENT
-}
-
-enum ParticipantRole {
-  OWNER
-  MEMBER
-}
-
-model Conversation {
-  id           String                    @id @default(uuid())
-  title        String?
-  channel      String                    @default("chat")
-  status       ConversationStatus        @default(ACTIVE)
-  createdBy    String
-  participants ConversationParticipant[]
-  createdAt    DateTime                  @default(now())
-  updatedAt    DateTime                  @updatedAt
-
-  @@index([createdBy])
-  @@index([status])
-  @@index([channel])
-  @@index([createdAt])
-  @@map("conversations")
-}
-
-model ConversationParticipant {
-  id              String          @id @default(uuid())
-  conversationId  String
-  conversation    Conversation    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  participantId   String
-  participantType ParticipantType
-  participantName String
-  role            ParticipantRole @default(MEMBER)
-  autoAssigned    Boolean         @default(false)
-  invitedBy       String?
-  joinedAt        DateTime        @default(now())
-  leftAt          DateTime?
-
-  @@unique([conversationId, participantId, participantType])
-  @@index([conversationId])
-  @@index([participantId])
-  @@map("conversation_participants")
 }
 
 // ---------------------------------------------------------------------------
@@ -273,9 +222,9 @@ model Plugin {
   id            String               @id @default(uuid())
   name          String
   slug          String               @unique
-  type          String               // 'integration' | 'ai' | 'workflow' | 'ui' | 'utility'
+  type          String // 'integration' | 'ai' | 'workflow' | 'ui' | 'utility'
   author        String
-  version       String               // latest published version
+  version       String // latest published version
   description   String
   icon          String?
   downloads     Int                  @default(0)
@@ -323,52 +272,123 @@ model PluginInstallation {
 }
 
 // ---------------------------------------------------------------------------
-// Omni-Channel Conversations (UNC-1015)
+// Omni-Channel Conversation Hub (UNC-1014)
 // ---------------------------------------------------------------------------
+
+enum ConversationChannel {
+  TELEGRAM
+  LINE
+  FACEBOOK
+  INSTAGRAM
+  WHATSAPP
+  SLACK
+  DISCORD
+  EMAIL
+  SMS
+  LIVE_CHAT
+}
 
 enum ConversationStatus {
   OPEN
-  ASSIGNED
   PENDING
+  ASSIGNED
   RESOLVED
   CLOSED
 }
 
-model Conversation {
-  id           String             @id @default(uuid())
-  title        String?
-  status       ConversationStatus @default(OPEN)
-  channel      String             @default("web") // web, telegram, line, email, whatsapp, etc.
-  assigneeId   String?
-  assigneeName String?
-  contactId    String?
-  contactName  String?
-  contactEmail String?
-  userId       String
-  messages         ConversationMessage[]
-  outboundMessages OutboundMessage[]
-  metadata         Json               @default("{}")
-  closedAt     DateTime?
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  AUDIO
+  VIDEO
+  STICKER
+  LOCATION
+  TEMPLATE
+  SYSTEM
+}
 
-  @@index([status])
-  @@index([assigneeId])
-  @@index([userId])
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+/// A contact's identity on a specific messaging channel
+model ContactChannel {
+  id            String              @id @default(uuid())
+  channel       ConversationChannel
+  /// Unique identifier on the channel (e.g. Telegram user_id, LINE userId)
+  externalId    String
+  displayName   String?
+  avatarUrl     String?
+  /// Raw profile metadata from the channel
+  metadata      Json                @default("{}")
+  /// Link to an ERP contact after de-duplication
+  erpContactId  String?
+  conversations Conversation[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@unique([channel, externalId])
   @@index([channel])
-  @@index([createdAt])
+  @@index([erpContactId])
+  @@map("contact_channels")
+}
+
+/// An omni-channel conversation thread
+model Conversation {
+  id               String                    @id @default(uuid())
+  channel          ConversationChannel
+  status           ConversationStatus        @default(OPEN)
+  subject          String?
+  title            String?
+  /// The dashboard user who owns / created this conversation
+  userId           String?
+  /// Assigned operator name
+  assigneeName     String?
+  contactId        String?
+  contactName      String?
+  contactEmail     String?
+  /// External conversation/room ID from the originating channel
+  externalId       String?
+  /// Assigned operator user ID
+  assigneeId       String?
+  /// When true, inbound messages are routed to the Router Agent automatically (UNC-1021)
+  autoRespond      Boolean                   @default(false)
+  contactChannelId String?
+  contactChannel   ContactChannel?           @relation(fields: [contactChannelId], references: [id])
+  messages         Message[]
+  convMessages     ConversationMessage[]
+  participants     ConversationParticipant[]
+  resolvedAt       DateTime?
+  closedAt         DateTime?
+  lastMessageAt    DateTime?
+  metadata         Json                      @default("{}")
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+
+  @@index([channel])
+  @@index([status])
+  @@index([userId])
+  @@index([assigneeId])
+  @@index([externalId])
+  @@index([contactChannelId])
+  @@index([lastMessageAt])
   @@map("conversations")
 }
 
+/// Operator/agent messages in a conversation (simple model for dashboard hub)
 model ConversationMessage {
   id             String       @id @default(uuid())
   conversationId String
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  content        String
-  role           String       @default("user") // user, agent, system
+  content        String?
+  /// 'user' | 'assistant' | 'system'
+  role           String       @default("user")
   authorId       String?
   authorName     String?
-  authorType     String       @default("human") // human, agent, system
+  /// 'human' | 'agent' | 'system'
+  authorType     String       @default("human")
   metadata       Json         @default("{}")
   createdAt      DateTime     @default(now())
 
@@ -377,28 +397,125 @@ model ConversationMessage {
   @@map("conversation_messages")
 }
 
-// ---------------------------------------------------------------------------
-// Outbound Messages (UNC-1018) — messages sent from the platform to a channel
-// ---------------------------------------------------------------------------
-
-model OutboundMessage {
-  id             String       @id @default(uuid())
+/// A single message within a conversation (inbound or outbound)
+model Message {
+  id             String           @id @default(uuid())
   conversationId String
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  channelType    String
-  text           String
-  recipientId    String?
-  fromAgentId    String?
+  conversation   Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  direction      MessageDirection
+  type           MessageType      @default(TEXT)
+  content        String?
+  /// Attachments: [{ url, mimeType, filename, size }]
+  attachments    Json             @default("[]")
+  /// External message ID from the channel
   externalId     String?
-  status         String       @default("sent") // sent | failed | channel_switch
-  error          String?
-  metadata       Json         @default("{}")
-  createdAt      DateTime     @default(now())
+  /// Sender: { id, name, avatarUrl, type: 'contact'|'operator'|'bot' }
+  sender         Json             @default("{}")
+  isRead         Boolean          @default(false)
+  readAt         DateTime?
+  deliveredAt    DateTime?
+  failedAt       DateTime?
+  errorMessage   String?
+  /// True when this message was generated by an AI agent via auto-respond (UNC-1021)
+  isAiGenerated  Boolean          @default(false)
+  metadata       Json             @default("{}")
+  createdAt      DateTime         @default(now())
 
   @@index([conversationId])
-  @@index([channelType])
   @@index([conversationId, createdAt])
-  @@map("outbound_messages")
+  @@index([externalId])
+  @@map("messages")
+}
+
+/// Operators or agents participating in a conversation
+// UNC-1031: extended with participantType, participantColor, autoAssigned, invitedBy, isActive, autoRespond
+model ConversationParticipant {
+  id               String       @id @default(uuid())
+  conversationId   String
+  conversation     Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  /// Agent ID (OpenClaw registry) or User ID
+  participantId    String
+  /// "human" | "ai" | "USER" | "AGENT"
+  participantType  String       @default("human")
+  participantName  String
+  /// Hex colour for avatar badge (e.g. "#6366f1")
+  participantColor String       @default("#6366f1")
+  /// Role in the conversation: 'OWNER' | 'MEMBER' | 'operator'
+  role             String       @default("operator")
+  /// True when the participant was auto-assigned (not manually invited)
+  autoAssigned     Boolean      @default(false)
+  /// Who invited this participant (userId), null if self-joined or auto
+  invitedBy        String?
+  isActive         Boolean      @default(true)
+  /// When true, this AI agent will auto-respond to incoming messages (UNC-1031)
+  autoRespond      Boolean      @default(true)
+  joinedAt         DateTime     @default(now())
+  leftAt           DateTime?
+  updatedAt        DateTime     @updatedAt
+
+  @@unique([conversationId, participantId, participantType])
+  @@index([conversationId])
+  @@index([participantId])
+  @@index([conversationId, isActive])
+  @@map("conversation_participants")
+}
+
+// ---------------------------------------------------------------------------
+// Agent Notes (UNC-1013) — operator/agent notes on contact profiles
+// ---------------------------------------------------------------------------
+
+/// Notes written by operators or AI agents about a contact
+model AgentNote {
+  id         String   @id @default(uuid())
+  contactId  String
+  body       String
+  authorId   String
+  authorName String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([contactId])
+  @@index([authorId])
+  @@map("agent_notes")
+}
+
+// ---------------------------------------------------------------------------
+// Channel Messages (UNC-1016) — normalized inbound messages from all channels
+// ---------------------------------------------------------------------------
+
+model ChannelMessage {
+  id             String   @id @default(uuid())
+  /// Source channel: telegram | line | whatsapp | discord | slack | email | webchat
+  channel        String
+  /// Message ID as provided by the source channel
+  externalId     String
+  /// Chat / room / conversation ID in the source channel
+  conversationId String
+  senderId       String
+  senderName     String
+  senderAvatar   String?
+  /// Extracted plain-text content
+  text           String
+  /// Primary content type: text | image | video | audio | file | sticker | location | unknown
+  contentType    String   @default("text")
+  /// JSON array of MessageAttachment objects
+  attachments    Json     @default("[]")
+  /// External message ID being replied to, if applicable
+  replyToId      String?
+  isBot          Boolean  @default(false)
+  /// Original send time reported by the source channel
+  timestamp      DateTime
+  /// Channel-specific extras (thread_ts, subject, etc.)
+  metadata       Json     @default("{}")
+  /// Verbatim raw payload for audit / replay
+  rawPayload     Json
+  createdAt      DateTime @default(now())
+
+  @@unique([channel, externalId])
+  @@index([conversationId])
+  @@index([channel, conversationId])
+  @@index([channel, createdAt])
+  @@map("channel_messages")
 }
 
 // ---------------------------------------------------------------------------
@@ -409,15 +526,73 @@ model Notification {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type      String   // 'info' | 'warning' | 'success' | 'error'
+  type      String // 'info' | 'warning' | 'success' | 'error'
   title     String
   message   String
   read      Boolean  @default(false)
-  link      String?  // optional link to navigate to
+  link      String? // optional link to navigate to
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([userId, read])
   @@index([userId, createdAt])
   @@map("notifications")
+}
+
+// ---------------------------------------------------------------------------
+// Agent Handoff (UNC-1027)
+// Tracks escalations from AI to human and back, with SLA timers.
+// ---------------------------------------------------------------------------
+
+model Handoff {
+  id             String    @id @default(uuid())
+  /// Link to Conversation record (optional)
+  conversationId String?
+  /// WebSocket channel / session ID (e.g. "chat-agent-router")
+  channel        String
+  /// The end-user's ID whose conversation is being escalated
+  userId         String
+  /// What triggered the handoff
+  trigger        String // 'low_confidence' | 'explicit_request' | 'user_request'
+  /// AI confidence score at time of escalation (0-1); null for non-AI triggers
+  confidence     Float?
+  /// Current lifecycle state
+  status         String    @default("pending") // 'pending' | 'active' | 'resolved' | 'ai_resumed'
+  /// Human operator who claimed this handoff
+  assignedTo     String?
+  /// AI-generated context summary passed to the human agent
+  contextSummary String?
+  /// SLA window in minutes (default 15)
+  slaMinutes     Int       @default(15)
+  /// Hard deadline — computed as createdAt + slaMinutes
+  slaDeadline    DateTime
+  /// Set to true once the deadline passes without resolution
+  slaBreached    Boolean   @default(false)
+  resolvedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([status])
+  @@index([userId])
+  @@index([channel])
+  @@index([assignedTo])
+  @@index([slaDeadline])
+  @@map("handoffs")
+}
+
+// ---------------------------------------------------------------------------
+// Canned Responses (UNC-1020) — pre-written reply shortcuts for the composer
+// ---------------------------------------------------------------------------
+
+model CannedResponse {
+  id        String   @id @default(uuid())
+  shortcut  String   @unique
+  text      String
+  category  String?
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([shortcut])
+  @@map("canned_responses")
 }
