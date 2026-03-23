@@ -7,6 +7,7 @@ import {
   Bot, ExternalLink, Settings, MessageCircle, Terminal, Send,
   ChevronDown, ChevronRight, Circle, X, Loader2,
   Shield, Zap, TrendingUp, Mail, Search, Wrench, BarChart3, Database,
+  Plus, Crown, Lock,
 } from 'lucide-react';
 import { Badge, Card, CardContent, Button, Input } from '@unicore/ui';
 import { getAgents } from '@/lib/backoffice/store';
