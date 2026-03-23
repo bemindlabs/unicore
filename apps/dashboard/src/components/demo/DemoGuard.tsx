@@ -6,7 +6,7 @@ import { Rocket } from 'lucide-react';
  * Replaces a page or section that should be blocked in demo mode.
  * Usage: return <DemoGuard /> from a page component when demoMode is true.
  */
-export function DemoGuard() {
+export function DemoGuard(): JSX.Element {
   return (
     <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-amber-200 bg-amber-50 p-12 text-center dark:border-amber-800/40 dark:bg-amber-950/20">
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/40">
