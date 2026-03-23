@@ -9,6 +9,7 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -16,9 +17,12 @@ import { PluginsService } from './plugins.service';
 import { BrowsePluginsDto } from './dto/browse-plugins.dto';
 import { InstallPluginDto } from './dto/install-plugin.dto';
 import { ConfigurePluginDto } from './dto/configure-plugin.dto';
+import { SubmitPluginDto } from './dto/submit-plugin.dto';
 
 @Controller('api/v1/plugins')
 export class PluginsController {
+  private readonly logger = new Logger(PluginsController.name);
+
   constructor(private readonly pluginsService: PluginsService) {}
 
   @Get()
