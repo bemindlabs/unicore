@@ -1,35 +1,30 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator';
-
-export enum ConversationChannelDto {
-  TELEGRAM = 'TELEGRAM',
-  LINE = 'LINE',
-  FACEBOOK = 'FACEBOOK',
-  INSTAGRAM = 'INSTAGRAM',
-  WHATSAPP = 'WHATSAPP',
-  SLACK = 'SLACK',
-  DISCORD = 'DISCORD',
-  EMAIL = 'EMAIL',
-  SMS = 'SMS',
-  LIVE_CHAT = 'LIVE_CHAT',
-}
+import { IsString, IsOptional, MaxLength, IsEmail } from 'class-validator';
 
 export class CreateConversationDto {
-  @IsEnum(ConversationChannelDto)
-  channel: ConversationChannelDto;
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  title?: string;
 
   @IsOptional()
   @IsString()
-  subject?: string;
+  @MaxLength(100)
+  channel?: string;
 
   @IsOptional()
   @IsString()
-  externalId?: string;
+  contactId?: string;
 
   @IsOptional()
   @IsString()
-  assigneeId?: string;
+  @MaxLength(200)
+  contactName?: string;
+
+  @IsOptional()
+  @IsEmail()
+  contactEmail?: string;
 
   @IsOptional()
   @IsString()
-  contactChannelId?: string;
+  initialMessage?: string;
 }
