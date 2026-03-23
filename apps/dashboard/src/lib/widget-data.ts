@@ -69,8 +69,21 @@ export const widgetDataFetchers = {
   signups: (): Promise<SignupsWidgetData> =>
     api.get<SignupsWidgetData>('/api/v1/dashboard/widgets/signups'),
 
-  activity: (): Promise<ActivityWidgetData> =>
-    api.get<ActivityWidgetData>('/api/v1/dashboard/widgets/activity'),
+  activity: async (): Promise<ActivityWidgetData> => {
+    const res = await api.get<{ data: AuditLogEntry[] }>('/api/v1/audit-logs?limit=10&sort=desc');
+    const logs: AuditLogEntry[] = res?.data ?? [];
+    if (logs.length === 0) {
+      return { items: [{ id: 'empty', message: 'No recent activity', time: '', type: 'system' }] };
+    }
+    return {
+      items: logs.map((log) => ({
+        id: log.id,
+        message: log.detail ?? `${log.action} on ${log.resource}`,
+        time: toRelativeTime(log.createdAt),
+        type: auditActionToType(log.action, log.resource),
+      })),
+    };
+  },
 
   chart: (options: Record<string, unknown>): Promise<ChartWidgetData> =>
     api.get<ChartWidgetData>(
