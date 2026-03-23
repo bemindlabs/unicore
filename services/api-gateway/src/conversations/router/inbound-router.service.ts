@@ -163,27 +163,34 @@ export class InboundRouterService {
   async saveMessage(conversationId: string, msg: NormalizedMessageDto) {
     // Deduplication: skip if we've already seen this externalMessageId
     if (msg.externalMessageId) {
-      const dup = await this.prisma.inboundMessage.findFirst({
-        where: { externalMessageId: msg.externalMessageId },
+      const dup = await this.prisma.message.findFirst({
+        where: { externalId: msg.externalMessageId, conversationId },
       });
       if (dup) {
         this.logger.debug(
-          `Duplicate message skipped: externalMessageId=${msg.externalMessageId}`,
+          `Duplicate message skipped: externalId=${msg.externalMessageId}`,
         );
         return dup;
       }
     }
 
-    return this.prisma.inboundMessage.create({
+    return this.prisma.message.create({
       data: {
         conversationId,
-        channel: msg.channel,
-        senderId: msg.senderId,
-        senderName: msg.senderName ?? msg.senderId,
-        text: msg.text,
-        externalMessageId: msg.externalMessageId,
-        rawPayload: msg.rawPayload ?? {},
-        routedTo: 'pending',
+        direction: 'INBOUND',
+        type: 'TEXT',
+        content: msg.text,
+        externalId: msg.externalMessageId,
+        sender: {
+          id: msg.senderId,
+          name: msg.senderName ?? msg.senderId,
+          type: 'contact',
+        },
+        metadata: {
+          channel: msg.channel,
+          rawPayload: msg.rawPayload ?? {},
+          routedTo: 'pending',
+        },
       },
     });
   }
@@ -226,12 +233,6 @@ export class InboundRouterService {
       );
     });
 
-    // Update routed status
-    await this.prisma.inboundMessage.updateMany({
-      where: { conversationId, routedTo: 'pending' },
-      data: { routedTo: 'agent' },
-    });
-
     this.logger.log(`Routed conversationId=${conversationId} → agent=${agentId}`);
   }
 
@@ -245,7 +246,7 @@ export class InboundRouterService {
   ): Promise<void> {
     await this.prisma.conversation.update({
       where: { id: conversationId },
-      data: { assignedAgentId: agentId, status: 'assigned' },
+      data: { assigneeId: agentId, status: 'ASSIGNED' },
     });
 
     this.gateway.emitConversationAssigned(conversationId, agentId);

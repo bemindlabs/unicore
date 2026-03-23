@@ -19,6 +19,8 @@ import { RouterAgent } from '../router/router.agent';
 import { PtySessionManager } from '../terminal/pty-session-manager';
 import { MessagePersistenceService } from '../persistence/message-persistence.service';
 import { RateLimiterService } from '../routing/rate-limiter.service';
+import { HandoffNotifierService } from '../handoff/handoff-notifier.service';
+import { ConversationService } from '../conversations/conversation.service';
 import { WebSocket } from 'ws';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -89,6 +91,24 @@ describe('OpenClawGateway', () => {
             save: jest.fn().mockResolvedValue(undefined),
             findByChannel: jest.fn().mockResolvedValue([]),
             findAfterMessageId: jest.fn().mockResolvedValue([]),
+            onModuleInit: jest.fn(),
+            onModuleDestroy: jest.fn(),
+          },
+        },
+        {
+          provide: HandoffNotifierService,
+          useValue: {
+            detectTrigger: jest.fn().mockReturnValue(null),
+            createHandoff: jest.fn().mockResolvedValue(null),
+          },
+        },
+        {
+          provide: ConversationService,
+          useValue: {
+            create: jest.fn().mockResolvedValue({}),
+            assign: jest.fn().mockResolvedValue({}),
+            findByAgent: jest.fn().mockResolvedValue([]),
+            findById: jest.fn().mockResolvedValue(null),
             onModuleInit: jest.fn(),
             onModuleDestroy: jest.fn(),
           },
