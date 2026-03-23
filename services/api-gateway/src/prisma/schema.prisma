@@ -290,6 +290,7 @@ model Conversation {
   userId       String
   messages         ConversationMessage[]
   outboundMessages OutboundMessage[]
+  participants     ConversationParticipant[]
   metadata         Json               @default("{}")
   closedAt         DateTime?
   createdAt        DateTime           @default(now())
