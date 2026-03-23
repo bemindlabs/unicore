@@ -381,6 +381,8 @@ export class OpenClawGateway
   /**
    * Process a chat message through the RouterAgent and publish the response
    * back to the originating channel so the dashboard receives it.
+   * Includes handoff detection: escalates to human when confidence is low
+   * or the user explicitly requests a human agent.
    */
   private async processChat(
     text: string,
@@ -389,6 +391,32 @@ export class OpenClawGateway
     channel: string,
   ): Promise<void> {
     const result = await this.routerAgent.process(text, sessionId, userId);
+
+    const confidence = result.decision.classification?.confidence ?? 1;
+    const intent = result.decision.classification?.intent ?? 'unknown';
+
+    // --- Handoff detection ---
+    const handoffTrigger = this.handoffNotifier.detectTrigger(text, confidence);
+    let handoffData: { id: string; slaDeadline: string; trigger: string } | null = null;
+
+    if (handoffTrigger) {
+      const summary = this.handoffNotifier.buildContextSummary(
+        text,
+        result.response.content,
+        intent,
+        confidence,
+      );
+      const created = await this.handoffNotifier.createHandoff({
+        channel,
+        userId,
+        trigger: handoffTrigger,
+        confidence,
+        contextSummary: summary,
+      });
+      if (created) {
+        handoffData = { id: created.id, slaDeadline: created.slaDeadline, trigger: created.trigger };
+      }
+    }
 
     const responseMessage: IncomingMessage = {
       type: 'message:publish',
@@ -409,8 +437,10 @@ export class OpenClawGateway
           timestamp: new Date().toISOString(),
           metadata: {
             processingTimeMs: result.processingTimeMs,
-            intent: result.decision.classification?.intent,
-            confidence: result.decision.classification?.confidence,
+            intent,
+            confidence,
+            // Include handoff info in message metadata so the dashboard can show the banner
+            handoff: handoffData ?? undefined,
           },
         },
       },
