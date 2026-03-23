@@ -491,7 +491,7 @@ export default function PluginsMarketplacePage() {
         </div>
         <div className="sm:ml-auto">
           <Button variant="outline" asChild>
-            <Link href="/settings/plugins">Manage Installed</Link>
+            <Link href="/plugins/installed">Manage Installed</Link>
           </Button>
         </div>
       </div>
