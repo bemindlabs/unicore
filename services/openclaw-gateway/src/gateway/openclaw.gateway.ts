@@ -69,6 +69,7 @@ export class OpenClawGateway
     private readonly ptyManager: PtySessionManager,
     private readonly persistence: MessagePersistenceService,
     private readonly handoffNotifier: HandoffNotifierService,
+    private readonly conversationService: ConversationService,
   ) {}
 
   onModuleInit(): void {
