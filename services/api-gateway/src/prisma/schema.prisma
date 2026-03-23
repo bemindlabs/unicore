@@ -266,101 +266,142 @@ model PluginInstallation {
 }
 
 // ---------------------------------------------------------------------------
-// Omni-Channel Conversations (UNC-1015)
+// Omni-Channel Conversation Hub (UNC-1014)
 // ---------------------------------------------------------------------------
+
+enum ConversationChannel {
+  TELEGRAM
+  LINE
+  FACEBOOK
+  INSTAGRAM
+  WHATSAPP
+  SLACK
+  DISCORD
+  EMAIL
+  SMS
+  LIVE_CHAT
+}
 
 enum ConversationStatus {
   OPEN
-  ASSIGNED
   PENDING
+  ASSIGNED
   RESOLVED
   CLOSED
 }
 
-model Conversation {
-  id           String             @id @default(uuid())
-  title        String?
-  status       ConversationStatus @default(OPEN)
-  channel      String             @default("web") // web, telegram, line, email, whatsapp, etc.
-  assigneeId   String?
-  assigneeName String?
-  contactId    String?
-  contactName  String?
-  contactEmail String?
-  userId       String
-  messages         ConversationMessage[]
-  outboundMessages OutboundMessage[]
-  participants     ConversationParticipant[]
-  metadata         Json               @default("{}")
-  closedAt         DateTime?
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  AUDIO
+  VIDEO
+  STICKER
+  LOCATION
+  TEMPLATE
+  SYSTEM
+}
 
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+/// A contact's identity on a specific messaging channel
+model ContactChannel {
+  id            String              @id @default(uuid())
+  channel       ConversationChannel
+  /// Unique identifier on the channel (e.g. Telegram user_id, LINE userId)
+  externalId    String
+  displayName   String?
+  avatarUrl     String?
+  /// Raw profile metadata from the channel
+  metadata      Json                @default("{}")
+  /// Link to an ERP contact after de-duplication
+  erpContactId  String?
+  conversations Conversation[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@unique([channel, externalId])
+  @@index([channel])
+  @@index([erpContactId])
+  @@map("contact_channels")
+}
+
+/// An omni-channel conversation thread
+model Conversation {
+  id               String                    @id @default(uuid())
+  channel          ConversationChannel
+  status           ConversationStatus        @default(OPEN)
+  subject          String?
+  /// External conversation/room ID from the originating channel
+  externalId       String?
+  /// Assigned operator user ID
+  assigneeId       String?
+  contactChannelId String?
+  contactChannel   ContactChannel?           @relation(fields: [contactChannelId], references: [id])
+  messages         Message[]
+  participants     ConversationParticipant[]
+  resolvedAt       DateTime?
+  closedAt         DateTime?
+  lastMessageAt    DateTime?
+  metadata         Json                      @default("{}")
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+
+  @@index([channel])
   @@index([status])
   @@index([assigneeId])
-  @@index([userId])
-  @@index([channel])
-  @@index([createdAt])
+  @@index([externalId])
+  @@index([contactChannelId])
+  @@index([lastMessageAt])
   @@map("conversations")
 }
 
-model ConversationMessage {
-  id             String       @id @default(uuid())
+/// A single message within a conversation (inbound or outbound)
+model Message {
+  id             String           @id @default(uuid())
   conversationId String
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  content        String
-  role           String       @default("user") // user, agent, system
-  authorId       String?
-  authorName     String?
-  authorType     String       @default("human") // human, agent, system
-  metadata       Json         @default("{}")
-  createdAt      DateTime     @default(now())
-
-  @@index([conversationId])
-  @@index([conversationId, createdAt])
-  @@map("conversation_messages")
-}
-
-// ---------------------------------------------------------------------------
-// Outbound Messages (UNC-1018) — messages sent from the platform to a channel
-// ---------------------------------------------------------------------------
-
-model OutboundMessage {
-  id             String       @id @default(uuid())
-  conversationId String
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  channelType    String
-  text           String
-  recipientId    String?
-  fromAgentId    String?
+  conversation   Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  direction      MessageDirection
+  type           MessageType      @default(TEXT)
+  content        String?
+  /// Attachments: [{ url, mimeType, filename, size }]
+  attachments    Json             @default("[]")
+  /// External message ID from the channel
   externalId     String?
-  /// sent | failed | channel_switch
-  status         String       @default("sent")
-  error          String?
-  metadata       Json         @default("{}")
-  createdAt      DateTime     @default(now())
+  /// Sender: { id, name, avatarUrl, type: 'contact'|'operator'|'bot' }
+  sender         Json             @default("{}")
+  isRead         Boolean          @default(false)
+  readAt         DateTime?
+  deliveredAt    DateTime?
+  failedAt       DateTime?
+  errorMessage   String?
+  metadata       Json             @default("{}")
+  createdAt      DateTime         @default(now())
 
   @@index([conversationId])
-  @@index([channelType])
   @@index([conversationId, createdAt])
-  @@map("outbound_messages")
+  @@index([externalId])
+  @@map("messages")
 }
 
-// ---------------------------------------------------------------------------
-// Canned Responses (UNC-1020) — pre-written reply shortcuts for the composer
-// ---------------------------------------------------------------------------
+/// Operators or agents participating in a conversation
+model ConversationParticipant {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  /// 'operator' | 'agent' | 'bot'
+  role           String       @default("operator")
+  joinedAt       DateTime     @default(now())
+  leftAt         DateTime?
 
-model CannedResponse {
-  id        String   @id @default(uuid())
-  shortcut  String   @unique
-  text      String
-  category  String?
-  createdBy String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([shortcut])
-  @@map("canned_responses")
+  @@unique([conversationId, userId])
+  @@index([conversationId])
+  @@index([userId])
+  @@map("conversation_participants")
 }
 
 // ---------------------------------------------------------------------------
@@ -399,7 +440,7 @@ model Handoff {
   userId         String
   /// What triggered the handoff
   trigger        String    // 'low_confidence' | 'explicit_request' | 'user_request'
-  /// AI confidence score at time of escalation (0–1); null for non-AI triggers
+  /// AI confidence score at time of escalation (0-1); null for non-AI triggers
   confidence     Float?
   /// Current lifecycle state
   status         String    @default("pending")  // 'pending' | 'active' | 'resolved' | 'ai_resumed'

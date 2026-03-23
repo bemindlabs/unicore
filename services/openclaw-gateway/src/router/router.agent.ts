@@ -32,9 +32,11 @@ export interface RouterProcessResult {
  * user interaction with the UniCore AI layer.  It:
  *
  * 1. Normalises the raw incoming message into an {@link AgentMessage}.
- * 2. Classifies the user's intent using {@link IntentClassifierService}.
- * 3. Delegates to the appropriate specialist via {@link DelegationService}.
- * 4. Returns both the specialist response and full routing metadata.
+ * 2. Checks for @mention syntax (UNC-1028) — if found, routes directly to
+ *    the mentioned specialist, bypassing LLM classification.
+ * 3. Otherwise classifies the user's intent using {@link IntentClassifierService}.
+ * 4. Delegates to the appropriate specialist via {@link DelegationService}.
+ * 5. Returns both the specialist response and full routing metadata.
  *
  * The Router Agent itself never generates domain-specific content — it only
  * routes and falls back gracefully when classification or delegation fails.
@@ -49,6 +51,7 @@ export class RouterAgent implements OnModuleInit {
   constructor(
     private readonly classifier: IntentClassifierService,
     private readonly delegation: DelegationService,
+    private readonly mentionParser: MentionParserService,
     // Specialist agents injected by NestJS DI
     private readonly commsAgent: CommsAgent,
     private readonly financeAgent: FinanceAgent,
@@ -91,7 +94,12 @@ export class RouterAgent implements OnModuleInit {
   // ---------------------------------------------------------------------------
 
   /**
-   * Process a raw user message through the full classify → delegate pipeline.
+   * Process a raw user message through the classify → delegate pipeline.
+   *
+   * When the message contains an @mention (e.g. `@finance show Q3 burn rate`),
+   * classification is skipped and the message is routed directly to the
+   * mentioned specialist.  This enables mid-conversation hand-offs without
+   * an LLM round-trip (UNC-1028).
    *
    * @param rawContent  The verbatim user message text.
    * @param sessionId   Unique conversation/session identifier.
@@ -107,6 +115,21 @@ export class RouterAgent implements OnModuleInit {
   ): Promise<RouterProcessResult> {
     const startedAt = Date.now();
 
+    // --- @mention detection (UNC-1028) -----------------------------------
+    const { mention, strippedContent } = this.mentionParser.parse(rawContent.trim());
+    if (mention) {
+      return this.processMention(
+        mention,
+        strippedContent || rawContent.trim(),
+        rawContent.trim(),
+        sessionId,
+        from,
+        context,
+        startedAt,
+      );
+    }
+
+    // --- normal LLM-classification path ----------------------------------
     const message = this.buildMessage(rawContent, sessionId, from);
     const agentContext = this.buildContext(sessionId, context);
 
@@ -145,6 +168,60 @@ export class RouterAgent implements OnModuleInit {
   // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
+
+  /**
+   * Route an @mention directly to the target specialist, bypassing classification.
+   */
+  private async processMention(
+    mention: AgentType,
+    strippedContent: string,
+    rawContent: string,
+    sessionId: string,
+    from: string,
+    context: Partial<AgentContext> | undefined,
+    startedAt: number,
+  ): Promise<RouterProcessResult> {
+    this.logger.log(
+      `@mention detected: routing directly to '${mention}' (session=${sessionId})`,
+    );
+
+    const message = this.buildMessage(strippedContent, sessionId, from);
+    message.metadata = { ...message.metadata, mentionRaw: rawContent };
+    const agentContext = this.buildContext(sessionId, context);
+
+    // Synthetic classification — 100 % confidence for explicit @mention
+    const classification: ClassificationResult = {
+      intent: mention,
+      confidence: 1.0,
+      reasoning: `Direct @mention routing to ${mention}`,
+      alternates: [],
+    };
+
+    try {
+      const { response, decision } = await this.delegation.delegate(
+        message,
+        classification,
+        agentContext,
+      );
+
+      const processingTimeMs = Date.now() - startedAt;
+
+      this.logger.log(
+        `@mention message processed in ${processingTimeMs}ms → ${decision.targetAgent}`,
+      );
+
+      return {
+        response,
+        decision: { ...decision, mentionRouted: true },
+        processingTimeMs,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error processing @mention message ${message.id}: ${String(error)}`,
+      );
+      return this.buildErrorResult(message.id, startedAt, error);
+    }
+  }
 
   private buildMessage(
     content: string,
