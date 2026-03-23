@@ -423,7 +423,7 @@ export function ContactProfileSidebar({
   /* ------------------------------------------------------------------ */
 
   return (
-    <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Sheet open={open} onOpenChange={(v: boolean) => { if (!v) onClose(); }}>
       <SheetContent side="right" className="w-[400px] sm:w-[480px] overflow-y-auto p-0">
         {/* Header */}
         <SheetHeader className="px-5 pt-5 pb-4 border-b">
