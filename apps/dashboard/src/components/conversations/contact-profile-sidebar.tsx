@@ -575,10 +575,10 @@ export function ContactProfileSidebar({
               <div className="space-y-2 mb-3">
                 <Textarea
                   value={noteText}
-                  onChange={(e) => setNoteText(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNoteText(e.target.value)}
                   placeholder={editingNote ? 'Edit note…' : 'Add a note…'}
                   className="text-xs min-h-[72px] resize-none"
-                  onKeyDown={(e) => {
+                  onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
                     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
                       e.preventDefault();
                       void handleSaveNote();
