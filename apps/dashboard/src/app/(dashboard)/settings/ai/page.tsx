@@ -129,6 +129,20 @@ export default function AiSettingsPage() {
   const [testing, setTesting] = useState(false);
   const [testResults, setTestResults] = useState<{ provider: string; healthy: boolean; error?: string; latencyMs?: number }[]>([]);
 
+  const handleUpgradeToPro = useCallback(async () => {
+    setIsUpgrading(true);
+    try {
+      const res = await api.post<{ url: string }>('/api/v1/license/upgrade', {
+        plan: 'PRO_ANNUAL',
+        email: user?.email ?? '',
+      });
+      if (res.url) window.location.href = res.url;
+    } catch (err: any) {
+      toast({ title: 'Upgrade failed', description: err?.message ?? 'Please try again.' });
+      setIsUpgrading(false);
+    }
+  }, [user?.email]);
+
   const fetchConfig = useCallback(async () => {
     try {
       const data = await api.get<Record<string, any>>('/api/v1/settings/ai-config');
