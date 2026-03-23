@@ -418,30 +418,54 @@ export default function BrandingSettingsPage() {
           {/* White-label & Custom CSS */}
           <Card>
             <CardHeader>
-              <CardTitle>Advanced</CardTitle>
-              <CardDescription>White-label settings and custom CSS overrides</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Advanced</CardTitle>
+                  <CardDescription>White-label settings and custom CSS overrides</CardDescription>
+                </div>
+                {!isPro && (
+                  <Badge variant="secondary" className="gap-1 bg-amber-500/10 text-amber-600 border-amber-300/40">
+                    <Crown className="h-3 w-3" />
+                    Pro
+                  </Badge>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between rounded-lg border p-3">
+              <div className={`flex items-center justify-between rounded-lg border p-3 ${!isPro ? 'opacity-50' : ''}`}>
                 <div>
                   <p className="text-sm font-medium">Remove UniCore Branding</p>
-                  <p className="text-xs text-muted-foreground">Hide "Powered by UniCore" attribution — requires Pro license</p>
+                  <p className="text-xs text-muted-foreground">
+                    {isPro
+                      ? 'Hide "Powered by UniCore" attribution'
+                      : 'Hide "Powered by UniCore" attribution — available in Pro'}
+                  </p>
                 </div>
                 <Switch
                   checked={config.removeUnicoreBranding}
-                  onCheckedChange={(v) => setConfig((prev) => ({ ...prev, removeUnicoreBranding: v }))}
+                  onCheckedChange={(v) => isPro && setConfig((prev) => ({ ...prev, removeUnicoreBranding: v }))}
+                  disabled={!isPro}
+                  title={!isPro ? 'Available in Pro' : undefined}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="customCss">Custom CSS</Label>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="customCss">Custom CSS</Label>
+                  {!isPro && (
+                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                      <Lock className="h-3 w-3" /> Available in Pro
+                    </span>
+                  )}
+                </div>
                 <textarea
                   id="customCss"
                   value={config.customCss}
-                  onChange={(e) => setConfig((prev) => ({ ...prev, customCss: e.target.value }))}
-                  placeholder=":root { --radius: 0.5rem; }"
+                  onChange={(e) => isPro && setConfig((prev) => ({ ...prev, customCss: e.target.value }))}
+                  placeholder={isPro ? ':root { --radius: 0.5rem; }' : 'Upgrade to Pro to add custom CSS'}
                   rows={6}
-                  className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  disabled={!isPro}
+                  className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
             </CardContent>
