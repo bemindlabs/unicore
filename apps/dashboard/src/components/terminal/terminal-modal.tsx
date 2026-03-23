@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { X, Minus, Plus, Maximize2, PanelBottomClose, ExternalLink } from 'lucide-react';
 import { cn } from '@unicore/ui';
-import SystemTerminal from './SystemTerminal';
+import { SystemTerminal } from './SystemTerminal';
 
 export type TerminalMode = 'modal' | 'docked';
 
