@@ -181,11 +181,25 @@ export default function AgentsPage() {
           {!loading && (
             <span className="text-xs text-muted-foreground">
               {agents.length} agents
-              {!isPro && maxAgents > 0 && (
-                <span className="ml-1">(+ {maxAgents} custom)</span>
-              )}
             </span>
           )}
+          {/* Create Custom Agent — Pro only */}
+          <button
+            disabled={!isPro}
+            title={!isPro ? 'Available in Pro' : 'Create a custom agent'}
+            className={`flex items-center gap-1.5 text-xs border rounded-md px-2.5 py-1.5 transition-colors ${
+              isPro
+                ? 'text-foreground hover:bg-muted/50'
+                : 'text-muted-foreground opacity-50 cursor-not-allowed'
+            }`}
+            onClick={() => {
+              if (!isPro) return;
+              // Agent builder is a Pro feature
+            }}
+          >
+            {isPro ? <Plus className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
+            {isPro ? 'New Agent' : 'New Agent (Pro)'}
+          </button>
           <Link
             href="/backoffice"
             className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors border rounded-md px-2.5 py-1.5"
