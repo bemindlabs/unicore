@@ -470,7 +470,7 @@ export function ConversationParticipantPanel({
         <AddAgentDialog
           conversationId={conversationId}
           existingIds={existingIds}
-          onAdd={addParticipant}
+          onAdd={(payload: AddParticipantPayload) => addParticipant(payload).then(() => undefined)}
           onClose={() => setShowAddDialog(false)}
         />
       )}
