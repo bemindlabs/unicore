@@ -656,7 +656,7 @@ export function ContactProfileSidebar({
                   <Input
                     placeholder="Search by name or email…"
                     value={mergeSearch}
-                    onChange={(e) => setMergeSearch(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMergeSearch(e.target.value)}
                     className="text-xs h-8"
                   />
                   {mergeResults.length > 0 && (
