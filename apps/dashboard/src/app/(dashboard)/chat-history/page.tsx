@@ -19,6 +19,8 @@ import { toast, Badge, Button, Input, Skeleton } from '@unicore/ui';
 import { api } from '@/lib/api';
 import { getAgents } from '@/lib/backoffice/store';
 import type { BackofficeAgent } from '@/lib/backoffice/types';
+import { ConversationIntelligenceSidebar } from '@/components/chat-intelligence/ConversationIntelligenceSidebar';
+import { useIntelligenceStream } from '@/hooks/use-intelligence-stream';
 import { ContactProfileSidebar } from '@/components/conversations/contact-profile-sidebar';
 
 /* ------------------------------------------------------------------ */
@@ -186,6 +188,21 @@ function MessageBubble({ msg, agentColor: color, agentName }: MessageBubbleProps
   );
 }
 
+function IntelligencePanel({ chatHistoryId }: { chatHistoryId: string }) {
+  const [token, setToken] = useState<string | null>(null);
+  useEffect(() => {
+    setToken(typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null);
+  }, []);
+  const { intelligence, loading, refresh } = useIntelligenceStream(chatHistoryId, token);
+  return (
+    <ConversationIntelligenceSidebar
+      intelligence={intelligence}
+      loading={loading}
+      onRefresh={refresh}
+    />
+  );
+}
+
 interface ConversationRowProps {
   record: ChatHistoryRecord;
   expanded: boolean;
@@ -309,24 +326,32 @@ function ConversationRow({ record, expanded, onToggle, onDelete, onOpenProfile, 
                 </div>
               </div>
 
-              {/* Messages */}
-              <div className="px-4 py-4">
-                {Array.isArray(record.messages) && record.messages.length > 0 ? (
-                  <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
-                    {record.messages.map((msg, idx) => (
-                      <MessageBubble
-                        key={msg.id ?? idx}
-                        msg={msg}
-                        agentColor={color}
-                        agentName={record.agentName}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground text-center py-6">
-                    No messages in this conversation.
-                  </p>
-                )}
+              {/* Messages + Intelligence */}
+              <div className="px-4 py-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {/* Messages — takes 2/3 */}
+                <div className="lg:col-span-2">
+                  {Array.isArray(record.messages) && record.messages.length > 0 ? (
+                    <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
+                      {record.messages.map((msg, idx) => (
+                        <MessageBubble
+                          key={msg.id ?? idx}
+                          msg={msg}
+                          agentColor={color}
+                          agentName={record.agentName}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground text-center py-6">
+                      No messages in this conversation.
+                    </p>
+                  )}
+                </div>
+
+                {/* Intelligence sidebar — 1/3 */}
+                <div className="lg:col-span-1">
+                  <IntelligencePanel chatHistoryId={record.id} />
+                </div>
               </div>
             </div>
           )}
