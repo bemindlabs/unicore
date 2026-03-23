@@ -290,6 +290,7 @@ model Conversation {
   userId       String
   messages         ConversationMessage[]
   outboundMessages OutboundMessage[]
+  participants     ConversationParticipant[]
   metadata         Json               @default("{}")
   closedAt         DateTime?
   createdAt        DateTime           @default(now())
@@ -343,6 +344,40 @@ model OutboundMessage {
   @@index([channelType])
   @@index([conversationId, createdAt])
   @@map("outbound_messages")
+}
+
+// ---------------------------------------------------------------------------
+// Conversation Participants (UNC-1026) — AI agents + humans as participants
+// Supports /invite @agent commands and auto-assign via Router Agent
+// ---------------------------------------------------------------------------
+
+enum ParticipantType {
+  USER
+  AGENT
+}
+
+enum ParticipantRole {
+  OWNER
+  MEMBER
+}
+
+model ConversationParticipant {
+  id              String          @id @default(uuid())
+  conversationId  String
+  conversation    Conversation    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  participantId   String
+  participantType ParticipantType
+  participantName String
+  role            ParticipantRole @default(MEMBER)
+  autoAssigned    Boolean         @default(false)
+  invitedBy       String?
+  joinedAt        DateTime        @default(now())
+  leftAt          DateTime?
+
+  @@unique([conversationId, participantId, participantType])
+  @@index([conversationId])
+  @@index([participantId])
+  @@map("conversation_participants")
 }
 
 // ---------------------------------------------------------------------------
