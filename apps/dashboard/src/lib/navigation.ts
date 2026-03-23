@@ -69,6 +69,12 @@ export const menuSections: NavSection[] = [
         roles: [UserRole.Owner, UserRole.Operator],
       },
       {
+        label: 'Conversations',
+        icon: Inbox,
+        href: '/conversations',
+        roles: [UserRole.Owner, UserRole.Operator],
+      },
+      {
         label: 'All Channels',
         icon: Megaphone,
         href: '/channels',
