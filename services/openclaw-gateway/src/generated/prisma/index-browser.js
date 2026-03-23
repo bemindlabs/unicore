@@ -130,6 +130,19 @@ exports.Prisma.ChatMessageScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.ConversationScalarFieldEnum = {
+  id: 'id',
+  agentId: 'agentId',
+  userId: 'userId',
+  userChannel: 'userChannel',
+  status: 'status',
+  assignedTo: 'assignedTo',
+  assignedName: 'assignedName',
+  metadata: 'metadata',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -150,9 +163,15 @@ exports.Prisma.JsonNullValueFilter = {
   AnyNull: Prisma.AnyNull
 };
 
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
+
 
 exports.Prisma.ModelName = {
-  ChatMessage: 'ChatMessage'
+  ChatMessage: 'ChatMessage',
+  Conversation: 'Conversation'
 };
 
 /**
