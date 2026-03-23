@@ -20,7 +20,9 @@ COPY services/api-gateway ./services/api-gateway
 COPY tsconfig.json ./
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/services/api-gateway/node_modules ./services/api-gateway/node_modules
-RUN cd services/api-gateway && npx prisma generate --schema=src/prisma/schema.prisma 2>/dev/null; pnpm run build
+RUN cd services/api-gateway && \
+    (npx prisma generate --schema=src/prisma/schema.prisma 2>/dev/null || true) && \
+    pnpm run build
 
 ARG VERSION=0.0.0
 FROM --platform=$TARGETPLATFORM node:20.20.1-alpine AS runner
