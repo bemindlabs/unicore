@@ -30,6 +30,7 @@ if (process.env.GITHUB_CLIENT_ID) {
       signOptions: { expiresIn: '15m' },
     }),
     AuditModule,
+    LicenseModule,
   ],
   controllers: [AuthController],
   providers: [
