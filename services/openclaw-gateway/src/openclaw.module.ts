@@ -9,6 +9,7 @@ import { AgentsController } from './agents/agents.controller';
 import { RouterModule } from './router/router.module';
 import { PtySessionManager } from './terminal/pty-session-manager';
 import { MessagePersistenceService } from './persistence/message-persistence.service';
+import { ChannelsController } from './messages/channels.controller';
 import { MessagesController } from './messages/messages.controller';
 import { HandoffNotifierService } from './handoff/handoff-notifier.service';
 import { ConversationService } from './conversations/conversation.service';
@@ -24,10 +25,11 @@ import { ConversationService } from './conversations/conversation.service';
  *   - RouterModule             : Intent classification & task delegation (UNC-28)
  *   - MessagePersistenceService: Persist messages to PostgreSQL via Prisma
  *   - MessagesController       : GET /messages — paginated message history
+ *   - ChannelsController       : POST /api/v1/channels/inbound — auto-respond (UNC-1021)
  */
 @Module({
   imports: [RouterModule],
-  controllers: [HealthController, AgentsController, MessagesController],
+  controllers: [HealthController, AgentsController, MessagesController, ChannelsController],
   providers: [
     OpenClawGateway,
     AgentRegistryService,
