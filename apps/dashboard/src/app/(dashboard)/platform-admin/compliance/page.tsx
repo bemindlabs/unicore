@@ -604,7 +604,7 @@ export default function CompliancePage() {
       URL.revokeObjectURL(url);
       toast({ title: 'Compliance report downloaded' });
     } catch {
-      // Simulate download for demo when API not available
+      // Simulate success for demo when API not available
       toast({ title: 'Report generated', description: 'Compliance report would be downloaded in production.' });
     } finally {
       setGeneratingReport(false);
