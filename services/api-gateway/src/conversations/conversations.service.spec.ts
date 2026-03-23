@@ -1,8 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ConversationsService } from './conversations.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { InviteParticipantType } from './dto/invite-participant.dto';
+
+const mockConfigService = {
+  get: jest.fn().mockReturnValue(undefined),
+};
 
 const mockPrisma = {
   conversation: {
