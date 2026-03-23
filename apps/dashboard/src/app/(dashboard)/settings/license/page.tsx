@@ -453,7 +453,39 @@ export default function SettingsLicensePage() {
                   : `${new Date(license.expiresAt).toLocaleDateString()} (${daysUntilExpiry}d remaining)`}
               </p>
             </div>
+            {machineId && (
+              <div>
+                <p className="text-xs text-muted-foreground">Machine ID</p>
+                <p className="text-sm font-mono truncate" title={machineId}>{machineId}</p>
+              </div>
+            )}
           </div>
+
+          {/* Plan management links */}
+          {license.edition !== 'community' && (
+            <>
+              <Separator />
+              <div className="flex flex-wrap gap-3">
+                <a
+                  href="https://unicore.bemind.tech/pricing"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-primary underline-offset-4 hover:underline"
+                >
+                  Change Plan
+                </a>
+                <span className="text-muted-foreground">·</span>
+                <a
+                  href="https://unicore.bemind.tech/billing"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-primary underline-offset-4 hover:underline"
+                >
+                  Manage Subscription
+                </a>
+              </div>
+            </>
+          )}
 
           <Separator />
 
