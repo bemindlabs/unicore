@@ -165,14 +165,7 @@ export const mockWidgetData = {
   }),
 
   activity: (): ActivityWidgetData => ({
-    items: [
-      { id: '1', message: 'New order #1042 received from Acme Corp', time: '2 minutes ago', type: 'order' },
-      { id: '2', message: 'Invoice #892 marked as paid — $3,200', time: '15 minutes ago', type: 'invoice' },
-      { id: '3', message: 'AI Agent completed lead qualification for 8 contacts', time: '1 hour ago', type: 'agent' },
-      { id: '4', message: 'New contact added: Jane Smith (Acme Corp)', time: '2 hours ago', type: 'contact' },
-      { id: '5', message: 'Inventory alert: Widget A (SKU-042) below reorder level', time: '3 hours ago', type: 'inventory' },
-      { id: '6', message: 'Workflow "Daily Report" completed successfully', time: '4 hours ago', type: 'system' },
-    ],
+    items: [{ id: 'empty', message: 'No recent activity', time: '', type: 'system' }],
   }),
 
   chart: (): ChartWidgetData => ({
