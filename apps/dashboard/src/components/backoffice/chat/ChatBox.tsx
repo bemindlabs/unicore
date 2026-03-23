@@ -3,8 +3,6 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Send, MessageCircle, ChevronDown, ArrowLeft, Search, Bell, BellOff } from 'lucide-react';
 import { useChatWebSocket, type ChatMessage, type SuggestedAction } from '@/hooks/use-chat-ws';
-import { useHandoff } from '@/hooks/use-handoff';
-import { HandoffBanner } from './HandoffBanner';
 import { getAgents } from '@/lib/backoffice/store';
 import { api } from '@/lib/api';
 import type { BackofficeAgent } from '@/lib/backoffice/types';
@@ -89,22 +87,6 @@ export function ChatBox() {
 
   const channel = selectedAgent ? agentChannel(selectedAgent.id) : GENERAL_CHANNEL;
 
-  // UNC-1027: Handoff state
-  const {
-    handoff,
-    slaSecondsRemaining,
-    claimHandoff,
-    resolveHandoff,
-    resumeAI,
-    setHandoffFromMessage,
-  } = useHandoff(channel);
-  const [handoffDismissed, setHandoffDismissed] = useState(false);
-
-  // Reset dismiss when channel or handoff changes
-  useEffect(() => {
-    setHandoffDismissed(false);
-  }, [channel, handoff?.id]);
-
   // Persist sound preference
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -171,16 +153,11 @@ export function ChatBox() {
         typingTimeoutRef.current = null;
       }
     }
-    // UNC-1027: Detect handoff metadata in AI response
-    if (msg.metadata?.handoff) {
-      setHandoffDismissed(false);
-      setHandoffFromMessage(msg.metadata.handoff);
-    }
     // Play beep on incoming messages from others
     if (msg.authorId !== 'human-user' && soundEnabledRef.current) {
       playBeep();
     }
-  }, [open, setHandoffFromMessage]);
+  }, [open]);
 
   const { connected, send } = useChatWebSocket(channel, handleMessage);
 
@@ -461,18 +438,6 @@ export function ChatBox() {
         </div>
       )}
 
-      {/* UNC-1027: Handoff banner */}
-      {handoff && !handoffDismissed && (
-        <HandoffBanner
-          handoff={handoff}
-          slaSecondsRemaining={slaSecondsRemaining}
-          onClaim={() => claimHandoff('current-user')}
-          onResolve={resolveHandoff}
-          onResumeAI={resumeAI}
-          onDismiss={() => setHandoffDismissed(true)}
-        />
-      )}
-
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-3">
         {visibleMessages.length === 0 && (
@@ -515,15 +480,25 @@ export function ChatBox() {
                         : 'bg-[var(--bo-bg-bubble)] text-[var(--bo-text-body-soft)] border border-[var(--bo-border-subtle)]'
                     }`}
                   >
-                    {msg.text != null && renderMessageText(msg.text)}
-                    {msg.toolCalls != null && msg.toolCalls.length > 0 && (
+                    {msg.text && renderMessageText(msg.text)}
+
+                    {/* UNC-1029: Tool call cards */}
+                    {msg.toolCalls && msg.toolCalls.length > 0 && (
                       <div className={msg.text ? 'mt-2' : ''}>
-                        {msg.toolCalls.map((tc, i) => <ToolCallCard key={i} toolCall={tc} />)}
+                        {msg.toolCalls.map((tc, i) => (
+                          <ToolCallCard key={i} toolCall={tc} />
+                        ))}
                       </div>
                     )}
                   </div>
-                  {msg.suggestedActions != null && msg.suggestedActions.length > 0 && (
-                    <SuggestedActions actions={msg.suggestedActions} onAction={handleSuggestedAction} disabled={!connected} />
+
+                  {/* UNC-1029: Suggested action quick replies */}
+                  {msg.suggestedActions && msg.suggestedActions.length > 0 && (
+                    <SuggestedActions
+                      actions={msg.suggestedActions}
+                      onAction={handleSuggestedAction}
+                      disabled={!connected}
+                    />
                   )}
 
                   {/* UNC-103: Reaction picker on hover */}
