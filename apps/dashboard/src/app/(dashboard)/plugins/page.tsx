@@ -539,8 +539,10 @@ export default function PluginsMarketplacePage() {
             {paginated.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <Puzzle className="mb-3 h-12 w-12 text-muted-foreground/40" />
-                <p className="text-muted-foreground">No plugins found</p>
-                {search && (
+                <p className="text-muted-foreground">
+                  {plugins.length === 0 ? 'No plugins available yet' : 'No plugins found'}
+                </p>
+                {search && plugins.length > 0 && (
                   <Button variant="link" onClick={() => setSearch('')}>
                     Clear search
                   </Button>
