@@ -73,6 +73,20 @@ const MOCK_INSTALLED: InstalledPlugin[] = [
     installedAt: '2026-02-10T08:00:00Z',
     updatedAt: '2026-03-01T12:00:00Z',
     hasUpdate: true,
+    configSchema: {
+      title: 'GPT-4o Agent Configuration',
+      description: 'Configure model parameters and behaviour.',
+      properties: {
+        apiKey: { type: 'string', title: 'API Key', format: 'password', description: 'Your OpenAI API key.' },
+        model: { type: 'string', title: 'Model', enum: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo'], default: 'gpt-4o' },
+        maxTokens: { type: 'integer', title: 'Max Tokens', minimum: 256, maximum: 128000, default: 4096 },
+        temperature: { type: 'number', title: 'Temperature', minimum: 0, maximum: 2, default: 0.7 },
+        systemPrompt: { type: 'string', title: 'System Prompt', format: 'textarea', description: 'Optional system-level instruction.' },
+        enableStreaming: { type: 'boolean', title: 'Enable Streaming', default: true },
+        allowedTools: { type: 'array', title: 'Allowed Tools', items: { type: 'string' }, description: 'Tool names this agent may call.' },
+      },
+      required: ['apiKey'],
+    },
   },
   {
     id: '2',
@@ -86,6 +100,17 @@ const MOCK_INSTALLED: InstalledPlugin[] = [
     status: 'active',
     installedAt: '2026-01-20T09:00:00Z',
     updatedAt: '2026-03-10T14:00:00Z',
+    configSchema: {
+      title: 'Slack Integration',
+      description: 'Connect UniCore to your Slack workspace.',
+      properties: {
+        botToken: { type: 'string', title: 'Bot Token', format: 'password', description: 'xoxb-… token from Slack App settings.' },
+        defaultChannel: { type: 'string', title: 'Default Channel', description: 'Channel ID for notifications (e.g. C01234ABCD).' },
+        notifyOnError: { type: 'boolean', title: 'Notify on Error', default: true },
+        mentionGroup: { type: 'string', title: 'Mention Group', description: 'Group handle to @mention on alerts (optional).' },
+      },
+      required: ['botToken', 'defaultChannel'],
+    },
   },
   {
     id: '3',
@@ -101,6 +126,14 @@ const MOCK_INSTALLED: InstalledPlugin[] = [
     installedAt: '2026-02-05T11:00:00Z',
     updatedAt: '2026-02-28T09:00:00Z',
     hasUpdate: true,
+    configSchema: {
+      title: 'Advanced Analytics',
+      properties: {
+        retentionDays: { type: 'integer', title: 'Data Retention (days)', minimum: 7, maximum: 365, default: 90 },
+        timezone: { type: 'string', title: 'Timezone', enum: ['UTC', 'America/New_York', 'Europe/London', 'Asia/Tokyo'], default: 'UTC' },
+        enableAiInsights: { type: 'boolean', title: 'AI-Powered Insights', default: true },
+      },
+    },
   },
   {
     id: '4',
@@ -115,6 +148,18 @@ const MOCK_INSTALLED: InstalledPlugin[] = [
     installedAt: '2026-03-01T10:00:00Z',
     updatedAt: '2026-03-15T08:00:00Z',
     errorMessage: 'Failed to connect to external workflow service. Check API credentials in configuration.',
+    configSchema: {
+      title: 'Workflow Automation Pro',
+      description: 'Set API credentials for the external workflow service.',
+      properties: {
+        serviceUrl: { type: 'string', title: 'Service URL', description: 'Base URL of your workflow service.' },
+        apiKey: { type: 'string', title: 'API Key', format: 'password' },
+        timeoutSeconds: { type: 'integer', title: 'Timeout (seconds)', minimum: 5, maximum: 300, default: 30 },
+        retryCount: { type: 'integer', title: 'Retry Count', minimum: 0, maximum: 5, default: 3 },
+        webhookUrls: { type: 'array', title: 'Webhook URLs', items: { type: 'string' }, description: 'URLs to notify on workflow events.' },
+      },
+      required: ['serviceUrl', 'apiKey'],
+    },
   },
   {
     id: '5',
@@ -128,6 +173,16 @@ const MOCK_INSTALLED: InstalledPlugin[] = [
     status: 'active',
     installedAt: '2026-01-15T07:00:00Z',
     updatedAt: '2026-03-18T11:00:00Z',
+    configSchema: {
+      title: 'Telegram Channel',
+      properties: {
+        botToken: { type: 'string', title: 'Bot Token', format: 'password', description: 'Token from @BotFather.' },
+        webhookSecret: { type: 'string', title: 'Webhook Secret', format: 'password', description: 'Optional secret for webhook validation.' },
+        allowedChatIds: { type: 'array', title: 'Allowed Chat IDs', items: { type: 'string' }, description: 'Leave empty to allow all chats.' },
+        parseMode: { type: 'string', title: 'Parse Mode', enum: ['HTML', 'Markdown', 'MarkdownV2'], default: 'HTML' },
+      },
+      required: ['botToken'],
+    },
   },
   {
     id: '6',
@@ -141,6 +196,15 @@ const MOCK_INSTALLED: InstalledPlugin[] = [
     status: 'active',
     installedAt: '2026-02-22T13:00:00Z',
     updatedAt: '2026-03-05T16:00:00Z',
+    configSchema: {
+      title: 'Security Scanner',
+      properties: {
+        scanInterval: { type: 'string', title: 'Scan Interval', enum: ['hourly', 'daily', 'weekly'], default: 'daily' },
+        severityThreshold: { type: 'string', title: 'Alert Threshold', enum: ['low', 'medium', 'high', 'critical'], default: 'high' },
+        notifyEmail: { type: 'string', title: 'Notification Email', description: 'Email for scan reports.' },
+        autoRemediate: { type: 'boolean', title: 'Auto-Remediate', description: 'Automatically apply safe fixes.', default: false },
+      },
+    },
   },
 ];
 
