@@ -77,6 +77,6 @@ export function PixelCloud({ className, px }: { className?: string; px?: number 
   return <PixelShape grid={CLOUD_GRID} px={px ?? 2} animation="pixelFloat 5s ease-in-out infinite" className={className} />;
 }
 
-export function PixelFlower({ className, px }: { className?: string; px?: number }) {
+export function PixelFlower({ className, px }: { className?: string; px?: number }): JSX.Element {
   return <PixelShape grid={FLOWER_GRID} px={px ?? 3} className={className} />;
 }
