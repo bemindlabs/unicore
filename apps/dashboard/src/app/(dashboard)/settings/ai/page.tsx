@@ -111,6 +111,9 @@ function ModelSearch({ models, value, onChange, placeholder }: {
 // ── Page ──────────────────────────────────────────────────────────────────
 
 export default function AiSettingsPage() {
+  const { isPro } = useLicense();
+  const { user } = useAuth();
+  const [isUpgrading, setIsUpgrading] = useState(false);
   const [config, setConfig] = useState<Record<string, any> | null>(null);
   const [keys, setKeys] = useState<Record<string, string>>({});
   const [baseUrls, setBaseUrls] = useState<Record<string, string>>({});
