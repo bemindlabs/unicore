@@ -279,6 +279,35 @@ exports.Prisma.PluginInstallationScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ConversationScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  status: 'status',
+  channel: 'channel',
+  assigneeId: 'assigneeId',
+  assigneeName: 'assigneeName',
+  contactId: 'contactId',
+  contactName: 'contactName',
+  contactEmail: 'contactEmail',
+  userId: 'userId',
+  metadata: 'metadata',
+  closedAt: 'closedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ConversationMessageScalarFieldEnum = {
+  id: 'id',
+  conversationId: 'conversationId',
+  content: 'content',
+  role: 'role',
+  authorId: 'authorId',
+  authorName: 'authorName',
+  authorType: 'authorType',
+  metadata: 'metadata',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.NotificationScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -323,6 +352,14 @@ exports.Role = exports.$Enums.Role = {
   VIEWER: 'VIEWER'
 };
 
+exports.ConversationStatus = exports.$Enums.ConversationStatus = {
+  OPEN: 'OPEN',
+  ASSIGNED: 'ASSIGNED',
+  PENDING: 'PENDING',
+  RESOLVED: 'RESOLVED',
+  CLOSED: 'CLOSED'
+};
+
 exports.Prisma.ModelName = {
   User: 'User',
   OAuthAccount: 'OAuthAccount',
@@ -337,6 +374,8 @@ exports.Prisma.ModelName = {
   Plugin: 'Plugin',
   PluginVersion: 'PluginVersion',
   PluginInstallation: 'PluginInstallation',
+  Conversation: 'Conversation',
+  ConversationMessage: 'ConversationMessage',
   Notification: 'Notification'
 };
 
