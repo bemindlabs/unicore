@@ -105,31 +105,59 @@ export function AgentTerminal({ agent, open, onClose }: Props) {
       fit.fit();
     });
 
-    // Intercept /theme and /font commands; forward everything else to PTY
+    // Intercept /theme, /font, and agent commands; forward everything else to PTY
     let inputBuffer = '';
 
     terminal.onData((data) => {
       // Carriage return = user pressed Enter — check buffer for commands
       if (data === '\r') {
-        const result = parseThemeCommand(inputBuffer);
+        const line = inputBuffer;
         inputBuffer = '';
 
-        if (result.type === 'not-a-command') {
-          sendInput(data);
+        // 1. /theme and /font commands
+        const themeResult = parseThemeCommand(line);
+        if (themeResult.type !== 'not-a-command') {
+          // Clear PTY line buffer (Ctrl-U) so the shell doesn't see the typed text
+          sendInput('\x15');
+          terminal.write(themeResult.message);
+          if (themeResult.type === 'theme-changed') {
+            setStoredTheme(themeResult.themeId);
+            setThemeId(themeResult.themeId);
+          } else if (themeResult.type === 'font-changed') {
+            setStoredFont(themeResult.fontId);
+            setFontId(themeResult.fontId);
+          }
           return;
         }
 
-        // Echo the command result in the terminal
-        terminal.write(result.message);
-
-        if (result.type === 'theme-changed') {
-          setStoredTheme(result.themeId);
-          setThemeId(result.themeId);
-        } else if (result.type === 'font-changed') {
-          setStoredFont(result.fontId);
-          setFontId(result.fontId);
+        // 2. Agent slash commands (/help, /agents, /chat, /ask, /exit, /clear, /history)
+        if (line.trimStart().startsWith('/')) {
+          // Clear PTY line buffer so the shell doesn't execute the command
+          sendInput('\x15');
+          terminal.writeln('');
+          // Track in history
+          setCmdHistory((h) => [...h.slice(-199), line.trim()]);
+          cmdHistoryRef.current = [...cmdHistoryRef.current.slice(-199), line.trim()];
+          runCommand(line, {
+            terminal,
+            agent,
+            agents: defaultAgents,
+            history: cmdHistoryRef.current,
+            activeChat: activeChatRef.current,
+            sendAsk: (question: string) => {
+              sendChat(question, 'You', 'dashboard-ui', 'human');
+            },
+            onChatStart: (agentId: string) => {
+              setActiveChat(agentId || null);
+              activeChatRef.current = agentId || null;
+            },
+            onClose,
+          });
+          return;
         }
-        // For help/error we already wrote the message — done.
+
+        // 3. Forward regular input to PTY
+        sendInput(data);
         return;
       }
 
