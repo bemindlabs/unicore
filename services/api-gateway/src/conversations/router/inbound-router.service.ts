@@ -232,12 +232,6 @@ export class InboundRouterService {
       );
     });
 
-    // Update routed status
-    await this.prisma.inboundMessage.updateMany({
-      where: { conversationId, routedTo: 'pending' },
-      data: { routedTo: 'agent' },
-    });
-
     this.logger.log(`Routed conversationId=${conversationId} → agent=${agentId}`);
   }
 
