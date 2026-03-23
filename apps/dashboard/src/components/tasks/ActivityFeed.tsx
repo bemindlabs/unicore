@@ -52,7 +52,7 @@ function ActionIcon({ action }: { action: string }) {
   );
 }
 
-export function ActivityFeed({ entries, maxItems }: { entries: TaskActivityEntry[]; maxItems?: number }) {
+export function ActivityFeed({ entries, maxItems }: { entries: TaskActivityEntry[]; maxItems?: number }): JSX.Element {
   const sorted = [...entries].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   const items = maxItems ? sorted.slice(0, maxItems) : sorted;
 

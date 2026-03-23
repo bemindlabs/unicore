@@ -18,7 +18,7 @@ export function UpgradePrompt({
   feature,
   targetTier = 'Pro',
   description,
-}: UpgradePromptProps) {
+}: UpgradePromptProps): JSX.Element {
   return (
     <Card className="border-dashed">
       <CardContent className="flex flex-col items-center justify-center py-12 text-center space-y-5">

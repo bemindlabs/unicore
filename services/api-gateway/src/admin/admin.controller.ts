@@ -181,6 +181,7 @@ export class AdminController {
 
   @Get('health')
   async health() {
+    const startMs = Date.now();
     const now = new Date().toISOString();
     const services: Array<{ name: string; status: string; latencyMs?: number; lastCheckedAt: string; errorMessage?: string }> = [];
 
@@ -241,7 +242,7 @@ export class AdminController {
       },
     ];
 
-    return { overallStatus, services, clusterNodes, checkedAt: now };
+    return { overallStatus, services, clusterNodes, checkedAt: now, uptime: uptimeSec, timestamp: now, totalMs: Date.now() - startMs };
   }
 
   // ─── Platform Overview ──────────────────────────────────────────────────

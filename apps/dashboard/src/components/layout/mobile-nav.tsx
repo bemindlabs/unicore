@@ -12,7 +12,7 @@ interface MobileNavProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function MobileNav({ open, onOpenChange }: MobileNavProps) {
+export function MobileNav({ open, onOpenChange }: MobileNavProps): JSX.Element {
   const pathname = usePathname();
   const { user } = useAuth();
   const { config } = useBranding();
