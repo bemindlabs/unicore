@@ -498,7 +498,6 @@ export class ConversationsService {
         authorId: 'router-agent',
         authorName: 'Router Agent',
         authorType: 'agent',
-        isAiGenerated: true,
       },
     });
 
