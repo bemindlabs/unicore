@@ -428,7 +428,7 @@ model Message {
 }
 
 /// Operators or agents participating in a conversation
-// UNC-1031: extended with participantType, participantColor, autoAssigned, invitedBy, isActive
+// UNC-1031: extended with participantType, participantColor, autoAssigned, invitedBy, isActive, autoRespond
 model ConversationParticipant {
   id               String       @id @default(uuid())
   conversationId   String
@@ -447,6 +447,8 @@ model ConversationParticipant {
   /// Who invited this participant (userId), null if self-joined or auto
   invitedBy        String?
   isActive         Boolean      @default(true)
+  /// When true, this AI agent will auto-respond to incoming messages (UNC-1031)
+  autoRespond      Boolean      @default(true)
   joinedAt         DateTime     @default(now())
   leftAt           DateTime?
   updatedAt        DateTime     @updatedAt
@@ -456,6 +458,25 @@ model ConversationParticipant {
   @@index([participantId])
   @@index([conversationId, isActive])
   @@map("conversation_participants")
+}
+
+// ---------------------------------------------------------------------------
+// Agent Notes (UNC-1013) — operator/agent notes on contact profiles
+// ---------------------------------------------------------------------------
+
+/// Notes written by operators or AI agents about a contact
+model AgentNote {
+  id         String   @id @default(uuid())
+  contactId  String
+  body       String
+  authorId   String
+  authorName String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([contactId])
+  @@index([authorId])
+  @@map("agent_notes")
 }
 
 // ---------------------------------------------------------------------------
