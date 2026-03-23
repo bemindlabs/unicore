@@ -9,8 +9,46 @@ import type {
   ChurnWidgetData,
   SignupsWidgetData,
   ActivityWidgetData,
+  ActivityItem,
   ChartWidgetData,
 } from '@/types/widget';
+
+// --- Audit log helpers ---
+
+interface AuditLogEntry {
+  id: string;
+  userId?: string;
+  userEmail?: string;
+  action: string;
+  resource: string;
+  resourceId?: string;
+  detail?: string;
+  success?: boolean;
+  createdAt: string;
+}
+
+function auditActionToType(action: string, resource: string): ActivityItem['type'] {
+  const r = resource.toLowerCase();
+  const a = action.toLowerCase();
+  if (r === 'orders' || r === 'order' || a === 'order') return 'order';
+  if (r === 'invoices' || r === 'invoice' || a === 'invoice') return 'invoice';
+  if (r === 'agents' || r === 'agent' || a === 'agent') return 'agent';
+  if (r === 'contacts' || r === 'contact' || a === 'contact') return 'contact';
+  if (r === 'inventory' || r === 'products' || r === 'product') return 'inventory';
+  return 'system';
+}
+
+function toRelativeTime(isoDate: string): string {
+  const ms = Date.now() - new Date(isoDate).getTime();
+  const seconds = Math.floor(ms / 1000);
+  if (seconds < 60) return `${seconds} second${seconds === 1 ? '' : 's'} ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days === 1 ? '' : 's'} ago`;
+}
 
 export const widgetDataFetchers = {
   revenue: (): Promise<RevenueWidgetData> =>
