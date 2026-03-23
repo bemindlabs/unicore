@@ -367,6 +367,25 @@ exports.Prisma.ConversationParticipantScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ChannelMessageScalarFieldEnum = {
+  id: 'id',
+  channel: 'channel',
+  externalId: 'externalId',
+  conversationId: 'conversationId',
+  senderId: 'senderId',
+  senderName: 'senderName',
+  senderAvatar: 'senderAvatar',
+  text: 'text',
+  contentType: 'contentType',
+  attachments: 'attachments',
+  replyToId: 'replyToId',
+  isBot: 'isBot',
+  timestamp: 'timestamp',
+  metadata: 'metadata',
+  rawPayload: 'rawPayload',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.NotificationScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -496,6 +515,7 @@ exports.Prisma.ModelName = {
   ConversationMessage: 'ConversationMessage',
   Message: 'Message',
   ConversationParticipant: 'ConversationParticipant',
+  ChannelMessage: 'ChannelMessage',
   Notification: 'Notification',
   Handoff: 'Handoff',
   CannedResponse: 'CannedResponse'

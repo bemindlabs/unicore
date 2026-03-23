@@ -104,6 +104,11 @@ export type Message = $Result.DefaultSelection<Prisma.$MessagePayload>
  */
 export type ConversationParticipant = $Result.DefaultSelection<Prisma.$ConversationParticipantPayload>
 /**
+ * Model ChannelMessage
+ * 
+ */
+export type ChannelMessage = $Result.DefaultSelection<Prisma.$ChannelMessagePayload>
+/**
  * Model Notification
  * 
  */
@@ -502,6 +507,16 @@ export class PrismaClient<
     * ```
     */
   get conversationParticipant(): Prisma.ConversationParticipantDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.channelMessage`: Exposes CRUD operations for the **ChannelMessage** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ChannelMessages
+    * const channelMessages = await prisma.channelMessage.findMany()
+    * ```
+    */
+  get channelMessage(): Prisma.ChannelMessageDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.notification`: Exposes CRUD operations for the **Notification** model.
@@ -991,6 +1006,7 @@ export namespace Prisma {
     ConversationMessage: 'ConversationMessage',
     Message: 'Message',
     ConversationParticipant: 'ConversationParticipant',
+    ChannelMessage: 'ChannelMessage',
     Notification: 'Notification',
     Handoff: 'Handoff',
     CannedResponse: 'CannedResponse'
@@ -1012,7 +1028,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "oAuthAccount" | "session" | "customDomain" | "auditLog" | "settings" | "task" | "chatHistory" | "chatMessage" | "gamification" | "plugin" | "pluginVersion" | "pluginInstallation" | "contactChannel" | "conversation" | "conversationMessage" | "message" | "conversationParticipant" | "notification" | "handoff" | "cannedResponse"
+      modelProps: "user" | "oAuthAccount" | "session" | "customDomain" | "auditLog" | "settings" | "task" | "chatHistory" | "chatMessage" | "gamification" | "plugin" | "pluginVersion" | "pluginInstallation" | "contactChannel" | "conversation" | "conversationMessage" | "message" | "conversationParticipant" | "channelMessage" | "notification" | "handoff" | "cannedResponse"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2348,6 +2364,80 @@ export namespace Prisma {
           }
         }
       }
+      ChannelMessage: {
+        payload: Prisma.$ChannelMessagePayload<ExtArgs>
+        fields: Prisma.ChannelMessageFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ChannelMessageFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelMessagePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ChannelMessageFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelMessagePayload>
+          }
+          findFirst: {
+            args: Prisma.ChannelMessageFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelMessagePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ChannelMessageFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelMessagePayload>
+          }
+          findMany: {
+            args: Prisma.ChannelMessageFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelMessagePayload>[]
+          }
+          create: {
+            args: Prisma.ChannelMessageCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelMessagePayload>
+          }
+          createMany: {
+            args: Prisma.ChannelMessageCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ChannelMessageCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelMessagePayload>[]
+          }
+          delete: {
+            args: Prisma.ChannelMessageDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelMessagePayload>
+          }
+          update: {
+            args: Prisma.ChannelMessageUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelMessagePayload>
+          }
+          deleteMany: {
+            args: Prisma.ChannelMessageDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ChannelMessageUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ChannelMessageUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelMessagePayload>[]
+          }
+          upsert: {
+            args: Prisma.ChannelMessageUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChannelMessagePayload>
+          }
+          aggregate: {
+            args: Prisma.ChannelMessageAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateChannelMessage>
+          }
+          groupBy: {
+            args: Prisma.ChannelMessageGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ChannelMessageGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ChannelMessageCountArgs<ExtArgs>
+            result: $Utils.Optional<ChannelMessageCountAggregateOutputType> | number
+          }
+        }
+      }
       Notification: {
         payload: Prisma.$NotificationPayload<ExtArgs>
         fields: Prisma.NotificationFieldRefs
@@ -2684,6 +2774,7 @@ export namespace Prisma {
     conversationMessage?: ConversationMessageOmit
     message?: MessageOmit
     conversationParticipant?: ConversationParticipantOmit
+    channelMessage?: ChannelMessageOmit
     notification?: NotificationOmit
     handoff?: HandoffOmit
     cannedResponse?: CannedResponseOmit
@@ -23212,6 +23303,1162 @@ export namespace Prisma {
 
 
   /**
+   * Model ChannelMessage
+   */
+
+  export type AggregateChannelMessage = {
+    _count: ChannelMessageCountAggregateOutputType | null
+    _min: ChannelMessageMinAggregateOutputType | null
+    _max: ChannelMessageMaxAggregateOutputType | null
+  }
+
+  export type ChannelMessageMinAggregateOutputType = {
+    id: string | null
+    channel: string | null
+    externalId: string | null
+    conversationId: string | null
+    senderId: string | null
+    senderName: string | null
+    senderAvatar: string | null
+    text: string | null
+    contentType: string | null
+    replyToId: string | null
+    isBot: boolean | null
+    timestamp: Date | null
+    createdAt: Date | null
+  }
+
+  export type ChannelMessageMaxAggregateOutputType = {
+    id: string | null
+    channel: string | null
+    externalId: string | null
+    conversationId: string | null
+    senderId: string | null
+    senderName: string | null
+    senderAvatar: string | null
+    text: string | null
+    contentType: string | null
+    replyToId: string | null
+    isBot: boolean | null
+    timestamp: Date | null
+    createdAt: Date | null
+  }
+
+  export type ChannelMessageCountAggregateOutputType = {
+    id: number
+    channel: number
+    externalId: number
+    conversationId: number
+    senderId: number
+    senderName: number
+    senderAvatar: number
+    text: number
+    contentType: number
+    attachments: number
+    replyToId: number
+    isBot: number
+    timestamp: number
+    metadata: number
+    rawPayload: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type ChannelMessageMinAggregateInputType = {
+    id?: true
+    channel?: true
+    externalId?: true
+    conversationId?: true
+    senderId?: true
+    senderName?: true
+    senderAvatar?: true
+    text?: true
+    contentType?: true
+    replyToId?: true
+    isBot?: true
+    timestamp?: true
+    createdAt?: true
+  }
+
+  export type ChannelMessageMaxAggregateInputType = {
+    id?: true
+    channel?: true
+    externalId?: true
+    conversationId?: true
+    senderId?: true
+    senderName?: true
+    senderAvatar?: true
+    text?: true
+    contentType?: true
+    replyToId?: true
+    isBot?: true
+    timestamp?: true
+    createdAt?: true
+  }
+
+  export type ChannelMessageCountAggregateInputType = {
+    id?: true
+    channel?: true
+    externalId?: true
+    conversationId?: true
+    senderId?: true
+    senderName?: true
+    senderAvatar?: true
+    text?: true
+    contentType?: true
+    attachments?: true
+    replyToId?: true
+    isBot?: true
+    timestamp?: true
+    metadata?: true
+    rawPayload?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type ChannelMessageAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ChannelMessage to aggregate.
+     */
+    where?: ChannelMessageWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ChannelMessages to fetch.
+     */
+    orderBy?: ChannelMessageOrderByWithRelationInput | ChannelMessageOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ChannelMessageWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ChannelMessages from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ChannelMessages.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ChannelMessages
+    **/
+    _count?: true | ChannelMessageCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ChannelMessageMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ChannelMessageMaxAggregateInputType
+  }
+
+  export type GetChannelMessageAggregateType<T extends ChannelMessageAggregateArgs> = {
+        [P in keyof T & keyof AggregateChannelMessage]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateChannelMessage[P]>
+      : GetScalarType<T[P], AggregateChannelMessage[P]>
+  }
+
+
+
+
+  export type ChannelMessageGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ChannelMessageWhereInput
+    orderBy?: ChannelMessageOrderByWithAggregationInput | ChannelMessageOrderByWithAggregationInput[]
+    by: ChannelMessageScalarFieldEnum[] | ChannelMessageScalarFieldEnum
+    having?: ChannelMessageScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ChannelMessageCountAggregateInputType | true
+    _min?: ChannelMessageMinAggregateInputType
+    _max?: ChannelMessageMaxAggregateInputType
+  }
+
+  export type ChannelMessageGroupByOutputType = {
+    id: string
+    channel: string
+    externalId: string
+    conversationId: string
+    senderId: string
+    senderName: string
+    senderAvatar: string | null
+    text: string
+    contentType: string
+    attachments: JsonValue
+    replyToId: string | null
+    isBot: boolean
+    timestamp: Date
+    metadata: JsonValue
+    rawPayload: JsonValue
+    createdAt: Date
+    _count: ChannelMessageCountAggregateOutputType | null
+    _min: ChannelMessageMinAggregateOutputType | null
+    _max: ChannelMessageMaxAggregateOutputType | null
+  }
+
+  type GetChannelMessageGroupByPayload<T extends ChannelMessageGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ChannelMessageGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ChannelMessageGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ChannelMessageGroupByOutputType[P]>
+            : GetScalarType<T[P], ChannelMessageGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ChannelMessageSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    channel?: boolean
+    externalId?: boolean
+    conversationId?: boolean
+    senderId?: boolean
+    senderName?: boolean
+    senderAvatar?: boolean
+    text?: boolean
+    contentType?: boolean
+    attachments?: boolean
+    replyToId?: boolean
+    isBot?: boolean
+    timestamp?: boolean
+    metadata?: boolean
+    rawPayload?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["channelMessage"]>
+
+  export type ChannelMessageSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    channel?: boolean
+    externalId?: boolean
+    conversationId?: boolean
+    senderId?: boolean
+    senderName?: boolean
+    senderAvatar?: boolean
+    text?: boolean
+    contentType?: boolean
+    attachments?: boolean
+    replyToId?: boolean
+    isBot?: boolean
+    timestamp?: boolean
+    metadata?: boolean
+    rawPayload?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["channelMessage"]>
+
+  export type ChannelMessageSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    channel?: boolean
+    externalId?: boolean
+    conversationId?: boolean
+    senderId?: boolean
+    senderName?: boolean
+    senderAvatar?: boolean
+    text?: boolean
+    contentType?: boolean
+    attachments?: boolean
+    replyToId?: boolean
+    isBot?: boolean
+    timestamp?: boolean
+    metadata?: boolean
+    rawPayload?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["channelMessage"]>
+
+  export type ChannelMessageSelectScalar = {
+    id?: boolean
+    channel?: boolean
+    externalId?: boolean
+    conversationId?: boolean
+    senderId?: boolean
+    senderName?: boolean
+    senderAvatar?: boolean
+    text?: boolean
+    contentType?: boolean
+    attachments?: boolean
+    replyToId?: boolean
+    isBot?: boolean
+    timestamp?: boolean
+    metadata?: boolean
+    rawPayload?: boolean
+    createdAt?: boolean
+  }
+
+  export type ChannelMessageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "channel" | "externalId" | "conversationId" | "senderId" | "senderName" | "senderAvatar" | "text" | "contentType" | "attachments" | "replyToId" | "isBot" | "timestamp" | "metadata" | "rawPayload" | "createdAt", ExtArgs["result"]["channelMessage"]>
+
+  export type $ChannelMessagePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ChannelMessage"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      /**
+       * Source channel: telegram | line | whatsapp | discord | slack | email | webchat
+       */
+      channel: string
+      /**
+       * Message ID as provided by the source channel
+       */
+      externalId: string
+      /**
+       * Chat / room / conversation ID in the source channel
+       */
+      conversationId: string
+      senderId: string
+      senderName: string
+      senderAvatar: string | null
+      /**
+       * Extracted plain-text content
+       */
+      text: string
+      /**
+       * Primary content type: text | image | video | audio | file | sticker | location | unknown
+       */
+      contentType: string
+      /**
+       * JSON array of MessageAttachment objects
+       */
+      attachments: Prisma.JsonValue
+      /**
+       * External message ID being replied to, if applicable
+       */
+      replyToId: string | null
+      isBot: boolean
+      /**
+       * Original send time reported by the source channel
+       */
+      timestamp: Date
+      /**
+       * Channel-specific extras (thread_ts, subject, etc.)
+       */
+      metadata: Prisma.JsonValue
+      /**
+       * Verbatim raw payload for audit / replay
+       */
+      rawPayload: Prisma.JsonValue
+      createdAt: Date
+    }, ExtArgs["result"]["channelMessage"]>
+    composites: {}
+  }
+
+  type ChannelMessageGetPayload<S extends boolean | null | undefined | ChannelMessageDefaultArgs> = $Result.GetResult<Prisma.$ChannelMessagePayload, S>
+
+  type ChannelMessageCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ChannelMessageFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ChannelMessageCountAggregateInputType | true
+    }
+
+  export interface ChannelMessageDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ChannelMessage'], meta: { name: 'ChannelMessage' } }
+    /**
+     * Find zero or one ChannelMessage that matches the filter.
+     * @param {ChannelMessageFindUniqueArgs} args - Arguments to find a ChannelMessage
+     * @example
+     * // Get one ChannelMessage
+     * const channelMessage = await prisma.channelMessage.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ChannelMessageFindUniqueArgs>(args: SelectSubset<T, ChannelMessageFindUniqueArgs<ExtArgs>>): Prisma__ChannelMessageClient<$Result.GetResult<Prisma.$ChannelMessagePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ChannelMessage that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ChannelMessageFindUniqueOrThrowArgs} args - Arguments to find a ChannelMessage
+     * @example
+     * // Get one ChannelMessage
+     * const channelMessage = await prisma.channelMessage.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ChannelMessageFindUniqueOrThrowArgs>(args: SelectSubset<T, ChannelMessageFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ChannelMessageClient<$Result.GetResult<Prisma.$ChannelMessagePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ChannelMessage that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChannelMessageFindFirstArgs} args - Arguments to find a ChannelMessage
+     * @example
+     * // Get one ChannelMessage
+     * const channelMessage = await prisma.channelMessage.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ChannelMessageFindFirstArgs>(args?: SelectSubset<T, ChannelMessageFindFirstArgs<ExtArgs>>): Prisma__ChannelMessageClient<$Result.GetResult<Prisma.$ChannelMessagePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ChannelMessage that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChannelMessageFindFirstOrThrowArgs} args - Arguments to find a ChannelMessage
+     * @example
+     * // Get one ChannelMessage
+     * const channelMessage = await prisma.channelMessage.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ChannelMessageFindFirstOrThrowArgs>(args?: SelectSubset<T, ChannelMessageFindFirstOrThrowArgs<ExtArgs>>): Prisma__ChannelMessageClient<$Result.GetResult<Prisma.$ChannelMessagePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ChannelMessages that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChannelMessageFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ChannelMessages
+     * const channelMessages = await prisma.channelMessage.findMany()
+     * 
+     * // Get first 10 ChannelMessages
+     * const channelMessages = await prisma.channelMessage.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const channelMessageWithIdOnly = await prisma.channelMessage.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ChannelMessageFindManyArgs>(args?: SelectSubset<T, ChannelMessageFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChannelMessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ChannelMessage.
+     * @param {ChannelMessageCreateArgs} args - Arguments to create a ChannelMessage.
+     * @example
+     * // Create one ChannelMessage
+     * const ChannelMessage = await prisma.channelMessage.create({
+     *   data: {
+     *     // ... data to create a ChannelMessage
+     *   }
+     * })
+     * 
+     */
+    create<T extends ChannelMessageCreateArgs>(args: SelectSubset<T, ChannelMessageCreateArgs<ExtArgs>>): Prisma__ChannelMessageClient<$Result.GetResult<Prisma.$ChannelMessagePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ChannelMessages.
+     * @param {ChannelMessageCreateManyArgs} args - Arguments to create many ChannelMessages.
+     * @example
+     * // Create many ChannelMessages
+     * const channelMessage = await prisma.channelMessage.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ChannelMessageCreateManyArgs>(args?: SelectSubset<T, ChannelMessageCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ChannelMessages and returns the data saved in the database.
+     * @param {ChannelMessageCreateManyAndReturnArgs} args - Arguments to create many ChannelMessages.
+     * @example
+     * // Create many ChannelMessages
+     * const channelMessage = await prisma.channelMessage.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ChannelMessages and only return the `id`
+     * const channelMessageWithIdOnly = await prisma.channelMessage.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ChannelMessageCreateManyAndReturnArgs>(args?: SelectSubset<T, ChannelMessageCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChannelMessagePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ChannelMessage.
+     * @param {ChannelMessageDeleteArgs} args - Arguments to delete one ChannelMessage.
+     * @example
+     * // Delete one ChannelMessage
+     * const ChannelMessage = await prisma.channelMessage.delete({
+     *   where: {
+     *     // ... filter to delete one ChannelMessage
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ChannelMessageDeleteArgs>(args: SelectSubset<T, ChannelMessageDeleteArgs<ExtArgs>>): Prisma__ChannelMessageClient<$Result.GetResult<Prisma.$ChannelMessagePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ChannelMessage.
+     * @param {ChannelMessageUpdateArgs} args - Arguments to update one ChannelMessage.
+     * @example
+     * // Update one ChannelMessage
+     * const channelMessage = await prisma.channelMessage.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ChannelMessageUpdateArgs>(args: SelectSubset<T, ChannelMessageUpdateArgs<ExtArgs>>): Prisma__ChannelMessageClient<$Result.GetResult<Prisma.$ChannelMessagePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ChannelMessages.
+     * @param {ChannelMessageDeleteManyArgs} args - Arguments to filter ChannelMessages to delete.
+     * @example
+     * // Delete a few ChannelMessages
+     * const { count } = await prisma.channelMessage.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ChannelMessageDeleteManyArgs>(args?: SelectSubset<T, ChannelMessageDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ChannelMessages.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChannelMessageUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ChannelMessages
+     * const channelMessage = await prisma.channelMessage.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ChannelMessageUpdateManyArgs>(args: SelectSubset<T, ChannelMessageUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ChannelMessages and returns the data updated in the database.
+     * @param {ChannelMessageUpdateManyAndReturnArgs} args - Arguments to update many ChannelMessages.
+     * @example
+     * // Update many ChannelMessages
+     * const channelMessage = await prisma.channelMessage.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ChannelMessages and only return the `id`
+     * const channelMessageWithIdOnly = await prisma.channelMessage.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ChannelMessageUpdateManyAndReturnArgs>(args: SelectSubset<T, ChannelMessageUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChannelMessagePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ChannelMessage.
+     * @param {ChannelMessageUpsertArgs} args - Arguments to update or create a ChannelMessage.
+     * @example
+     * // Update or create a ChannelMessage
+     * const channelMessage = await prisma.channelMessage.upsert({
+     *   create: {
+     *     // ... data to create a ChannelMessage
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ChannelMessage we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ChannelMessageUpsertArgs>(args: SelectSubset<T, ChannelMessageUpsertArgs<ExtArgs>>): Prisma__ChannelMessageClient<$Result.GetResult<Prisma.$ChannelMessagePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ChannelMessages.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChannelMessageCountArgs} args - Arguments to filter ChannelMessages to count.
+     * @example
+     * // Count the number of ChannelMessages
+     * const count = await prisma.channelMessage.count({
+     *   where: {
+     *     // ... the filter for the ChannelMessages we want to count
+     *   }
+     * })
+    **/
+    count<T extends ChannelMessageCountArgs>(
+      args?: Subset<T, ChannelMessageCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ChannelMessageCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ChannelMessage.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChannelMessageAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ChannelMessageAggregateArgs>(args: Subset<T, ChannelMessageAggregateArgs>): Prisma.PrismaPromise<GetChannelMessageAggregateType<T>>
+
+    /**
+     * Group by ChannelMessage.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChannelMessageGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ChannelMessageGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ChannelMessageGroupByArgs['orderBy'] }
+        : { orderBy?: ChannelMessageGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ChannelMessageGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetChannelMessageGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ChannelMessage model
+   */
+  readonly fields: ChannelMessageFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ChannelMessage.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ChannelMessageClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ChannelMessage model
+   */
+  interface ChannelMessageFieldRefs {
+    readonly id: FieldRef<"ChannelMessage", 'String'>
+    readonly channel: FieldRef<"ChannelMessage", 'String'>
+    readonly externalId: FieldRef<"ChannelMessage", 'String'>
+    readonly conversationId: FieldRef<"ChannelMessage", 'String'>
+    readonly senderId: FieldRef<"ChannelMessage", 'String'>
+    readonly senderName: FieldRef<"ChannelMessage", 'String'>
+    readonly senderAvatar: FieldRef<"ChannelMessage", 'String'>
+    readonly text: FieldRef<"ChannelMessage", 'String'>
+    readonly contentType: FieldRef<"ChannelMessage", 'String'>
+    readonly attachments: FieldRef<"ChannelMessage", 'Json'>
+    readonly replyToId: FieldRef<"ChannelMessage", 'String'>
+    readonly isBot: FieldRef<"ChannelMessage", 'Boolean'>
+    readonly timestamp: FieldRef<"ChannelMessage", 'DateTime'>
+    readonly metadata: FieldRef<"ChannelMessage", 'Json'>
+    readonly rawPayload: FieldRef<"ChannelMessage", 'Json'>
+    readonly createdAt: FieldRef<"ChannelMessage", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ChannelMessage findUnique
+   */
+  export type ChannelMessageFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelMessage
+     */
+    select?: ChannelMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelMessage
+     */
+    omit?: ChannelMessageOmit<ExtArgs> | null
+    /**
+     * Filter, which ChannelMessage to fetch.
+     */
+    where: ChannelMessageWhereUniqueInput
+  }
+
+  /**
+   * ChannelMessage findUniqueOrThrow
+   */
+  export type ChannelMessageFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelMessage
+     */
+    select?: ChannelMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelMessage
+     */
+    omit?: ChannelMessageOmit<ExtArgs> | null
+    /**
+     * Filter, which ChannelMessage to fetch.
+     */
+    where: ChannelMessageWhereUniqueInput
+  }
+
+  /**
+   * ChannelMessage findFirst
+   */
+  export type ChannelMessageFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelMessage
+     */
+    select?: ChannelMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelMessage
+     */
+    omit?: ChannelMessageOmit<ExtArgs> | null
+    /**
+     * Filter, which ChannelMessage to fetch.
+     */
+    where?: ChannelMessageWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ChannelMessages to fetch.
+     */
+    orderBy?: ChannelMessageOrderByWithRelationInput | ChannelMessageOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ChannelMessages.
+     */
+    cursor?: ChannelMessageWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ChannelMessages from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ChannelMessages.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ChannelMessages.
+     */
+    distinct?: ChannelMessageScalarFieldEnum | ChannelMessageScalarFieldEnum[]
+  }
+
+  /**
+   * ChannelMessage findFirstOrThrow
+   */
+  export type ChannelMessageFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelMessage
+     */
+    select?: ChannelMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelMessage
+     */
+    omit?: ChannelMessageOmit<ExtArgs> | null
+    /**
+     * Filter, which ChannelMessage to fetch.
+     */
+    where?: ChannelMessageWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ChannelMessages to fetch.
+     */
+    orderBy?: ChannelMessageOrderByWithRelationInput | ChannelMessageOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ChannelMessages.
+     */
+    cursor?: ChannelMessageWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ChannelMessages from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ChannelMessages.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ChannelMessages.
+     */
+    distinct?: ChannelMessageScalarFieldEnum | ChannelMessageScalarFieldEnum[]
+  }
+
+  /**
+   * ChannelMessage findMany
+   */
+  export type ChannelMessageFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelMessage
+     */
+    select?: ChannelMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelMessage
+     */
+    omit?: ChannelMessageOmit<ExtArgs> | null
+    /**
+     * Filter, which ChannelMessages to fetch.
+     */
+    where?: ChannelMessageWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ChannelMessages to fetch.
+     */
+    orderBy?: ChannelMessageOrderByWithRelationInput | ChannelMessageOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ChannelMessages.
+     */
+    cursor?: ChannelMessageWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ChannelMessages from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ChannelMessages.
+     */
+    skip?: number
+    distinct?: ChannelMessageScalarFieldEnum | ChannelMessageScalarFieldEnum[]
+  }
+
+  /**
+   * ChannelMessage create
+   */
+  export type ChannelMessageCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelMessage
+     */
+    select?: ChannelMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelMessage
+     */
+    omit?: ChannelMessageOmit<ExtArgs> | null
+    /**
+     * The data needed to create a ChannelMessage.
+     */
+    data: XOR<ChannelMessageCreateInput, ChannelMessageUncheckedCreateInput>
+  }
+
+  /**
+   * ChannelMessage createMany
+   */
+  export type ChannelMessageCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ChannelMessages.
+     */
+    data: ChannelMessageCreateManyInput | ChannelMessageCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ChannelMessage createManyAndReturn
+   */
+  export type ChannelMessageCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelMessage
+     */
+    select?: ChannelMessageSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelMessage
+     */
+    omit?: ChannelMessageOmit<ExtArgs> | null
+    /**
+     * The data used to create many ChannelMessages.
+     */
+    data: ChannelMessageCreateManyInput | ChannelMessageCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ChannelMessage update
+   */
+  export type ChannelMessageUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelMessage
+     */
+    select?: ChannelMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelMessage
+     */
+    omit?: ChannelMessageOmit<ExtArgs> | null
+    /**
+     * The data needed to update a ChannelMessage.
+     */
+    data: XOR<ChannelMessageUpdateInput, ChannelMessageUncheckedUpdateInput>
+    /**
+     * Choose, which ChannelMessage to update.
+     */
+    where: ChannelMessageWhereUniqueInput
+  }
+
+  /**
+   * ChannelMessage updateMany
+   */
+  export type ChannelMessageUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ChannelMessages.
+     */
+    data: XOR<ChannelMessageUpdateManyMutationInput, ChannelMessageUncheckedUpdateManyInput>
+    /**
+     * Filter which ChannelMessages to update
+     */
+    where?: ChannelMessageWhereInput
+    /**
+     * Limit how many ChannelMessages to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ChannelMessage updateManyAndReturn
+   */
+  export type ChannelMessageUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelMessage
+     */
+    select?: ChannelMessageSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelMessage
+     */
+    omit?: ChannelMessageOmit<ExtArgs> | null
+    /**
+     * The data used to update ChannelMessages.
+     */
+    data: XOR<ChannelMessageUpdateManyMutationInput, ChannelMessageUncheckedUpdateManyInput>
+    /**
+     * Filter which ChannelMessages to update
+     */
+    where?: ChannelMessageWhereInput
+    /**
+     * Limit how many ChannelMessages to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ChannelMessage upsert
+   */
+  export type ChannelMessageUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelMessage
+     */
+    select?: ChannelMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelMessage
+     */
+    omit?: ChannelMessageOmit<ExtArgs> | null
+    /**
+     * The filter to search for the ChannelMessage to update in case it exists.
+     */
+    where: ChannelMessageWhereUniqueInput
+    /**
+     * In case the ChannelMessage found by the `where` argument doesn't exist, create a new ChannelMessage with this data.
+     */
+    create: XOR<ChannelMessageCreateInput, ChannelMessageUncheckedCreateInput>
+    /**
+     * In case the ChannelMessage was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ChannelMessageUpdateInput, ChannelMessageUncheckedUpdateInput>
+  }
+
+  /**
+   * ChannelMessage delete
+   */
+  export type ChannelMessageDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelMessage
+     */
+    select?: ChannelMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelMessage
+     */
+    omit?: ChannelMessageOmit<ExtArgs> | null
+    /**
+     * Filter which ChannelMessage to delete.
+     */
+    where: ChannelMessageWhereUniqueInput
+  }
+
+  /**
+   * ChannelMessage deleteMany
+   */
+  export type ChannelMessageDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ChannelMessages to delete
+     */
+    where?: ChannelMessageWhereInput
+    /**
+     * Limit how many ChannelMessages to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ChannelMessage without action
+   */
+  export type ChannelMessageDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChannelMessage
+     */
+    select?: ChannelMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChannelMessage
+     */
+    omit?: ChannelMessageOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Model Notification
    */
 
@@ -26852,6 +28099,28 @@ export namespace Prisma {
   export type ConversationParticipantScalarFieldEnum = (typeof ConversationParticipantScalarFieldEnum)[keyof typeof ConversationParticipantScalarFieldEnum]
 
 
+  export const ChannelMessageScalarFieldEnum: {
+    id: 'id',
+    channel: 'channel',
+    externalId: 'externalId',
+    conversationId: 'conversationId',
+    senderId: 'senderId',
+    senderName: 'senderName',
+    senderAvatar: 'senderAvatar',
+    text: 'text',
+    contentType: 'contentType',
+    attachments: 'attachments',
+    replyToId: 'replyToId',
+    isBot: 'isBot',
+    timestamp: 'timestamp',
+    metadata: 'metadata',
+    rawPayload: 'rawPayload',
+    createdAt: 'createdAt'
+  };
+
+  export type ChannelMessageScalarFieldEnum = (typeof ChannelMessageScalarFieldEnum)[keyof typeof ChannelMessageScalarFieldEnum]
+
+
   export const NotificationScalarFieldEnum: {
     id: 'id',
     userId: 'userId',
@@ -28602,6 +29871,114 @@ export namespace Prisma {
     joinedAt?: DateTimeWithAggregatesFilter<"ConversationParticipant"> | Date | string
     leftAt?: DateTimeNullableWithAggregatesFilter<"ConversationParticipant"> | Date | string | null
     updatedAt?: DateTimeWithAggregatesFilter<"ConversationParticipant"> | Date | string
+  }
+
+  export type ChannelMessageWhereInput = {
+    AND?: ChannelMessageWhereInput | ChannelMessageWhereInput[]
+    OR?: ChannelMessageWhereInput[]
+    NOT?: ChannelMessageWhereInput | ChannelMessageWhereInput[]
+    id?: StringFilter<"ChannelMessage"> | string
+    channel?: StringFilter<"ChannelMessage"> | string
+    externalId?: StringFilter<"ChannelMessage"> | string
+    conversationId?: StringFilter<"ChannelMessage"> | string
+    senderId?: StringFilter<"ChannelMessage"> | string
+    senderName?: StringFilter<"ChannelMessage"> | string
+    senderAvatar?: StringNullableFilter<"ChannelMessage"> | string | null
+    text?: StringFilter<"ChannelMessage"> | string
+    contentType?: StringFilter<"ChannelMessage"> | string
+    attachments?: JsonFilter<"ChannelMessage">
+    replyToId?: StringNullableFilter<"ChannelMessage"> | string | null
+    isBot?: BoolFilter<"ChannelMessage"> | boolean
+    timestamp?: DateTimeFilter<"ChannelMessage"> | Date | string
+    metadata?: JsonFilter<"ChannelMessage">
+    rawPayload?: JsonFilter<"ChannelMessage">
+    createdAt?: DateTimeFilter<"ChannelMessage"> | Date | string
+  }
+
+  export type ChannelMessageOrderByWithRelationInput = {
+    id?: SortOrder
+    channel?: SortOrder
+    externalId?: SortOrder
+    conversationId?: SortOrder
+    senderId?: SortOrder
+    senderName?: SortOrder
+    senderAvatar?: SortOrderInput | SortOrder
+    text?: SortOrder
+    contentType?: SortOrder
+    attachments?: SortOrder
+    replyToId?: SortOrderInput | SortOrder
+    isBot?: SortOrder
+    timestamp?: SortOrder
+    metadata?: SortOrder
+    rawPayload?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ChannelMessageWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    channel_externalId?: ChannelMessageChannelExternalIdCompoundUniqueInput
+    AND?: ChannelMessageWhereInput | ChannelMessageWhereInput[]
+    OR?: ChannelMessageWhereInput[]
+    NOT?: ChannelMessageWhereInput | ChannelMessageWhereInput[]
+    channel?: StringFilter<"ChannelMessage"> | string
+    externalId?: StringFilter<"ChannelMessage"> | string
+    conversationId?: StringFilter<"ChannelMessage"> | string
+    senderId?: StringFilter<"ChannelMessage"> | string
+    senderName?: StringFilter<"ChannelMessage"> | string
+    senderAvatar?: StringNullableFilter<"ChannelMessage"> | string | null
+    text?: StringFilter<"ChannelMessage"> | string
+    contentType?: StringFilter<"ChannelMessage"> | string
+    attachments?: JsonFilter<"ChannelMessage">
+    replyToId?: StringNullableFilter<"ChannelMessage"> | string | null
+    isBot?: BoolFilter<"ChannelMessage"> | boolean
+    timestamp?: DateTimeFilter<"ChannelMessage"> | Date | string
+    metadata?: JsonFilter<"ChannelMessage">
+    rawPayload?: JsonFilter<"ChannelMessage">
+    createdAt?: DateTimeFilter<"ChannelMessage"> | Date | string
+  }, "id" | "channel_externalId">
+
+  export type ChannelMessageOrderByWithAggregationInput = {
+    id?: SortOrder
+    channel?: SortOrder
+    externalId?: SortOrder
+    conversationId?: SortOrder
+    senderId?: SortOrder
+    senderName?: SortOrder
+    senderAvatar?: SortOrderInput | SortOrder
+    text?: SortOrder
+    contentType?: SortOrder
+    attachments?: SortOrder
+    replyToId?: SortOrderInput | SortOrder
+    isBot?: SortOrder
+    timestamp?: SortOrder
+    metadata?: SortOrder
+    rawPayload?: SortOrder
+    createdAt?: SortOrder
+    _count?: ChannelMessageCountOrderByAggregateInput
+    _max?: ChannelMessageMaxOrderByAggregateInput
+    _min?: ChannelMessageMinOrderByAggregateInput
+  }
+
+  export type ChannelMessageScalarWhereWithAggregatesInput = {
+    AND?: ChannelMessageScalarWhereWithAggregatesInput | ChannelMessageScalarWhereWithAggregatesInput[]
+    OR?: ChannelMessageScalarWhereWithAggregatesInput[]
+    NOT?: ChannelMessageScalarWhereWithAggregatesInput | ChannelMessageScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ChannelMessage"> | string
+    channel?: StringWithAggregatesFilter<"ChannelMessage"> | string
+    externalId?: StringWithAggregatesFilter<"ChannelMessage"> | string
+    conversationId?: StringWithAggregatesFilter<"ChannelMessage"> | string
+    senderId?: StringWithAggregatesFilter<"ChannelMessage"> | string
+    senderName?: StringWithAggregatesFilter<"ChannelMessage"> | string
+    senderAvatar?: StringNullableWithAggregatesFilter<"ChannelMessage"> | string | null
+    text?: StringWithAggregatesFilter<"ChannelMessage"> | string
+    contentType?: StringWithAggregatesFilter<"ChannelMessage"> | string
+    attachments?: JsonWithAggregatesFilter<"ChannelMessage">
+    replyToId?: StringNullableWithAggregatesFilter<"ChannelMessage"> | string | null
+    isBot?: BoolWithAggregatesFilter<"ChannelMessage"> | boolean
+    timestamp?: DateTimeWithAggregatesFilter<"ChannelMessage"> | Date | string
+    metadata?: JsonWithAggregatesFilter<"ChannelMessage">
+    rawPayload?: JsonWithAggregatesFilter<"ChannelMessage">
+    createdAt?: DateTimeWithAggregatesFilter<"ChannelMessage"> | Date | string
   }
 
   export type NotificationWhereInput = {
@@ -30595,6 +31972,139 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type ChannelMessageCreateInput = {
+    id?: string
+    channel: string
+    externalId: string
+    conversationId: string
+    senderId: string
+    senderName: string
+    senderAvatar?: string | null
+    text: string
+    contentType?: string
+    attachments?: JsonNullValueInput | InputJsonValue
+    replyToId?: string | null
+    isBot?: boolean
+    timestamp: Date | string
+    metadata?: JsonNullValueInput | InputJsonValue
+    rawPayload: JsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type ChannelMessageUncheckedCreateInput = {
+    id?: string
+    channel: string
+    externalId: string
+    conversationId: string
+    senderId: string
+    senderName: string
+    senderAvatar?: string | null
+    text: string
+    contentType?: string
+    attachments?: JsonNullValueInput | InputJsonValue
+    replyToId?: string | null
+    isBot?: boolean
+    timestamp: Date | string
+    metadata?: JsonNullValueInput | InputJsonValue
+    rawPayload: JsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type ChannelMessageUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    channel?: StringFieldUpdateOperationsInput | string
+    externalId?: StringFieldUpdateOperationsInput | string
+    conversationId?: StringFieldUpdateOperationsInput | string
+    senderId?: StringFieldUpdateOperationsInput | string
+    senderName?: StringFieldUpdateOperationsInput | string
+    senderAvatar?: NullableStringFieldUpdateOperationsInput | string | null
+    text?: StringFieldUpdateOperationsInput | string
+    contentType?: StringFieldUpdateOperationsInput | string
+    attachments?: JsonNullValueInput | InputJsonValue
+    replyToId?: NullableStringFieldUpdateOperationsInput | string | null
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    metadata?: JsonNullValueInput | InputJsonValue
+    rawPayload?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ChannelMessageUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    channel?: StringFieldUpdateOperationsInput | string
+    externalId?: StringFieldUpdateOperationsInput | string
+    conversationId?: StringFieldUpdateOperationsInput | string
+    senderId?: StringFieldUpdateOperationsInput | string
+    senderName?: StringFieldUpdateOperationsInput | string
+    senderAvatar?: NullableStringFieldUpdateOperationsInput | string | null
+    text?: StringFieldUpdateOperationsInput | string
+    contentType?: StringFieldUpdateOperationsInput | string
+    attachments?: JsonNullValueInput | InputJsonValue
+    replyToId?: NullableStringFieldUpdateOperationsInput | string | null
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    metadata?: JsonNullValueInput | InputJsonValue
+    rawPayload?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ChannelMessageCreateManyInput = {
+    id?: string
+    channel: string
+    externalId: string
+    conversationId: string
+    senderId: string
+    senderName: string
+    senderAvatar?: string | null
+    text: string
+    contentType?: string
+    attachments?: JsonNullValueInput | InputJsonValue
+    replyToId?: string | null
+    isBot?: boolean
+    timestamp: Date | string
+    metadata?: JsonNullValueInput | InputJsonValue
+    rawPayload: JsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type ChannelMessageUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    channel?: StringFieldUpdateOperationsInput | string
+    externalId?: StringFieldUpdateOperationsInput | string
+    conversationId?: StringFieldUpdateOperationsInput | string
+    senderId?: StringFieldUpdateOperationsInput | string
+    senderName?: StringFieldUpdateOperationsInput | string
+    senderAvatar?: NullableStringFieldUpdateOperationsInput | string | null
+    text?: StringFieldUpdateOperationsInput | string
+    contentType?: StringFieldUpdateOperationsInput | string
+    attachments?: JsonNullValueInput | InputJsonValue
+    replyToId?: NullableStringFieldUpdateOperationsInput | string | null
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    metadata?: JsonNullValueInput | InputJsonValue
+    rawPayload?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ChannelMessageUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    channel?: StringFieldUpdateOperationsInput | string
+    externalId?: StringFieldUpdateOperationsInput | string
+    conversationId?: StringFieldUpdateOperationsInput | string
+    senderId?: StringFieldUpdateOperationsInput | string
+    senderName?: StringFieldUpdateOperationsInput | string
+    senderAvatar?: NullableStringFieldUpdateOperationsInput | string | null
+    text?: StringFieldUpdateOperationsInput | string
+    contentType?: StringFieldUpdateOperationsInput | string
+    attachments?: JsonNullValueInput | InputJsonValue
+    replyToId?: NullableStringFieldUpdateOperationsInput | string | null
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    metadata?: JsonNullValueInput | InputJsonValue
+    rawPayload?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type NotificationCreateInput = {
     id?: string
     type: string
@@ -32074,6 +33584,62 @@ export namespace Prisma {
     joinedAt?: SortOrder
     leftAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type ChannelMessageChannelExternalIdCompoundUniqueInput = {
+    channel: string
+    externalId: string
+  }
+
+  export type ChannelMessageCountOrderByAggregateInput = {
+    id?: SortOrder
+    channel?: SortOrder
+    externalId?: SortOrder
+    conversationId?: SortOrder
+    senderId?: SortOrder
+    senderName?: SortOrder
+    senderAvatar?: SortOrder
+    text?: SortOrder
+    contentType?: SortOrder
+    attachments?: SortOrder
+    replyToId?: SortOrder
+    isBot?: SortOrder
+    timestamp?: SortOrder
+    metadata?: SortOrder
+    rawPayload?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ChannelMessageMaxOrderByAggregateInput = {
+    id?: SortOrder
+    channel?: SortOrder
+    externalId?: SortOrder
+    conversationId?: SortOrder
+    senderId?: SortOrder
+    senderName?: SortOrder
+    senderAvatar?: SortOrder
+    text?: SortOrder
+    contentType?: SortOrder
+    replyToId?: SortOrder
+    isBot?: SortOrder
+    timestamp?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ChannelMessageMinOrderByAggregateInput = {
+    id?: SortOrder
+    channel?: SortOrder
+    externalId?: SortOrder
+    conversationId?: SortOrder
+    senderId?: SortOrder
+    senderName?: SortOrder
+    senderAvatar?: SortOrder
+    text?: SortOrder
+    contentType?: SortOrder
+    replyToId?: SortOrder
+    isBot?: SortOrder
+    timestamp?: SortOrder
+    createdAt?: SortOrder
   }
 
   export type NotificationCountOrderByAggregateInput = {

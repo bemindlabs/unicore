@@ -156,6 +156,10 @@ export class OpenClawGateway
             case 'pty:input':          this.handlePtyInput(socket, msg as PtyMessage); break;
             case 'pty:resize':         this.handlePtyResize(socket, msg as PtyMessage); break;
             case 'pty:destroy':        this.handlePtyDestroy(socket, msg as PtyMessage); break;
+            case 'conversation:new':       this.handleConversationNew(socket, msg as ConversationNewMessage); break;
+            case 'conversation:message':   this.handleConversationMessage(socket, msg as ConversationMessageEvent); break;
+            case 'conversation:assigned':  this.handleConversationAssigned(socket, msg as ConversationAssignedMessage); break;
+            case 'conversation:typing':    this.handleConversationTyping(socket, msg as ConversationTypingMessage); break;
             default:
               socket.send(JSON.stringify({
                 type: 'system:error',
