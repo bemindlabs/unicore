@@ -11,6 +11,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { TokenBlacklistService } from './token-blacklist.service';
 import { AuditModule } from '../audit/audit.module';
+import { LicenseModule } from '../license/license.module';
 
 // Only register OAuth strategies when credentials are configured
 const oauthProviders: Provider[] = [];
