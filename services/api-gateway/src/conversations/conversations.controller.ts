@@ -18,6 +18,7 @@ import { ConversationsGateway } from './conversations.gateway';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { UpdateConversationDto, TransitionStatusDto } from './dto/update-conversation.dto';
 import { AddMessageDto } from './dto/add-message.dto';
+import { InviteParticipantDto, InviteCommandDto } from './dto/invite-participant.dto';
 import { AuditService } from '../audit/audit.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
@@ -28,6 +29,8 @@ export class ConversationsController {
     private readonly gateway: ConversationsGateway,
     private readonly audit: AuditService,
   ) {}
+
+  // ─── Conversations CRUD ──────────────────────────────────────────────────────
 
   @Post()
   async create(@Body() dto: CreateConversationDto, @CurrentUser() user: any, @Req() req: Request) {
@@ -49,7 +52,7 @@ export class ConversationsController {
   }
 
   @Get()
-  async list(
+  list(
     @CurrentUser() user: any,
     @Query('status') status?: string,
     @Query('channel') channel?: string,
@@ -131,7 +134,7 @@ export class ConversationsController {
       success: true,
     });
 
-    this.gateway.emitConversationUpdated(id, { status: updated.status, assigneeId, assigneeName });
+    this.gateway.emitConversationAssigned(id, assigneeId);
     return updated;
   }
 
@@ -225,5 +228,148 @@ export class ConversationsController {
     });
 
     this.gateway.emitConversationUpdated(id, { deleted: true });
+  }
+
+  // ─── Participants ─────────────────────────────────────────────────────────────
+
+  @Get(':id/participants')
+  async listParticipants(@Param('id') id: string, @CurrentUser() user: any) {
+    const existing = await this.conversationsService.findOne(id);
+    if (existing.userId !== user.id) throw new ForbiddenException('Access denied');
+    return this.conversationsService.listParticipants(id);
+  }
+
+  /**
+   * Invite an agent or user to a conversation.
+   *
+   * POST /api/v1/conversations/:id/participants
+   * Body: { participantId, participantType, participantName, autoAssigned? }
+   */
+  @Post(':id/participants')
+  async inviteParticipant(
+    @Param('id') id: string,
+    @Body() dto: InviteParticipantDto,
+    @CurrentUser() user: any,
+    @Req() req: Request,
+  ) {
+    const existing = await this.conversationsService.findOne(id);
+    if (existing.userId !== user.id) throw new ForbiddenException('Access denied');
+
+    const participant = await this.conversationsService.inviteParticipant(id, dto, user.id);
+
+    await this.audit.log({
+      userId: user.id,
+      userEmail: user.email,
+      action: 'create',
+      resource: 'conversation_participants',
+      resourceId: participant.id,
+      detail: `Invited ${dto.participantType} "${dto.participantName}" to conversation ${id}`,
+      ip: req.ip,
+      success: true,
+    });
+
+    this.gateway.emitParticipantInvited(id, participant);
+    return participant;
+  }
+
+  /**
+   * Process /invite @agentType command (e.g. /invite @finance).
+   *
+   * POST /api/v1/conversations/:id/invite-command
+   * Body: { command: "/invite @finance" }
+   */
+  @Post(':id/invite-command')
+  async inviteCommand(
+    @Param('id') id: string,
+    @Body() dto: InviteCommandDto,
+    @CurrentUser() user: any,
+    @Req() req: Request,
+  ) {
+    const existing = await this.conversationsService.findOne(id);
+    if (existing.userId !== user.id) throw new ForbiddenException('Access denied');
+
+    const participant = await this.conversationsService.processInviteCommand(
+      id,
+      dto.command,
+      user.id,
+    );
+
+    await this.audit.log({
+      userId: user.id,
+      userEmail: user.email,
+      action: 'create',
+      resource: 'conversation_participants',
+      resourceId: participant.id,
+      detail: `Executed invite command "${dto.command}" on conversation ${id}`,
+      ip: req.ip,
+      success: true,
+    });
+
+    this.gateway.emitParticipantInvited(id, participant);
+    return participant;
+  }
+
+  /**
+   * Remove a participant from a conversation.
+   *
+   * DELETE /api/v1/conversations/:id/participants/:participantId
+   */
+  @Delete(':id/participants/:participantId')
+  @HttpCode(HttpStatus.OK)
+  async removeParticipant(
+    @Param('id') id: string,
+    @Param('participantId') participantId: string,
+    @CurrentUser() user: any,
+    @Req() req: Request,
+  ) {
+    const existing = await this.conversationsService.findOne(id);
+    if (existing.userId !== user.id) throw new ForbiddenException('Access denied');
+
+    const participant = await this.conversationsService.removeParticipant(id, participantId);
+
+    await this.audit.log({
+      userId: user.id,
+      userEmail: user.email,
+      action: 'delete',
+      resource: 'conversation_participants',
+      resourceId: participant.id,
+      detail: `Removed participant "${participantId}" from conversation ${id}`,
+      ip: req.ip,
+      success: true,
+    });
+
+    this.gateway.emitParticipantLeft(id, participantId);
+    return participant;
+  }
+
+  /**
+   * Auto-assign agents to a conversation via Router Agent.
+   *
+   * POST /api/v1/conversations/:id/auto-assign
+   */
+  @Post(':id/auto-assign')
+  async autoAssign(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @Req() req: Request,
+  ) {
+    const existing = await this.conversationsService.findOne(id);
+    if (existing.userId !== user.id) throw new ForbiddenException('Access denied');
+
+    const participant = await this.conversationsService.autoAssign(id, user.id);
+
+    await this.audit.log({
+      userId: user.id,
+      userEmail: user.email,
+      action: 'create',
+      resource: 'conversation_participants',
+      resourceId: participant.id,
+      detail: `Auto-assigned agent to conversation ${id}`,
+      ip: req.ip,
+      success: true,
+    });
+
+    this.gateway.emitParticipantInvited(id, participant);
+    return participant;
   }
 }

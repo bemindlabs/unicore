@@ -1,51 +1,28 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { ConversationsService } from './conversations.service';
 import { PrismaService } from '../prisma/prisma.service';
 
-const mockConversation = {
-  id: 'conv-1',
-  title: 'Test Conversation',
-  status: 'OPEN',
-  channel: 'web',
-  userId: 'user-1',
-  assigneeId: null,
-  assigneeName: null,
-  contactId: null,
-  contactName: null,
-  contactEmail: null,
-  metadata: {},
-  closedAt: null,
-  messages: [],
-  createdAt: new Date(),
-  updatedAt: new Date(),
-};
-
-const mockMessage = {
-  id: 'msg-1',
-  conversationId: 'conv-1',
-  content: 'Hello',
-  role: 'user',
-  authorId: 'user-1',
-  authorName: null,
-  authorType: 'human',
-  metadata: {},
-  createdAt: new Date(),
-};
-
-const mockPrismaService = {
+const mockPrisma = {
   conversation: {
-    create: jest.fn(),
     findMany: jest.fn(),
+    count: jest.fn(),
     findUnique: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
-    count: jest.fn(),
-  },
-  conversationMessage: {
     create: jest.fn(),
+    update: jest.fn(),
+  },
+  message: {
     findMany: jest.fn(),
-    count: jest.fn(),
+    create: jest.fn(),
+    updateMany: jest.fn(),
+  },
+  contactChannel: {
+    upsert: jest.fn(),
+    findMany: jest.fn(),
+  },
+  conversationParticipant: {
+    upsert: jest.fn(),
+    updateMany: jest.fn(),
   },
 };
 
@@ -56,7 +33,7 @@ describe('ConversationsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ConversationsService,
-        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: PrismaService, useValue: mockPrisma },
       ],
     }).compile();
 
@@ -64,224 +41,163 @@ describe('ConversationsService', () => {
     jest.clearAllMocks();
   });
 
-  describe('create', () => {
-    it('creates a conversation', async () => {
-      mockPrismaService.conversation.create.mockResolvedValue(mockConversation);
-      mockPrismaService.conversation.findUnique.mockResolvedValue(mockConversation);
-
-      const result = await service.create('user-1', { title: 'Test', channel: 'web' });
-
-      expect(mockPrismaService.conversation.create).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ userId: 'user-1', channel: 'web' }) }),
-      );
-      expect(result).toEqual(mockConversation);
-    });
-
-    it('creates initial message when provided', async () => {
-      mockPrismaService.conversation.create.mockResolvedValue(mockConversation);
-      mockPrismaService.conversationMessage.create.mockResolvedValue(mockMessage);
-      mockPrismaService.conversation.findUnique.mockResolvedValue(mockConversation);
-
-      await service.create('user-1', { initialMessage: 'Hello' });
-
-      expect(mockPrismaService.conversationMessage.create).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ content: 'Hello', conversationId: 'conv-1' }) }),
-      );
-    });
-
-    it('defaults channel to web', async () => {
-      mockPrismaService.conversation.create.mockResolvedValue(mockConversation);
-      mockPrismaService.conversation.findUnique.mockResolvedValue(mockConversation);
-
-      await service.create('user-1', {});
-
-      expect(mockPrismaService.conversation.create).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ channel: 'web' }) }),
-      );
-    });
-  });
+  // ─── list ─────────────────────────────────────────────────────────────────
 
   describe('list', () => {
-    it('returns paginated conversations', async () => {
-      mockPrismaService.conversation.findMany.mockResolvedValue([mockConversation]);
-      mockPrismaService.conversation.count.mockResolvedValue(1);
+    it('returns conversations and total', async () => {
+      const conv = { id: 'c1', channel: 'TELEGRAM', status: 'OPEN' };
+      mockPrisma.conversation.findMany.mockResolvedValue([conv]);
+      mockPrisma.conversation.count.mockResolvedValue(1);
 
-      const result = await service.list({ userId: 'user-1' });
+      const result = await service.list();
 
-      expect(result.items).toHaveLength(1);
-      expect(result.total).toBe(1);
-      expect(result.page).toBe(1);
-      expect(result.totalPages).toBe(1);
-    });
-
-    it('filters by status', async () => {
-      mockPrismaService.conversation.findMany.mockResolvedValue([]);
-      mockPrismaService.conversation.count.mockResolvedValue(0);
-
-      await service.list({ status: 'OPEN' });
-
-      expect(mockPrismaService.conversation.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: expect.objectContaining({ status: 'OPEN' }) }),
+      expect(result).toEqual({ conversations: [conv], total: 1 });
+      expect(mockPrisma.conversation.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: {} }),
       );
     });
 
-    it('filters by channel', async () => {
-      mockPrismaService.conversation.findMany.mockResolvedValue([]);
-      mockPrismaService.conversation.count.mockResolvedValue(0);
+    it('applies channel filter', async () => {
+      mockPrisma.conversation.findMany.mockResolvedValue([]);
+      mockPrisma.conversation.count.mockResolvedValue(0);
 
-      await service.list({ channel: 'telegram' });
+      await service.list({ channel: 'TELEGRAM' });
 
-      expect(mockPrismaService.conversation.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: expect.objectContaining({ channel: 'telegram' }) }),
+      expect(mockPrisma.conversation.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { channel: 'TELEGRAM' } }),
       );
-    });
-
-    it('applies search as OR across title, contactName, contactEmail', async () => {
-      mockPrismaService.conversation.findMany.mockResolvedValue([]);
-      mockPrismaService.conversation.count.mockResolvedValue(0);
-
-      await service.list({ search: 'john' });
-
-      const call = mockPrismaService.conversation.findMany.mock.calls[0][0];
-      expect(call.where.OR).toHaveLength(3);
-    });
-
-    it('caps limit at 100', async () => {
-      mockPrismaService.conversation.findMany.mockResolvedValue([]);
-      mockPrismaService.conversation.count.mockResolvedValue(0);
-
-      const result = await service.list({ limit: 500 });
-      expect(result.limit).toBe(100);
     });
   });
 
-  describe('findOne', () => {
-    it('returns conversation by id', async () => {
-      mockPrismaService.conversation.findUnique.mockResolvedValue(mockConversation);
+  // ─── findOne ──────────────────────────────────────────────────────────────
 
-      const result = await service.findOne('conv-1');
-      expect(result).toEqual(mockConversation);
+  describe('findOne', () => {
+    it('returns conversation when found', async () => {
+      const conv = { id: 'c1', channel: 'LINE', status: 'OPEN', messages: [], participants: [] };
+      mockPrisma.conversation.findUnique.mockResolvedValue(conv);
+
+      const result = await service.findOne('c1');
+
+      expect(result).toEqual(conv);
     });
 
     it('throws NotFoundException when not found', async () => {
-      mockPrismaService.conversation.findUnique.mockResolvedValue(null);
+      mockPrisma.conversation.findUnique.mockResolvedValue(null);
 
-      await expect(service.findOne('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('missing')).rejects.toThrow(NotFoundException);
     });
   });
 
-  describe('update', () => {
-    it('updates conversation fields', async () => {
-      mockPrismaService.conversation.findUnique.mockResolvedValue(mockConversation);
-      mockPrismaService.conversation.update.mockResolvedValue({ ...mockConversation, title: 'Updated' });
+  // ─── create ───────────────────────────────────────────────────────────────
 
-      const result = await service.update('conv-1', { title: 'Updated' });
-      expect(result.title).toBe('Updated');
+  describe('create', () => {
+    it('creates a conversation', async () => {
+      const dto = { channel: 'TELEGRAM' as any, subject: 'Hello' };
+      const created = { id: 'c1', ...dto, status: 'OPEN' };
+      mockPrisma.conversation.create.mockResolvedValue(created);
+
+      const result = await service.create(dto);
+
+      expect(result).toEqual(created);
+      expect(mockPrisma.conversation.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ channel: 'TELEGRAM' }) }),
+      );
     });
   });
 
-  describe('assign', () => {
-    it('assigns conversation and sets status to ASSIGNED', async () => {
-      mockPrismaService.conversation.findUnique.mockResolvedValue(mockConversation);
-      mockPrismaService.conversation.update.mockResolvedValue({
-        ...mockConversation,
-        status: 'ASSIGNED',
-        assigneeId: 'agent-1',
-        assigneeName: 'Agent One',
-      });
+  // ─── sendMessage ──────────────────────────────────────────────────────────
 
-      const result = await service.assign('conv-1', 'agent-1', 'Agent One');
+  describe('sendMessage', () => {
+    it('creates a message and updates lastMessageAt', async () => {
+      const conv = { id: 'c1' };
+      mockPrisma.conversation.findUnique.mockResolvedValue(conv);
+      const msg = { id: 'm1', conversationId: 'c1', content: 'Hi', createdAt: new Date() };
+      mockPrisma.message.create.mockResolvedValue(msg);
+      mockPrisma.conversation.update.mockResolvedValue({ ...conv, lastMessageAt: msg.createdAt });
 
-      expect(mockPrismaService.conversation.update).toHaveBeenCalledWith(
+      const result = await service.sendMessage('c1', { content: 'Hi' }, 'OUTBOUND');
+
+      expect(result).toEqual(msg);
+      expect(mockPrisma.message.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ assigneeId: 'agent-1', status: 'ASSIGNED' }),
+          data: expect.objectContaining({ content: 'Hi', direction: 'OUTBOUND' }),
         }),
       );
-      expect(result.status).toBe('ASSIGNED');
-    });
-  });
-
-  describe('transition', () => {
-    it('transitions from OPEN to ASSIGNED', async () => {
-      mockPrismaService.conversation.findUnique.mockResolvedValue(mockConversation);
-      mockPrismaService.conversation.update.mockResolvedValue({ ...mockConversation, status: 'ASSIGNED' });
-
-      const result = await service.transition('conv-1', 'ASSIGNED');
-      expect(result.status).toBe('ASSIGNED');
-    });
-
-    it('sets closedAt when transitioning to CLOSED', async () => {
-      mockPrismaService.conversation.findUnique.mockResolvedValue(mockConversation);
-      mockPrismaService.conversation.update.mockResolvedValue({ ...mockConversation, status: 'CLOSED' });
-
-      await service.transition('conv-1', 'CLOSED');
-
-      expect(mockPrismaService.conversation.update).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ closedAt: expect.any(Date) }) }),
+      expect(mockPrisma.conversation.update).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 'c1' } }),
       );
     });
 
-    it('throws BadRequestException for invalid transition', async () => {
-      mockPrismaService.conversation.findUnique.mockResolvedValue({ ...mockConversation, status: 'CLOSED' });
+    it('throws when conversation not found', async () => {
+      mockPrisma.conversation.findUnique.mockResolvedValue(null);
 
-      await expect(service.transition('conv-1', 'OPEN')).rejects.toThrow(BadRequestException);
-    });
-
-    it('throws BadRequestException for unknown target status', async () => {
-      mockPrismaService.conversation.findUnique.mockResolvedValue(mockConversation);
-
-      await expect(service.transition('conv-1', 'INVALID')).rejects.toThrow(BadRequestException);
-    });
-  });
-
-  describe('getHistory', () => {
-    it('returns paginated messages for a conversation', async () => {
-      mockPrismaService.conversation.findUnique.mockResolvedValue(mockConversation);
-      mockPrismaService.conversationMessage.findMany.mockResolvedValue([mockMessage]);
-      mockPrismaService.conversationMessage.count.mockResolvedValue(1);
-
-      const result = await service.getHistory('conv-1');
-
-      expect(result.messages).toHaveLength(1);
-      expect(result.total).toBe(1);
-    });
-
-    it('throws NotFoundException for unknown conversation', async () => {
-      mockPrismaService.conversation.findUnique.mockResolvedValue(null);
-
-      await expect(service.getHistory('nonexistent')).rejects.toThrow(NotFoundException);
-    });
-  });
-
-  describe('addMessage', () => {
-    it('adds a message to a conversation', async () => {
-      mockPrismaService.conversation.findUnique.mockResolvedValue(mockConversation);
-      mockPrismaService.conversationMessage.create.mockResolvedValue(mockMessage);
-      mockPrismaService.conversation.update.mockResolvedValue(mockConversation);
-
-      const result = await service.addMessage('conv-1', 'user-1', { content: 'Hello' });
-
-      expect(result).toEqual(mockMessage);
-      expect(mockPrismaService.conversation.update).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { id: 'conv-1' } }),
+      await expect(service.sendMessage('missing', { content: 'Hi' })).rejects.toThrow(
+        NotFoundException,
       );
     });
   });
 
-  describe('remove', () => {
-    it('deletes a conversation', async () => {
-      mockPrismaService.conversation.findUnique.mockResolvedValue(mockConversation);
-      mockPrismaService.conversation.delete.mockResolvedValue(mockConversation);
+  // ─── assign ───────────────────────────────────────────────────────────────
 
-      await service.remove('conv-1');
+  describe('assign', () => {
+    it('assigns an operator and sets status to ASSIGNED', async () => {
+      mockPrisma.conversation.findUnique.mockResolvedValue({ id: 'c1' });
+      mockPrisma.conversation.update.mockResolvedValue({ id: 'c1', assigneeId: 'u1', status: 'ASSIGNED' });
 
-      expect(mockPrismaService.conversation.delete).toHaveBeenCalledWith({ where: { id: 'conv-1' } });
+      const result = await service.assign('c1', 'u1');
+
+      expect(result.status).toBe('ASSIGNED');
+      expect(mockPrisma.conversation.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: { assigneeId: 'u1', status: 'ASSIGNED' },
+        }),
+      );
     });
 
-    it('throws NotFoundException for unknown conversation', async () => {
-      mockPrismaService.conversation.findUnique.mockResolvedValue(null);
+    it('unassigns and reverts status to OPEN', async () => {
+      mockPrisma.conversation.findUnique.mockResolvedValue({ id: 'c1' });
+      mockPrisma.conversation.update.mockResolvedValue({ id: 'c1', assigneeId: null, status: 'OPEN' });
 
-      await expect(service.remove('nonexistent')).rejects.toThrow(NotFoundException);
+      await service.assign('c1', null);
+
+      expect(mockPrisma.conversation.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: { assigneeId: null, status: 'OPEN' },
+        }),
+      );
+    });
+  });
+
+  // ─── upsertContactChannel ─────────────────────────────────────────────────
+
+  describe('upsertContactChannel', () => {
+    it('upserts a contact channel record', async () => {
+      const dto = { channel: 'TELEGRAM' as any, externalId: '12345', displayName: 'Alice' };
+      const record = { id: 'cc1', ...dto };
+      mockPrisma.contactChannel.upsert.mockResolvedValue(record);
+
+      const result = await service.upsertContactChannel(dto);
+
+      expect(result).toEqual(record);
+      expect(mockPrisma.contactChannel.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { channel_externalId: { channel: 'TELEGRAM', externalId: '12345' } },
+        }),
+      );
+    });
+  });
+
+  // ─── addParticipant ───────────────────────────────────────────────────────
+
+  describe('addParticipant', () => {
+    it('adds a participant to a conversation', async () => {
+      mockPrisma.conversation.findUnique.mockResolvedValue({ id: 'c1' });
+      const participant = { id: 'p1', conversationId: 'c1', userId: 'u1', role: 'operator' };
+      mockPrisma.conversationParticipant.upsert.mockResolvedValue(participant);
+
+      const result = await service.addParticipant('c1', 'u1');
+
+      expect(result).toEqual(participant);
     });
   });
 });

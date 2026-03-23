@@ -302,6 +302,9 @@ export class ConversationsService {
         participantId: dto.participantId,
         participantType: dto.participantType,
         participantName: dto.participantName,
+        participantColor: dto.participantColor ?? '#6366f1',
+        autoRespond: dto.autoRespond ?? (dto.participantType === InviteParticipantType.AGENT),
+        addedBy: invitedBy,
         role: 'MEMBER',
         autoAssigned: dto.autoAssigned ?? false,
         invitedBy,
@@ -331,7 +334,34 @@ export class ConversationsService {
 
     return this.prisma.conversationParticipant.update({
       where: { id: participant.id },
-      data: { leftAt: new Date() },
+      data: { leftAt: new Date(), isActive: false },
+    });
+  }
+
+  /** UNC-1031: Toggle autoRespond or update participantColor for an agent participant */
+  async updateParticipant(
+    conversationId: string,
+    participantId: string,
+    dto: { autoRespond?: boolean; participantColor?: string },
+  ) {
+    await this.findOne(conversationId);
+
+    const participant = await this.prisma.conversationParticipant.findFirst({
+      where: { conversationId, participantId, leftAt: null },
+    });
+
+    if (!participant) {
+      throw new NotFoundException(
+        `Participant "${participantId}" not found in conversation ${conversationId}`,
+      );
+    }
+
+    return this.prisma.conversationParticipant.update({
+      where: { id: participant.id },
+      data: {
+        ...(dto.autoRespond !== undefined && { autoRespond: dto.autoRespond }),
+        ...(dto.participantColor !== undefined && { participantColor: dto.participantColor }),
+      },
     });
   }
 
