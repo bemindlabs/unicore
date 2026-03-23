@@ -1,5 +1,7 @@
 'use client';
 
+// Updated: 2026-03-23
+
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
@@ -31,10 +33,6 @@ import {
   DialogClose,
 } from '@unicore/ui';
 import { api } from '@/lib/api';
-import { PluginConfigForm } from '@/components/plugins/plugin-config-form';
-import type { JsonSchema } from '@/components/plugins/plugin-config-form';
-
-// Updated: 2026-03-23
 
 type PluginStatus = 'active' | 'disabled' | 'error';
 
@@ -53,158 +51,7 @@ interface InstalledPlugin {
   updatedAt: string;
   errorMessage?: string;
   hasUpdate?: boolean;
-  configSchema?: JsonSchema;
 }
-
-const MOCK_INSTALLED: InstalledPlugin[] = [
-  {
-    id: '1',
-    slug: 'gpt-4o-agent',
-    name: 'GPT-4o Agent',
-    description: 'Deploy a powerful GPT-4o powered agent with advanced reasoning and multimodal capabilities.',
-    author: 'OpenAI Labs',
-    version: '2.1.0',
-    latestVersion: '2.2.0',
-    category: 'agents',
-    icon: '🤖',
-    status: 'active',
-    installedAt: '2026-02-10T08:00:00Z',
-    updatedAt: '2026-03-01T12:00:00Z',
-    hasUpdate: true,
-    configSchema: {
-      title: 'GPT-4o Agent Configuration',
-      description: 'Configure model parameters and behaviour.',
-      properties: {
-        apiKey: { type: 'string', title: 'API Key', format: 'password', description: 'Your OpenAI API key.' },
-        model: { type: 'string', title: 'Model', enum: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo'], default: 'gpt-4o' },
-        maxTokens: { type: 'integer', title: 'Max Tokens', minimum: 256, maximum: 128000, default: 4096 },
-        temperature: { type: 'number', title: 'Temperature', minimum: 0, maximum: 2, default: 0.7 },
-        systemPrompt: { type: 'string', title: 'System Prompt', format: 'textarea', description: 'Optional system-level instruction.' },
-        enableStreaming: { type: 'boolean', title: 'Enable Streaming', default: true },
-        allowedTools: { type: 'array', title: 'Allowed Tools', items: { type: 'string' }, description: 'Tool names this agent may call.' },
-      },
-      required: ['apiKey'],
-    },
-  },
-  {
-    id: '2',
-    slug: 'slack-integration',
-    name: 'Slack Integration',
-    description: 'Connect your workspace with Slack for real-time notifications, alerts, and two-way messaging.',
-    author: 'UniCore Labs',
-    version: '1.4.2',
-    category: 'apps',
-    icon: '💬',
-    status: 'active',
-    installedAt: '2026-01-20T09:00:00Z',
-    updatedAt: '2026-03-10T14:00:00Z',
-    configSchema: {
-      title: 'Slack Integration',
-      description: 'Connect UniCore to your Slack workspace.',
-      properties: {
-        botToken: { type: 'string', title: 'Bot Token', format: 'password', description: 'xoxb-… token from Slack App settings.' },
-        defaultChannel: { type: 'string', title: 'Default Channel', description: 'Channel ID for notifications (e.g. C01234ABCD).' },
-        notifyOnError: { type: 'boolean', title: 'Notify on Error', default: true },
-        mentionGroup: { type: 'string', title: 'Mention Group', description: 'Group handle to @mention on alerts (optional).' },
-      },
-      required: ['botToken', 'defaultChannel'],
-    },
-  },
-  {
-    id: '3',
-    slug: 'advanced-analytics',
-    name: 'Advanced Analytics',
-    description: 'Deep dive into your business metrics with AI-powered insights and predictive analytics.',
-    author: 'DataCore Inc.',
-    version: '3.0.1',
-    latestVersion: '3.1.0',
-    category: 'analytics',
-    icon: '📊',
-    status: 'disabled',
-    installedAt: '2026-02-05T11:00:00Z',
-    updatedAt: '2026-02-28T09:00:00Z',
-    hasUpdate: true,
-    configSchema: {
-      title: 'Advanced Analytics',
-      properties: {
-        retentionDays: { type: 'integer', title: 'Data Retention (days)', minimum: 7, maximum: 365, default: 90 },
-        timezone: { type: 'string', title: 'Timezone', enum: ['UTC', 'America/New_York', 'Europe/London', 'Asia/Tokyo'], default: 'UTC' },
-        enableAiInsights: { type: 'boolean', title: 'AI-Powered Insights', default: true },
-      },
-    },
-  },
-  {
-    id: '4',
-    slug: 'workflow-automation',
-    name: 'Workflow Automation Pro',
-    description: 'Build complex multi-step workflows with conditional logic, loops, and AI decision nodes.',
-    author: 'FlowTech',
-    version: '1.1.0',
-    category: 'workflows',
-    icon: '⚡',
-    status: 'error',
-    installedAt: '2026-03-01T10:00:00Z',
-    updatedAt: '2026-03-15T08:00:00Z',
-    errorMessage: 'Failed to connect to external workflow service. Check API credentials in configuration.',
-    configSchema: {
-      title: 'Workflow Automation Pro',
-      description: 'Set API credentials for the external workflow service.',
-      properties: {
-        serviceUrl: { type: 'string', title: 'Service URL', description: 'Base URL of your workflow service.' },
-        apiKey: { type: 'string', title: 'API Key', format: 'password' },
-        timeoutSeconds: { type: 'integer', title: 'Timeout (seconds)', minimum: 5, maximum: 300, default: 30 },
-        retryCount: { type: 'integer', title: 'Retry Count', minimum: 0, maximum: 5, default: 3 },
-        webhookUrls: { type: 'array', title: 'Webhook URLs', items: { type: 'string' }, description: 'URLs to notify on workflow events.' },
-      },
-      required: ['serviceUrl', 'apiKey'],
-    },
-  },
-  {
-    id: '5',
-    slug: 'telegram-channel',
-    name: 'Telegram Channel',
-    description: 'Deploy AI agents directly to Telegram with full message handling and inline buttons.',
-    author: 'UniCore Labs',
-    version: '2.3.1',
-    category: 'channels',
-    icon: '✈️',
-    status: 'active',
-    installedAt: '2026-01-15T07:00:00Z',
-    updatedAt: '2026-03-18T11:00:00Z',
-    configSchema: {
-      title: 'Telegram Channel',
-      properties: {
-        botToken: { type: 'string', title: 'Bot Token', format: 'password', description: 'Token from @BotFather.' },
-        webhookSecret: { type: 'string', title: 'Webhook Secret', format: 'password', description: 'Optional secret for webhook validation.' },
-        allowedChatIds: { type: 'array', title: 'Allowed Chat IDs', items: { type: 'string' }, description: 'Leave empty to allow all chats.' },
-        parseMode: { type: 'string', title: 'Parse Mode', enum: ['HTML', 'Markdown', 'MarkdownV2'], default: 'HTML' },
-      },
-      required: ['botToken'],
-    },
-  },
-  {
-    id: '6',
-    slug: 'security-scanner',
-    name: 'Security Scanner',
-    description: 'Automated vulnerability scanning and compliance checks for your AI agent configurations.',
-    author: 'SecureAI',
-    version: '1.0.3',
-    category: 'security',
-    icon: '🛡️',
-    status: 'active',
-    installedAt: '2026-02-22T13:00:00Z',
-    updatedAt: '2026-03-05T16:00:00Z',
-    configSchema: {
-      title: 'Security Scanner',
-      properties: {
-        scanInterval: { type: 'string', title: 'Scan Interval', enum: ['hourly', 'daily', 'weekly'], default: 'daily' },
-        severityThreshold: { type: 'string', title: 'Alert Threshold', enum: ['low', 'medium', 'high', 'critical'], default: 'high' },
-        notifyEmail: { type: 'string', title: 'Notification Email', description: 'Email for scan reports.' },
-        autoRemediate: { type: 'boolean', title: 'Auto-Remediate', description: 'Automatically apply safe fixes.', default: false },
-      },
-    },
-  },
-];
 
 function StatusBadge({ status }: { status: PluginStatus }) {
   if (status === 'active') {
@@ -378,10 +225,10 @@ export default function InstalledPluginsPage() {
   const fetchInstalled = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await api.get<InstalledPlugin[]>('/api/proxy/ai/plugins/installed');
-      setPlugins(data);
+      const data = await api.get<InstalledPlugin[]>('/api/v1/plugins/installed');
+      setPlugins(Array.isArray(data) ? data : []);
     } catch {
-      setPlugins(MOCK_INSTALLED);
+      setPlugins([]);
     } finally {
       setLoading(false);
     }
@@ -403,7 +250,7 @@ export default function InstalledPluginsPage() {
       const target = plugins.find(p => p.id === id);
       if (!target) return;
       const action = target.status === 'active' ? 'disable' : 'enable';
-      await api.post(`/api/proxy/ai/plugins/${id}/${action}`, {});
+      await api.post(`/api/v1/plugins/${id}/${action}`, {});
     } catch {
       // revert on failure
       setPlugins(prev =>
@@ -419,7 +266,7 @@ export default function InstalledPluginsPage() {
   const handleUpdate = useCallback(async (id: string) => {
     setUpdatingId(id);
     try {
-      await api.post(`/api/proxy/ai/plugins/${id}/update`, {});
+      await api.post(`/api/v1/plugins/${id}/update`, {});
       setPlugins(prev =>
         prev.map(p => {
           if (p.id !== id) return p;
@@ -427,7 +274,7 @@ export default function InstalledPluginsPage() {
         })
       );
     } catch {
-      // silently ignore in demo
+      // silently ignore
     } finally {
       setUpdatingId(null);
     }
@@ -437,7 +284,7 @@ export default function InstalledPluginsPage() {
     if (!uninstallTarget) return;
     setUninstalling(true);
     try {
-      await api.delete(`/api/proxy/ai/plugins/${uninstallTarget.id}`);
+      await api.delete(`/api/v1/plugins/${uninstallTarget.id}`);
       setPlugins(prev => prev.filter(p => p.id !== uninstallTarget.id));
     } catch {
       setPlugins(prev => prev.filter(p => p.id !== uninstallTarget.id));
@@ -603,15 +450,27 @@ export default function InstalledPluginsPage() {
       </Dialog>
 
       {/* Configure dialog */}
-      {configureTarget && (
-        <PluginConfigForm
-          pluginId={configureTarget.id}
-          pluginName={configureTarget.name}
-          configSchema={configureTarget.configSchema ?? { properties: {} }}
-          open={!!configureTarget}
-          onClose={() => setConfigureTarget(null)}
-        />
-      )}
+      <Dialog open={!!configureTarget} onOpenChange={open => !open && setConfigureTarget(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Configure — {configureTarget?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Plugin configuration UI for <strong>{configureTarget?.name}</strong> v{configureTarget?.version}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-lg border border-dashed bg-muted/30 py-10 text-center text-sm text-muted-foreground">
+            Configuration schema coming soon.
+          </div>
+          <div className="flex justify-end pt-2">
+            <DialogClose asChild>
+              <Button variant="outline" size="sm">Close</Button>
+            </DialogClose>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
