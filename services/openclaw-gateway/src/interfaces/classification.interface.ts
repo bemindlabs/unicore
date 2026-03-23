@@ -34,4 +34,9 @@ export interface RoutingDecision {
   isFallback: boolean;
   /** ISO-8601 timestamp of the routing decision */
   decidedAt: string;
+  /**
+   * True when routing was triggered by an explicit @mention rather than
+   * LLM intent classification (UNC-1028).
+   */
+  mentionRouted?: boolean;
 }
