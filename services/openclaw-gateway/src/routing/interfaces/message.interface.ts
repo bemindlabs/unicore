@@ -213,4 +213,14 @@ export interface PongMessage extends BaseMessage {
   };
 }
 
-export type OutgoingMessage = AckMessage | ErrorMessage | PongMessage | DirectMessage | BroadcastMessage | PublishMessage;
+export type OutgoingMessage =
+  | AckMessage
+  | ErrorMessage
+  | PongMessage
+  | DirectMessage
+  | BroadcastMessage
+  | PublishMessage
+  | ConversationNewMessage
+  | ConversationMessageEvent
+  | ConversationAssignedMessage
+  | ConversationTypingMessage;
