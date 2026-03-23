@@ -220,9 +220,9 @@ export class AdminController {
       checkService('AI Engine', `http://${aiHost}:${aiPort}/api/v1/llm/health`),
     ]);
 
-    const hasUnhealthy = services.some(s => s.status === 'UNHEALTHY');
-    const hasDegraded = services.some(s => s.status === 'DEGRADED');
-    const overallStatus = hasUnhealthy ? 'DEGRADED' : hasDegraded ? 'DEGRADED' : 'HEALTHY';
+    const hasUnhealthy = services.some(s => s.status === 'down');
+    const hasDegraded = services.some(s => s.status === 'degraded');
+    const overallStatus = hasUnhealthy ? 'degraded' : hasDegraded ? 'degraded' : 'healthy';
 
     const uptimeSec = Math.floor(process.uptime());
     const cpus = os.cpus();
