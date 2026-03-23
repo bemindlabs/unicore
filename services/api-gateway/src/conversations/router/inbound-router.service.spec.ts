@@ -24,13 +24,12 @@ const mockConversation = {
 const mockMessage = {
   id: 'msg-001',
   conversationId: 'conv-123',
-  channel: 'telegram',
-  senderId: 'user-789',
-  senderName: 'Alice',
-  text: 'Hello!',
-  externalMessageId: 'tg-msg-1',
-  rawPayload: {},
-  routedTo: 'pending',
+  direction: 'INBOUND',
+  type: 'TEXT',
+  content: 'Hello!',
+  externalId: 'tg-msg-1',
+  sender: { id: 'user-789', name: 'Alice', type: 'contact' },
+  metadata: { channel: 'telegram', rawPayload: {}, routedTo: 'pending' },
   createdAt: new Date(),
 };
 
