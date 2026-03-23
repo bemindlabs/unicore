@@ -21,7 +21,7 @@ interface Props {
   onCloseMobile?: () => void;
 }
 
-export function TeamSidebar({ agents, filter, onFilterChange, onSelectAgent, onOpenTerminal, mobileOpen }: Props) {
+export function TeamSidebar({ agents, filter, onFilterChange, onSelectAgent, onOpenTerminal, mobileOpen }: Props): JSX.Element {
   const filters: { key: 'all' | 'working' | 'idle'; label: string }[] = [
     { key: 'all', label: 'ALL' },
     { key: 'working', label: 'WORKING' },
