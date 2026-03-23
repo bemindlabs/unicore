@@ -822,5 +822,6 @@ export default function SettingsDomainsPage() {
         onConfirm={handleRemoveDomain}
       />
     </div>
+    </UpgradeGate>
   );
 }
