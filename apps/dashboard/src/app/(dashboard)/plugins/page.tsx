@@ -63,6 +63,8 @@ interface Plugin {
   icon: string;
   featured?: boolean;
   createdAt: string;
+  configSchema?: JsonSchema;
+  installed?: boolean;
 }
 
 const MOCK_PLUGINS: Plugin[] = [
