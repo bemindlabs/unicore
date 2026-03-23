@@ -133,7 +133,7 @@ export function TerminalModal({ open, onClose, onConnected }: TerminalModalProps
 
   const terminalContent = !minimized && (
     <div className="flex-1 min-h-0 overflow-hidden">
-      <SystemTerminal />
+      <SystemTerminal embedded />
     </div>
   );
 
