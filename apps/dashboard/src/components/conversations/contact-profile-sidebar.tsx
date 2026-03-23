@@ -22,14 +22,14 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from '@unicore/ui/components/sheet';
-import { Button } from '@unicore/ui/components/button';
-import { Badge } from '@unicore/ui/components/badge';
-import { Textarea } from '@unicore/ui/components/textarea';
-import { Input } from '@unicore/ui/components/input';
-import { Separator } from '@unicore/ui/components/separator';
-import { Skeleton } from '@unicore/ui/components/skeleton';
-import { toast } from '@unicore/ui/components/toast';
+  Button,
+  Badge,
+  Textarea,
+  Input,
+  Separator,
+  Skeleton,
+  toast,
+} from '@unicore/ui';
 import { api } from '@/lib/api';
 
 /* ------------------------------------------------------------------ */
