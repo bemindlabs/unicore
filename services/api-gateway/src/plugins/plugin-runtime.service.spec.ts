@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PluginRuntimeService } from './plugin-runtime.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { PluginLoadError } from '@unicore/plugin-sdk';
 
 // ─── SDK mocks ────────────────────────────────────────────────────────────────
 
