@@ -667,15 +667,12 @@ export default function SettingsDomainsPage() {
   }, []);
 
   return (
+    <UpgradeGate
+      feature="customDomains"
+      featureTitle="Custom Domains"
+      featureDescription="Add verified custom domains with automatic SSL certificates and DNS management."
+    >
     <div className="space-y-6">
-      {/* Pro feature banner */}
-      {!isPro && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
-          <strong>Pro Feature</strong> — Custom domain support requires a Pro license.
-          <a href="/settings/license" className="underline ml-1">Upgrade</a>
-        </div>
-      )}
-
       {/* Header card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
