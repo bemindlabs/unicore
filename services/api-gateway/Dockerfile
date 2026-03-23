@@ -23,6 +23,7 @@ COPY tsconfig.json ./
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/services/api-gateway/node_modules ./services/api-gateway/node_modules
 RUN cd packages/plugin-sdk && npx tsc -p tsconfig.json && npx tsc -p tsconfig.cjs.json && \
+    echo '{"type":"commonjs"}' > dist/cjs/package.json && \
     cd /app/services/api-gateway && \
     (npx prisma generate --schema=src/prisma/schema.prisma 2>/dev/null || true) && \
     pnpm run build
