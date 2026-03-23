@@ -35,7 +35,7 @@ function MiniMascot({ active }: { active: boolean }) {
   );
 }
 
-export function RetroDeskThemeToggle() {
+export function RetroDeskThemeToggle(): JSX.Element {
   const { characterTheme, setCharacterTheme } = useTheme();
   const isActive = characterTheme === 'retrodesk';
 
