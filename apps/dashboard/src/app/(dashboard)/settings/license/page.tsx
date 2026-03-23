@@ -217,6 +217,7 @@ export default function SettingsLicensePage() {
       status?: string;
       maxAgents?: number;
       maxRoles?: number;
+      machineId?: string;
     }
 
     Promise.all([
