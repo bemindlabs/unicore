@@ -1,6 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, lazy, Suspense } from 'react';
+
+const TerminalEmulator = lazy(() =>
+  import('./terminal-emulator').then((m) => ({ default: m.TerminalEmulator })),
+);
 
 export type TerminalMode = 'modal' | 'docked' | 'popout';
 
