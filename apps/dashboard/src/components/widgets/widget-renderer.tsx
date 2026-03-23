@@ -12,7 +12,7 @@ interface WidgetRendererProps {
  * Renders a single widget by looking it up in the registry.
  * Unknown types render a clear error state rather than crashing.
  */
-export function WidgetRenderer({ config }: WidgetRendererProps) {
+export function WidgetRenderer({ config }: WidgetRendererProps): JSX.Element {
   const Widget = resolveWidget(config.type);
 
   if (!Widget) {
