@@ -74,7 +74,9 @@ export function LicenseProvider({ children }: { children: ReactNode }) {
       writeCache(data);
       if (isMounted.current) setStatus(data);
     } catch {
-      // silently fall back to cached or default
+      // API failed (401, network error, etc.) — clear stale cache and fall back to community defaults
+      localStorage.removeItem(CACHE_KEY);
+      if (isMounted.current) setStatus(DEFAULT_STATUS);
     } finally {
       if (isMounted.current) setLoading(false);
     }
