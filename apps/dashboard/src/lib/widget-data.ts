@@ -52,22 +52,22 @@ function toRelativeTime(isoDate: string): string {
 
 export const widgetDataFetchers = {
   revenue: (): Promise<RevenueWidgetData> =>
-    api.get<RevenueWidgetData>('/api/v1/dashboard/widgets/revenue'),
+    api.get<RevenueWidgetData>('/api/proxy/erp/dashboard/revenue'),
 
   orders: (): Promise<OrdersWidgetData> =>
-    api.get<OrdersWidgetData>('/api/v1/dashboard/widgets/orders'),
+    api.get<OrdersWidgetData>('/api/proxy/erp/dashboard/orders'),
 
   inventory: (): Promise<InventoryWidgetData> =>
-    api.get<InventoryWidgetData>('/api/v1/dashboard/widgets/inventory'),
+    api.get<InventoryWidgetData>('/api/proxy/erp/dashboard/inventory'),
 
   mrr: (): Promise<MrrWidgetData> =>
-    api.get<MrrWidgetData>('/api/v1/dashboard/widgets/mrr'),
+    api.get<MrrWidgetData>('/api/proxy/erp/dashboard/mrr'),
 
   churn: (): Promise<ChurnWidgetData> =>
-    api.get<ChurnWidgetData>('/api/v1/dashboard/widgets/churn'),
+    api.get<ChurnWidgetData>('/api/proxy/erp/dashboard/churn'),
 
   signups: (): Promise<SignupsWidgetData> =>
-    api.get<SignupsWidgetData>('/api/v1/dashboard/widgets/signups'),
+    api.get<SignupsWidgetData>('/api/proxy/erp/dashboard/signups'),
 
   activity: async (): Promise<ActivityWidgetData> => {
     const res = await api.get<{ data: AuditLogEntry[] }>('/api/v1/audit-logs?limit=10&sort=desc');
