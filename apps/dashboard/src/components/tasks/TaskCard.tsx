@@ -22,7 +22,7 @@ interface Props {
   onDragStart?: (e: React.DragEvent) => void;
 }
 
-export function TaskCard({ task, onClick, onDragStart }: Props) {
+export function TaskCard({ task, onClick, onDragStart }: Props): JSX.Element {
   const priorityCfg = PRIORITY_CONFIG[task.priority];
 
   return (
