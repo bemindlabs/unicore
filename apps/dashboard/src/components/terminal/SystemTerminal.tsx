@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect, useCallback, KeyboardEvent } from 'react';
 import { api } from '@/lib/api';
-import { handleErpCommand } from '@/lib/terminal/erp-commands';
 
 // ── ANSI-like color helpers ────────────────────────────────────────────────
 
