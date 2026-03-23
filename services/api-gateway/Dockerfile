@@ -22,7 +22,8 @@ COPY services/api-gateway ./services/api-gateway
 COPY tsconfig.json ./
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/services/api-gateway/node_modules ./services/api-gateway/node_modules
-RUN cd services/api-gateway && \
+RUN cd packages/plugin-sdk && npx tsc -p tsconfig.json && \
+    cd /app/services/api-gateway && \
     (npx prisma generate --schema=src/prisma/schema.prisma 2>/dev/null || true) && \
     pnpm run build
 
