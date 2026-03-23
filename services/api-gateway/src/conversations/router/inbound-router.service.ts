@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
-import { ConversationsGateway } from '../gateway/conversations.gateway';
+import { ConversationsGateway } from '../conversations.gateway';
 import { KafkaProducerService } from '../kafka/kafka-producer.service';
 import { NormalizedMessageDto } from '../dto/normalized-message.dto';
 
