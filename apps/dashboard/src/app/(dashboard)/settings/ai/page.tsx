@@ -451,6 +451,31 @@ export default function AiSettingsPage() {
               </div>
             );
           })}
+
+          {/* Unlock all 13 providers CTA */}
+          {!isPro && (
+            <div className="mt-2 flex items-center justify-between rounded-lg border border-dashed border-amber-300/60 bg-amber-500/5 px-4 py-3">
+              <div className="flex items-center gap-2 text-sm">
+                <Crown className="h-4 w-4 text-amber-500" />
+                <span className="font-medium text-amber-700 dark:text-amber-400">
+                  Unlock all {PROVIDERS.length} providers
+                </span>
+                <span className="text-muted-foreground">
+                  — {PROVIDERS.length - COMMUNITY_PROVIDER_IDS.size} more available in Pro
+                </span>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 border-amber-400/50 text-amber-700 hover:bg-amber-500/10 dark:text-amber-400"
+                onClick={handleUpgradeToPro}
+                disabled={isUpgrading}
+              >
+                {isUpgrading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Crown className="h-3.5 w-3.5" />}
+                Upgrade to Pro
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
