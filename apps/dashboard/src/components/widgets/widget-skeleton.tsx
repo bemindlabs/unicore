@@ -17,7 +17,7 @@ export function WidgetSkeleton(): JSX.Element {
   );
 }
 
-export function WidgetErrorCard({ message }: { message: string }) {
+export function WidgetErrorCard({ message }: { message: string }): JSX.Element {
   return (
     <Card>
       <CardContent className="flex h-full min-h-[100px] items-center justify-center">
