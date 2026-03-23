@@ -191,6 +191,7 @@ export default function SettingsLicensePage() {
   const [isActivating, setIsActivating] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [usersUsed, setUsersUsed] = useState(0);
+  const [machineId, setMachineId] = useState<string | null>(null);
   const [isAnnual, setIsAnnual] = useState(true);
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [showDowngrade, setShowDowngrade] = useState(false);
