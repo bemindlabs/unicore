@@ -441,6 +441,33 @@ export default function ChatHistoryPage() {
     });
   }
 
+  async function handleOpenProfile(userName: string) {
+    // Search ERP contacts by userName to resolve the contactId
+    try {
+      const data = await api.get<{ items: Array<{ id: string; name: string }> }>(
+        `/api/v1/contact-profile/search?q=${encodeURIComponent(userName)}`,
+      );
+      const results = data.items ?? [];
+      if (results.length === 0) {
+        toast({
+          title: 'No contact found',
+          description: `No CRM contact matching "${userName}".`,
+          variant: 'destructive',
+        });
+        return;
+      }
+      // Use the first (best) match
+      setProfileContactId(results[0].id);
+      setProfileOpen(true);
+    } catch {
+      toast({
+        title: 'Could not load contact',
+        description: 'Make sure the ERP service is running.',
+        variant: 'destructive',
+      });
+    }
+  }
+
   // Unique agent options for filter dropdown
   const agentOptions = Array.from(
     new Map(records.map((r) => [r.agentId, r.agentName])).entries(),

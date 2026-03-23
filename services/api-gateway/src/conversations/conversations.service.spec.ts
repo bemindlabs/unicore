@@ -335,6 +335,158 @@ describe('ConversationsService', () => {
     });
   });
 
+  // ─── listParticipants (UNC-1031) ─────────────────────────────────────────
+
+  describe('listParticipants', () => {
+    it('returns only active participants', async () => {
+      mockPrisma.conversation.findUnique.mockResolvedValue(makeConversation());
+      const participants = [
+        { id: 'p-1', participantId: 'user-1', participantType: 'USER', isActive: true, leftAt: null },
+        { id: 'p-2', participantId: 'finance-agent', participantType: 'AGENT', isActive: true, leftAt: null },
+      ];
+      mockPrisma.conversationParticipant.findMany.mockResolvedValue(participants);
+
+      const result = await service.listParticipants('conv-1');
+
+      expect(result).toHaveLength(2);
+      expect(mockPrisma.conversationParticipant.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ conversationId: 'conv-1', leftAt: null }),
+        }),
+      );
+    });
+  });
+
+  // ─── inviteParticipant with autoRespond + participantColor (UNC-1031) ──────
+
+  describe('inviteParticipant (UNC-1031 fields)', () => {
+    it('persists participantColor and autoRespond when provided', async () => {
+      mockPrisma.conversation.findUnique.mockResolvedValue(makeConversation());
+      mockPrisma.conversationParticipant.findFirst.mockResolvedValue(null);
+      mockPrisma.conversationParticipant.create.mockResolvedValue({
+        id: 'p-1',
+        participantId: 'finance-agent',
+        participantType: 'AGENT',
+        participantName: 'Finance Agent',
+        participantColor: '#f59e0b',
+        autoRespond: false,
+      });
+      mockPrisma.conversation.update.mockResolvedValue({});
+
+      await service.inviteParticipant(
+        'conv-1',
+        {
+          participantId: 'finance-agent',
+          participantType: InviteParticipantType.AGENT,
+          participantName: 'Finance Agent',
+          participantColor: '#f59e0b',
+          autoRespond: false,
+        },
+        'user-1',
+      );
+
+      expect(mockPrisma.conversationParticipant.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            participantColor: '#f59e0b',
+            autoRespond: false,
+            addedBy: 'user-1',
+          }),
+        }),
+      );
+    });
+
+    it('defaults autoRespond to true for AGENT participants', async () => {
+      mockPrisma.conversation.findUnique.mockResolvedValue(makeConversation());
+      mockPrisma.conversationParticipant.findFirst.mockResolvedValue(null);
+      mockPrisma.conversationParticipant.create.mockResolvedValue({ id: 'p-1', autoRespond: true });
+      mockPrisma.conversation.update.mockResolvedValue({});
+
+      await service.inviteParticipant(
+        'conv-1',
+        {
+          participantId: 'router-agent',
+          participantType: InviteParticipantType.AGENT,
+          participantName: 'Router Agent',
+        },
+        'user-1',
+      );
+
+      const callData = mockPrisma.conversationParticipant.create.mock.calls[0][0].data;
+      expect(callData.autoRespond).toBe(true);
+    });
+  });
+
+  // ─── updateParticipant (UNC-1031) ─────────────────────────────────────────
+
+  describe('updateParticipant', () => {
+    it('toggles autoRespond for an AI agent', async () => {
+      mockPrisma.conversation.findUnique.mockResolvedValue(makeConversation());
+      mockPrisma.conversationParticipant.findFirst.mockResolvedValue({
+        id: 'p-1', participantId: 'finance-agent', autoRespond: true, leftAt: null,
+      });
+      mockPrisma.conversationParticipant.update.mockResolvedValue({
+        id: 'p-1', autoRespond: false,
+      });
+
+      const result = await service.updateParticipant('conv-1', 'finance-agent', { autoRespond: false });
+
+      expect(mockPrisma.conversationParticipant.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'p-1' },
+          data: expect.objectContaining({ autoRespond: false }),
+        }),
+      );
+      expect(result.autoRespond).toBe(false);
+    });
+
+    it('updates participantColor', async () => {
+      mockPrisma.conversation.findUnique.mockResolvedValue(makeConversation());
+      mockPrisma.conversationParticipant.findFirst.mockResolvedValue({
+        id: 'p-1', participantId: 'finance-agent', participantColor: '#6366f1', leftAt: null,
+      });
+      mockPrisma.conversationParticipant.update.mockResolvedValue({
+        id: 'p-1', participantColor: '#f59e0b',
+      });
+
+      const result = await service.updateParticipant('conv-1', 'finance-agent', { participantColor: '#f59e0b' });
+
+      expect(mockPrisma.conversationParticipant.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ participantColor: '#f59e0b' }),
+        }),
+      );
+      expect(result.participantColor).toBe('#f59e0b');
+    });
+
+    it('throws NotFoundException when participant not in conversation', async () => {
+      mockPrisma.conversation.findUnique.mockResolvedValue(makeConversation());
+      mockPrisma.conversationParticipant.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.updateParticipant('conv-1', 'unknown-agent', { autoRespond: false }),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  // ─── removeParticipant — isActive flag (UNC-1031) ────────────────────────
+
+  describe('removeParticipant (isActive)', () => {
+    it('sets isActive=false when removing', async () => {
+      mockPrisma.conversation.findUnique.mockResolvedValue(makeConversation());
+      mockPrisma.conversationParticipant.findFirst.mockResolvedValue({ id: 'p-1', leftAt: null });
+      mockPrisma.conversationParticipant.update.mockResolvedValue({ id: 'p-1', leftAt: new Date(), isActive: false });
+
+      await service.removeParticipant('conv-1', 'finance-agent');
+
+      expect(mockPrisma.conversationParticipant.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ leftAt: expect.any(Date), isActive: false }),
+        }),
+      );
+    });
+  });
+
   // ─── autoAssign ────────────────────────────────────────────────────────────
 
   describe('autoAssign', () => {
