@@ -126,6 +126,50 @@ export interface PtyMessage extends BaseMessage {
   payload: Record<string, unknown>;
 }
 
+export interface ConversationNewMessage extends BaseMessage {
+  type: 'conversation:new';
+  payload: {
+    conversationId: string;
+    agentId: string;
+    userId: string;
+    channel: string;
+    metadata?: Record<string, unknown>;
+  };
+}
+
+export interface ConversationMessageEvent extends BaseMessage {
+  type: 'conversation:message';
+  payload: {
+    conversationId: string;
+    agentId: string;
+    fromId: string;
+    fromType: 'agent' | 'human';
+    text: string;
+    channel: string;
+  };
+}
+
+export interface ConversationAssignedMessage extends BaseMessage {
+  type: 'conversation:assigned';
+  payload: {
+    conversationId: string;
+    agentId: string;
+    assignedTo: string;
+    assignedToName: string;
+  };
+}
+
+export interface ConversationTypingMessage extends BaseMessage {
+  type: 'conversation:typing';
+  payload: {
+    conversationId: string;
+    agentId: string;
+    fromId: string;
+    fromType: 'agent' | 'human';
+    isTyping: boolean;
+  };
+}
+
 export type IncomingMessage =
   | RegisterMessage
   | UnregisterMessage
@@ -137,7 +181,11 @@ export type IncomingMessage =
   | SubscribeMessage
   | UnsubscribeMessage
   | PingMessage
-  | PtyMessage;
+  | PtyMessage
+  | ConversationNewMessage
+  | ConversationMessageEvent
+  | ConversationAssignedMessage
+  | ConversationTypingMessage;
 
 export interface AckMessage extends BaseMessage {
   type: 'system:ack';
