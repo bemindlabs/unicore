@@ -461,6 +461,18 @@ export function ChatBox() {
         </div>
       )}
 
+      {/* UNC-1027: Handoff banner */}
+      {handoff && !handoffDismissed && (
+        <HandoffBanner
+          handoff={handoff}
+          slaSecondsRemaining={slaSecondsRemaining}
+          onClaim={() => claimHandoff('current-user')}
+          onResolve={resolveHandoff}
+          onResumeAI={resumeAI}
+          onDismiss={() => setHandoffDismissed(true)}
+        />
+      )}
+
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-3">
         {visibleMessages.length === 0 && (
