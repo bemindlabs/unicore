@@ -87,7 +87,7 @@ export const widgetDataFetchers = {
 
   chart: (options: Record<string, unknown>): Promise<ChartWidgetData> =>
     api.get<ChartWidgetData>(
-      `/api/v1/dashboard/widgets/chart?metric=${options.metric ?? 'revenue'}&period=${options.period ?? '30d'}`,
+      `/api/proxy/erp/dashboard/chart?metric=${options.metric ?? 'revenue'}&period=${options.period ?? '30d'}`,
     ),
 };
 
