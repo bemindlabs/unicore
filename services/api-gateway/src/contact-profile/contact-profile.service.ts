@@ -30,17 +30,6 @@ export class ContactProfileService {
     return res.json() as Promise<T>;
   }
 
-  private async erpPatch<T = unknown>(path: string, body: unknown): Promise<T> {
-    const res = await fetch(`${ERP_BASE}/api/v1${path}`, {
-      method: 'PATCH',
-      headers: INTERNAL_HEADER,
-      body: JSON.stringify(body),
-    });
-    if (res.status === 404) throw new NotFoundException(`ERP resource not found: ${path}`);
-    if (!res.ok) throw new BadRequestException(`ERP error ${res.status}: ${path}`);
-    return res.json() as Promise<T>;
-  }
-
   private async erpDelete(path: string): Promise<void> {
     const res = await fetch(`${ERP_BASE}/api/v1${path}`, {
       method: 'DELETE',
