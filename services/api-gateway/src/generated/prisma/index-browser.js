@@ -259,6 +259,11 @@ exports.Prisma.PluginScalarFieldEnum = {
   icon: 'icon',
   downloads: 'downloads',
   rating: 'rating',
+  status: 'status',
+  submittedBy: 'submittedBy',
+  rejectionReason: 'rejectionReason',
+  reviewedBy: 'reviewedBy',
+  reviewedAt: 'reviewedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };

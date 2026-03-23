@@ -219,22 +219,29 @@ model Gamification {
 // ---------------------------------------------------------------------------
 
 model Plugin {
-  id            String               @id @default(uuid())
-  name          String
-  slug          String               @unique
-  type          String // 'integration' | 'ai' | 'workflow' | 'ui' | 'utility'
-  author        String
-  version       String // latest published version
-  description   String
-  icon          String?
-  downloads     Int                  @default(0)
-  rating        Float                @default(0)
-  versions      PluginVersion[]
-  installations PluginInstallation[]
-  createdAt     DateTime             @default(now())
-  updatedAt     DateTime             @updatedAt
+  id              String               @id @default(uuid())
+  name            String
+  slug            String               @unique
+  type            String // 'integration' | 'ai' | 'workflow' | 'ui' | 'utility'
+  author          String
+  version         String // latest published version
+  description     String
+  icon            String?
+  downloads       Int                  @default(0)
+  rating          Float                @default(0)
+  status          String               @default("draft") // 'draft' | 'pending' | 'approved' | 'rejected'
+  submittedBy     String? // userId of the developer who submitted
+  rejectionReason String?
+  reviewedBy      String? // userId of admin who reviewed
+  reviewedAt      DateTime?
+  versions        PluginVersion[]
+  installations   PluginInstallation[]
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
 
   @@index([type])
+  @@index([status])
+  @@index([submittedBy])
   @@map("plugins")
 }
 

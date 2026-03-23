@@ -14024,6 +14024,11 @@ export namespace Prisma {
     icon: string | null
     downloads: number | null
     rating: number | null
+    status: string | null
+    submittedBy: string | null
+    rejectionReason: string | null
+    reviewedBy: string | null
+    reviewedAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -14039,6 +14044,11 @@ export namespace Prisma {
     icon: string | null
     downloads: number | null
     rating: number | null
+    status: string | null
+    submittedBy: string | null
+    rejectionReason: string | null
+    reviewedBy: string | null
+    reviewedAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -14054,6 +14064,11 @@ export namespace Prisma {
     icon: number
     downloads: number
     rating: number
+    status: number
+    submittedBy: number
+    rejectionReason: number
+    reviewedBy: number
+    reviewedAt: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -14081,6 +14096,11 @@ export namespace Prisma {
     icon?: true
     downloads?: true
     rating?: true
+    status?: true
+    submittedBy?: true
+    rejectionReason?: true
+    reviewedBy?: true
+    reviewedAt?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -14096,6 +14116,11 @@ export namespace Prisma {
     icon?: true
     downloads?: true
     rating?: true
+    status?: true
+    submittedBy?: true
+    rejectionReason?: true
+    reviewedBy?: true
+    reviewedAt?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -14111,6 +14136,11 @@ export namespace Prisma {
     icon?: true
     downloads?: true
     rating?: true
+    status?: true
+    submittedBy?: true
+    rejectionReason?: true
+    reviewedBy?: true
+    reviewedAt?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -14213,6 +14243,11 @@ export namespace Prisma {
     icon: string | null
     downloads: number
     rating: number
+    status: string
+    submittedBy: string | null
+    rejectionReason: string | null
+    reviewedBy: string | null
+    reviewedAt: Date | null
     createdAt: Date
     updatedAt: Date
     _count: PluginCountAggregateOutputType | null
@@ -14247,6 +14282,11 @@ export namespace Prisma {
     icon?: boolean
     downloads?: boolean
     rating?: boolean
+    status?: boolean
+    submittedBy?: boolean
+    rejectionReason?: boolean
+    reviewedBy?: boolean
+    reviewedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     versions?: boolean | Plugin$versionsArgs<ExtArgs>
@@ -14265,6 +14305,11 @@ export namespace Prisma {
     icon?: boolean
     downloads?: boolean
     rating?: boolean
+    status?: boolean
+    submittedBy?: boolean
+    rejectionReason?: boolean
+    reviewedBy?: boolean
+    reviewedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["plugin"]>
@@ -14280,6 +14325,11 @@ export namespace Prisma {
     icon?: boolean
     downloads?: boolean
     rating?: boolean
+    status?: boolean
+    submittedBy?: boolean
+    rejectionReason?: boolean
+    reviewedBy?: boolean
+    reviewedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["plugin"]>
@@ -14295,11 +14345,16 @@ export namespace Prisma {
     icon?: boolean
     downloads?: boolean
     rating?: boolean
+    status?: boolean
+    submittedBy?: boolean
+    rejectionReason?: boolean
+    reviewedBy?: boolean
+    reviewedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type PluginOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "slug" | "type" | "author" | "version" | "description" | "icon" | "downloads" | "rating" | "createdAt" | "updatedAt", ExtArgs["result"]["plugin"]>
+  export type PluginOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "slug" | "type" | "author" | "version" | "description" | "icon" | "downloads" | "rating" | "status" | "submittedBy" | "rejectionReason" | "reviewedBy" | "reviewedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["plugin"]>
   export type PluginInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     versions?: boolean | Plugin$versionsArgs<ExtArgs>
     installations?: boolean | Plugin$installationsArgs<ExtArgs>
@@ -14325,6 +14380,11 @@ export namespace Prisma {
       icon: string | null
       downloads: number
       rating: number
+      status: string
+      submittedBy: string | null
+      rejectionReason: string | null
+      reviewedBy: string | null
+      reviewedAt: Date | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["plugin"]>
@@ -14762,6 +14822,11 @@ export namespace Prisma {
     readonly icon: FieldRef<"Plugin", 'String'>
     readonly downloads: FieldRef<"Plugin", 'Int'>
     readonly rating: FieldRef<"Plugin", 'Float'>
+    readonly status: FieldRef<"Plugin", 'String'>
+    readonly submittedBy: FieldRef<"Plugin", 'String'>
+    readonly rejectionReason: FieldRef<"Plugin", 'String'>
+    readonly reviewedBy: FieldRef<"Plugin", 'String'>
+    readonly reviewedAt: FieldRef<"Plugin", 'DateTime'>
     readonly createdAt: FieldRef<"Plugin", 'DateTime'>
     readonly updatedAt: FieldRef<"Plugin", 'DateTime'>
   }
@@ -29111,6 +29176,11 @@ export namespace Prisma {
     icon: 'icon',
     downloads: 'downloads',
     rating: 'rating',
+    status: 'status',
+    submittedBy: 'submittedBy',
+    rejectionReason: 'rejectionReason',
+    reviewedBy: 'reviewedBy',
+    reviewedAt: 'reviewedAt',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -30313,6 +30383,11 @@ export namespace Prisma {
     icon?: StringNullableFilter<"Plugin"> | string | null
     downloads?: IntFilter<"Plugin"> | number
     rating?: FloatFilter<"Plugin"> | number
+    status?: StringFilter<"Plugin"> | string
+    submittedBy?: StringNullableFilter<"Plugin"> | string | null
+    rejectionReason?: StringNullableFilter<"Plugin"> | string | null
+    reviewedBy?: StringNullableFilter<"Plugin"> | string | null
+    reviewedAt?: DateTimeNullableFilter<"Plugin"> | Date | string | null
     createdAt?: DateTimeFilter<"Plugin"> | Date | string
     updatedAt?: DateTimeFilter<"Plugin"> | Date | string
     versions?: PluginVersionListRelationFilter
@@ -30330,6 +30405,11 @@ export namespace Prisma {
     icon?: SortOrderInput | SortOrder
     downloads?: SortOrder
     rating?: SortOrder
+    status?: SortOrder
+    submittedBy?: SortOrderInput | SortOrder
+    rejectionReason?: SortOrderInput | SortOrder
+    reviewedBy?: SortOrderInput | SortOrder
+    reviewedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     versions?: PluginVersionOrderByRelationAggregateInput
@@ -30350,6 +30430,11 @@ export namespace Prisma {
     icon?: StringNullableFilter<"Plugin"> | string | null
     downloads?: IntFilter<"Plugin"> | number
     rating?: FloatFilter<"Plugin"> | number
+    status?: StringFilter<"Plugin"> | string
+    submittedBy?: StringNullableFilter<"Plugin"> | string | null
+    rejectionReason?: StringNullableFilter<"Plugin"> | string | null
+    reviewedBy?: StringNullableFilter<"Plugin"> | string | null
+    reviewedAt?: DateTimeNullableFilter<"Plugin"> | Date | string | null
     createdAt?: DateTimeFilter<"Plugin"> | Date | string
     updatedAt?: DateTimeFilter<"Plugin"> | Date | string
     versions?: PluginVersionListRelationFilter
@@ -30367,6 +30452,11 @@ export namespace Prisma {
     icon?: SortOrderInput | SortOrder
     downloads?: SortOrder
     rating?: SortOrder
+    status?: SortOrder
+    submittedBy?: SortOrderInput | SortOrder
+    rejectionReason?: SortOrderInput | SortOrder
+    reviewedBy?: SortOrderInput | SortOrder
+    reviewedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: PluginCountOrderByAggregateInput
@@ -30390,6 +30480,11 @@ export namespace Prisma {
     icon?: StringNullableWithAggregatesFilter<"Plugin"> | string | null
     downloads?: IntWithAggregatesFilter<"Plugin"> | number
     rating?: FloatWithAggregatesFilter<"Plugin"> | number
+    status?: StringWithAggregatesFilter<"Plugin"> | string
+    submittedBy?: StringNullableWithAggregatesFilter<"Plugin"> | string | null
+    rejectionReason?: StringNullableWithAggregatesFilter<"Plugin"> | string | null
+    reviewedBy?: StringNullableWithAggregatesFilter<"Plugin"> | string | null
+    reviewedAt?: DateTimeNullableWithAggregatesFilter<"Plugin"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Plugin"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Plugin"> | Date | string
   }
@@ -32363,6 +32458,11 @@ export namespace Prisma {
     icon?: string | null
     downloads?: number
     rating?: number
+    status?: string
+    submittedBy?: string | null
+    rejectionReason?: string | null
+    reviewedBy?: string | null
+    reviewedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     versions?: PluginVersionCreateNestedManyWithoutPluginInput
@@ -32380,6 +32480,11 @@ export namespace Prisma {
     icon?: string | null
     downloads?: number
     rating?: number
+    status?: string
+    submittedBy?: string | null
+    rejectionReason?: string | null
+    reviewedBy?: string | null
+    reviewedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     versions?: PluginVersionUncheckedCreateNestedManyWithoutPluginInput
@@ -32397,6 +32502,11 @@ export namespace Prisma {
     icon?: NullableStringFieldUpdateOperationsInput | string | null
     downloads?: IntFieldUpdateOperationsInput | number
     rating?: FloatFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    submittedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     versions?: PluginVersionUpdateManyWithoutPluginNestedInput
@@ -32414,6 +32524,11 @@ export namespace Prisma {
     icon?: NullableStringFieldUpdateOperationsInput | string | null
     downloads?: IntFieldUpdateOperationsInput | number
     rating?: FloatFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    submittedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     versions?: PluginVersionUncheckedUpdateManyWithoutPluginNestedInput
@@ -32431,6 +32546,11 @@ export namespace Prisma {
     icon?: string | null
     downloads?: number
     rating?: number
+    status?: string
+    submittedBy?: string | null
+    rejectionReason?: string | null
+    reviewedBy?: string | null
+    reviewedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -32446,6 +32566,11 @@ export namespace Prisma {
     icon?: NullableStringFieldUpdateOperationsInput | string | null
     downloads?: IntFieldUpdateOperationsInput | number
     rating?: FloatFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    submittedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -32461,6 +32586,11 @@ export namespace Prisma {
     icon?: NullableStringFieldUpdateOperationsInput | string | null
     downloads?: IntFieldUpdateOperationsInput | number
     rating?: FloatFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    submittedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -34401,6 +34531,11 @@ export namespace Prisma {
     icon?: SortOrder
     downloads?: SortOrder
     rating?: SortOrder
+    status?: SortOrder
+    submittedBy?: SortOrder
+    rejectionReason?: SortOrder
+    reviewedBy?: SortOrder
+    reviewedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -34421,6 +34556,11 @@ export namespace Prisma {
     icon?: SortOrder
     downloads?: SortOrder
     rating?: SortOrder
+    status?: SortOrder
+    submittedBy?: SortOrder
+    rejectionReason?: SortOrder
+    reviewedBy?: SortOrder
+    reviewedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -34436,6 +34576,11 @@ export namespace Prisma {
     icon?: SortOrder
     downloads?: SortOrder
     rating?: SortOrder
+    status?: SortOrder
+    submittedBy?: SortOrder
+    rejectionReason?: SortOrder
+    reviewedBy?: SortOrder
+    reviewedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -36508,6 +36653,11 @@ export namespace Prisma {
     icon?: string | null
     downloads?: number
     rating?: number
+    status?: string
+    submittedBy?: string | null
+    rejectionReason?: string | null
+    reviewedBy?: string | null
+    reviewedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     installations?: PluginInstallationCreateNestedManyWithoutPluginInput
@@ -36524,6 +36674,11 @@ export namespace Prisma {
     icon?: string | null
     downloads?: number
     rating?: number
+    status?: string
+    submittedBy?: string | null
+    rejectionReason?: string | null
+    reviewedBy?: string | null
+    reviewedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     installations?: PluginInstallationUncheckedCreateNestedManyWithoutPluginInput
@@ -36556,6 +36711,11 @@ export namespace Prisma {
     icon?: NullableStringFieldUpdateOperationsInput | string | null
     downloads?: IntFieldUpdateOperationsInput | number
     rating?: FloatFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    submittedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     installations?: PluginInstallationUpdateManyWithoutPluginNestedInput
@@ -36572,6 +36732,11 @@ export namespace Prisma {
     icon?: NullableStringFieldUpdateOperationsInput | string | null
     downloads?: IntFieldUpdateOperationsInput | number
     rating?: FloatFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    submittedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     installations?: PluginInstallationUncheckedUpdateManyWithoutPluginNestedInput
@@ -36588,6 +36753,11 @@ export namespace Prisma {
     icon?: string | null
     downloads?: number
     rating?: number
+    status?: string
+    submittedBy?: string | null
+    rejectionReason?: string | null
+    reviewedBy?: string | null
+    reviewedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     versions?: PluginVersionCreateNestedManyWithoutPluginInput
@@ -36604,6 +36774,11 @@ export namespace Prisma {
     icon?: string | null
     downloads?: number
     rating?: number
+    status?: string
+    submittedBy?: string | null
+    rejectionReason?: string | null
+    reviewedBy?: string | null
+    reviewedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     versions?: PluginVersionUncheckedCreateNestedManyWithoutPluginInput
@@ -36636,6 +36811,11 @@ export namespace Prisma {
     icon?: NullableStringFieldUpdateOperationsInput | string | null
     downloads?: IntFieldUpdateOperationsInput | number
     rating?: FloatFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    submittedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     versions?: PluginVersionUpdateManyWithoutPluginNestedInput
@@ -36652,6 +36832,11 @@ export namespace Prisma {
     icon?: NullableStringFieldUpdateOperationsInput | string | null
     downloads?: IntFieldUpdateOperationsInput | number
     rating?: FloatFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    submittedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     versions?: PluginVersionUncheckedUpdateManyWithoutPluginNestedInput
