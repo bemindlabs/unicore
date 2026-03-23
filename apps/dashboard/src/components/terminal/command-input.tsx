@@ -32,6 +32,12 @@ const COMMANDS = [
   'format',
   'config',
   'exit',
+  '/erp contacts',
+  '/erp orders',
+  '/erp inventory',
+  '/erp revenue',
+  '/erp invoice',
+  '/erp report pnl',
 ];
 
 const ALL_SUGGESTIONS = [...COMMANDS, ...AGENT_NAMES.map((a) => `agent ${a}`)];
