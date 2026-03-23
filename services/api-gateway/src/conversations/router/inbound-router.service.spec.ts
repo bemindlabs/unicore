@@ -226,7 +226,7 @@ describe('InboundRouterService', () => {
     });
 
     it('routes to assigned agent when conversation has assignedAgentId', async () => {
-      const assignedConversation = { ...mockConversation, assignedAgentId: 'agent-42', status: 'assigned' };
+      const assignedConversation = { ...mockConversation, assigneeId: 'agent-42', status: 'ASSIGNED' };
       mockPrisma.conversation.findFirst.mockResolvedValue(assignedConversation);
 
       const result = await service.route(dto);
