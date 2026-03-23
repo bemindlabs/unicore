@@ -10,12 +10,12 @@ import { NormalizedMessageDto } from '../dto/normalized-message.dto';
 
 const mockConversation = {
   id: 'conv-123',
-  channel: 'telegram',
+  channel: 'TELEGRAM',
   externalId: 'chat-456',
-  status: 'unassigned',
-  assignedAgentId: null,
+  status: 'OPEN',
+  assigneeId: null,
   contactName: 'Alice',
-  contactExternalId: 'user-789',
+  contactId: 'user-789',
   lastMessageAt: new Date(),
   createdAt: new Date(),
   updatedAt: new Date(),
