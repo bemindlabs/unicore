@@ -101,7 +101,7 @@ export class ChatHistoryService {
         agentName: data.agentName,
         userId: data.userId,
         userName: data.userName,
-        messages: msgs,
+        messages: msgs as unknown as import('../generated/prisma').Prisma.InputJsonValue,
         summary: autoSummary || null,
         channel: data.channel ?? 'command',
       },
