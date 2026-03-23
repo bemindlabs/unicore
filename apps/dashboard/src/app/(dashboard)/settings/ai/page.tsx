@@ -1,13 +1,16 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Bot, Eye, EyeOff, Save, CheckCircle, AlertCircle, Loader2, RefreshCw, ExternalLink, Trash2, BarChart3 } from 'lucide-react';
+import { Bot, Eye, EyeOff, Save, CheckCircle, AlertCircle, Loader2, RefreshCw, ExternalLink, Trash2, BarChart3, Crown, Lock } from 'lucide-react';
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
-  Button, Input, Label,
+  Button, Input, Label, Badge,
 } from '@unicore/ui';
 import { api } from '@/lib/api';
 import Link from 'next/link';
+import { useLicense } from '@/hooks/use-license';
+import { useAuth } from '@/hooks/use-auth';
+import { toast } from '@unicore/ui';
 
 // ── Provider definitions ──────────────────────────────────────────────────
 
