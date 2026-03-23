@@ -84,7 +84,7 @@ export class WebchatWebhookController {
       senderId: body.sessionId,
       senderName,
       text: body.message,
-      rawPayload: body as Record<string, unknown>,
+      rawPayload: body as unknown as Record<string, unknown>,
       metadata: body.metadata,
     });
 
