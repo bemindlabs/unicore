@@ -566,6 +566,86 @@ export class OpenClawGateway
   }
 
   // ---------------------------------------------------------------------------
+  // Conversation event handlers (UNC-1025)
+  // ---------------------------------------------------------------------------
+
+  @SubscribeMessage('conversation:new')
+  handleConversationNew(
+    @ConnectedSocket() client: WebSocket,
+    @MessageBody() message: ConversationNewMessage,
+  ): void {
+    const { conversationId, agentId, userId, channel, metadata } = message.payload;
+    const agentChannel = `conversation-${agentId}`;
+
+    this.conversationService
+      .create(conversationId, agentId, userId, channel, metadata)
+      .then(() => {
+        const envelope = JSON.stringify(message);
+        this.router.routePublish(agentChannel, 'system', envelope, (socketId, data) =>
+          this.sendToSocket(socketId, data),
+        );
+        this.send(client, this.ack(message.messageId, { conversationId }));
+      })
+      .catch((err) => {
+        this.logger.error(`conversation:new failed: ${String(err)}`);
+        this.send(client, this.error(message.messageId, 'CONVERSATION_ERROR', String(err)));
+      });
+  }
+
+  @SubscribeMessage('conversation:message')
+  handleConversationMessage(
+    @ConnectedSocket() client: WebSocket,
+    @MessageBody() message: ConversationMessageEvent,
+  ): void {
+    const { conversationId, agentId, fromId } = message.payload;
+    const agentChannel = `conversation-${agentId}`;
+
+    const envelope = JSON.stringify(message);
+    const count = this.router.routePublish(agentChannel, fromId, envelope, (socketId, data) =>
+      this.sendToSocket(socketId, data),
+    );
+    this.send(client, this.ack(message.messageId, { conversationId, deliveredTo: count }));
+  }
+
+  @SubscribeMessage('conversation:assigned')
+  handleConversationAssigned(
+    @ConnectedSocket() client: WebSocket,
+    @MessageBody() message: ConversationAssignedMessage,
+  ): void {
+    const { conversationId, agentId, assignedTo, assignedToName } = message.payload;
+    const agentChannel = `conversation-${agentId}`;
+
+    this.conversationService
+      .assign(conversationId, assignedTo, assignedToName)
+      .then(() => {
+        const envelope = JSON.stringify(message);
+        this.router.routePublish(agentChannel, 'system', envelope, (socketId, data) =>
+          this.sendToSocket(socketId, data),
+        );
+        this.send(client, this.ack(message.messageId, { conversationId, assignedTo }));
+      })
+      .catch((err) => {
+        this.logger.error(`conversation:assigned failed: ${String(err)}`);
+        this.send(client, this.error(message.messageId, 'CONVERSATION_ERROR', String(err)));
+      });
+  }
+
+  @SubscribeMessage('conversation:typing')
+  handleConversationTyping(
+    @ConnectedSocket() client: WebSocket,
+    @MessageBody() message: ConversationTypingMessage,
+  ): void {
+    const { conversationId, agentId, fromId } = message.payload;
+    const agentChannel = `conversation-${agentId}`;
+
+    const envelope = JSON.stringify(message);
+    const count = this.router.routePublish(agentChannel, fromId, envelope, (socketId, data) =>
+      this.sendToSocket(socketId, data),
+    );
+    this.send(client, this.ack(message.messageId, { conversationId, deliveredTo: count }));
+  }
+
+  // ---------------------------------------------------------------------------
   // PTY terminal handlers
   // ---------------------------------------------------------------------------
 
