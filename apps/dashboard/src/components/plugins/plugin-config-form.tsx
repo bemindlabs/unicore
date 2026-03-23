@@ -122,7 +122,7 @@ export function validateAll(
 // Default value builders
 // ---------------------------------------------------------------------------
 
-function defaultForSchema(schema: JsonSchemaProperty): unknown {
+export function defaultForSchema(schema: JsonSchemaProperty): unknown {
   if (schema.default !== undefined) return schema.default;
   switch (schema.type) {
     case 'boolean': return false;
