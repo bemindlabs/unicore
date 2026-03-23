@@ -274,6 +274,18 @@ function ConversationRow({ record, expanded, onToggle, onDelete, onOpenProfile, 
                   <span title={formatAbsolute(record.createdAt)}>{formatAbsolute(record.createdAt)}</span>
                 </div>
                 <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs gap-1 text-muted-foreground hover:text-foreground"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenProfile(record.userName);
+                    }}
+                  >
+                    <UserCircle className="h-3 w-3" />
+                    Contact Profile
+                  </Button>
                   <a
                     href={`/backoffice?agent=${record.agentId}`}
                     className="inline-flex items-center gap-1 text-xs text-primary hover:underline px-2 py-1 rounded hover:bg-primary/10 transition-colors"
