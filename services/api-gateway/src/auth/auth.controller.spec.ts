@@ -103,12 +103,43 @@ describe('AuthController', () => {
   });
 
   describe('getMe', () => {
-    it('should call authService.getMe', async () => {
+    it('should return user data with license info', async () => {
       const user = { id: '1', email: 'test@example.com', name: 'Test', role: 'VIEWER' };
       mockAuthService.getMe.mockResolvedValue(user);
 
       const result = await controller.getMe('1');
-      expect(result).toEqual(user);
+      expect(result).toEqual({
+        ...user,
+        license: {
+          tier: mockLicenseStatus.edition,
+          features: mockLicenseStatus.features,
+          expiresAt: mockLicenseStatus.expiresAt,
+          isValid: mockLicenseStatus.valid,
+        },
+      });
+      expect(mockAuthService.getMe).toHaveBeenCalledWith('1');
+      expect(mockLicenseService.getLicenseStatus).toHaveBeenCalled();
+    });
+
+    it('should include pro license info when license is valid', async () => {
+      const user = { id: '2', email: 'pro@example.com', name: 'Pro User', role: 'OWNER' };
+      const proStatus = {
+        ...mockLicenseStatus,
+        valid: true,
+        edition: 'pro' as const,
+        features: ['allAgents', 'sso', 'auditLogs'] as any[],
+        expiresAt: new Date('2027-01-01'),
+      };
+      mockAuthService.getMe.mockResolvedValue(user);
+      mockLicenseService.getLicenseStatus.mockResolvedValue(proStatus);
+
+      const result = await controller.getMe('2');
+      expect(result.license).toEqual({
+        tier: 'pro',
+        features: proStatus.features,
+        expiresAt: proStatus.expiresAt,
+        isValid: true,
+      });
     });
   });
 });
