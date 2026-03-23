@@ -4,8 +4,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn, Separator, Sheet, SheetContent, SheetHeader, SheetTitle } from '@unicore/ui';
 import { useAuth } from '@/hooks/use-auth';
+import { useLicense } from '@/hooks/use-license';
 import { useBranding } from '@/components/BrandingProvider';
-import { filterSectionsByRole } from '@/lib/navigation';
+import { filterSectionsByRole, isNavItemLocked } from '@/lib/navigation';
 
 interface MobileNavProps {
   open: boolean;
@@ -15,6 +16,7 @@ interface MobileNavProps {
 export function MobileNav({ open, onOpenChange }: MobileNavProps): JSX.Element {
   const pathname = usePathname();
   const { user } = useAuth();
+  const { isPro, edition, hasFeature } = useLicense();
   const { config } = useBranding();
   const appName = config?.appName ?? 'UniCore';
   const sections = user ? filterSectionsByRole(user.role) : [];
@@ -31,7 +33,11 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps): JSX.Element {
           </SheetTitle>
         </SheetHeader>
         <nav className="flex-1 min-h-0 overflow-y-auto px-2 py-3">
-          {sections.map((section, idx) => (
+          {sections
+            .filter((section) =>
+              section.items.some((item) => !isNavItemLocked(item, isPro, edition, hasFeature)),
+            )
+            .map((section, idx) => (
             <div key={section.label} className={cn(idx > 0 && 'mt-3')}>
               <p className="mb-1 px-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70">
                 {section.label}
@@ -40,6 +46,12 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps): JSX.Element {
               <div className="space-y-0.5">
                 {section.items.map((item) => {
                   const Icon = item.icon;
+                  const locked = isNavItemLocked(item, isPro, edition, hasFeature);
+
+                  if (locked) {
+                    return null;
+                  }
+
                   const isActive =
                     item.href === '/'
                       ? pathname === '/'
