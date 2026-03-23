@@ -193,16 +193,17 @@ export function TerminalModal({ open, onClose, onConnected, title = 'Terminal' }
     </div>
   );
 
-  /* ── Terminal content (iframe → SSH proxy) ─────────────────────────────── */
+  /* ── Terminal content (xterm.js + PTY WebSocket) ─────────────────────── */
   const TerminalBody = () => (
-    <iframe
-      src="/ssh/"
-      className="flex-1 w-full border-0"
-      title="SSH Terminal"
-      onLoad={() => setConnectedState(true)}
-      onError={() => setConnectedState(false)}
-      style={{ background: '#000000', colorScheme: 'dark' }}
-    />
+    <Suspense
+      fallback={
+        <div className="flex-1 flex items-center justify-center" style={{ background: '#0d1117' }}>
+          <span className="text-green-500/60 font-mono text-xs animate-pulse">Loading terminal...</span>
+        </div>
+      }
+    >
+      <TerminalEmulator className="flex-1" cwd="/workspace" />
+    </Suspense>
   );
 
   /* ── MODAL (centered 80% viewport) ─────────────────────────────────────── */
