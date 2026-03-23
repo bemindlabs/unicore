@@ -69,7 +69,7 @@ export function PixelStar({ className, px }: { className?: string; px?: number }
   return <PixelShape grid={STAR_GRID} px={px ?? 3} animation="pixelTwinkle 2s ease-in-out infinite" className={className} />;
 }
 
-export function PixelHeart({ className, px }: { className?: string; px?: number }) {
+export function PixelHeart({ className, px }: { className?: string; px?: number }): JSX.Element {
   return <PixelShape grid={HEART_GRID} px={px ?? 2} animation="pixelFloat 3s ease-in-out infinite" className={className} />;
 }
 
