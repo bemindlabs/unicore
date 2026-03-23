@@ -108,6 +108,8 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
         />
       </div>
 
+      <LicenseBadge />
+
       {/* User avatar dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
