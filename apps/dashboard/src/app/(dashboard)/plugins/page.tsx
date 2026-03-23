@@ -104,19 +104,6 @@ const SORT_OPTIONS = [
 
 const PAGE_SIZE = 12;
 
-async function fetchPluginsFromAPI(): Promise<Plugin[] | null> {
-  try {
-    const res = await fetch('/api/proxy/bootstrap/plugins', {
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (Array.isArray(data) && data.length > 0) return data;
-    return null;
-  } catch {
-    return null;
-  }
-}
 
 function PriceLabel({ price }: { price: number | null }) {
   if (price === null) {
