@@ -115,14 +115,19 @@ export class LlmController {
     }
   }
 
+  @Get('providers')
+  providers() {
+    return { providers: this.llmService.listProviders() };
+  }
+
   @Get('health')
   async health() {
     return { providers: await this.llmService.healthCheck() };
   }
 
   @Get('models')
-  async models() {
-    return { models: await this.llmService.listModels() };
+  async models(@Query('provider') provider?: string) {
+    return { models: await this.llmService.listModels(provider) };
   }
 
   @Post('reload')
