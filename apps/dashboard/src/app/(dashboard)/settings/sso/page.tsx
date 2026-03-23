@@ -3,7 +3,7 @@
 import { Shield } from 'lucide-react';
 import { UpgradeGate } from '@/components/upgrade-gate';
 
-export default function SsoSettingsPage() {
+export default function SsoSettingsPage(): JSX.Element {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">

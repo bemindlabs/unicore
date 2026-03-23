@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, Skeleton } from '@unicore/ui';
 
-export function WidgetSkeleton() {
+export function WidgetSkeleton(): JSX.Element {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -17,7 +17,7 @@ export function WidgetSkeleton() {
   );
 }
 
-export function WidgetErrorCard({ message }: { message: string }) {
+export function WidgetErrorCard({ message }: { message: string }): JSX.Element {
   return (
     <Card>
       <CardContent className="flex h-full min-h-[100px] items-center justify-center">

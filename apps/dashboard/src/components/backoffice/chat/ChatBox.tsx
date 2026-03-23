@@ -2,10 +2,12 @@
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Send, MessageCircle, ChevronDown, ArrowLeft, Search, Bell, BellOff } from 'lucide-react';
-import { useChatWebSocket, type ChatMessage } from '@/hooks/use-chat-ws';
+import { useChatWebSocket, type ChatMessage, type SuggestedAction } from '@/hooks/use-chat-ws';
 import { getAgents } from '@/lib/backoffice/store';
 import { api } from '@/lib/api';
 import type { BackofficeAgent } from '@/lib/backoffice/types';
+import { ToolCallCard } from './ToolCallCard';
+import { SuggestedActions } from './SuggestedActions';
 
 const GENERAL_CHANNEL = 'chat-backoffice';
 
@@ -300,6 +302,11 @@ export function ChatBox() {
     typingTimeoutRef.current = setTimeout(() => setIsAgentTyping(false), 30_000);
   }
 
+  function handleSuggestedAction(action: SuggestedAction) {
+    if (!connected) return;
+    send(action.value, 'You', 'human-user', 'human');
+  }
+
   function selectAgent(agent: BackofficeAgent) {
     setSelectedAgent(agent);
     setDropdownOpen(false);
@@ -473,8 +480,25 @@ export function ChatBox() {
                         : 'bg-[var(--bo-bg-bubble)] text-[var(--bo-text-body-soft)] border border-[var(--bo-border-subtle)]'
                     }`}
                   >
-                    {renderMessageText(msg.text)}
+                    {msg.text && renderMessageText(msg.text)}
+                    {/* UNC-1029: Tool call cards inline */}
+                    {msg.toolCalls && msg.toolCalls.length > 0 && (
+                      <div className={msg.text ? 'mt-2' : ''}>
+                        {msg.toolCalls.map((tc, i) => (
+                          <ToolCallCard key={i} toolCall={tc} />
+                        ))}
+                      </div>
+                    )}
                   </div>
+
+                  {/* UNC-1029: Suggested action quick replies */}
+                  {msg.suggestedActions && msg.suggestedActions.length > 0 && (
+                    <SuggestedActions
+                      actions={msg.suggestedActions}
+                      onAction={handleSuggestedAction}
+                      disabled={!connected}
+                    />
+                  )}
 
                   {/* UNC-103: Reaction picker on hover */}
                   {isHovered && (

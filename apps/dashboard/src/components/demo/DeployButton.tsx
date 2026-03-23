@@ -2,7 +2,7 @@
 
 import { Rocket } from 'lucide-react';
 
-export function DeployButton() {
+export function DeployButton(): JSX.Element {
   return (
     <a
       href="https://unicore.bemind.tech/get-started"

@@ -9,7 +9,7 @@ interface ProgressIndicatorProps {
   onStepClick?: (step: number) => void;
 }
 
-export function ProgressIndicator({ currentStep, onStepClick }: ProgressIndicatorProps) {
+export function ProgressIndicator({ currentStep, onStepClick }: ProgressIndicatorProps): JSX.Element {
   return (
     <div className="w-full">
       {/* Mobile: simple dots */}

@@ -42,7 +42,7 @@ const ROLES = [
   },
 ];
 
-export default function AdminRolesPage() {
+export default function AdminRolesPage(): JSX.Element {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">

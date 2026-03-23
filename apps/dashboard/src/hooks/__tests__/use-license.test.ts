@@ -3,8 +3,8 @@ import { useLicense, useProFeature } from '../use-license';
 
 // Mock the license context
 const mockRefresh = jest.fn();
-let mockContextValue = {
-  status: { valid: true, edition: 'community', features: [], maxAgents: 2, maxRoles: 3 },
+let mockContextValue: { status: { valid: boolean; edition: string; features: string[]; maxAgents: number; maxRoles: number }; loading: boolean; refresh: jest.Mock } = {
+  status: { valid: true, edition: 'community', features: [] as string[], maxAgents: 2, maxRoles: 3 },
   loading: false,
   refresh: mockRefresh,
 };
@@ -26,7 +26,7 @@ let mockUseContext: jest.SpyInstance;
 
 describe('useLicense', () => {
   beforeEach(() => {
-    mockUseContext = jest.spyOn(React, 'useContext').mockReturnValue(mockContextValue);
+    mockUseContext = jest.spyOn(React, 'useContext').mockReturnValue(mockContextValue as any);
     jest.clearAllMocks();
     mockContextValue = {
       status: { valid: true, edition: 'community', features: [], maxAgents: 2, maxRoles: 3 },
@@ -109,7 +109,7 @@ describe('useLicense', () => {
 
 describe('useProFeature', () => {
   beforeEach(() => {
-    mockUseContext = jest.spyOn(React, 'useContext').mockReturnValue(mockContextValue);
+    mockUseContext = jest.spyOn(React, 'useContext').mockReturnValue(mockContextValue as any);
     jest.clearAllMocks();
   });
 

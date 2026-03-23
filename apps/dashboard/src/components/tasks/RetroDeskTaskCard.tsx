@@ -26,7 +26,7 @@ interface Props {
   onDragStart?: (e: React.DragEvent) => void;
 }
 
-export function RetroDeskTaskCard({ task, onClick, onDragStart }: Props) {
+export function RetroDeskTaskCard({ task, onClick, onDragStart }: Props): JSX.Element {
   const priorityCfg = PRIORITY_CONFIG[task.priority];
 
   return (

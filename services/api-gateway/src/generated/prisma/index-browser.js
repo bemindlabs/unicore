@@ -279,6 +279,72 @@ exports.Prisma.PluginInstallationScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ConversationScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  status: 'status',
+  channel: 'channel',
+  assigneeId: 'assigneeId',
+  assigneeName: 'assigneeName',
+  contactId: 'contactId',
+  contactName: 'contactName',
+  contactEmail: 'contactEmail',
+  userId: 'userId',
+  metadata: 'metadata',
+  closedAt: 'closedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ConversationMessageScalarFieldEnum = {
+  id: 'id',
+  conversationId: 'conversationId',
+  content: 'content',
+  role: 'role',
+  authorId: 'authorId',
+  authorName: 'authorName',
+  authorType: 'authorType',
+  metadata: 'metadata',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.OutboundMessageScalarFieldEnum = {
+  id: 'id',
+  conversationId: 'conversationId',
+  channelType: 'channelType',
+  text: 'text',
+  recipientId: 'recipientId',
+  fromAgentId: 'fromAgentId',
+  externalId: 'externalId',
+  status: 'status',
+  error: 'error',
+  metadata: 'metadata',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ConversationParticipantScalarFieldEnum = {
+  id: 'id',
+  conversationId: 'conversationId',
+  participantId: 'participantId',
+  participantType: 'participantType',
+  participantName: 'participantName',
+  role: 'role',
+  autoAssigned: 'autoAssigned',
+  invitedBy: 'invitedBy',
+  joinedAt: 'joinedAt',
+  leftAt: 'leftAt'
+};
+
+exports.Prisma.CannedResponseScalarFieldEnum = {
+  id: 'id',
+  shortcut: 'shortcut',
+  text: 'text',
+  category: 'category',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.NotificationScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -287,6 +353,45 @@ exports.Prisma.NotificationScalarFieldEnum = {
   message: 'message',
   read: 'read',
   link: 'link',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.HandoffScalarFieldEnum = {
+  id: 'id',
+  conversationId: 'conversationId',
+  channel: 'channel',
+  userId: 'userId',
+  trigger: 'trigger',
+  confidence: 'confidence',
+  status: 'status',
+  assignedTo: 'assignedTo',
+  contextSummary: 'contextSummary',
+  slaMinutes: 'slaMinutes',
+  slaDeadline: 'slaDeadline',
+  slaBreached: 'slaBreached',
+  resolvedAt: 'resolvedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AgentNoteScalarFieldEnum = {
+  id: 'id',
+  contactId: 'contactId',
+  authorId: 'authorId',
+  authorName: 'authorName',
+  body: 'body',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ContactChannelScalarFieldEnum = {
+  id: 'id',
+  contactId: 'contactId',
+  channel: 'channel',
+  channelUserId: 'channelUserId',
+  displayName: 'displayName',
+  isActive: 'isActive',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -323,6 +428,24 @@ exports.Role = exports.$Enums.Role = {
   VIEWER: 'VIEWER'
 };
 
+exports.ConversationStatus = exports.$Enums.ConversationStatus = {
+  OPEN: 'OPEN',
+  ASSIGNED: 'ASSIGNED',
+  PENDING: 'PENDING',
+  RESOLVED: 'RESOLVED',
+  CLOSED: 'CLOSED'
+};
+
+exports.ParticipantType = exports.$Enums.ParticipantType = {
+  USER: 'USER',
+  AGENT: 'AGENT'
+};
+
+exports.ParticipantRole = exports.$Enums.ParticipantRole = {
+  OWNER: 'OWNER',
+  MEMBER: 'MEMBER'
+};
+
 exports.Prisma.ModelName = {
   User: 'User',
   OAuthAccount: 'OAuthAccount',
@@ -337,7 +460,15 @@ exports.Prisma.ModelName = {
   Plugin: 'Plugin',
   PluginVersion: 'PluginVersion',
   PluginInstallation: 'PluginInstallation',
-  Notification: 'Notification'
+  Conversation: 'Conversation',
+  ConversationMessage: 'ConversationMessage',
+  OutboundMessage: 'OutboundMessage',
+  ConversationParticipant: 'ConversationParticipant',
+  CannedResponse: 'CannedResponse',
+  Notification: 'Notification',
+  Handoff: 'Handoff',
+  AgentNote: 'AgentNote',
+  ContactChannel: 'ContactChannel'
 };
 
 /**

@@ -65,18 +65,18 @@ const FLOWER_GRID = [
   [_, _, '#a8e6cf', _, _],
 ];
 
-export function PixelStar({ className, px }: { className?: string; px?: number }) {
+export function PixelStar({ className, px }: { className?: string; px?: number }): JSX.Element {
   return <PixelShape grid={STAR_GRID} px={px ?? 3} animation="pixelTwinkle 2s ease-in-out infinite" className={className} />;
 }
 
-export function PixelHeart({ className, px }: { className?: string; px?: number }) {
+export function PixelHeart({ className, px }: { className?: string; px?: number }): JSX.Element {
   return <PixelShape grid={HEART_GRID} px={px ?? 2} animation="pixelFloat 3s ease-in-out infinite" className={className} />;
 }
 
-export function PixelCloud({ className, px }: { className?: string; px?: number }) {
+export function PixelCloud({ className, px }: { className?: string; px?: number }): JSX.Element {
   return <PixelShape grid={CLOUD_GRID} px={px ?? 2} animation="pixelFloat 5s ease-in-out infinite" className={className} />;
 }
 
-export function PixelFlower({ className, px }: { className?: string; px?: number }) {
+export function PixelFlower({ className, px }: { className?: string; px?: number }): JSX.Element {
   return <PixelShape grid={FLOWER_GRID} px={px ?? 3} className={className} />;
 }

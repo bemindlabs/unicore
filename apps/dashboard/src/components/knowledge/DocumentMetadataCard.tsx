@@ -36,7 +36,7 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function DocumentMetadataCard({ doc }: DocumentMetadataCardProps) {
+export function DocumentMetadataCard({ doc }: DocumentMetadataCardProps): JSX.Element {
   const tz = useBusinessTimezone();
   const rows: { icon: React.ReactNode; label: string; value: string }[] = [];
 

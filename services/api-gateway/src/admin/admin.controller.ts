@@ -181,6 +181,7 @@ export class AdminController {
 
   @Get('health')
   async health() {
+    const startMs = Date.now();
     const now = new Date().toISOString();
     const services: Array<{ name: string; status: string; latencyMs?: number; lastCheckedAt: string; errorMessage?: string }> = [];
 
@@ -188,9 +189,9 @@ export class AdminController {
       const t = Date.now();
       try {
         const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
-        services.push({ name, status: res.ok ? 'HEALTHY' : 'DEGRADED', latencyMs: Date.now() - t, lastCheckedAt: now });
+        services.push({ name, status: res.ok ? 'healthy' : 'degraded', latencyMs: Date.now() - t, lastCheckedAt: now });
       } catch (err: any) {
-        services.push({ name, status: 'UNHEALTHY', latencyMs: Date.now() - t, lastCheckedAt: now, errorMessage: err?.message ?? 'Connection failed' });
+        services.push({ name, status: 'down', latencyMs: Date.now() - t, lastCheckedAt: now, errorMessage: err?.message ?? 'Connection failed' });
       }
     };
 
@@ -198,9 +199,9 @@ export class AdminController {
     const dbStart = Date.now();
     try {
       await this.prisma.$queryRaw`SELECT 1`;
-      services.push({ name: 'PostgreSQL', status: 'HEALTHY', latencyMs: Date.now() - dbStart, lastCheckedAt: now });
+      services.push({ name: 'PostgreSQL', status: 'healthy', latencyMs: Date.now() - dbStart, lastCheckedAt: now });
     } catch (err: any) {
-      services.push({ name: 'PostgreSQL', status: 'UNHEALTHY', latencyMs: Date.now() - dbStart, lastCheckedAt: now, errorMessage: err?.message });
+      services.push({ name: 'PostgreSQL', status: 'down', latencyMs: Date.now() - dbStart, lastCheckedAt: now, errorMessage: err?.message });
     }
 
     // Check services in parallel
@@ -220,9 +221,9 @@ export class AdminController {
       checkService('AI Engine', `http://${aiHost}:${aiPort}/api/v1/llm/health`),
     ]);
 
-    const hasUnhealthy = services.some(s => s.status === 'UNHEALTHY');
-    const hasDegraded = services.some(s => s.status === 'DEGRADED');
-    const overallStatus = hasUnhealthy ? 'DEGRADED' : hasDegraded ? 'DEGRADED' : 'HEALTHY';
+    const hasUnhealthy = services.some(s => s.status === 'down');
+    const hasDegraded = services.some(s => s.status === 'degraded');
+    const overallStatus = hasUnhealthy ? 'degraded' : hasDegraded ? 'degraded' : 'healthy';
 
     const uptimeSec = Math.floor(process.uptime());
     const cpus = os.cpus();
@@ -241,7 +242,7 @@ export class AdminController {
       },
     ];
 
-    return { overallStatus, services, clusterNodes, checkedAt: now };
+    return { overallStatus, services, clusterNodes, checkedAt: now, uptime: uptimeSec, timestamp: now, totalMs: Date.now() - startMs };
   }
 
   // ─── Platform Overview ──────────────────────────────────────────────────

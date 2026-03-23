@@ -7,7 +7,7 @@ import { MetricCard } from './metric-card';
 import { WidgetSkeleton, WidgetErrorCard } from './widget-skeleton';
 import { Badge } from '@unicore/ui';
 
-export function InventoryWidget({ config }: WidgetComponentProps) {
+export function InventoryWidget({ config }: WidgetComponentProps): JSX.Element | null {
   const { data, loading, error } = useInventoryData(config.refreshInterval);
 
   if (loading) return <WidgetSkeleton />;

@@ -35,7 +35,7 @@ function ActivitySkeleton() {
   );
 }
 
-export function ActivityWidget({ config }: WidgetComponentProps) {
+export function ActivityWidget({ config }: WidgetComponentProps): JSX.Element | null {
   const { data, loading, error } = useActivityData(config.refreshInterval);
 
   if (loading) return <ActivitySkeleton />;

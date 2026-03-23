@@ -6,7 +6,7 @@ import type { WidgetComponentProps } from './widget-registry';
 import { MetricCard } from './metric-card';
 import { WidgetSkeleton, WidgetErrorCard } from './widget-skeleton';
 
-export function SignupsWidget({ config }: WidgetComponentProps) {
+export function SignupsWidget({ config }: WidgetComponentProps): JSX.Element | null {
   const { data, loading, error } = useSignupsData(config.refreshInterval);
 
   if (loading) return <WidgetSkeleton />;

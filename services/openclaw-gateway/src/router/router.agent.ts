@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { IntentClassifierService } from './intent-classifier.service';
 import { DelegationService } from './delegation.service';
+import { MentionParserService } from './mention-parser.service';
 import { CommsAgent } from '../agents/comms/comms.agent';
 import { FinanceAgent } from '../agents/finance/finance.agent';
 import { GrowthAgent } from '../agents/growth/growth.agent';
@@ -14,8 +15,9 @@ import type {
   AgentContext,
   AgentMessage,
   AgentResponse,
+  AgentType,
 } from '../interfaces/agent-base.interface';
-import type { RoutingDecision } from '../interfaces/classification.interface';
+import type { ClassificationResult, RoutingDecision } from '../interfaces/classification.interface';
 
 export interface RouterProcessResult {
   response: AgentResponse;
@@ -47,6 +49,7 @@ export class RouterAgent implements OnModuleInit {
   constructor(
     private readonly classifier: IntentClassifierService,
     private readonly delegation: DelegationService,
+    private readonly mentionParser: MentionParserService,
     // Specialist agents injected by NestJS DI
     private readonly commsAgent: CommsAgent,
     private readonly financeAgent: FinanceAgent,

@@ -77,7 +77,7 @@ function DeskScene({ agent }: { agent: BackofficeAgent }) {
   );
 }
 
-export function WorkstationCard({ agent, onClick }: { agent: BackofficeAgent; onClick: () => void }) {
+export function WorkstationCard({ agent, onClick }: { agent: BackofficeAgent; onClick: () => void }): JSX.Element {
   const { isActive: isRetroDesk } = useRetroDeskTheme();
 
   return (

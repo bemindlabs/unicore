@@ -266,143 +266,135 @@ model PluginInstallation {
 }
 
 // ---------------------------------------------------------------------------
-// Omni-Channel Conversation Hub (UNC-1014)
+// Omni-Channel Conversations (UNC-1015)
 // ---------------------------------------------------------------------------
-
-/// Channel type for conversations (matches unicore-pro/channels providers)
-enum ConversationChannel {
-  TELEGRAM
-  LINE
-  FACEBOOK
-  INSTAGRAM
-  WHATSAPP
-  SLACK
-  DISCORD
-  EMAIL
-  SMS
-  LIVE_CHAT
-}
 
 enum ConversationStatus {
   OPEN
+  ASSIGNED
   PENDING
   RESOLVED
   CLOSED
 }
 
-enum MessageType {
-  TEXT
-  IMAGE
-  FILE
-  AUDIO
-  VIDEO
-  STICKER
-  LOCATION
-  TEMPLATE
-  SYSTEM
-}
-
-enum MessageDirection {
-  INBOUND
-  OUTBOUND
-}
-
-/// A customer conversation thread originating from any channel
 model Conversation {
-  id             String                    @id @default(uuid())
-  channel        ConversationChannel
-  status         ConversationStatus        @default(OPEN)
-  subject        String?
-  /// External conversation/room ID from the originating channel (e.g. Telegram chat_id)
-  externalId     String?
-  /// Assigned operator user ID
-  assigneeId     String?
-  /// Primary contact channel record
-  contactChannelId String?
-  contactChannel ContactChannel?          @relation(fields: [contactChannelId], references: [id])
-  messages       Message[]
-  participants   ConversationParticipant[]
-  resolvedAt     DateTime?
-  closedAt       DateTime?
-  lastMessageAt  DateTime?
-  createdAt      DateTime                  @default(now())
-  updatedAt      DateTime                  @updatedAt
+  id           String             @id @default(uuid())
+  title        String?
+  status       ConversationStatus @default(OPEN)
+  channel      String             @default("web") // web, telegram, line, email, whatsapp, etc.
+  assigneeId   String?
+  assigneeName String?
+  contactId    String?
+  contactName  String?
+  contactEmail String?
+  userId       String
+  messages         ConversationMessage[]
+  outboundMessages OutboundMessage[]
+  participants     ConversationParticipant[]
+  metadata         Json               @default("{}")
+  closedAt         DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
 
-  @@index([channel])
   @@index([status])
   @@index([assigneeId])
-  @@index([externalId])
-  @@index([contactChannelId])
-  @@index([lastMessageAt])
+  @@index([userId])
+  @@index([channel])
+  @@index([createdAt])
   @@map("conversations")
 }
 
-/// A single message within a conversation
-model Message {
-  id             String           @id @default(uuid())
-  conversationId String
-  conversation   Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  direction      MessageDirection
-  type           MessageType      @default(TEXT)
-  content        String?
-  /// Raw payload from the channel (images, files, location, etc.)
-  attachments    Json             @default("[]")
-  /// External message ID from the originating channel
-  externalId     String?
-  /// Sender info: { id, name, avatarUrl } — contact or operator
-  sender         Json             @default("{}")
-  isRead         Boolean          @default(false)
-  readAt         DateTime?
-  deliveredAt    DateTime?
-  failedAt       DateTime?
-  errorMessage   String?
-  createdAt      DateTime         @default(now())
-
-  @@index([conversationId])
-  @@index([conversationId, createdAt])
-  @@index([externalId])
-  @@map("messages")
-}
-
-/// A contact's presence on a specific channel (e.g. a Telegram user record)
-model ContactChannel {
-  id            String              @id @default(uuid())
-  channel       ConversationChannel
-  /// Contact identifier on the channel (e.g. Telegram user_id, LINE userId)
-  externalId    String
-  /// Display name from the channel
-  displayName   String?
-  avatarUrl     String?
-  /// Raw profile metadata from the channel
-  metadata      Json                @default("{}")
-  /// Link to the ERP contact (optional — set after de-duplication)
-  erpContactId  String?
-  conversations Conversation[]
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
-
-  @@unique([channel, externalId])
-  @@index([channel])
-  @@index([erpContactId])
-  @@map("contact_channels")
-}
-
-/// Operators or agents participating in a conversation
-model ConversationParticipant {
+model ConversationMessage {
   id             String       @id @default(uuid())
   conversationId String
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  /// User ID from the User table (operator/agent)
-  userId         String
-  /// 'operator' | 'agent' | 'bot'
-  role           String       @default("operator")
-  joinedAt       DateTime     @default(now())
-  leftAt         DateTime?
+  content        String
+  role           String       @default("user") // user, agent, system
+  authorId       String?
+  authorName     String?
+  authorType     String       @default("human") // human, agent, system
+  metadata       Json         @default("{}")
+  createdAt      DateTime     @default(now())
 
-  @@unique([conversationId, userId])
   @@index([conversationId])
-  @@index([userId])
+  @@index([conversationId, createdAt])
+  @@map("conversation_messages")
+}
+
+// ---------------------------------------------------------------------------
+// Outbound Messages (UNC-1018) — messages sent from the platform to a channel
+// ---------------------------------------------------------------------------
+
+model OutboundMessage {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  channelType    String
+  text           String
+  recipientId    String?
+  fromAgentId    String?
+  externalId     String?
+  /// sent | failed | channel_switch
+  status         String       @default("sent")
+  error          String?
+  metadata       Json         @default("{}")
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+  @@index([channelType])
+  @@index([conversationId, createdAt])
+  @@map("outbound_messages")
+}
+
+// ---------------------------------------------------------------------------
+// Conversation Participants (UNC-1026) — AI agents + humans as participants
+// Supports /invite @agent commands and auto-assign via Router Agent
+// ---------------------------------------------------------------------------
+
+enum ParticipantType {
+  USER
+  AGENT
+}
+
+enum ParticipantRole {
+  OWNER
+  MEMBER
+}
+
+model ConversationParticipant {
+  id              String          @id @default(uuid())
+  conversationId  String
+  conversation    Conversation    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  participantId   String
+  participantType ParticipantType
+  participantName String
+  role            ParticipantRole @default(MEMBER)
+  autoAssigned    Boolean         @default(false)
+  invitedBy       String?
+  joinedAt        DateTime        @default(now())
+  leftAt          DateTime?
+
+  @@unique([conversationId, participantId, participantType])
+  @@index([conversationId])
+  @@index([participantId])
   @@map("conversation_participants")
+}
+
+// ---------------------------------------------------------------------------
+// Canned Responses (UNC-1020) — pre-written reply shortcuts for the composer
+// ---------------------------------------------------------------------------
+
+model CannedResponse {
+  id        String   @id @default(uuid())
+  shortcut  String   @unique   // e.g. "greeting" → triggered by /greeting
+  text      String
+  category  String?
+  createdBy String?  // userId of creator
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([shortcut])
+  @@map("canned_responses")
 }
 
 // ---------------------------------------------------------------------------
@@ -424,4 +416,81 @@ model Notification {
   @@index([userId, read])
   @@index([userId, createdAt])
   @@map("notifications")
+}
+
+// ---------------------------------------------------------------------------
+// Agent Handoff (UNC-1027)
+// Tracks escalations from AI to human and back, with SLA timers.
+// ---------------------------------------------------------------------------
+
+model Handoff {
+  id             String    @id @default(uuid())
+  /// Link to Conversation record (optional)
+  conversationId String?
+  /// WebSocket channel / session ID (e.g. "chat-agent-router")
+  channel        String
+  /// The end-user's ID whose conversation is being escalated
+  userId         String
+  /// What triggered the handoff
+  trigger        String    // 'low_confidence' | 'explicit_request' | 'user_request'
+  /// AI confidence score at time of escalation (0–1); null for non-AI triggers
+  confidence     Float?
+  /// Current lifecycle state
+  status         String    @default("pending")  // 'pending' | 'active' | 'resolved' | 'ai_resumed'
+  /// Human operator who claimed this handoff
+  assignedTo     String?
+  /// AI-generated context summary passed to the human agent
+  contextSummary String?
+  /// SLA window in minutes (default 15)
+  slaMinutes     Int       @default(15)
+  /// Hard deadline — computed as createdAt + slaMinutes
+  slaDeadline    DateTime
+  /// Set to true once the deadline passes without resolution
+  slaBreached    Boolean   @default(false)
+  resolvedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([status])
+  @@index([userId])
+  @@index([channel])
+  @@index([assignedTo])
+  @@index([slaDeadline])
+  @@map("handoffs")
+}
+
+// ---------------------------------------------------------------------------
+// Contact Profile (UNC-1022) — Agent notes & channel bindings stored in gateway
+// ---------------------------------------------------------------------------
+
+/// Agent-authored notes on an ERP contact (contactId references ERP Contact.id)
+model AgentNote {
+  id          String   @id @default(uuid())
+  contactId   String
+  authorId    String
+  authorName  String
+  body        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([contactId])
+  @@index([authorId])
+  @@map("agent_notes")
+}
+
+/// Channel bindings for a contact — maps an ERP contact to a messaging channel identity
+model ContactChannel {
+  id            String   @id @default(uuid())
+  contactId     String
+  channel       String   // telegram | line | web | api | command
+  channelUserId String
+  displayName   String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([contactId, channel])
+  @@index([contactId])
+  @@index([channel, channelUserId])
+  @@map("contact_channels")
 }

@@ -3,7 +3,7 @@
 import { useAuth } from '@/hooks/use-auth';
 import { DynamicWidgetGrid } from '@/components/dashboard/widget-grid';
 
-export default function DashboardPage() {
+export default function DashboardPage(): JSX.Element {
   const { user } = useAuth();
 
   const greeting = getGreeting();
