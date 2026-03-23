@@ -4,6 +4,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { ConversationsGateway } from '../conversations.gateway';
 import { KafkaProducerService } from '../kafka/kafka-producer.service';
 import { NormalizedMessageDto } from '../dto/normalized-message.dto';
+import { ConversationChannel } from '../../generated/prisma';
 
 export type ConversationStatus = 'unassigned' | 'assigned' | 'open' | 'closed';
 
@@ -118,10 +119,11 @@ export class InboundRouterService {
     contactName: string,
     contactId: string,
   ) {
+    const channelEnum = channel as ConversationChannel;
     // Look for an existing non-closed conversation on this channel+externalId
     const existing = await this.prisma.conversation.findFirst({
       where: {
-        channel,
+        channel: channelEnum,
         externalId,
         status: { not: 'CLOSED' },
       },
@@ -135,7 +137,7 @@ export class InboundRouterService {
     // Create a new conversation
     const created = await this.prisma.conversation.create({
       data: {
-        channel,
+        channel: channelEnum,
         externalId,
         status: 'OPEN',
         contactName,
