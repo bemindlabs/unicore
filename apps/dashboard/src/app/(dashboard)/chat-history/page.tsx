@@ -191,11 +191,12 @@ interface ConversationRowProps {
   expanded: boolean;
   onToggle: () => void;
   onDelete: (id: string) => void;
+  onOpenProfile: (userName: string) => void;
   agents: BackofficeAgent[];
   deleting: boolean;
 }
 
-function ConversationRow({ record, expanded, onToggle, onDelete, agents, deleting }: ConversationRowProps) {
+function ConversationRow({ record, expanded, onToggle, onDelete, onOpenProfile, agents, deleting }: ConversationRowProps) {
   const color = agentColor(record.agentId, agents);
   const msgCount = Array.isArray(record.messages) ? record.messages.length : 0;
   const preview =
