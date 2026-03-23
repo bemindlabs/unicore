@@ -188,9 +188,9 @@ export class AdminController {
       const t = Date.now();
       try {
         const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
-        services.push({ name, status: res.ok ? 'HEALTHY' : 'DEGRADED', latencyMs: Date.now() - t, lastCheckedAt: now });
+        services.push({ name, status: res.ok ? 'healthy' : 'degraded', latencyMs: Date.now() - t, lastCheckedAt: now });
       } catch (err: any) {
-        services.push({ name, status: 'UNHEALTHY', latencyMs: Date.now() - t, lastCheckedAt: now, errorMessage: err?.message ?? 'Connection failed' });
+        services.push({ name, status: 'down', latencyMs: Date.now() - t, lastCheckedAt: now, errorMessage: err?.message ?? 'Connection failed' });
       }
     };
 
