@@ -42,6 +42,7 @@ import {
 } from "@unicore/ui";
 import { api } from "@/lib/api";
 import { useLicense } from "@/hooks/use-license";
+import { UpgradeGate } from "@/components/upgrade-gate";
 
 // ---------------------------------------------------------------------------
 // Types
