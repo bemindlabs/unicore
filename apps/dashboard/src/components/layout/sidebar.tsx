@@ -80,7 +80,11 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
         {/* Navigation sections — scrollable */}
         <nav className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2 py-3 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
-          {sections.map((section, idx) => (
+          {sections
+            .filter((section) =>
+              section.items.some((item) => !isNavItemLocked(item, isPro, edition, hasFeature)),
+            )
+            .map((section, idx) => (
             <div key={section.label} className={cn(idx > 0 && 'mt-4')}>
               {!collapsed && (
                 <p className="mb-1 px-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70">
@@ -94,23 +98,16 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 {section.items.map((item) => {
                   const Icon = item.icon;
                   const locked = isNavItemLocked(item, isPro, edition, hasFeature);
-                  const isActive =
-                    !locked &&
-                    (item.href === '/'
-                      ? pathname === '/'
-                      : pathname === item.href || pathname.startsWith(item.href + '/'));
-
-                  const upgradeLabel = item.license?.upgradeLabel ?? item.license?.tier ?? 'Pro';
-                  const tooltip = locked
-                    ? `Upgrade to ${upgradeLabel} to unlock ${item.label}`
-                    : collapsed
-                    ? item.label
-                    : undefined;
 
                   // Hide menu items that require a higher license tier
                   if (locked) {
                     return null;
                   }
+
+                  const isActive =
+                    item.href === '/'
+                      ? pathname === '/'
+                      : pathname === item.href || pathname.startsWith(item.href + '/');
 
                   return (
                     <Link
@@ -123,7 +120,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                           : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
                         collapsed && 'justify-center px-2',
                       )}
-                      title={tooltip}
+                      title={collapsed ? item.label : undefined}
                     >
                       <Icon className="h-4 w-4 shrink-0" />
                       {!collapsed && <span className="truncate">{item.label}</span>}
