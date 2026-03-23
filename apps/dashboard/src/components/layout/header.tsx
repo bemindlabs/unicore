@@ -109,6 +109,19 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
         {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
       </Button>
 
+      <Button
+        variant="ghost"
+        size="icon"
+        className="relative h-8 w-8"
+        onClick={toggleTerminal}
+        title="Terminal (Ctrl+`)"
+      >
+        <Terminal className="h-4 w-4" />
+        {terminalConnected && (
+          <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-green-500 shadow-[0_0_4px_rgba(34,197,94,0.6)]" />
+        )}
+      </Button>
+
       <div className="relative">
         <Button variant="ghost" size="icon" className="relative h-8 w-8" onClick={toggleNotifPanel}>
           <Bell className="h-4 w-4" />
