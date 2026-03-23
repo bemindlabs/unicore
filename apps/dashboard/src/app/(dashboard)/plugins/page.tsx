@@ -558,30 +558,32 @@ export default function PluginsMarketplacePage() {
             )}
           </TabsContent>
         ))}
-      </Tabs>
+      </Tabs>}
 
       {/* Footer stats */}
-      <div className="flex items-center justify-between border-t pt-3 text-xs text-muted-foreground">
-        <span>
-          {allFiltered.length} plugin{allFiltered.length !== 1 ? 's' : ''}
-          {totalPages > 1 && (
-            <span className="ml-1 text-muted-foreground/70">
-              · page {page} of {totalPages}
-            </span>
-          )}
-        </span>
-        <div className="flex items-center gap-1">
-          <TrendingUp className="h-3 w-3" />
-          <span>{plugins.reduce((sum, p) => sum + p.installCount, 0).toLocaleString()} total installs</span>
+      {!loading && (
+        <div className="flex items-center justify-between border-t pt-3 text-xs text-muted-foreground">
+          <span>
+            {allFiltered.length} plugin{allFiltered.length !== 1 ? 's' : ''}
+            {totalPages > 1 && (
+              <span className="ml-1 text-muted-foreground/70">
+                · page {page} of {totalPages}
+              </span>
+            )}
+          </span>
+          <div className="flex items-center gap-1">
+            <TrendingUp className="h-3 w-3" />
+            <span>{plugins.reduce((sum, p) => sum + p.installCount, 0).toLocaleString()} total installs</span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Plugin Detail Dialog */}
       <PluginDetailDialog
         plugin={selectedPlugin}
         open={detailOpen}
         onClose={() => setDetailOpen(false)}
-        isPreview={isPreview}
+        isPreview={false}
       />
     </div>
   );
