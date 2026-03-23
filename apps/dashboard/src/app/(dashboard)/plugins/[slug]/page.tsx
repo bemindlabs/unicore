@@ -1,3 +1,4 @@
+// Updated: 2026-03-23
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -21,7 +22,10 @@ import {
   Bot,
   GitBranch,
   BarChart3,
-  Layers,
+  Plus,
+  Trash2,
+  Save,
+  Settings2,
 } from 'lucide-react';
 import {
   Badge,
@@ -36,6 +40,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  Input,
   Separator,
   Tabs,
   TabsContent,
