@@ -343,11 +343,11 @@ export class ConversationsService {
     });
   }
 
-  /** UNC-1031: Update participantColor for a participant */
+  /** UNC-1031: Update participantColor and/or autoRespond for a participant */
   async updateParticipant(
     conversationId: string,
     participantId: string,
-    dto: { participantColor?: string },
+    dto: { participantColor?: string; autoRespond?: boolean },
   ) {
     await this.findOne(conversationId);
 
@@ -365,6 +365,7 @@ export class ConversationsService {
       where: { id: participant.id },
       data: {
         ...(dto.participantColor !== undefined && { participantColor: dto.participantColor }),
+        ...(dto.autoRespond !== undefined && { autoRespond: dto.autoRespond }),
       },
     });
   }
