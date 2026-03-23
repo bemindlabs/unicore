@@ -243,7 +243,7 @@ function saveHistory(h: string[]) {
 
 // ── Component ────────────────────────────────────────────────────────────
 
-export function SystemTerminal() {
+export function SystemTerminal({ embedded = false }: { embedded?: boolean } = {}) {
   const [output, setOutput] = useState<OutputLine[]>(() => buildHelp());
   const [input, setInput] = useState('');
   const [running, setRunning] = useState(false);
