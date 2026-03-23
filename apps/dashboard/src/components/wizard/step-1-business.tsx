@@ -26,7 +26,7 @@ import {
   BUSINESS_TEMPLATES,
 } from '@/types/wizard';
 
-export function StepBusiness() {
+export function StepBusiness(): JSX.Element {
   const { state, dispatch } = useWizardState();
   const { business } = state;
   const t = useTranslations('wizard.business');
