@@ -21,6 +21,7 @@ import { useNotifications } from '@/hooks/use-notifications';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { NotificationPanel } from '@/components/layout/notification-panel';
 import { LicenseBadge } from '@/components/license/license-badge';
+import { TerminalModal } from '@/components/terminal/terminal-modal';
 
 interface HeaderProps {
   onMobileMenuToggle: () => void;
