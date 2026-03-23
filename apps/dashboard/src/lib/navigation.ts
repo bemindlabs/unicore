@@ -74,6 +74,12 @@ export const menuSections: NavSection[] = [
         roles: [UserRole.Owner, UserRole.Operator],
         license: { tier: 'pro', feature: 'channels', upgradeLabel: 'Pro' },
       },
+      {
+        label: 'Conv. Analytics',
+        icon: LineChart,
+        href: '/conversations/analytics',
+        roles: [UserRole.Owner, UserRole.Operator],
+      },
     ],
   },
   {
