@@ -65,7 +65,7 @@ const FLOWER_GRID = [
   [_, _, '#a8e6cf', _, _],
 ];
 
-export function PixelStar({ className, px }: { className?: string; px?: number }) {
+export function PixelStar({ className, px }: { className?: string; px?: number }): JSX.Element {
   return <PixelShape grid={STAR_GRID} px={px ?? 3} animation="pixelTwinkle 2s ease-in-out infinite" className={className} />;
 }
 
