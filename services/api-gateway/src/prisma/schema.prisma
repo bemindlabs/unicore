@@ -406,3 +406,39 @@ model Handoff {
   @@index([slaDeadline])
   @@map("handoffs")
 }
+
+// ---------------------------------------------------------------------------
+// Contact Profile (UNC-1022) — Agent notes & channel bindings stored in gateway
+// ---------------------------------------------------------------------------
+
+/// Agent-authored notes on an ERP contact (contactId references ERP Contact.id)
+model AgentNote {
+  id          String   @id @default(uuid())
+  contactId   String
+  authorId    String
+  authorName  String
+  body        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([contactId])
+  @@index([authorId])
+  @@map("agent_notes")
+}
+
+/// Channel bindings for a contact — maps an ERP contact to a messaging channel identity
+model ContactChannel {
+  id            String   @id @default(uuid())
+  contactId     String
+  channel       String   // telegram | line | web | api | command
+  channelUserId String
+  displayName   String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([contactId, channel])
+  @@index([contactId])
+  @@index([channel, channelUserId])
+  @@map("contact_channels")
+}
