@@ -377,6 +377,30 @@ model ConversationMessage {
 }
 
 // ---------------------------------------------------------------------------
+// Outbound Messages (UNC-1018) — messages sent from the platform to a channel
+// ---------------------------------------------------------------------------
+
+model OutboundMessage {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  channelType    String
+  text           String
+  recipientId    String?
+  fromAgentId    String?
+  externalId     String?
+  status         String       @default("sent") // sent | failed | channel_switch
+  error          String?
+  metadata       Json         @default("{}")
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+  @@index([channelType])
+  @@index([conversationId, createdAt])
+  @@map("outbound_messages")
+}
+
+// ---------------------------------------------------------------------------
 // Notifications
 // ---------------------------------------------------------------------------
 
