@@ -9,7 +9,7 @@ interface Props {
   onSelectAgent: (agent: BackofficeAgent) => void;
 }
 
-export function WorkstationGrid({ agents, onSelectAgent }: Props) {
+export function WorkstationGrid({ agents, onSelectAgent }: Props): JSX.Element | null {
   const { isActive: isRetroDesk } = useRetroDeskTheme();
 
   if (agents.length === 0) return null;
