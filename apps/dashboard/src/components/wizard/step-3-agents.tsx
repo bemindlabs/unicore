@@ -41,7 +41,7 @@ const CHANNEL_OPTIONS: { value: AgentChannel; label: string }[] = [
   { value: 'telegram', label: 'Telegram' },
 ];
 
-export function StepAgents() {
+export function StepAgents(): JSX.Element {
   const { state, dispatch } = useWizardState();
 
   function toggleChannel(agentIndex: number, channel: AgentChannel) {
