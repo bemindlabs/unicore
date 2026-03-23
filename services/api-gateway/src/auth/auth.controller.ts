@@ -99,8 +99,20 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  getMe(@CurrentUser('id') userId: string) {
-    return this.authService.getMe(userId);
+  async getMe(@CurrentUser('id') userId: string) {
+    const [user, status] = await Promise.all([
+      this.authService.getMe(userId),
+      this.licenseService.getLicenseStatus(),
+    ]);
+    return {
+      ...user,
+      license: {
+        tier: status.edition,
+        features: status.features,
+        expiresAt: status.expiresAt,
+        isValid: status.valid,
+      },
+    };
   }
 
   @UseGuards(JwtAuthGuard)
