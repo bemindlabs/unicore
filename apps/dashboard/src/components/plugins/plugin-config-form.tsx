@@ -53,10 +53,10 @@ export interface JsonSchema {
 }
 
 // ---------------------------------------------------------------------------
-// Validation helpers
+// Validation helpers (exported for testing)
 // ---------------------------------------------------------------------------
 
-function validateField(key: string, schema: JsonSchemaProperty, value: unknown): string | null {
+export function validateField(key: string, schema: JsonSchemaProperty, value: unknown): string | null {
   const label = schema.title ?? key;
 
   if (schema.type === 'string' || !schema.type) {
