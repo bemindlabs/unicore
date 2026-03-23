@@ -6,6 +6,20 @@ import { uuid } from '@/lib/uuid';
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:18789';
 const MAX_BACKOFF = 30_000;
 
+export interface ToolCallEntry {
+  toolName: string;
+  arguments: Record<string, unknown>;
+  result?: unknown;
+  error?: string;
+  status: 'pending' | 'success' | 'error';
+}
+
+export interface SuggestedAction {
+  label: string;
+  value: string;
+  variant?: 'default' | 'confirm' | 'danger';
+}
+
 export interface ChatMessage {
   id: string;
   text: string;
@@ -15,6 +29,8 @@ export interface ChatMessage {
   authorColor?: string;
   channel: string;
   timestamp: string;
+  toolCalls?: ToolCallEntry[];
+  suggestedActions?: SuggestedAction[];
 }
 
 export function useChatWebSocket(
