@@ -28,6 +28,7 @@ import {
 } from '../routing/interfaces/message.interface';
 import { AgentMetadata } from '../registry/interfaces/agent.interface';
 import { MessagePersistenceService } from '../persistence/message-persistence.service';
+import { HandoffNotifierService } from '../handoff/handoff-notifier.service';
 
 // Extend the WebSocket type to carry our correlation id and auth context
 interface TrackedSocket extends WebSocket {
