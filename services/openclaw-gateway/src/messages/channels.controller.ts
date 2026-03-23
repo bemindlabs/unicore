@@ -50,7 +50,7 @@ export class ChannelsController {
     try {
       const result = await this.routerAgent.process(text, sessionId, from);
 
-      const responseText = result.response.content ?? result.response.text ?? '';
+      const responseText = result.response.content ?? '';
       const intent = result.decision.classification?.intent ?? 'unknown';
       const agent = result.decision.targetAgent ?? 'router';
 
