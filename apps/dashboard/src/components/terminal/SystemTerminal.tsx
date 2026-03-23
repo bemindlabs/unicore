@@ -551,27 +551,29 @@ export function SystemTerminal({ embedded = false }: { embedded?: boolean } = {}
 
   return (
     <div
-      className="flex flex-col h-full rounded-lg overflow-hidden border border-[#30363d]"
+      className={`flex flex-col h-full overflow-hidden ${embedded ? '' : 'rounded-lg border border-[#30363d]'}`}
       style={{ background: '#0d1117', fontFamily: 'JetBrains Mono, Menlo, Monaco, Courier New, monospace' }}
       onClick={() => inputRef.current?.focus()}
     >
-      {/* Title bar */}
-      <div
-        className="flex items-center gap-2 px-4 py-2 border-b border-[#21262d] shrink-0"
-        style={{ background: '#161b22' }}
-      >
-        <span className="text-xs text-[#39c5cf]">$</span>
-        <span className="text-xs text-[#39c5cf] font-bold uppercase tracking-wider">
-          System Admin Terminal
-        </span>
-        <span className="ml-auto text-[10px] text-[#484f58] uppercase">
-          {running ? (
-            <span className="text-[#d29922] animate-pulse">running…</span>
-          ) : (
-            'OWNER only'
-          )}
-        </span>
-      </div>
+      {/* Title bar — hidden when embedded in modal */}
+      {!embedded && (
+        <div
+          className="flex items-center gap-2 px-4 py-2 border-b border-[#21262d] shrink-0"
+          style={{ background: '#161b22' }}
+        >
+          <span className="text-xs text-[#39c5cf]">$</span>
+          <span className="text-xs text-[#39c5cf] font-bold uppercase tracking-wider">
+            System Admin Terminal
+          </span>
+          <span className="ml-auto text-[10px] text-[#484f58] uppercase">
+            {running ? (
+              <span className="text-[#d29922] animate-pulse">running…</span>
+            ) : (
+              'OWNER only'
+            )}
+          </span>
+        </div>
+      )}
 
       {/* Output area */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-0.5 min-h-0">
