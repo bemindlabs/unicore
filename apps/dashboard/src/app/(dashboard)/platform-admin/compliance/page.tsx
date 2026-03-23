@@ -116,7 +116,7 @@ const MOCK_SOC2: Soc2Control[] = [
   { id: 's1', category: 'CC1 – Control Environment', control: 'CC1.1', description: 'Commitment to integrity and ethical values', result: 'PASS', lastAssessedAt: '2026-03-01T00:00:00Z' },
   { id: 's2', category: 'CC1 – Control Environment', control: 'CC1.2', description: 'Board oversight of internal controls', result: 'PASS', lastAssessedAt: '2026-03-01T00:00:00Z' },
   { id: 's3', category: 'CC2 – Communication', control: 'CC2.1', description: 'Information relevant to internal control is communicated', result: 'PASS', lastAssessedAt: '2026-03-01T00:00:00Z' },
-  { id: 's4', category: 'CC6 – Logical Access', control: 'CC6.1', description: 'Logical access security software', result: 'PASS', lastAssessedAt: '2026-03-01T00:00:00Z' },
+  { id: 's4', category: 'CC6 – Logical Access', control: 'CC6.1', description: 'Logical access security software, infrastructure, and architectures', result: 'PASS', lastAssessedAt: '2026-03-01T00:00:00Z' },
   { id: 's5', category: 'CC6 – Logical Access', control: 'CC6.2', description: 'User registration and de-registration procedures', result: 'PASS', lastAssessedAt: '2026-03-01T00:00:00Z' },
   { id: 's6', category: 'CC6 – Logical Access', control: 'CC6.3', description: 'Privileged access management', result: 'FAIL', lastAssessedAt: '2026-03-10T00:00:00Z', notes: 'MFA not enforced for all admin accounts' },
   { id: 's7', category: 'CC7 – System Operations', control: 'CC7.1', description: 'Vulnerability management program', result: 'PASS', lastAssessedAt: '2026-03-05T00:00:00Z' },
@@ -210,7 +210,7 @@ function GdprTable({ requests }: { requests: GdprExportRequest[] }) {
               <td className="px-4 py-3 font-medium">{r.userEmail}</td>
               <td className="px-4 py-3 text-muted-foreground">{fmtDate(r.requestedAt)}</td>
               <td className="px-4 py-3 text-muted-foreground">
-                {r.expiresAt ? fmtDate(r.expiresAt) : '\u2014'}
+                {r.expiresAt ? fmtDate(r.expiresAt) : '—'}
               </td>
               <td className="px-4 py-3">{statusBadge(r.status)}</td>
               <td className="px-4 py-3">
@@ -224,7 +224,7 @@ function GdprTable({ requests }: { requests: GdprExportRequest[] }) {
                 ) : r.status === 'PENDING' ? (
                   <Button variant="ghost" size="sm" className="h-7 text-xs">Process</Button>
                 ) : (
-                  <span className="text-muted-foreground text-xs">\u2014</span>
+                  <span className="text-muted-foreground text-xs">—</span>
                 )}
               </td>
             </tr>
@@ -274,7 +274,7 @@ function CcpaTable({ requests }: { requests: CcpaDeletionRequest[] }) {
               </td>
               <td className="px-4 py-3">{statusBadge(r.status)}</td>
               <td className="px-4 py-3 text-muted-foreground">
-                {r.completedAt ? fmtDate(r.completedAt) : '\u2014'}
+                {r.completedAt ? fmtDate(r.completedAt) : '—'}
               </td>
             </tr>
           ))}
@@ -308,6 +308,7 @@ function Soc2Checklist({ controls }: { controls: Soc2Control[] }) {
 
   return (
     <div className="space-y-4">
+      {/* Summary row */}
       <div className="flex gap-4">
         <div className="flex items-center gap-1.5 text-sm">
           <CheckCircle2 className="h-4 w-4 text-emerald-500" />
@@ -323,6 +324,7 @@ function Soc2Checklist({ controls }: { controls: Soc2Control[] }) {
         </div>
       </div>
 
+      {/* Per-category accordions */}
       <div className="space-y-2">
         {categories.map((cat) => {
           const catControls = controls.filter((c) => c.category === cat);
@@ -452,6 +454,7 @@ function AuditViewer({ entries }: { entries: AuditTrailEntry[] }) {
 
   return (
     <div className="space-y-4">
+      {/* Date range filter */}
       <div className="flex flex-wrap items-center gap-3">
         <Filter className="h-4 w-4 text-muted-foreground" />
         <div className="flex items-center gap-2">
@@ -482,6 +485,7 @@ function AuditViewer({ entries }: { entries: AuditTrailEntry[] }) {
         <span className="text-xs text-muted-foreground ml-auto">{filtered.length} entries</span>
       </div>
 
+      {/* Table */}
       {filtered.length === 0 ? (
         <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
           No audit events in this date range.
@@ -600,6 +604,7 @@ export default function CompliancePage() {
       URL.revokeObjectURL(url);
       toast({ title: 'Compliance report downloaded' });
     } catch {
+      // Simulate success for demo when API not available
       toast({ title: 'Report generated', description: 'Compliance report would be downloaded in production.' });
     } finally {
       setGeneratingReport(false);
@@ -610,7 +615,7 @@ export default function CompliancePage() {
     return (
       <div className="flex h-40 items-center justify-center text-muted-foreground text-sm">
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        Loading compliance data...
+        Loading compliance data…
       </div>
     );
   }
@@ -623,13 +628,14 @@ export default function CompliancePage() {
       description="GDPR, CCPA, SOC2 compliance management and audit trails require the Enterprise plan."
     >
       <div className="space-y-8">
+        {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Shield className="h-6 w-6 text-primary" />
             <div>
               <h1 className="text-2xl font-bold tracking-tight">Compliance</h1>
               <p className="text-muted-foreground">
-                GDPR &middot; CCPA &middot; SOC2 &middot; Data Retention &middot; Audit Trail
+                GDPR · CCPA · SOC2 · Data Retention · Audit Trail
               </p>
             </div>
           </div>
@@ -644,11 +650,12 @@ export default function CompliancePage() {
               ) : (
                 <FileText className="mr-2 h-4 w-4" />
               )}
-              {generatingReport ? 'Generating...' : 'Generate Compliance Report'}
+              {generatingReport ? 'Generating…' : 'Generate Compliance Report'}
             </Button>
           </div>
         </div>
 
+        {/* SOC2 fail alert */}
         {soc2Controls.some((c) => c.result === 'FAIL') && (
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
@@ -660,6 +667,7 @@ export default function CompliancePage() {
           </Alert>
         )}
 
+        {/* GDPR */}
         <Card>
           <CardHeader className="flex flex-row items-start justify-between">
             <div>
@@ -668,7 +676,7 @@ export default function CompliancePage() {
                 GDPR Data Export Requests
               </CardTitle>
               <CardDescription>
-                Manage Article 20 data portability requests - 30-day export window
+                Manage Article 20 data portability requests — 30-day export window
               </CardDescription>
             </div>
             <Badge variant="secondary" className="shrink-0">
@@ -680,6 +688,7 @@ export default function CompliancePage() {
           </CardContent>
         </Card>
 
+        {/* CCPA */}
         <Card>
           <CardHeader className="flex flex-row items-start justify-between">
             <div>
@@ -688,7 +697,7 @@ export default function CompliancePage() {
                 CCPA Deletion Requests
               </CardTitle>
               <CardDescription>
-                California Consumer Privacy Act "Right to Delete" requests - 45-day SLA
+                California Consumer Privacy Act "Right to Delete" requests — 45-day SLA
               </CardDescription>
             </div>
             <Badge variant="secondary" className="shrink-0">
@@ -700,6 +709,7 @@ export default function CompliancePage() {
           </CardContent>
         </Card>
 
+        {/* SOC2 */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -707,7 +717,7 @@ export default function CompliancePage() {
               SOC2 Control Status
             </CardTitle>
             <CardDescription>
-              Trust Services Criteria control assessment - updated per audit cycle
+              Trust Services Criteria control assessment status — updated per audit cycle
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -715,6 +725,7 @@ export default function CompliancePage() {
           </CardContent>
         </Card>
 
+        {/* Retention Policies */}
         <Card>
           <CardHeader className="flex flex-row items-start justify-between">
             <div>
@@ -733,7 +744,7 @@ export default function CompliancePage() {
                 ) : (
                   <Save className="mr-2 h-4 w-4" />
                 )}
-                {savingRetention ? 'Saving...' : 'Save'}
+                {savingRetention ? 'Saving…' : 'Save'}
               </Button>
             )}
           </CardHeader>
@@ -744,6 +755,7 @@ export default function CompliancePage() {
 
         <Separator />
 
+        {/* Audit Trail */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -751,7 +763,7 @@ export default function CompliancePage() {
               Audit Trail
             </CardTitle>
             <CardDescription>
-              Immutable record of all platform actions - filter by date range
+              Immutable record of all platform actions — filter by date range
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -759,6 +771,7 @@ export default function CompliancePage() {
           </CardContent>
         </Card>
 
+        {/* Sticky save bar for retention */}
         {retentionDirty && (
           <div className="sticky bottom-4 flex items-center justify-between rounded-lg border bg-background/95 p-4 shadow-lg backdrop-blur">
             <div className="flex items-center gap-2">
@@ -771,7 +784,7 @@ export default function CompliancePage() {
               </Button>
               <Button size="sm" onClick={handleSaveRetention} disabled={savingRetention}>
                 {savingRetention ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                {savingRetention ? 'Saving...' : 'Save Policies'}
+                {savingRetention ? 'Saving…' : 'Save Policies'}
               </Button>
             </div>
           </div>

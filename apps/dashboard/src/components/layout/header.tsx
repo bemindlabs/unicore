@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bell, LogOut, Menu, Moon, Search, Sun, User } from 'lucide-react';
+import { Bell, LogOut, Menu, Moon, Search, Sun, Terminal, User } from 'lucide-react';
 import {
   Avatar,
   AvatarFallback,
@@ -21,6 +21,7 @@ import { useNotifications } from '@/hooks/use-notifications';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { NotificationPanel } from '@/components/layout/notification-panel';
 import { LicenseBadge } from '@/components/license/license-badge';
+import { TerminalModal } from '@/components/terminal/terminal-modal';
 
 interface HeaderProps {
   onMobileMenuToggle: () => void;
@@ -49,6 +50,27 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
     deleteNotification,
   } = useNotifications();
   const [notifOpen, setNotifOpen] = useState(false);
+  const [terminalOpen, setTerminalOpen] = useState(false);
+  const [terminalConnected, setTerminalConnected] = useState(false);
+
+  const toggleTerminal = useCallback(() => {
+    setTerminalOpen((prev) => !prev);
+  }, []);
+
+  const closeTerminal = useCallback(() => {
+    setTerminalOpen(false);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === '`') {
+        e.preventDefault();
+        setTerminalOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const toggleNotifPanel = useCallback(() => {
     setNotifOpen((prev) => !prev);
@@ -87,6 +109,19 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
         {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
       </Button>
 
+      <Button
+        variant="ghost"
+        size="icon"
+        className="relative h-8 w-8"
+        onClick={toggleTerminal}
+        title="Terminal (Ctrl+`)"
+      >
+        <Terminal className="h-4 w-4" />
+        {terminalConnected && (
+          <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-green-500 shadow-[0_0_4px_rgba(34,197,94,0.6)]" />
+        )}
+      </Button>
+
       <div className="relative">
         <Button variant="ghost" size="icon" className="relative h-8 w-8" onClick={toggleNotifPanel}>
           <Bell className="h-4 w-4" />
@@ -107,6 +142,8 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
           onDelete={deleteNotification}
         />
       </div>
+
+      <TerminalModal open={terminalOpen} onClose={closeTerminal} onConnected={setTerminalConnected} />
 
       <LicenseBadge />
 
