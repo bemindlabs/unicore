@@ -302,6 +302,11 @@ export function ChatBox() {
     typingTimeoutRef.current = setTimeout(() => setIsAgentTyping(false), 30_000);
   }
 
+  function handleSuggestedAction(action: SuggestedAction) {
+    if (!connected) return;
+    send(action.value, 'You', 'human-user', 'human');
+  }
+
   function selectAgent(agent: BackofficeAgent) {
     setSelectedAgent(agent);
     setDropdownOpen(false);
