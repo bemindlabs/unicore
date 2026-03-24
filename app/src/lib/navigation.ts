@@ -140,7 +140,7 @@ export const menuSections: NavSection[] = [
         icon: Shield,
         href: '/admin/roles',
         roles: [UserRole.Owner],
-        license: { tier: 'pro', feature: 'rbac', upgradeLabel: 'Pro' },
+        license: { tier: 'pro', feature: 'fullRbac', upgradeLabel: 'Pro' },
       },
       {
         label: 'SSO',
