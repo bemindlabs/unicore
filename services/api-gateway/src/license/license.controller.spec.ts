@@ -99,4 +99,60 @@ describe('LicenseController', () => {
       expect(result).toHaveProperty('validatedAt');
     });
   });
+
+  describe('activateAddon', () => {
+    const validSecret = 'test-platform-secret';
+
+    beforeEach(() => {
+      process.env.PLATFORM_CALLBACK_SECRET = validSecret;
+    });
+
+    afterEach(() => {
+      delete process.env.PLATFORM_CALLBACK_SECRET;
+    });
+
+    it('activates geek add-on with valid platform secret', async () => {
+      const result = await controller.activateAddon(
+        { addonType: 'geek' },
+        validSecret,
+      );
+
+      expect(mockLicenseService.activateAddon).toHaveBeenCalledTimes(1);
+      expect(mockLicenseService.activateAddon).toHaveBeenCalledWith('geek');
+      expect(result).toEqual({ success: true, addon: 'geek' });
+    });
+
+    it('activates dlc add-on with valid platform secret', async () => {
+      const result = await controller.activateAddon(
+        { addonType: 'dlc' },
+        validSecret,
+      );
+
+      expect(mockLicenseService.activateAddon).toHaveBeenCalledTimes(1);
+      expect(mockLicenseService.activateAddon).toHaveBeenCalledWith('dlc');
+      expect(result).toEqual({ success: true, addon: 'dlc' });
+    });
+
+    it('rejects request with missing platform secret', async () => {
+      await expect(
+        controller.activateAddon({ addonType: 'geek' }, undefined as any),
+      ).rejects.toThrow('Invalid or missing X-Platform-Secret header');
+    });
+
+    it('rejects request with wrong platform secret', async () => {
+      await expect(
+        controller.activateAddon({ addonType: 'geek' }, 'wrong-secret'),
+      ).rejects.toThrow('Invalid or missing X-Platform-Secret header');
+    });
+
+    it('returns 500 when service throws', async () => {
+      mockLicenseService.activateAddon.mockRejectedValueOnce(
+        new Error('License server unreachable'),
+      );
+
+      await expect(
+        controller.activateAddon({ addonType: 'dlc' }, validSecret),
+      ).rejects.toThrow('Failed to activate add-on');
+    });
+  });
 });
