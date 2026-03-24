@@ -46,8 +46,8 @@ import {
   type ConversationParticipant,
   type AddParticipantPayload,
 } from '@/hooks/use-conversation-participants';
-import { getAgents } from '@/lib/backoffice/store';
-import type { BackofficeAgent } from '@/lib/backoffice/types';
+import { getAgents } from '@/lib/agents/store';
+import type { BackofficeAgent } from '@/lib/agents/types';
 
 // ─── Status indicator ─────────────────────────────────────────────────────
 
