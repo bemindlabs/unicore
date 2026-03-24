@@ -23,12 +23,12 @@ COPY packages/shared-types ./packages/shared-types
 COPY packages/ui ./packages/ui
 COPY packages/branding ./packages/branding
 COPY packages/branding-base ./packages/branding-base
-COPY apps/dashboard ./apps/dashboard
+COPY app ./app
 RUN rm -f pnpm-lock.yaml && pnpm install
 RUN cd packages/shared-types && npx tsc
 RUN cd packages/branding-base && npx tsc 2>&1 || echo "branding-base tsc failed"
 RUN cd packages/branding && npx tsc 2>&1 || echo "branding tsc failed"
-RUN cd apps/dashboard && npx next build
+RUN cd app && npx next build
 
 ARG VERSION=0.0.0
 FROM --platform=$TARGETPLATFORM node:20.20.1-alpine AS runner
@@ -41,13 +41,13 @@ LABEL org.opencontainers.image.title="unicore-dashboard"
 LABEL org.opencontainers.image.description="Next.js 16 frontend dashboard for UniCore"
 LABEL org.opencontainers.image.version="${VERSION}"
 COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/apps/dashboard/.next ./apps/dashboard/.next
-COPY --from=build /app/apps/dashboard/public ./apps/dashboard/public
-COPY --from=build /app/apps/dashboard/package.json ./apps/dashboard/
-COPY --from=build /app/apps/dashboard/next.config.js ./apps/dashboard/
-COPY --from=build /app/apps/dashboard/node_modules ./apps/dashboard/node_modules
+COPY --from=build /app/app/.next ./app/.next
+COPY --from=build /app/app/public ./app/public
+COPY --from=build /app/app/package.json ./app/
+COPY --from=build /app/app/next.config.js ./app/
+COPY --from=build /app/app/node_modules ./app/node_modules
 COPY --from=build /app/packages ./packages
-WORKDIR /app/apps/dashboard
+WORKDIR /app/app
 RUN addgroup -g 1001 -S nodejs && adduser -S -u 1001 appuser
 USER appuser
 EXPOSE 3000
