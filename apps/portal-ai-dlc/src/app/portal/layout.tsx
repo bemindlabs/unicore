@@ -85,10 +85,72 @@ function Sidebar({ onClose, userName, userEmail }: { onClose?: () => void; userN
   );
 }
 
+function getJwtExp(token: string): number | null {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1])) as { exp?: number };
+    return payload.exp ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userName, setUserName] = useState('User');
   const [userEmail, setUserEmail] = useState('');
+  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearRefreshTimer = useCallback(() => {
+    if (refreshTimerRef.current) {
+      clearTimeout(refreshTimerRef.current);
+      refreshTimerRef.current = null;
+    }
+  }, []);
+
+  const scheduleRefresh = useCallback(
+    (token: string) => {
+      clearRefreshTimer();
+      const exp = getJwtExp(token);
+      if (!exp) return;
+      // Refresh 2 minutes before expiry
+      const ms = (exp - Math.floor(Date.now() / 1000) - 120) * 1000;
+
+      const doRefresh = async () => {
+        const rt = localStorage.getItem('dlc_refresh_token');
+        if (!rt) {
+          router.push('/login');
+          return;
+        }
+        try {
+          const res = await fetch(`${siteConfig.apiGatewayUrl}/auth/refresh`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken: rt }),
+          });
+          if (!res.ok) throw new Error('Refresh failed');
+          const data = await res.json();
+          localStorage.setItem('dlc_token', data.accessToken);
+          localStorage.setItem('dlc_refresh_token', data.refreshToken);
+          document.cookie = `dlc_token=${data.accessToken}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 7}`;
+          scheduleRefresh(data.accessToken);
+        } catch {
+          localStorage.removeItem('dlc_token');
+          localStorage.removeItem('dlc_refresh_token');
+          localStorage.removeItem('dlc_user');
+          document.cookie = 'dlc_token=; path=/; max-age=0';
+          router.push('/login');
+        }
+      };
+
+      if (ms <= 0) {
+        doRefresh();
+        return;
+      }
+      refreshTimerRef.current = setTimeout(doRefresh, ms);
+    },
+    [clearRefreshTimer, router],
+  );
 
   useEffect(() => {
     try {
@@ -99,7 +161,15 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         if (user.email) setUserEmail(user.email);
       }
     } catch {}
-  }, []);
+
+    // Schedule token refresh
+    const token = localStorage.getItem('dlc_token');
+    if (token) {
+      scheduleRefresh(token);
+    }
+
+    return () => clearRefreshTimer();
+  }, [scheduleRefresh, clearRefreshTimer]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-zinc-900">
