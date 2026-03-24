@@ -108,7 +108,9 @@ function Sidebar({
 
 function getJwtExp(token: string): number | null {
   try {
-    const payload = JSON.parse(atob(token.split('.')[1])) as { exp?: number };
+    const base64 = token.split('.')[1];
+    const padded = base64.replace(/-/g, '+').replace(/_/g, '/');
+    const payload = JSON.parse(atob(padded)) as { exp?: number };
     return payload.exp ?? null;
   } catch {
     return null;
