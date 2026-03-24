@@ -100,7 +100,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   const Icon = item.icon;
                   const locked = isNavItemLocked(item, isPro, edition, hasFeature);
 
-                  // Show locked items with upgrade indicator (don't hide)
+                  // Hide locked items except in Add-ons section
+                  if (locked && section.label !== 'Add-ons') {
+                    return null;
+                  }
 
                   const isActive =
                     item.href === '/'
