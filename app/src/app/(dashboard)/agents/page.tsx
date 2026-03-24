@@ -343,10 +343,7 @@ export default function AgentsPage() {
         Open Virtual Office — Full Agent Management
         <ExternalLink className="h-3.5 w-3.5" />
       </Link>
-<<<<<<< HEAD:apps/dashboard/src/app/(dashboard)/agents/page.tsx
-=======
 
->>>>>>> origin/develop:app/src/app/(dashboard)/agents/page.tsx
     </div>
   );
 }
