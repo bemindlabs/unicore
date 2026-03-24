@@ -3,13 +3,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@bemindlabs/unicore-shared-types": ["../../packages/shared-types/src"],
-      "@bemindlabs/unicore-ui": ["../../packages/ui/src"],
-      "@bemindlabs/unicore-config": ["../../packages/config/src"],
-      "@bemindlabs/unicore-branding": ["../../packages/branding/src"],
-      "@bemindlabs/unicore-branding-base": ["../../packages/branding-base/src"],
-      "@bemindlabs/unicore-branding-base/*": ["../../packages/branding-base/src/*"]
+      "@/*": ["./src/*"]
     },
     "allowJs": true,
     "noUnusedLocals": false,

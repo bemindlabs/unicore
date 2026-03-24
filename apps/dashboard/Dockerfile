@@ -24,21 +24,11 @@ COPY packages/ui ./packages/ui
 COPY packages/branding ./packages/branding
 COPY packages/branding-base ./packages/branding-base
 COPY apps/dashboard ./apps/dashboard
-RUN pnpm install --no-frozen-lockfile
+RUN rm -f pnpm-lock.yaml && pnpm install
 RUN cd packages/shared-types && npx tsc
 RUN cd packages/branding-base && npx tsc 2>&1 || echo "branding-base tsc failed"
 RUN cd packages/branding && npx tsc 2>&1 || echo "branding tsc failed"
-# Ensure workspace symlinks resolve for both root and app-level node_modules
-RUN for dir in node_modules apps/dashboard/node_modules; do \
-      mkdir -p $dir/@bemindlabs && \
-      ln -sf /app/packages/shared-types $dir/@bemindlabs/unicore-shared-types && \
-      ln -sf /app/packages/ui $dir/@bemindlabs/unicore-ui && \
-      ln -sf /app/packages/config $dir/@bemindlabs/unicore-config && \
-      ln -sf /app/packages/branding $dir/@bemindlabs/unicore-branding && \
-      ln -sf /app/packages/branding-base $dir/@bemindlabs/unicore-branding-base; \
-    done
-RUN ls -la node_modules/@bemindlabs/ && ls -la apps/dashboard/node_modules/@bemindlabs/ && \
-    cd apps/dashboard && npx next build
+RUN cd apps/dashboard && npx next build
 
 ARG VERSION=0.0.0
 FROM --platform=$TARGETPLATFORM node:20.20.1-alpine AS runner
