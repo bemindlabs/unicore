@@ -219,27 +219,6 @@ export const menuSections: NavSection[] = [
       },
     ],
   },
-  {
-    label: 'Add-ons',
-    items: [
-      {
-        label: 'Geek CLI',
-        icon: Terminal,
-        href: process.env.NEXT_PUBLIC_GEEK_PORTAL_URL ?? '/portal/geek',
-        roles: [UserRole.Owner, UserRole.Operator],
-        license: { tier: 'pro', feature: 'featGeekCli', upgradeLabel: 'Pro' },
-        external: true,
-      },
-      {
-        label: 'AI-DLC',
-        icon: Zap,
-        href: process.env.NEXT_PUBLIC_DLC_PORTAL_URL ?? '/portal/ai-dlc',
-        roles: [UserRole.Owner, UserRole.Operator],
-        license: { tier: 'pro', feature: 'featAiDlc', upgradeLabel: 'Pro' },
-        external: true,
-      },
-    ],
-  },
 ];
 
 export const menuItems: NavItem[] = menuSections.flatMap((s) => s.items);
