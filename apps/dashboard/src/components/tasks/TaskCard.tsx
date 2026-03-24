@@ -27,9 +27,6 @@ export function TaskCard({ task, onClick, onDragStart }: Props): JSX.Element {
 
   return (
     <>
-    <RetroDeskOnly>
-      <RetroDeskTaskCard task={task} onClick={onClick} onDragStart={onDragStart} />
-    </RetroDeskOnly>
     <DefaultOnly>
     <div
       draggable
