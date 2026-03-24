@@ -17,6 +17,8 @@ export interface NavItem {
   roles: (UserRole | '*')[];
   /** When set, item requires this license tier/feature to be accessible */
   license?: NavItemLicense;
+  /** When true, opens in a new tab (external portal link) */
+  external?: boolean;
 }
 
 export interface NavSection {
