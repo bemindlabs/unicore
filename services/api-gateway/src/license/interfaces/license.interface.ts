@@ -18,6 +18,7 @@ export type ProFeature =
   | 'sso'
   | 'auditLogs'
   | 'prioritySupport'
+  | 'geekCli'
   | 'aiDlc';
 
 export interface LicenseStatus {
