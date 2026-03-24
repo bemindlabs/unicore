@@ -13,7 +13,7 @@
     "signOut": "Déconnexion",
     "expandSidebar": "Développer la barre latérale",
     "collapseSidebar": "Réduire la barre latérale",
-    "backoffice": "Back-office",
+    "virtualOffice": "Bureau Virtuel",
     "upgradeToPro": "Passer à Pro"
   },
   "auth": {

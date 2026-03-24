@@ -13,7 +13,7 @@
     "signOut": "退出登录",
     "expandSidebar": "展开侧边栏",
     "collapseSidebar": "折叠侧边栏",
-    "backoffice": "后台管理",
+    "virtualOffice": "虚拟办公室",
     "upgradeToPro": "升级到 Pro"
   },
   "auth": {
