@@ -13,9 +13,8 @@ import { useDemoMode } from '@/hooks/use-demo-mode';
 import { DemoBanner } from '@/components/demo/DemoBanner';
 import { DeployButton } from '@/components/demo/DeployButton';
 import { UpgradeBanner } from '@/components/license/upgrade-banner';
-import { RetroDeskThemeProvider } from '@/components/retrodesk/RetroDeskThemeProvider';
-import { isRetroDeskFamily } from '@/lib/theme/theme-registry';
-import '@/styles/retrodesk-theme.css';
+const RetroDeskThemeProvider = ({ children }: { children: React.ReactNode }) => <>{children}</>;
+const isRetroDeskFamily = (_theme: string) => false;
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
