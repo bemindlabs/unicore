@@ -16,11 +16,6 @@ import { useLicense } from '@/hooks/use-license';
 import { useChatWebSocket, type ChatMessage } from '@/hooks/use-chat-ws';
 import { api } from '@/lib/api';
 
-const AgentTerminal = dynamic(
-  () => import('@/components/backoffice/AgentTerminal').then((m) => m.AgentTerminal),
-  { ssr: false },
-);
-
 // ── Icons ─────────────────────────────────────────────────────────────────
 
 const AGENT_ICONS: Record<string, typeof Bot> = {
