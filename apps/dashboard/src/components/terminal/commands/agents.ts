@@ -1,5 +1,5 @@
 import type { CommandDef } from './types';
-import type { AgentStatus } from '@/lib/backoffice/types';
+import type { AgentStatus } from '@/lib/agents/types';
 
 const R  = '\x1b[0m';
 const B  = '\x1b[1m';
