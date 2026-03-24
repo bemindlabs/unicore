@@ -25,15 +25,9 @@ test.describe('Wizard Steps @smoke', () => {
     } else if (status === 302 || status === 301 || page.url().includes('/login')) {
       // Redirect to login — verify we actually landed on the login page
       await expect(page).toHaveURL(/\/login/);
-<<<<<<< HEAD
       await expect(
         page.getByLabel('Email').or(page.getByText(/sign in/i).first()),
       ).toBeVisible({ timeout: 10000 });
-=======
-      await expect(page.getByLabel('Email').or(page.getByText(/sign in/i).first())).toBeVisible({
-        timeout: 10000,
-      });
->>>>>>> origin/develop
     } else {
       // 200 OK — wizard content must be visible
       await expect(
