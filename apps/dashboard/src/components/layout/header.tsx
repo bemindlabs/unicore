@@ -86,6 +86,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
   }, [logout, router]);
 
   return (
+    <>
     <header className="flex h-14 items-center gap-2 sm:gap-4 border-b bg-card/30 backdrop-blur-sm px-3 sm:px-4 lg:px-6">
       <Button variant="ghost" size="icon" className="lg:hidden shrink-0" onClick={onMobileMenuToggle}>
         <Menu className="h-5 w-5" />
