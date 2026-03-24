@@ -28,6 +28,8 @@ import { Public } from '../auth/decorators/public.decorator';
  */
 @Controller('api/v1/license')
 export class LicenseController {
+  private readonly logger = new Logger(LicenseController.name);
+
   constructor(private readonly licenseService: LicenseService) {}
 
   /**
