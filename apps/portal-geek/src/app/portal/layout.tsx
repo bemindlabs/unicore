@@ -42,6 +42,7 @@ function Sidebar({
   function handleLogout() {
     localStorage.removeItem('geek_token');
     localStorage.removeItem('geek_user');
+    document.cookie = 'geek_token=; path=/; max-age=0';
     router.push('/login');
   }
 
