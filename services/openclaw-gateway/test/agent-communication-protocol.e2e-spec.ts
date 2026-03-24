@@ -206,8 +206,8 @@ function collectMessages(ws: WebSocket, count: number, timeoutMs = 5000): Promis
  */
 function connectWs(token?: string): Promise<WebSocket> {
   const url = token
-    ? `wss://localhost:${WS_PORT}?token=${token}`
-    : `wss://localhost:${WS_PORT}`;
+    ? `ws://localhost:${WS_PORT}?token=${token}`
+    : `ws://localhost:${WS_PORT}`;
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(url);
     ws.once('open', () => resolve(ws));
