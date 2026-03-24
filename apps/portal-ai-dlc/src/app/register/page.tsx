@@ -53,10 +53,10 @@ export default function RegisterPage() {
         return;
       }
 
-      localStorage.setItem('dlc_token', data.access_token);
+      localStorage.setItem('dlc_token', data.accessToken);
       localStorage.setItem('dlc_refresh_token', data.refreshToken ?? '');
       localStorage.setItem('dlc_user', JSON.stringify(data.user));
-      document.cookie = `dlc_token=${data.access_token}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 7}`;
+      document.cookie = `dlc_token=${data.accessToken}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 7}`;
       router.push('/portal');
     } catch {
       setError('Connection failed. Please try again.');
