@@ -40,10 +40,13 @@ async function bootstrap() {
     }),
   );
 
-  const corsOrigins = [
-    'https://unicore.bemind.tech',
-    'http://unicore.bemind.tech',
+  const corsOrigins: (string | RegExp)[] = [
+    /\.bemind\.tech$/,
     'http://localhost:3000',
+    'http://localhost:3100',
+    'http://localhost:3200',
+    'http://localhost:3300',
+    'http://localhost:3400',
   ];
   if (process.env.EXTRA_CORS_ORIGINS) {
     corsOrigins.push(...process.env.EXTRA_CORS_ORIGINS.split(',').map(s => s.trim()));
@@ -51,6 +54,10 @@ async function bootstrap() {
   app.enableCors({
     origin: corsOrigins,
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Tenant-Id'],
+    exposedHeaders: ['X-Request-Id', 'X-RateLimit-Limit', 'X-RateLimit-Remaining'],
+    maxAge: 86400,
   });
 
   app.useGlobalPipes(
