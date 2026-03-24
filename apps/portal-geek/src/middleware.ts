@@ -8,13 +8,22 @@ function isPublicPath(pathname: string): boolean {
   return PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 
+function decodeJwtPayload(token: string): { exp?: number } {
+  try {
+    const base64 = token.split('.')[1];
+    const padded = base64.replace(/-/g, '+').replace(/_/g, '/');
+    const json = atob(padded);
+    return JSON.parse(json);
+  } catch {
+    return {};
+  }
+}
+
 function isTokenValid(token: string): boolean {
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return false;
-    const payload = JSON.parse(
-      Buffer.from(parts[1], 'base64url').toString('utf-8'),
-    );
+    const payload = decodeJwtPayload(token);
     if (!payload.exp) return false;
     return payload.exp > Date.now() / 1000;
   } catch {
