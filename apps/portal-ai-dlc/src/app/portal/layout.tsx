@@ -32,6 +32,7 @@ function Sidebar({ onClose, userName, userEmail }: { onClose?: () => void; userN
   function handleLogout() {
     localStorage.removeItem('dlc_token');
     localStorage.removeItem('dlc_user');
+    document.cookie = 'dlc_token=; path=/; max-age=0';
     router.push('/login');
   }
 
