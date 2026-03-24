@@ -13,7 +13,7 @@
     "signOut": "ออกจากระบบ",
     "expandSidebar": "ขยายแถบด้านข้าง",
     "collapseSidebar": "ย่อแถบด้านข้าง",
-    "backoffice": "แบ็คออฟฟิศ",
+    "virtualOffice": "สำนักงานเสมือน",
     "upgradeToPro": "อัปเกรดเป็น Pro"
   },
   "auth": {

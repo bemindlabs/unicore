@@ -13,7 +13,7 @@
     "signOut": "サインアウト",
     "expandSidebar": "サイドバーを展開",
     "collapseSidebar": "サイドバーを折りたたむ",
-    "backoffice": "バックオフィス",
+    "virtualOffice": "バーチャルオフィス",
     "upgradeToPro": "Proにアップグレード"
   },
   "auth": {

@@ -13,7 +13,7 @@
     "signOut": "Abmelden",
     "expandSidebar": "Seitenleiste erweitern",
     "collapseSidebar": "Seitenleiste einklappen",
-    "backoffice": "Backoffice",
+    "virtualOffice": "Virtual Office",
     "upgradeToPro": "Auf Pro upgraden"
   },
   "auth": {

@@ -13,7 +13,7 @@
     "signOut": "Sign out",
     "expandSidebar": "Expand sidebar",
     "collapseSidebar": "Collapse sidebar",
-    "backoffice": "Backoffice",
+    "virtualOffice": "Virtual Office",
     "upgradeToPro": "Upgrade to Pro"
   },
   "auth": {
