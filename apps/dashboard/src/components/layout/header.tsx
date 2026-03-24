@@ -183,5 +183,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
         </DropdownMenuContent>
       </DropdownMenu>
     </header>
+    <TerminalModal open={terminalOpen} onClose={closeTerminal} onConnected={setTerminalConnected} />
+    </>
   );
 }
