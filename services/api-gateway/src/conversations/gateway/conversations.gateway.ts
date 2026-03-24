@@ -14,7 +14,7 @@ import { Server, WebSocket } from 'ws';
  * Runs on port 4001 (separate from the REST server on 4000) to avoid
  * conflicts with the Express HTTP server.
  *
- * Clients connect with: ws://unicore-api-gateway:4001
+ * Clients connect with: wss://unicore-api-gateway:4001
  *
  * Emitted events:
  *   - conversation.created  { conversation }
