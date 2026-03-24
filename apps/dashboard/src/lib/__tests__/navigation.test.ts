@@ -121,12 +121,14 @@ describe('menuSections', () => {
     }
   });
 
-  it('marks add-on items with their feature flags', () => {
+  it('marks add-on items with their feature flags and external links', () => {
     const allItems = menuSections.flatMap((s) => s.items);
     const geekCli = allItems.find((i) => i.label === 'Geek CLI');
     const aiDlc = allItems.find((i) => i.label === 'AI-DLC');
     expect(geekCli?.license?.feature).toBe('featGeekCli');
+    expect(geekCli?.external).toBe(true);
     expect(aiDlc?.license?.feature).toBe('featAiDlc');
+    expect(aiDlc?.external).toBe(true);
   });
 });
 
