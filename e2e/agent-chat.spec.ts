@@ -2,13 +2,13 @@ import { test, expect } from '@playwright/test';
 
 test.use({ storageState: '.auth/user.json' });
 
-test.describe('Agent Chat @backoffice', () => {
+test.describe('Agent Chat @virtual-office', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/backoffice');
+    await page.goto('/virtual-office');
     await page.waitForLoadState('networkidle');
   });
 
-  test('should load backoffice with agents', async ({ page }) => {
+  test('should load virtual office with agents', async ({ page }) => {
     // Header should be visible
     await expect(page.locator('header')).toBeVisible();
 

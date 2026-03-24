@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Agent Management UI @backoffice', () => {
+test.describe('Agent Management UI @virtual-office', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/backoffice');
+    await page.goto('/virtual-office');
     await page.waitForLoadState('networkidle');
   });
 
-  test('backoffice page loads with agent list', async ({ page }) => {
+  test('virtual office page loads with agent list', async ({ page }) => {
     await expect(page.locator('header')).toBeVisible({ timeout: 15000 });
   });
 
@@ -74,7 +74,7 @@ test.describe('Agent Management UI @backoffice', () => {
     await expect(page.getByText(/agent/i).first()).toBeVisible({ timeout: 15000 });
   });
 
-  test('should switch backoffice tabs', async ({ page }) => {
+  test('should switch virtual office tabs', async ({ page }) => {
     for (const tabName of ['Commander', 'Settings', 'Overview']) {
       const tab = page.getByRole('button', { name: new RegExp(tabName, 'i') });
       if (await tab.isVisible({ timeout: 3000 }).catch(() => false)) {
@@ -82,6 +82,6 @@ test.describe('Agent Management UI @backoffice', () => {
         await page.waitForTimeout(300);
       }
     }
-    await expect(page.locator('main, .backoffice-content').first()).toBeVisible();
+    await expect(page.locator('main, .virtual-office-content').first()).toBeVisible();
   });
 });
