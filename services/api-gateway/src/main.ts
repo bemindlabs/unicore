@@ -23,7 +23,22 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule);
 
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          connectSrc: ["'self'", 'https://*.bemind.tech', 'wss://*.bemind.tech'],
+          fontSrc: ["'self'", 'https:', 'data:'],
+          imgSrc: ["'self'", 'data:'],
+          styleSrc: ["'self'", 'https:', "'unsafe-inline'"],
+          scriptSrc: ["'self'"],
+          objectSrc: ["'none'"],
+          frameAncestors: ["'self'"],
+        },
+      },
+    }),
+  );
 
   const corsOrigins = [
     'https://unicore.bemind.tech',
