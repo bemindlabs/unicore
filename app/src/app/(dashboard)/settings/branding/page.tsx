@@ -68,11 +68,11 @@ const PRESETS: { id: string; name: string; colors: BrandingColors }[] = [
     colors: { primary: '#6366f1', secondary: '#0ea5e9', accent: '#f59e0b', background: '#f8fafc', surface: '#ffffff', onPrimary: '#ffffff', foreground: '#0f172a', muted: '#64748b', border: '#e2e8f0', destructive: '#ef4444' },
   },
   {
-    id: 'chinjan-pixel', name: 'Chinjan Pixel Art',
+    id: 'retrodesk-pixel', name: 'RetroDesk Pixel Art',
     colors: { primary: '#ff6b9d', secondary: '#7ec8e3', accent: '#ffd93d', background: '#faf8f5', surface: '#ffffff', onPrimary: '#ffffff', foreground: '#2d2d2d', muted: '#9ca3af', border: '#e5e1dc', destructive: '#ef4444' },
   },
   {
-    id: 'chinjan-pixel-dark', name: 'Chinjan Pixel Art (Dark)',
+    id: 'retrodesk-pixel-dark', name: 'RetroDesk Pixel Art (Dark)',
     colors: { primary: '#ff6b9d', secondary: '#7ec8e3', accent: '#ffd93d', background: '#1a1525', surface: '#251f35', onPrimary: '#ffffff', foreground: '#f0e8ff', muted: '#8b7faa', border: '#3d3555', destructive: '#ef4444' },
   },
 ];

@@ -96,7 +96,7 @@ interface AuditTrailEntry {
 }
 
 // ---------------------------------------------------------------------------
-// Mock / fallback data
+// Fallback data — used when compliance API endpoints are unavailable
 // ---------------------------------------------------------------------------
 
 const MOCK_GDPR: GdprExportRequest[] = [

@@ -8,7 +8,7 @@ type FetcherKey = keyof typeof widgetDataFetchers;
 
 /**
  * Generic hook that fetches data for any widget type.
- * Always calls the real API first; falls back to mock data when the API fails.
+ * Always calls the real API first; falls back to local data when the API is unavailable.
  */
 export function useWidgetData<T>(
   type: WidgetType,
@@ -40,7 +40,7 @@ export function useWidgetData<T>(
     } catch (err) {
       if (!mountedRef.current) return;
 
-      // On API failure, fall back to mock data silently
+      // On API failure, fall back to local data silently
       const mockFn = mockWidgetData[type as keyof typeof mockWidgetData];
       if (mockFn) {
         setData((mockFn as () => T)());

@@ -80,7 +80,7 @@ interface Plugin {
 }
 
 // ---------------------------------------------------------------------------
-// Mock data
+// Fallback plugin catalog — used when plugin API is unavailable
 // ---------------------------------------------------------------------------
 
 const MOCK_PLUGINS: Plugin[] = [
@@ -545,7 +545,7 @@ export default function PluginDetailPage() {
 
   useEffect(() => {
     setLoading(true);
-    // Attempt real API first, fall back to mock data
+    // Attempt real API first, fall back to local catalog
     fetch(`/api/proxy/ai/plugins/${slug}`)
       .then((res) => (res.ok ? res.json() : null))
       .catch(() => null)

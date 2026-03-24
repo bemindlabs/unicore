@@ -75,9 +75,9 @@ const EMPTY_AGENT: Omit<CustomAgent, 'id' | 'createdAt' | 'updatedAt'> = {
   status: 'draft',
 };
 
-// ─── Mock helpers (replace with real API calls when endpoint is available) ────
+// ─── Local storage persistence (agents are saved to localStorage until API endpoint is available) ────
 
-function mockAgents(): CustomAgent[] {
+function loadAgentsFromStorage(): CustomAgent[] {
   try {
     const stored = localStorage.getItem('agent_builder_agents');
     return stored ? JSON.parse(stored) : [];
@@ -487,7 +487,7 @@ function AgentCard({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 function AgentBuilderContent() {
-  const [agents, setAgents] = useState<CustomAgent[]>(() => mockAgents());
+  const [agents, setAgents] = useState<CustomAgent[]>(() => loadAgentsFromStorage());
   const [view, setView] = useState<'list' | 'builder'>('list');
   const [editingAgent, setEditingAgent] = useState<CustomAgent | undefined>(undefined);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);

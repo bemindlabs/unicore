@@ -1,6 +1,6 @@
 'use client';
 
-// UNC-173: ChinjanKnowledgeBase wrapper component
+// UNC-173: KnowledgeBase wrapper component (RetroDesk themed)
 // UNC-174: Pixel-art borders and fonts applied to document list
 // UNC-175: Pixel-art search result cards
 // UNC-176: PixelStar decorations for ingested documents
@@ -102,7 +102,7 @@ function PixelLoadingDots({ label }: { label: string }) {
 
 /* ---------- Main Component ---------- */
 
-export function ChinjanKnowledgeBase() {
+export function KnowledgeBase() {
   /* ---- Documents tab state ---- */
   const [activeTab, setActiveTab] = useState<'documents' | 'search'>('documents');
   const [documents, setDocuments] = useState<IngestedDocument[]>([]);

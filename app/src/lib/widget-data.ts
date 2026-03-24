@@ -91,7 +91,7 @@ export const widgetDataFetchers = {
     ),
 };
 
-// --- Mock data for development / when API is unavailable ---
+// --- Fallback widget data — used when ERP dashboard API is unavailable ---
 
 export const mockWidgetData = {
   revenue: (): RevenueWidgetData => ({
