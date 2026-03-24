@@ -197,7 +197,7 @@ export const menuSections: NavSection[] = [
         icon: Zap,
         href: process.env.NEXT_PUBLIC_DLC_PORTAL_URL ?? 'https://dlc-unicore-demo.bemind.tech',
         roles: [UserRole.Owner, UserRole.Operator],
-        license: { tier: 'pro', feature: 'featAiDlc', upgradeLabel: 'Pro' },
+        license: { tier: 'pro', feature: 'aiDlc', upgradeLabel: 'Pro' },
         external: true,
       },
     ],
