@@ -22,9 +22,10 @@ export default function GeekPage() {
   if (!enabled) {
     return (
       <FeaturePreview
-        feature="Geek CLI & TUI"
+        feature="featGeekCli"
+        title="Geek CLI & TUI"
         description="Terminal-first dashboard with XP progression, achievements, leaderboards, multiplayer coding sessions, and CLI plugins."
-        requiredTier="pro"
+        tier="Pro"
       />
     );
   }
