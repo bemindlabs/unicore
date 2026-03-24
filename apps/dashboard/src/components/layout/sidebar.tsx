@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Crown, ExternalLink, Lock, PanelLeftClose, PanelLeftOpen, LogOut, Monitor } from 'lucide-react';
+import { Crown, ExternalLink, Lock, PanelLeftClose, PanelLeftOpen, LogOut } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage, Button, cn, Separator } from '@bemindlabs/unicore-ui';
 import { useAuth } from '@/hooks/use-auth';
 import { useLicense } from '@/hooks/use-license';
@@ -159,23 +159,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
         {/* Bottom section — pinned, never overflows */}
         <div className="shrink-0 overflow-hidden">
-          {/* Backoffice + Upgrade links */}
+          {/* Upgrade links */}
           <div className="px-2 pb-1 space-y-0.5">
-            <Link
-              href="/backoffice"
-              className={cn(
-                'flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-                pathname.startsWith('/backoffice')
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
-                collapsed && 'justify-center px-2',
-              )}
-              title={t('backoffice')}
-            >
-              <Monitor className="h-4 w-4 shrink-0" />
-              {!collapsed && <span className="truncate">{t('backoffice')}</span>}
-            </Link>
-
             {!isPro && (
               <Link
                 href="/settings/license"

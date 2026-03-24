@@ -14,6 +14,7 @@ import {
   LayoutDashboard,
   MessageSquare,
   Megaphone,
+  Monitor,
   Package,
   ScrollText,
   Settings,
@@ -169,6 +170,18 @@ export const menuSections: NavSection[] = [
     label: 'System',
     items: [
       { label: 'Settings', icon: Settings, href: '/settings', roles: [UserRole.Owner] },
+    ],
+  },
+  {
+    label: 'Add-ons',
+    items: [
+      {
+        label: 'Virtual Office',
+        icon: Monitor,
+        href: '/virtual-office',
+        roles: [UserRole.Owner, UserRole.Operator],
+        license: { tier: 'pro', feature: 'featVirtualOffice', upgradeLabel: 'Pro' },
+      },
     ],
   },
   {
