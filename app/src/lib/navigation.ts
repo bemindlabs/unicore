@@ -161,7 +161,7 @@ export const menuSections: NavSection[] = [
         icon: ScrollText,
         href: '/admin/audit-logs',
         roles: [UserRole.Owner],
-        license: { tier: 'pro', feature: 'audit', upgradeLabel: 'Pro' },
+        license: { tier: 'pro', feature: 'auditLogs', upgradeLabel: 'Pro' },
       },
       { label: 'System Health', icon: Activity, href: '/admin/health', roles: [UserRole.Owner] },
       { label: 'System Terminal', icon: Terminal, href: '/admin/terminal', roles: [UserRole.Owner] },
