@@ -187,20 +187,12 @@ export class InboundRouterService {
           id: msg.senderId,
           name: msg.senderName ?? msg.senderId,
           type: 'contact',
-<<<<<<< HEAD
-        },
-        metadata: {
-          channel: msg.channel,
-          rawPayload: msg.rawPayload ?? {},
-        },
-=======
         } as unknown as import('../../generated/prisma').Prisma.InputJsonValue,
         metadata: {
           channel: msg.channel,
           rawPayload: msg.rawPayload ?? {},
           routedTo: 'pending',
         } as unknown as import('../../generated/prisma').Prisma.InputJsonValue,
->>>>>>> main
       },
     });
   }
