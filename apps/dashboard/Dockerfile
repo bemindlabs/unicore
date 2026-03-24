@@ -37,7 +37,8 @@ RUN for dir in node_modules apps/dashboard/node_modules; do \
       ln -sf /app/packages/branding $dir/@bemindlabs/unicore-branding && \
       ln -sf /app/packages/branding-base $dir/@bemindlabs/unicore-branding-base; \
     done
-RUN cd apps/dashboard && NEXT_PRIVATE_STANDALONE=true npx next build --no-turbopack
+RUN ls -la node_modules/@bemindlabs/ && ls -la apps/dashboard/node_modules/@bemindlabs/ && \
+    cd apps/dashboard && npx next build
 
 ARG VERSION=0.0.0
 FROM --platform=$TARGETPLATFORM node:20.20.1-alpine AS runner
