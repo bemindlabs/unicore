@@ -80,7 +80,7 @@ export const menuSections: NavSection[] = [
         icon: Megaphone,
         href: '/channels',
         roles: [UserRole.Owner, UserRole.Operator],
-        license: { tier: 'pro', feature: 'channels', upgradeLabel: 'Pro' },
+        license: { tier: 'pro', feature: 'allChannels', upgradeLabel: 'Pro' },
       },
       {
         label: 'Conv. Analytics',
