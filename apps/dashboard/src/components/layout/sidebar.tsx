@@ -109,6 +109,31 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                       ? pathname === '/'
                       : pathname === item.href || pathname.startsWith(item.href + '/');
 
+                  if (item.external) {
+                    return (
+                      <a
+                        key={item.href}
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn(
+                          'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
+                          'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+                          collapsed && 'justify-center px-2',
+                        )}
+                        title={collapsed ? item.label : undefined}
+                      >
+                        <Icon className="h-4 w-4 shrink-0" />
+                        {!collapsed && (
+                          <>
+                            <span className="truncate">{item.label}</span>
+                            <ExternalLink className="ml-auto h-3 w-3 shrink-0 opacity-50" />
+                          </>
+                        )}
+                      </a>
+                    );
+                  }
+
                   return (
                     <Link
                       key={item.href}
