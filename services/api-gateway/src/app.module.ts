@@ -30,15 +30,9 @@ import { ConversationIntelligenceModule } from './conversation-intelligence/conv
 import { ConversationsModule } from './conversations/conversations.module';
 import { ConversationsAnalyticsModule } from './conversations-analytics/conversations-analytics.module';
 import { ContactProfileModule } from './contact-profile/contact-profile.module';
-<<<<<<< HEAD
-import { HandoffModule } from './handoff/handoff.module';
-@Module({
-  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule, AdminModule, AuditModule, SettingsModule, TasksModule, WebhooksModule, ChatHistoryModule, NotificationsModule, GamificationModule, ChannelsModule, ConversationsAnalyticsModule, ConversationsModule, ContactProfileModule, ConversationIntelligenceModule, HandoffModule],
-=======
 import { PluginsModule } from './plugins/plugins.module';
 @Module({
   imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule, AdminModule, AuditModule, SettingsModule, TasksModule, WebhooksModule, ChatHistoryModule, NotificationsModule, GamificationModule, ChannelsModule, ConversationsAnalyticsModule, ConversationsModule, ContactProfileModule, ConversationIntelligenceModule, PluginsModule],
->>>>>>> main
   controllers: [AppController],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
