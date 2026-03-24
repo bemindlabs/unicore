@@ -50,6 +50,7 @@ export function useTheme() {
   }, []);
 
   /** Legacy toggle (light ↔ dark) for non-themed pages. */
+  /** Legacy toggle (light ↔ dark) for non-themed pages. */
   const toggleTheme = useCallback(() => {
     setTheme((prev) => {
       const next = prev === 'light' ? 'dark' : 'light';

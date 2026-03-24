@@ -13,7 +13,7 @@ function MiniMascot({ active }: { active: boolean }) {
 
   const shadows = grid
     .flatMap((row, y) =>
-      row.map((cell, x) => (cell === 'transparent' ? null : `${x * MINI_PX}px ${y * MINI_PX}px 0 0 ${cell}`))
+      row.map((cell: string, x: number) => (cell === 'transparent' ? null : `${x * MINI_PX}px ${y * MINI_PX}px 0 0 ${cell}`))
     )
     .filter(Boolean)
     .join(', ');

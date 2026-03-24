@@ -178,10 +178,16 @@ export const menuSections: NavSection[] = [
       {
         label: 'Virtual Office',
         icon: Monitor,
+<<<<<<< HEAD
         href: process.env.NEXT_PUBLIC_VIRTUAL_OFFICE_URL ?? '/virtual-office',
         roles: [UserRole.Owner, UserRole.Operator],
         license: { tier: 'pro', feature: 'featVirtualOffice', upgradeLabel: 'Pro' },
         external: true,
+=======
+        href: '/virtual-office',
+        roles: [UserRole.Owner, UserRole.Operator],
+        license: { tier: 'pro', feature: 'featVirtualOffice', upgradeLabel: 'Pro' },
+>>>>>>> origin/develop
       },
     ],
   },

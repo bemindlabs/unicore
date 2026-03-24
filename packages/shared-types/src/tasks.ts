@@ -8,7 +8,7 @@ export interface TaskAssignee {
   id: string;
   type: AssigneeType;
   name: string;
-  /** Agent color from BackofficeAgent.color */
+  /** Agent color from VirtualOfficeAgent.color */
   color?: string;
 }
 
