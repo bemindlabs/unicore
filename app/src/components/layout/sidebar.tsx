@@ -99,10 +99,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   const Icon = item.icon;
                   const locked = isNavItemLocked(item, isPro, edition, hasFeature);
 
-                  // Hide menu items that require a higher license tier
-                  if (locked) {
-                    return null;
-                  }
+                  // Show locked items with upgrade indicator (don't hide)
 
                   const isActive =
                     item.href === '/'
