@@ -49,7 +49,7 @@ export function useTheme() {
     }
   }, []);
 
-  /** Legacy toggle (light ↔ dark) used by non-backoffice pages. */
+  /** Legacy toggle (light ↔ dark). */
   const toggleTheme = useCallback(() => {
     setTheme((prev) => {
       const next = prev === 'light' ? 'dark' : 'light';
