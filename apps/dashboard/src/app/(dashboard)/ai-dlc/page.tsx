@@ -22,9 +22,10 @@ export default function AiDlcPage() {
   if (!enabled) {
     return (
       <FeaturePreview
-        feature="AI Developer Lifecycle Chat"
+        feature="featAiDlc"
+        title="AI Developer Lifecycle Chat"
         description="Collaborate with AI specialist agents (Architect, Developer, Tester, DevOps, PM) in real-time chat rooms for your entire software development lifecycle."
-        requiredTier="pro"
+        tier="Pro"
       />
     );
   }
