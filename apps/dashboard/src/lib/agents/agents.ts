@@ -76,7 +76,7 @@ function mapState(state: string): AgentStatus {
   return "idle";
 }
 
-export function mapApiAgent(apiAgent: OpenClawAgent): BackofficeAgent {
+export function mapApiAgent(apiAgent: OpenClawAgent): VirtualOfficeAgent {
   const type = (apiAgent.type || "").toLowerCase();
   const config = TYPE_CONFIG[type] ?? {
     role: type || "Agent",
