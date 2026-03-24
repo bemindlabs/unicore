@@ -53,8 +53,6 @@ function makeConversation(overrides: Record<string, unknown> = {}) {
   };
 }
 
-const mockConfigService = { get: jest.fn().mockReturnValue('localhost') };
-
 describe('ConversationsService', () => {
   let service: ConversationsService;
 
