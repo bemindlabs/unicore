@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { uuid } from '@/lib/uuid';
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:18789';
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? 'wss://localhost:18789';
 const MAX_BACKOFF = 30_000;
 
 export function usePtyWebSocket(

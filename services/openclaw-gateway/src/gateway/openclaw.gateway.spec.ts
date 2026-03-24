@@ -19,15 +19,8 @@ import { RouterAgent } from '../router/router.agent';
 import { PtySessionManager } from '../terminal/pty-session-manager';
 import { MessagePersistenceService } from '../persistence/message-persistence.service';
 import { RateLimiterService } from '../routing/rate-limiter.service';
-<<<<<<< HEAD
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { HandoffNotifierService } = require('../handoff/handoff-notifier.service');
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { ConversationService } = require('../conversations/conversation.service');
-=======
 import { HandoffNotifierService } from '../handoff/handoff-notifier.service';
 import { ConversationService } from '../conversations/conversation.service';
->>>>>>> main
 import { WebSocket } from 'ws';
 import { v4 as uuidv4 } from 'uuid';
 

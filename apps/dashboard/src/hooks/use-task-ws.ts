@@ -5,7 +5,7 @@ import type { BoardTask, TaskStatus } from '@/lib/tasks/types';
 import type { AgentTask } from '@unicore/shared-types';
 import { uuid } from '@/lib/uuid';
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:18789';
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? 'wss://localhost:18789';
 const MAX_BACKOFF = 30_000;
 
 /** Map AgentTask status to BoardTask status */

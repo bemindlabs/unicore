@@ -38,7 +38,7 @@ interface SdlcAgent {
 
 // ── Constants ─────────────────────────────────────────────────────────────
 
-const DLC_WS_URL = process.env.NEXT_PUBLIC_DLC_WS_URL ?? 'ws://localhost:19789';
+const DLC_WS_URL = process.env.NEXT_PUBLIC_DLC_WS_URL ?? 'wss://localhost:19789';
 
 const ROOM_TYPE_COLORS: Record<RoomType, string> = {
   general: 'bg-slate-500/10 text-slate-600 dark:text-slate-400',

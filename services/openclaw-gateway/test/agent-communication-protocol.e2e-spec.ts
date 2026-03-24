@@ -206,8 +206,8 @@ function collectMessages(ws: WebSocket, count: number, timeoutMs = 5000): Promis
  */
 function connectWs(token?: string): Promise<WebSocket> {
   const url = token
-    ? `ws://localhost:${WS_PORT}?token=${token}`
-    : `ws://localhost:${WS_PORT}`;
+    ? `wss://localhost:${WS_PORT}?token=${token}`
+    : `wss://localhost:${WS_PORT}`;
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(url);
     ws.once('open', () => resolve(ws));
@@ -231,7 +231,7 @@ async function connectBuffered(token?: string): Promise<BufferedSocket> {
  * Connect with internal service token.
  */
 function connectServiceWs(): Promise<WebSocket> {
-  const url = `ws://localhost:${WS_PORT}?serviceToken=${INTERNAL_SERVICE_SECRET}`;
+  const url = `wss://localhost:${WS_PORT}?serviceToken=${INTERNAL_SERVICE_SECRET}`;
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(url);
     ws.once('open', () => resolve(ws));
