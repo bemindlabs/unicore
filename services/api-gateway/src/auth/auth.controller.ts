@@ -79,6 +79,36 @@ export class AuthController {
     return this.authService.refresh(dto.refreshToken);
   }
 
+  @Public()
+  @Post('token-exchange')
+  @HttpCode(HttpStatus.OK)
+  async tokenExchange(@Body() dto: TokenExchangeDto, @Req() req: Request) {
+    try {
+      const result = await this.authService.tokenExchange(
+        dto.platformToken,
+        dto.targetApp,
+      );
+      await this.auditService.log({
+        userId: result.user.id,
+        userEmail: result.user.email,
+        action: 'token-exchange',
+        resource: 'auth',
+        detail: `Cross-domain token exchange${dto.targetApp ? ` for ${dto.targetApp}` : ''}`,
+        ip: req.ip,
+      });
+      return result;
+    } catch (err) {
+      await this.auditService.log({
+        action: 'token-exchange',
+        resource: 'auth',
+        success: false,
+        detail: `Token exchange failed: ${(err as Error).message}`,
+        ip: req.ip,
+      });
+      throw err;
+    }
+  }
+
   @UseGuards(JwtAuthGuard)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
