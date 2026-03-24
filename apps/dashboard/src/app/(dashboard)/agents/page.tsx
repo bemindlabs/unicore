@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
 import {
   Bot, ExternalLink, Settings, MessageCircle, Terminal, Send,
   ChevronDown, ChevronRight, Circle, X, Loader2,
