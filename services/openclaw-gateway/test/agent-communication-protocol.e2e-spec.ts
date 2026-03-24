@@ -231,7 +231,7 @@ async function connectBuffered(token?: string): Promise<BufferedSocket> {
  * Connect with internal service token.
  */
 function connectServiceWs(): Promise<WebSocket> {
-  const url = `wss://localhost:${WS_PORT}?serviceToken=${INTERNAL_SERVICE_SECRET}`;
+  const url = `ws://localhost:${WS_PORT}?serviceToken=${INTERNAL_SERVICE_SECRET}`;
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(url);
     ws.once('open', () => resolve(ws));
