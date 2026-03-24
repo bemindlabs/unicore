@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -15,7 +15,7 @@ import {
   ShieldCheck,
   Trash2,
   XCircle,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   Badge,
   Button,
@@ -39,10 +39,10 @@ import {
   TableHeader,
   TableRow,
   toast,
-} from "@bemindlabs/unicore-ui";
-import { api } from "@/lib/api";
-import { useLicense } from "@/hooks/use-license";
-import { UpgradeGate } from "@/components/upgrade-gate";
+} from '@bemindlabs/unicore-ui';
+import { api } from '@/lib/api';
+import { useLicense } from '@/hooks/use-license';
+import { UpgradeGate } from '@/components/upgrade-gate';
 
 // ---------------------------------------------------------------------------
 // Types

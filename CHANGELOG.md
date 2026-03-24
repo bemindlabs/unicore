@@ -3,7 +3,7 @@
 Updated: 2026-03-24
 
 
-## [0.1.1] - 2026-03-24
+## [0.1.2] - 2026-03-24
 
 ### Added
 - Geek Portal (apps/portal-geek) — landing, auth, dashboard, leaderboard, multiplayer, downloads, plugins, license pages

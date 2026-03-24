@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { UserRole } from "@bemindlabs/unicore-shared-types";
+import { UserRole } from '@bemindlabs/unicore-shared-types';
 import {
   Badge,
   Button,
@@ -14,10 +14,10 @@ import {
   SelectTrigger,
   SelectValue,
   Separator,
-} from "@bemindlabs/unicore-ui";
-import { useState } from "react";
+} from '@bemindlabs/unicore-ui';
+import { useState } from 'react';
 
-import { useWizardState } from "@/hooks/use-wizard-state";
+import { useWizardState } from '@/hooks/use-wizard-state';
 
 const ROLE_OPTIONS = [
   { value: UserRole.Owner, label: "Owner" },

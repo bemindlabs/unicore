@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   Badge,
@@ -8,14 +8,14 @@ import {
   CardHeader,
   CardTitle,
   Separator,
-} from "@bemindlabs/unicore-ui";
-import { useState } from "react";
+} from '@bemindlabs/unicore-ui';
+import { useState } from 'react';
 
-import { useBranding } from "@/components/BrandingProvider";
-import { useWizardState } from "@/hooks/use-wizard-state";
-import { provisionWorkspace } from "@/lib/bootstrap-api";
-import type { ProvisionRequest, ProvisionResult } from "@/lib/bootstrap-api";
-import { AGENT_DEFINITIONS, ERP_MODULES } from "@/types/wizard";
+import { useBranding } from '@/components/BrandingProvider';
+import { useWizardState } from '@/hooks/use-wizard-state';
+import { provisionWorkspace } from '@/lib/bootstrap-api';
+import type { ProvisionRequest, ProvisionResult } from '@/lib/bootstrap-api';
+import { AGENT_DEFINITIONS, ERP_MODULES } from '@/types/wizard';
 
 export function StepReview() {
   const { state, prevStep, goToStep } = useWizardState();
