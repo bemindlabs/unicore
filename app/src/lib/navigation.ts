@@ -42,7 +42,7 @@ export const menuSections: NavSection[] = [
         icon: Wand2,
         href: '/agent-builder',
         roles: [UserRole.Owner, UserRole.Operator],
-        license: { tier: 'pro', feature: 'agentBuilder', upgradeLabel: 'Pro' },
+        license: { tier: 'pro', feature: 'customAgentBuilder', upgradeLabel: 'Pro' },
       },
       {
         label: 'Workflows',
