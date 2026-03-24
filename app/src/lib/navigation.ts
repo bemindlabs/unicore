@@ -178,7 +178,7 @@ export const menuSections: NavSection[] = [
       {
         label: 'Virtual Office',
         icon: Monitor,
-        href: process.env.NEXT_PUBLIC_VIRTUAL_OFFICE_URL ?? '/virtual-office',
+        href: process.env.NEXT_PUBLIC_VIRTUAL_OFFICE_URL ?? 'https://vo-unicore-demo.bemind.tech',
         roles: [UserRole.Owner, UserRole.Operator],
         license: { tier: 'pro', feature: 'featVirtualOffice', upgradeLabel: 'Pro' },
         external: true,
