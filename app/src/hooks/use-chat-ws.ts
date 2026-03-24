@@ -28,6 +28,7 @@ export interface ChatMessage {
   authorType: 'agent' | 'human';
   authorColor?: string;
   channel: string;
+  isAiGenerated?: boolean;
   timestamp: string;
   toolCalls?: ToolCallEntry[];
   suggestedActions?: SuggestedAction[];

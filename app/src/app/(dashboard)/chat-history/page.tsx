@@ -18,7 +18,7 @@ import {
 import { toast, Badge, Button, Input, Skeleton } from '@bemindlabs/unicore-ui';
 import { api } from '@/lib/api';
 import { getAgents } from '@/lib/agents/store';
-import type { BackofficeAgent } from '@/lib/agents/types';
+import type { VirtualOfficeAgent } from '@/lib/agents/types';
 import { ConversationIntelligenceSidebar } from '@/components/chat-intelligence/ConversationIntelligenceSidebar';
 import { useIntelligenceStream } from '@/hooks/use-intelligence-stream';
 import { ContactProfileSidebar } from '@/components/conversations/contact-profile-sidebar';
@@ -106,7 +106,7 @@ const AGENT_COLORS: Record<string, string> = {
   research: '#ec4899',
 };
 
-function agentColor(agentId: string, agents: BackofficeAgent[]): string {
+function agentColor(agentId: string, agents: VirtualOfficeAgent[]): string {
   const agent = agents.find((a) => a.id === agentId);
   return agent?.color ?? AGENT_COLORS[agentId] ?? '#64748b';
 }
@@ -209,7 +209,7 @@ interface ConversationRowProps {
   onToggle: () => void;
   onDelete: (id: string) => void;
   onOpenProfile: (userName: string) => void;
-  agents: BackofficeAgent[];
+  agents: VirtualOfficeAgent[];
   deleting: boolean;
 }
 
@@ -367,7 +367,7 @@ function ConversationRow({ record, expanded, onToggle, onDelete, onOpenProfile, 
 
 export default function ChatHistoryPage() {
   const [records, setRecords] = useState<ChatHistoryRecord[]>([]);
-  const [agents, setAgents] = useState<BackofficeAgent[]>([]);
+  const [agents, setAgents] = useState<VirtualOfficeAgent[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());

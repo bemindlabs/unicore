@@ -1,13 +1,13 @@
 import type { Terminal } from '@xterm/xterm';
-import type { BackofficeAgent } from '@/lib/agents/types';
+import type { VirtualOfficeAgent } from '@/lib/agents/types';
 
 export interface CommandContext {
   /** xterm.js Terminal instance — use writeln() to print output. */
   terminal: Terminal;
   /** Agent this terminal is attached to. */
-  agent: BackofficeAgent;
+  agent: VirtualOfficeAgent;
   /** All known agents (9 total). */
-  agents: BackofficeAgent[];
+  agents: VirtualOfficeAgent[];
   /** Ordered command history (most recent last). */
   history: readonly string[];
   /** Currently active chat agent id, or null. */

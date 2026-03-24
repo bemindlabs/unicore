@@ -1,4 +1,4 @@
-import type { BackofficeAgent, AgentStatus, RoomId } from "./types";
+import type { VirtualOfficeAgent, AgentStatus, RoomId } from "./types";
 
 interface OpenClawAgent {
   id: string;
@@ -76,7 +76,7 @@ function mapState(state: string): AgentStatus {
   return "idle";
 }
 
-export function mapApiAgent(apiAgent: OpenClawAgent): BackofficeAgent {
+export function mapApiAgent(apiAgent: OpenClawAgent): VirtualOfficeAgent {
   const type = (apiAgent.type || "").toLowerCase();
   const config = TYPE_CONFIG[type] ?? {
     role: type || "Agent",
@@ -95,7 +95,7 @@ export function mapApiAgent(apiAgent: OpenClawAgent): BackofficeAgent {
   };
 }
 
-export const defaultAgents: BackofficeAgent[] = [
+export const defaultAgents: VirtualOfficeAgent[] = [
   {
     id: "router",
     name: "ROUTER",
