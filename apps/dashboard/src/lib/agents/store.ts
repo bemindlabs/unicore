@@ -2,7 +2,7 @@ import type { BackofficeAgent } from "./types";
 import { defaultAgents, mapApiAgent } from "./agents";
 import { api } from "@/lib/api";
 
-const STORAGE_KEY = "unicore_backoffice_agents";
+const STORAGE_KEY = "unicore_agents";
 
 interface OpenClawAgent {
   id: string;
