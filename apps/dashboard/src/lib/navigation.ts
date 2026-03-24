@@ -173,6 +173,18 @@ export const menuSections: NavSection[] = [
     ],
   },
   {
+    label: 'Add-ons',
+    items: [
+      {
+        label: 'Virtual Office',
+        icon: Monitor,
+        href: '/virtual-office',
+        roles: [UserRole.Owner, UserRole.Operator],
+        license: { tier: 'pro', feature: 'featVirtualOffice', upgradeLabel: 'Pro' },
+      },
+    ],
+  },
+  {
     label: 'Enterprise',
     items: [
       {
