@@ -29,13 +29,7 @@ const mockMessage = {
   content: 'Hello!',
   externalId: 'tg-msg-1',
   sender: { id: 'user-789', name: 'Alice', type: 'contact' },
-<<<<<<< HEAD
-  metadata: { channel: 'telegram', rawPayload: {} },
-  isRead: false,
-  isAiGenerated: false,
-=======
   metadata: { channel: 'telegram', rawPayload: {}, routedTo: 'pending' },
->>>>>>> main
   createdAt: new Date(),
 };
 
