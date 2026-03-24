@@ -46,7 +46,7 @@ export default function RegisterPage() {
       const res = await fetch(`${siteConfig.apiGatewayUrl}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, licenseKey }),
+        body: JSON.stringify({ name, email, password, confirmPassword: password }),
       });
       const data = await res.json();
 
