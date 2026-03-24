@@ -183,6 +183,22 @@ export const menuSections: NavSection[] = [
         license: { tier: 'pro', feature: 'featVirtualOffice', upgradeLabel: 'Pro' },
         external: true,
       },
+      {
+        label: 'Geek CLI',
+        icon: Terminal,
+        href: process.env.NEXT_PUBLIC_GEEK_PORTAL_URL ?? 'https://geek-unicore-demo.bemind.tech',
+        roles: [UserRole.Owner, UserRole.Operator],
+        license: { tier: 'pro', feature: 'featGeekCli', upgradeLabel: 'Pro' },
+        external: true,
+      },
+      {
+        label: 'AI-DLC',
+        icon: Zap,
+        href: process.env.NEXT_PUBLIC_DLC_PORTAL_URL ?? 'https://dlc-unicore-demo.bemind.tech',
+        roles: [UserRole.Owner, UserRole.Operator],
+        license: { tier: 'pro', feature: 'featAiDlc', upgradeLabel: 'Pro' },
+        external: true,
+      },
     ],
   },
   {
