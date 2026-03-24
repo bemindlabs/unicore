@@ -44,10 +44,10 @@ COPY --from=build /app/services/api-gateway/dist ./services/api-gateway/dist
 COPY --from=build /app/services/api-gateway/package.json ./services/api-gateway/
 COPY --from=build /app/services/api-gateway/src/prisma ./services/api-gateway/prisma
 COPY --from=build /app/services/api-gateway/src/generated ./services/api-gateway/dist/generated
-RUN mkdir -p node_modules/@unicore && \
-    ln -sf /app/packages/plugin-sdk node_modules/@unicore/plugin-sdk && \
-    mkdir -p services/api-gateway/node_modules/@unicore && \
-    ln -sf /app/packages/plugin-sdk services/api-gateway/node_modules/@unicore/plugin-sdk
+RUN mkdir -p node_modules/@bemindlabs && \
+    ln -sf /app/packages/plugin-sdk node_modules/@bemindlabs/unicore-plugin-sdk && \
+    mkdir -p services/api-gateway/node_modules/@bemindlabs && \
+    ln -sf /app/packages/plugin-sdk services/api-gateway/node_modules/@bemindlabs/unicore-plugin-sdk
 WORKDIR /app/services/api-gateway
 RUN addgroup -g 1001 -S nodejs && adduser -S -u 1001 appuser
 USER appuser
