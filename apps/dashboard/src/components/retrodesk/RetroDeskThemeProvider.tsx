@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { useTheme } from '@/hooks/use-theme';
-import { isRetroDeskFamily } from '@/lib/backoffice/theme-registry';
+import { isRetroDeskFamily } from '@/lib/theme/theme-registry';
 
 interface RetroDeskThemeContext {
   isActive: boolean;
