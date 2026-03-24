@@ -1,4 +1,4 @@
-import baseConfig from '@unicore/config/tailwind/base';
+import baseConfig from '@bemindlabs/unicore-config/tailwind/base';
 import type { Config } from 'tailwindcss';
 
 const config: Config = {

@@ -1,7 +1,7 @@
 'use client';
 
 import { Crown, Lock } from 'lucide-react';
-import { Button, Card, CardContent } from '@unicore/ui';
+import { Button, Card, CardContent } from '@bemindlabs/unicore-ui';
 
 interface UpgradePromptProps {
   /** Human-readable feature name, e.g. "Single Sign-On" */

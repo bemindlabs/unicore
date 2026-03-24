@@ -40,7 +40,7 @@ import {
   DialogDescription,
   cn,
   toast,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 import {
   useConversationParticipants,
   type ConversationParticipant,

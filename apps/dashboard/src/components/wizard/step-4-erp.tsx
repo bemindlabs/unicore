@@ -1,6 +1,6 @@
 'use client';
 
-import type { ErpModulesConfig } from '@unicore/shared-types';
+import type { ErpModulesConfig } from '@bemindlabs/unicore-shared-types';
 import {
   Badge,
   Card,
@@ -10,7 +10,7 @@ import {
   CardTitle,
   Switch,
   cn,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 
 import { useWizardState } from '@/hooks/use-wizard-state';
 import { ERP_MODULES } from '@/types/wizard';

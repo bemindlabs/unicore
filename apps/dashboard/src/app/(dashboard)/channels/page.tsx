@@ -34,7 +34,7 @@ import {
   DialogHeader,
   DialogTitle,
   toast,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 import { useLicense } from '@/hooks/use-license';
 import { useAuth } from '@/hooks/use-auth';
 import { api } from '@/lib/api';

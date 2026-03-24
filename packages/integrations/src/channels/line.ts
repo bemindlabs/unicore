@@ -1,4 +1,4 @@
-// LINE Channel Adapter — @unicore/integrations
+// LINE Channel Adapter — @bemindlabs/unicore-integrations
 // Wraps the LINE Messaging API for sending messages, managing rich menus, and validating webhooks.
 
 import { createHmac, timingSafeEqual } from 'node:crypto';

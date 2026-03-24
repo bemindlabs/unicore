@@ -9,7 +9,7 @@
     "noEmit": false,
     "allowImportingTsExtensions": false,
     "paths": {
-      "@unicore/shared-types": ["../shared-types/src"]
+      "@bemindlabs/unicore-shared-types": ["../shared-types/src"]
     }
   },
   "include": ["src"],

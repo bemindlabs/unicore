@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { cn, Separator, Sheet, SheetContent, SheetHeader, SheetTitle } from '@unicore/ui';
+import { cn, Separator, Sheet, SheetContent, SheetHeader, SheetTitle } from '@bemindlabs/unicore-ui';
 import { useAuth } from '@/hooks/use-auth';
 import { useLicense } from '@/hooks/use-license';
 import { useBranding } from '@/components/BrandingProvider';

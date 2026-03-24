@@ -3,7 +3,7 @@
 'use client';
 
 import type { LucideIcon } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, cn } from '@unicore/ui';
+import { Card, CardContent, CardHeader, CardTitle, cn } from '@bemindlabs/unicore-ui';
 import type { TrendData } from '@/types/widget';
 
 interface MetricCardProps {

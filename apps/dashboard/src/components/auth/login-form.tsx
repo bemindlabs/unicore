@@ -9,7 +9,7 @@ import {
   CardContent,
   Input,
   Label,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 import { useAuth } from '@/hooks/use-auth';
 
 export function LoginForm() {

@@ -9,12 +9,12 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 import { useLicense } from '@/hooks/use-license';
 import { useAuth } from '@/hooks/use-auth';
 import { useCallback, useState } from 'react';
 import { api } from '@/lib/api';
-import { toast } from '@unicore/ui';
+import { toast } from '@bemindlabs/unicore-ui';
 import { Loader2 } from 'lucide-react';
 
 // ── Channel definitions ────────────────────────────────────────────────────

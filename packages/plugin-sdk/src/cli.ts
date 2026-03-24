@@ -27,7 +27,7 @@ async function promptChoice<T extends string>(
 function getTypeSpecificTemplate(type: PluginType, id: string, name: string): string {
   switch (type) {
     case 'agent':
-      return `import type { Plugin, PluginContext, PluginManifest } from '@unicore/plugin-sdk';
+      return `import type { Plugin, PluginContext, PluginManifest } from '@bemindlabs/unicore-plugin-sdk';
 import manifest from '../plugin.json' assert { type: 'json' };
 
 /**
@@ -60,7 +60,7 @@ export default plugin;
 `;
 
     case 'integration':
-      return `import type { Plugin, PluginContext, PluginManifest } from '@unicore/plugin-sdk';
+      return `import type { Plugin, PluginContext, PluginManifest } from '@bemindlabs/unicore-plugin-sdk';
 import manifest from '../plugin.json' assert { type: 'json' };
 
 /**
@@ -93,7 +93,7 @@ export default plugin;
 `;
 
     case 'workflow':
-      return `import type { Plugin, PluginContext, PluginManifest } from '@unicore/plugin-sdk';
+      return `import type { Plugin, PluginContext, PluginManifest } from '@bemindlabs/unicore-plugin-sdk';
 import manifest from '../plugin.json' assert { type: 'json' };
 
 /**
@@ -127,7 +127,7 @@ export default plugin;
 `;
 
     case 'theme':
-      return `import type { Plugin, PluginContext, PluginManifest } from '@unicore/plugin-sdk';
+      return `import type { Plugin, PluginContext, PluginManifest } from '@bemindlabs/unicore-plugin-sdk';
 import manifest from '../plugin.json' assert { type: 'json' };
 
 /**
@@ -233,10 +233,10 @@ async function generatePlugin(options: {
       build: 'tsc',
       test: 'jest',
       typecheck: 'tsc --noEmit',
-      validate: 'npx @unicore/plugin-sdk validate',
+      validate: 'npx @bemindlabs/unicore-plugin-sdk validate',
     },
     dependencies: {
-      '@unicore/plugin-sdk': 'workspace:*',
+      '@bemindlabs/unicore-plugin-sdk': 'workspace:*',
     },
     devDependencies: {
       '@types/jest': '^29.5.0',
@@ -286,7 +286,7 @@ export default config;
   await writeFile(join(dir, 'src', 'index.ts'), getTypeSpecificTemplate(type, id, name));
 
   // src/__tests__/plugin.test.ts
-  const testContent = `import type { PluginContext } from '@unicore/plugin-sdk';
+  const testContent = `import type { PluginContext } from '@bemindlabs/unicore-plugin-sdk';
 import plugin from '../index.js';
 
 describe('${name}', () => {
@@ -487,8 +487,8 @@ async function main(): Promise<void> {
   if (!command || command === '--help' || command === '-h') {
     console.log('UniCore Plugin SDK CLI\n');
     console.log('Usage:');
-    console.log('  npx @unicore/plugin-sdk init              Scaffold a new plugin interactively');
-    console.log('  npx @unicore/plugin-sdk validate [dir]    Validate manifest and bundle (default: .)');
+    console.log('  npx @bemindlabs/unicore-plugin-sdk init              Scaffold a new plugin interactively');
+    console.log('  npx @bemindlabs/unicore-plugin-sdk validate [dir]    Validate manifest and bundle (default: .)');
     process.exit(0);
   }
 
@@ -542,7 +542,7 @@ async function main(): Promise<void> {
   }
 
   console.error(`Unknown command: ${command}`);
-  console.error("Run 'npx @unicore/plugin-sdk --help' for usage.");
+  console.error("Run 'npx @bemindlabs/unicore-plugin-sdk --help' for usage.");
   process.exit(1);
 }
 

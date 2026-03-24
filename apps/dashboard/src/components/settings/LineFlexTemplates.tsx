@@ -26,7 +26,7 @@ import {
   Separator,
   Textarea,
   toast,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 
 interface FlexTemplate {
   id: string;

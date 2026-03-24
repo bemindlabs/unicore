@@ -13,7 +13,7 @@ import {
   Label,
   Separator,
   useToast,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 import { useAuth } from '@/hooks/use-auth';
 import { api } from '@/lib/api';
 

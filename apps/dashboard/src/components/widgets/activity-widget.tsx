@@ -2,7 +2,7 @@
 
 import { Activity, Bot, Package, Receipt, ShoppingCart, User } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, Skeleton } from '@unicore/ui';
+import { Card, CardContent, CardHeader, CardTitle, Skeleton } from '@bemindlabs/unicore-ui';
 import { useActivityData } from '@/hooks/use-widget-data';
 import type { ActivityItem } from '@/types/widget';
 import type { WidgetComponentProps } from './widget-registry';

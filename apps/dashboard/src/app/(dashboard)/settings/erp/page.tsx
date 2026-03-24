@@ -22,8 +22,8 @@ import {
   Separator,
   Switch,
   toast,
-} from '@unicore/ui';
-import type { ErpModulesConfig } from '@unicore/shared-types';
+} from '@bemindlabs/unicore-ui';
+import type { ErpModulesConfig } from '@bemindlabs/unicore-shared-types';
 import { api } from '@/lib/api';
 
 interface ErpModuleDefinition {

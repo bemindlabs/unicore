@@ -7,9 +7,9 @@ export type {
   TaskActivityEntry,
   TaskAction,
   AssigneeType,
-} from '@unicore/shared-types';
+} from '@bemindlabs/unicore-shared-types';
 
-import type { TaskStatus } from '@unicore/shared-types';
+import type { TaskStatus } from '@bemindlabs/unicore-shared-types';
 
 export const KANBAN_COLUMNS: { key: TaskStatus; label: string; color: string }[] = [
   { key: 'backlog', label: 'Backlog', color: '#94a3b8' },

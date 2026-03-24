@@ -1,7 +1,7 @@
 'use client';
 
 import { FileText, Link, File, Hash, HardDrive, BookOpen, User, Calendar } from 'lucide-react';
-import { Badge } from '@unicore/ui';
+import { Badge } from '@bemindlabs/unicore-ui';
 import { useBusinessTimezone, formatDateTimeTz } from '@/hooks/use-business-timezone';
 
 export interface DocumentMeta {

@@ -1,4 +1,4 @@
-import { UserRole } from '@unicore/shared-types';
+import { UserRole } from '@bemindlabs/unicore-shared-types';
 import type { AuthUser } from '../auth-provider';
 
 // ---------- mocks ----------

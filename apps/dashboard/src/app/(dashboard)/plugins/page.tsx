@@ -50,7 +50,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogClose,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 
 type PluginCategory =
   | 'all'

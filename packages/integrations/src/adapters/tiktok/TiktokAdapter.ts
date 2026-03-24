@@ -1,4 +1,4 @@
-// TikTok Marketing API Adapter — @unicore/integrations
+// TikTok Marketing API Adapter — @bemindlabs/unicore-integrations
 // Integrates with the TikTok Business API to sync ad campaigns, ad groups, and ads.
 
 import type { IAdapter, AdapterMeta, AdapterHealth, AdapterResult, AdapterError, SyncOptions, SyncResult } from '../../types/adapter.js';

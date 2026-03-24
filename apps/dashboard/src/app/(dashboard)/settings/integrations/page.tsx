@@ -38,8 +38,8 @@ import {
   TabsList,
   TabsTrigger,
   toast,
-} from '@unicore/ui';
-import type { IntegrationConfig } from '@unicore/shared-types';
+} from '@bemindlabs/unicore-ui';
+import type { IntegrationConfig } from '@bemindlabs/unicore-shared-types';
 import { TelegramConfig } from '../../../../components/settings/TelegramConfig';
 import { LineConfig } from '../../../../components/settings/LineConfig';
 import { LineRichMenu } from '../../../../components/settings/LineRichMenu';

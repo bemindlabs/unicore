@@ -12,7 +12,7 @@ export class HealthController {
 
     return {
       status,
-      service: '@unicore/rag',
+      service: '@bemindlabs/unicore-rag',
       timestamp: new Date().toISOString(),
       checks: {
         qdrant: qdrantOk ? 'ok' : 'unreachable',

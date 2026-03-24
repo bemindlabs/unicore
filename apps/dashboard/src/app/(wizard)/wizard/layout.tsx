@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { getTranslations } from 'next-intl/server';
-import '@unicore/ui/globals.css';
+import '@bemindlabs/unicore-ui/globals.css';
 
 export default async function WizardLayout({ children }: { children: ReactNode }) {
   const t = await getTranslations('wizard');

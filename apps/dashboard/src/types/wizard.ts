@@ -1,6 +1,6 @@
 import {
   AgentType,
-} from '@unicore/shared-types';
+} from '@bemindlabs/unicore-shared-types';
 import type {
   AgentChannel,
   AgentConfig,
@@ -9,7 +9,7 @@ import type {
   ErpModulesConfig,
   IntegrationConfig,
   UserRole,
-} from '@unicore/shared-types';
+} from '@bemindlabs/unicore-shared-types';
 
 export interface TeamMember {
   email: string;

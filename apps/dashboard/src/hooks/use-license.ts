@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useLicenseContext } from '@/contexts/license-context';
-import { toast } from '@unicore/ui';
+import { toast } from '@bemindlabs/unicore-ui';
 
 interface UseLicenseOptions {
   /** When true and URL has ?upgraded=true, poll for edition change */

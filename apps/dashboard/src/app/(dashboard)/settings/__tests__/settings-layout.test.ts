@@ -1,13 +1,13 @@
 /**
  * Unit tests for settings pages — pure business logic, no DOM required.
  *
- * Run: pnpm --filter @unicore/dashboard test
+ * Run: pnpm --filter @bemindlabs/unicore-dashboard test
  */
 
 // ---------------------------------------------------------------------------
 // Mirror the shared-types enums locally so the test works without ESM
 // resolution hurdles in the Jest/ts-jest pipeline.
-// These values MUST match @unicore/shared-types exactly — if they diverge,
+// These values MUST match @bemindlabs/unicore-shared-types exactly — if they diverge,
 // integration tests (with RTL) will catch the mismatch.
 // ---------------------------------------------------------------------------
 

@@ -1,4 +1,4 @@
-// @unicore/branding — Pro edition public API
+// @bemindlabs/unicore-branding — Pro edition public API
 // White-label customization: themes, CSS, Tailwind, email, React context
 
 // Types

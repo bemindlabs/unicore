@@ -1,10 +1,10 @@
-// Default theme presets for @unicore/branding (pro edition)
+// Default theme presets for @bemindlabs/unicore-branding (pro edition)
 // Includes all community presets plus pro-exclusive themes.
 
 import {
   DEFAULT_PRESET_ID,
   findPreset as findCommunityPreset,
-} from '@unicore/branding-base/presets';
+} from '@bemindlabs/unicore-branding-base/presets';
 import type { BrandingConfig, BrandingPreset } from './types';
 
 export { DEFAULT_PRESET_ID };

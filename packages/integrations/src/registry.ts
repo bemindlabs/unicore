@@ -1,4 +1,4 @@
-// Adapter Registry — @unicore/integrations
+// Adapter Registry — @bemindlabs/unicore-integrations
 // Central registry for discovering and instantiating adapters by id.
 
 import type { IAdapter, AdapterMeta } from './types/adapter.js';

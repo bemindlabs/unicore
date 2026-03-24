@@ -1,6 +1,6 @@
 "use client";
 
-import { UserRole } from "@unicore/shared-types";
+import { UserRole } from "@bemindlabs/unicore-shared-types";
 import {
   Badge,
   Button,
@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
   Separator,
-} from "@unicore/ui";
+} from "@bemindlabs/unicore-ui";
 import { useState } from "react";
 
 import { useWizardState } from "@/hooks/use-wizard-state";

@@ -173,12 +173,12 @@ unicore/
 │   ├── openclaw-gateway/          # Multi-agent WebSocket hub              :18789
 │   └── workflow/                  # Kafka consumers, event automation
 ├── packages/
-│   ├── ui/                        # @unicore/ui — shared components (shadcn/ui)
-│   ├── shared-types/              # @unicore/shared-types — TypeScript types
-│   ├── config/                    # @unicore/config — ESLint, Tailwind, TS configs
-│   ├── integrations/              # @unicore/integrations — 3rd-party API wrappers
-│   ├── branding/                  # @unicore/branding — community base theming
-│   └── plugin-sdk/                # @unicore/plugin-sdk — loader, lifecycle, sandbox, events, dep resolver
+│   ├── ui/                        # @bemindlabs/unicore-ui — shared components (shadcn/ui)
+│   ├── shared-types/              # @bemindlabs/unicore-shared-types — TypeScript types
+│   ├── config/                    # @bemindlabs/unicore-config — ESLint, Tailwind, TS configs
+│   ├── integrations/              # @bemindlabs/unicore-integrations — 3rd-party API wrappers
+│   ├── branding/                  # @bemindlabs/unicore-branding — community base theming
+│   └── plugin-sdk/                # @bemindlabs/unicore-plugin-sdk — loader, lifecycle, sandbox, events, dep resolver
 ├── templates/                     # Business templates (industry presets)
 ├── agents/                        # Agent extension points (pluggable)
 ├── e2e/                           # Playwright E2E tests
@@ -263,9 +263,9 @@ See [`.env.example`](.env.example) for the full list. Key variables:
 
 ```bash
 # Run specific service
-pnpm --filter @unicore/dashboard dev
-pnpm --filter @unicore/api-gateway dev
-pnpm --filter @unicore/erp dev
+pnpm --filter @bemindlabs/unicore-dashboard dev
+pnpm --filter @bemindlabs/unicore-api-gateway dev
+pnpm --filter @bemindlabs/unicore-erp dev
 
 # Lint, test, typecheck (all packages)
 pnpm lint
@@ -290,7 +290,7 @@ pnpm build
 
 ```bash
 pnpm test                    # Run all unit tests
-pnpm --filter @unicore/erp test   # Run tests for a specific service
+pnpm --filter @bemindlabs/unicore-erp test   # Run tests for a specific service
 ```
 
 ### E2E Tests (Playwright)

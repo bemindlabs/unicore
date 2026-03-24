@@ -5,12 +5,12 @@ import { Bot, Eye, EyeOff, Save, CheckCircle, AlertCircle, Loader2, RefreshCw, E
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
   Button, Input, Label, Badge,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 import { api } from '@/lib/api';
 import Link from 'next/link';
 import { useLicense } from '@/hooks/use-license';
 import { useAuth } from '@/hooks/use-auth';
-import { toast } from '@unicore/ui';
+import { toast } from '@bemindlabs/unicore-ui';
 
 // ── Provider definitions ──────────────────────────────────────────────────
 

@@ -8,7 +8,7 @@ import {
   DialogTitle,
   Button,
   Badge,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 import { Layers, Loader2, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import { api } from '@/lib/api';
 

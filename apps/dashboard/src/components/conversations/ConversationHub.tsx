@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Badge, Button } from '@unicore/ui';
+import { Badge, Button } from '@bemindlabs/unicore-ui';
 import {
   useConversationWebSocket,
   type ConversationEntry,

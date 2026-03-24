@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import {
   Badge, Button, Card, CardContent, CardHeader, CardTitle, Input,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 import { useLicense } from '@/hooks/use-license';
 import { useChatWebSocket, type ChatMessage } from '@/hooks/use-chat-ws';
 import { uuid } from '@/lib/uuid';

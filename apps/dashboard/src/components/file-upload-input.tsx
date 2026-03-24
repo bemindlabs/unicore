@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from 'react';
 import { Upload, FileText, X, Loader2 } from 'lucide-react';
-import { Button } from '@unicore/ui';
+import { Button } from '@bemindlabs/unicore-ui';
 
 interface FileUploadInputProps {
   accept?: string;

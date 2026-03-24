@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import { useDashboardConfig } from '@/hooks/use-dashboard-config';
 import { WidgetRenderer } from '@/components/widgets/widget-renderer';
-import { Skeleton } from '@unicore/ui';
+import { Skeleton } from '@bemindlabs/unicore-ui';
 
 // ─── Static layout variant (used for custom layouts defined in JSX) ───────────
 

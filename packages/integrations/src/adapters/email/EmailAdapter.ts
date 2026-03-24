@@ -1,4 +1,4 @@
-// Email Adapter — @unicore/integrations
+// Email Adapter — @bemindlabs/unicore-integrations
 // Sends transactional email via SMTP, SendGrid, or Mailgun.
 
 import type { IAdapter, AdapterMeta, AdapterHealth, AdapterResult, AdapterError, SyncOptions, SyncResult } from '../../types/adapter.js';

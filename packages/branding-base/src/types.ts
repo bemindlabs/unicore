@@ -1,4 +1,4 @@
-// @unicore/branding — Base branding types (community edition)
+// @bemindlabs/unicore-branding — Base branding types (community edition)
 
 export type FontWeight =
   | 'thin'

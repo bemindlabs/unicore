@@ -1,4 +1,4 @@
-// @unicore/branding — Pro branding types (extends community edition)
+// @bemindlabs/unicore-branding — Pro branding types (extends community edition)
 
 // Re-export all community base types
 export type {
@@ -6,9 +6,9 @@ export type {
   BrandingFont,
   BrandingColors,
   CssGeneratorOptions as BaseCssGeneratorOptions,
-} from '@unicore/branding-base/types';
+} from '@bemindlabs/unicore-branding-base/types';
 
-import type { BrandingConfig as BaseBrandingConfig, BrandingColors } from '@unicore/branding-base/types';
+import type { BrandingConfig as BaseBrandingConfig, BrandingColors } from '@bemindlabs/unicore-branding-base/types';
 
 /**
  * Pro branding configuration — extends the community base with white-label

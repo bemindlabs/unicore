@@ -1,5 +1,5 @@
 {
-  "name": "@unicore/integrations",
+  "name": "@bemindlabs/unicore-integrations",
   "version": "0.0.2",
   "private": true,
   "type": "module",
@@ -43,7 +43,7 @@
     "lint": "eslint src/"
   },
   "dependencies": {
-    "@unicore/shared-types": "workspace:*"
+    "@bemindlabs/unicore-shared-types": "workspace:*"
   },
   "devDependencies": {
     "@types/jest": "^29.5.0",

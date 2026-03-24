@@ -1,4 +1,4 @@
-// @unicore/integrations — External service adapters
+// @bemindlabs/unicore-integrations — External service adapters
 
 // Core types
 export type {

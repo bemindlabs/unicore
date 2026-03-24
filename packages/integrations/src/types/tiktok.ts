@@ -1,4 +1,4 @@
-// TikTok-specific types — @unicore/integrations
+// TikTok-specific types — @bemindlabs/unicore-integrations
 
 export interface TiktokConfig {
   /** TikTok Marketing API access token. */

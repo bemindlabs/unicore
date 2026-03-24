@@ -1,4 +1,4 @@
-import { DEFAULT_PRESET_ID } from '@unicore/branding-base/presets';
+import { DEFAULT_PRESET_ID } from '@bemindlabs/unicore-branding-base/presets';
 import type { BrandingConfig, BrandingPreset } from './types';
 export { DEFAULT_PRESET_ID };
 export declare const BRANDING_PRESETS: readonly BrandingPreset[];

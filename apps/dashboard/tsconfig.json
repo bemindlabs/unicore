@@ -1,5 +1,5 @@
 {
-  "extends": "@unicore/config/typescript/next",
+  "extends": "@bemindlabs/unicore-config/typescript/next",
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {

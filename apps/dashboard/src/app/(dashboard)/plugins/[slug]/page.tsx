@@ -47,7 +47,7 @@ import {
   TabsList,
   TabsTrigger,
   toast,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 
 // ---------------------------------------------------------------------------
 // Types

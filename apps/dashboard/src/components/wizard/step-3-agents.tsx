@@ -1,7 +1,7 @@
 'use client';
 
-import { AutonomyLevel } from '@unicore/shared-types';
-import type { AgentChannel } from '@unicore/shared-types';
+import { AutonomyLevel } from '@bemindlabs/unicore-shared-types';
+import type { AgentChannel } from '@bemindlabs/unicore-shared-types';
 import {
   Badge,
   Card,
@@ -18,7 +18,7 @@ import {
   SelectValue,
   Switch,
   cn,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 
 import { useWizardState } from '@/hooks/use-wizard-state';
 import { AGENT_DEFINITIONS } from '@/types/wizard';

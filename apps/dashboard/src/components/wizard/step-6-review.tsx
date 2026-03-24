@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
   Separator,
-} from "@unicore/ui";
+} from "@bemindlabs/unicore-ui";
 import { useState } from "react";
 
 import { useBranding } from "@/components/BrandingProvider";

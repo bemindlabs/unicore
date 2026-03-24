@@ -3,8 +3,8 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { api } from '@/lib/api';
-import type { BrandingConfig } from '@unicore/branding-base';
-import { generateCssTheme } from '@unicore/branding-base';
+import type { BrandingConfig } from '@bemindlabs/unicore-branding-base';
+import { generateCssTheme } from '@bemindlabs/unicore-branding-base';
 
 // ---------------------------------------------------------------------------
 // Context

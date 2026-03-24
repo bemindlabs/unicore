@@ -9,7 +9,7 @@ import {
   CardTitle,
   Switch,
   cn,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 import { useEffect } from 'react';
 
 import { useWizardState } from '@/hooks/use-wizard-state';

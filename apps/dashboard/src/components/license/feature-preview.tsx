@@ -2,11 +2,11 @@
 
 import { useState, useCallback } from 'react';
 import { Crown, Lock, Loader2 } from 'lucide-react';
-import { Badge, Button, Switch } from '@unicore/ui';
+import { Badge, Button, Switch } from '@bemindlabs/unicore-ui';
 import { useLicense } from '@/hooks/use-license';
 import { useAuth } from '@/hooks/use-auth';
 import { api } from '@/lib/api';
-import { toast } from '@unicore/ui';
+import { toast } from '@bemindlabs/unicore-ui';
 
 const MONTHLY_PRICE = 99;
 const ANNUAL_PRICE = 990;

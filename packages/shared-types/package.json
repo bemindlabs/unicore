@@ -1,5 +1,5 @@
 {
-  "name": "@unicore/shared-types",
+  "name": "@bemindlabs/unicore-shared-types",
   "version": "0.0.2",
   "private": true,
   "type": "module",

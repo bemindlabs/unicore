@@ -1,4 +1,4 @@
-// Plaid-specific types — @unicore/integrations
+// Plaid-specific types — @bemindlabs/unicore-integrations
 
 export interface PlaidConfig {
   /** Plaid client ID. */

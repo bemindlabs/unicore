@@ -1,4 +1,4 @@
-// CSS theme generator for @unicore/branding (pro edition)
+// CSS theme generator for @bemindlabs/unicore-branding (pro edition)
 // Extends community base with: removeUnicoreBranding, customCss injection
 
 import {
@@ -7,8 +7,8 @@ import {
   hexToHslComponents,
   buildGoogleFontImport,
   generateCssVariables as generateBaseCssVariables,
-} from '@unicore/branding-base/css-generator';
-import type { BrandingFont } from '@unicore/branding-base/types';
+} from '@bemindlabs/unicore-branding-base/css-generator';
+import type { BrandingFont } from '@bemindlabs/unicore-branding-base/types';
 import type { BrandingConfig, CssGeneratorOptions } from './types';
 
 function fontToCssVar(varName: string, font: BrandingFont): string {

@@ -27,7 +27,7 @@ import {
   Zap,
   LineChart,
 } from 'lucide-react';
-import { UserRole } from '@unicore/shared-types';
+import { UserRole } from '@bemindlabs/unicore-shared-types';
 import type { NavItem, NavSection } from '@/types/navigation';
 
 export const menuSections: NavSection[] = [

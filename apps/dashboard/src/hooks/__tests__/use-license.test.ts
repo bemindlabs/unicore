@@ -19,8 +19,8 @@ jest.mock('next/navigation', () => ({
   useRouter: () => ({ replace: jest.fn() }),
 }));
 
-// Mock @unicore/ui toast
-jest.mock('@unicore/ui', () => ({ toast: jest.fn() }));
+// Mock @bemindlabs/unicore-ui toast
+jest.mock('@bemindlabs/unicore-ui', () => ({ toast: jest.fn() }));
 
 let mockUseContext: jest.SpyInstance;
 

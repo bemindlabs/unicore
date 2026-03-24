@@ -1,4 +1,4 @@
-// Core Adapter Interface — @unicore/integrations
+// Core Adapter Interface — @bemindlabs/unicore-integrations
 
 /**
  * Lifecycle result wrapper for adapter operations.

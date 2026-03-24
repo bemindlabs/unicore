@@ -32,7 +32,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 import { ProGate } from '@/components/license/pro-gate';
 
 // ── Mock data ─────────────────────────────────────────────────────────────
@@ -98,9 +98,9 @@ const multiplayerSessions = [
 ];
 
 const installOptions = [
-  { label: 'npm', cmd: 'npm install -g @unicore/cli' },
-  { label: 'pnpm', cmd: 'pnpm add -g @unicore/cli' },
-  { label: 'yarn', cmd: 'yarn global add @unicore/cli' },
+  { label: 'npm', cmd: 'npm install -g @bemindlabs/unicore-cli' },
+  { label: 'pnpm', cmd: 'pnpm add -g @bemindlabs/unicore-cli' },
+  { label: 'yarn', cmd: 'yarn global add @bemindlabs/unicore-cli' },
   { label: 'brew', cmd: 'brew install unicore/tap/unicore-cli' },
 ];
 

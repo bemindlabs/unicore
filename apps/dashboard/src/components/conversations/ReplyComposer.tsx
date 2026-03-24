@@ -21,7 +21,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
   cn,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 import { api } from '@/lib/api';
 import { useChatWebSocket } from '@/hooks/use-chat-ws';
 import { uuid } from '@/lib/uuid';

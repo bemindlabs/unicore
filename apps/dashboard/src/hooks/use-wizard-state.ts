@@ -1,6 +1,6 @@
 'use client';
 
-import { AgentType, AutonomyLevel } from '@unicore/shared-types';
+import { AgentType, AutonomyLevel } from '@bemindlabs/unicore-shared-types';
 import {
   createContext,
   useCallback,

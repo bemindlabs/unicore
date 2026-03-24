@@ -16,7 +16,7 @@ import {
   Separator,
   Switch,
   toast,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 
 export interface ChannelField {
   key: string;

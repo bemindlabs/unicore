@@ -1,5 +1,5 @@
-export type { FontWeight, BrandingFont, BrandingColors, CssGeneratorOptions as BaseCssGeneratorOptions, } from '@unicore/branding-base/types';
-import type { BrandingConfig as BaseBrandingConfig, BrandingColors } from '@unicore/branding-base/types';
+export type { FontWeight, BrandingFont, BrandingColors, CssGeneratorOptions as BaseCssGeneratorOptions, } from '@bemindlabs/unicore-branding-base/types';
+import type { BrandingConfig as BaseBrandingConfig, BrandingColors } from '@bemindlabs/unicore-branding-base/types';
 /**
  * Pro branding configuration — extends the community base with white-label
  * and advanced customization features.

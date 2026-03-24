@@ -1,4 +1,4 @@
-// Result helpers — @unicore/integrations
+// Result helpers — @bemindlabs/unicore-integrations
 
 import type { AdapterError, AdapterResult } from '../types/adapter.js';
 
