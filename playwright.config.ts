@@ -55,7 +55,7 @@ export default defineConfig({
 
   webServer: [
     {
-      command: 'pnpm --filter dashboard dev',
+      command: 'pnpm --filter @bemindlabs/unicore-dashboard dev',
       url: DASHBOARD_URL,
       reuseExistingServer: true,
       timeout: 120_000,
