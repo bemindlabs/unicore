@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Crown, Lock, PanelLeftClose, PanelLeftOpen, LogOut, Monitor } from 'lucide-react';
+import { Crown, ExternalLink, Lock, PanelLeftClose, PanelLeftOpen, LogOut, Monitor } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage, Button, cn, Separator } from '@bemindlabs/unicore-ui';
 import { useAuth } from '@/hooks/use-auth';
 import { useLicense } from '@/hooks/use-license';
