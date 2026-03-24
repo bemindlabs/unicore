@@ -25,6 +25,7 @@ import {
   Users,
   UsersRound,
   Wand2,
+  Zap,
   LineChart,
 } from 'lucide-react';
 import { UserRole } from '@bemindlabs/unicore-shared-types';
