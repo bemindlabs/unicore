@@ -2,8 +2,8 @@
 
 import type { BoardTask } from '@/lib/tasks/types';
 import { PRIORITY_CONFIG } from '@/lib/tasks/types';
-import { RetroDeskOnly, DefaultOnly } from '@/components/retrodesk/RetroDeskThemeProvider';
-import { RetroDeskTaskCard } from './RetroDeskTaskCard';
+const RetroDeskOnly = ({ children }: { children: React.ReactNode }) => null;
+const DefaultOnly = ({ children }: { children: React.ReactNode }) => <>{children}</>;
 
 function relativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();

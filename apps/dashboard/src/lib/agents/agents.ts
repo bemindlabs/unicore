@@ -95,7 +95,7 @@ export function mapApiAgent(apiAgent: OpenClawAgent): VirtualOfficeAgent {
   };
 }
 
-export const defaultAgents: BackofficeAgent[] = [
+export const defaultAgents: VirtualOfficeAgent[] = [
   {
     id: "router",
     name: "ROUTER",

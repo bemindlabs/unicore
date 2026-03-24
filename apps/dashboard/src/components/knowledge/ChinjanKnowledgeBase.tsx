@@ -9,7 +9,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, toast } from '@bemindlabs/unicore-ui';
 import { api } from '@/lib/api';
-import { PixelStar } from '@/components/retrodesk/PixelDecorations';
+const PixelStar = () => <span className="text-yellow-400">★</span>;
 
 /* ---------- Types ---------- */
 
