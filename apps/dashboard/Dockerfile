@@ -25,16 +25,16 @@ COPY packages/branding ./packages/branding
 COPY packages/branding-base ./packages/branding-base
 COPY apps/dashboard ./apps/dashboard
 RUN pnpm install --no-frozen-lockfile
-# Ensure workspace symlinks exist under @bemindlabs scope
-RUN mkdir -p node_modules/@bemindlabs && \
-    ln -sf /app/packages/shared-types node_modules/@bemindlabs/unicore-shared-types && \
-    ln -sf /app/packages/ui node_modules/@bemindlabs/unicore-ui && \
-    ln -sf /app/packages/config node_modules/@bemindlabs/unicore-config && \
-    ln -sf /app/packages/branding node_modules/@bemindlabs/unicore-branding && \
-    ln -sf /app/packages/branding-base node_modules/@bemindlabs/unicore-branding-base
 RUN cd packages/shared-types && npx tsc
 RUN cd packages/branding-base && npx tsc 2>&1 || echo "branding-base tsc failed"
 RUN cd packages/branding && npx tsc 2>&1 || echo "branding tsc failed"
+# Ensure workspace symlinks exist under @bemindlabs scope (after tsc builds)
+RUN mkdir -p apps/dashboard/node_modules/@bemindlabs && \
+    ln -sf /app/packages/shared-types apps/dashboard/node_modules/@bemindlabs/unicore-shared-types && \
+    ln -sf /app/packages/ui apps/dashboard/node_modules/@bemindlabs/unicore-ui && \
+    ln -sf /app/packages/config apps/dashboard/node_modules/@bemindlabs/unicore-config && \
+    ln -sf /app/packages/branding apps/dashboard/node_modules/@bemindlabs/unicore-branding && \
+    ln -sf /app/packages/branding-base apps/dashboard/node_modules/@bemindlabs/unicore-branding-base
 RUN cd apps/dashboard && npx next build
 
 ARG VERSION=0.0.0
