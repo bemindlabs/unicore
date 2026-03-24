@@ -10,8 +10,8 @@ import {
   Plus, Crown, Lock,
 } from 'lucide-react';
 import { Badge, Card, CardContent, Button, Input } from '@bemindlabs/unicore-ui';
-import { getAgents } from '@/lib/backoffice/store';
-import type { BackofficeAgent } from '@/lib/backoffice/types';
+import { getAgents } from '@/lib/agents/store';
+import type { BackofficeAgent } from '@/lib/agents/types';
 import { useLicense } from '@/hooks/use-license';
 import { useChatWebSocket, type ChatMessage } from '@/hooks/use-chat-ws';
 import { api } from '@/lib/api';

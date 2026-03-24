@@ -46,8 +46,8 @@ import {
   type ConversationParticipant,
   type AddParticipantPayload,
 } from '@/hooks/use-conversation-participants';
-import { getAgents } from '@/lib/backoffice/store';
-import type { BackofficeAgent } from '@/lib/backoffice/types';
+import { getAgents } from '@/lib/agents/store';
+import type { BackofficeAgent } from '@/lib/agents/types';
 
 // ─── Status indicator ─────────────────────────────────────────────────────
 
@@ -277,7 +277,7 @@ function ParticipantRow({
 
 interface ConversationParticipantPanelProps {
   conversationId: string | null;
-  /** Live agent status map from the backoffice store (agentId → status) */
+  /** Live agent status map from the agent store (agentId → status) */
   agentStatusMap?: Record<string, string>;
   className?: string;
 }

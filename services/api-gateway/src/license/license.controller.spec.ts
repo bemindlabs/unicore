@@ -20,6 +20,7 @@ const mockLicenseService = {
   getLicenseStatus: jest.fn().mockResolvedValue(mockProStatus),
   activate: jest.fn().mockResolvedValue(mockProStatus),
   revalidate: jest.fn().mockResolvedValue(mockProStatus),
+  activateAddon: jest.fn().mockResolvedValue(undefined),
 };
 
 describe('LicenseController', () => {

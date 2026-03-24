@@ -13,8 +13,8 @@ import { useDemoMode } from '@/hooks/use-demo-mode';
 import { DemoBanner } from '@/components/demo/DemoBanner';
 import { DeployButton } from '@/components/demo/DeployButton';
 import { UpgradeBanner } from '@/components/license/upgrade-banner';
-import { RetroDeskThemeProvider } from '@/components/backoffice/retrodesk/RetroDeskThemeProvider';
-import { isRetroDeskFamily } from '@/lib/backoffice/theme-registry';
+import { RetroDeskThemeProvider } from '@/components/retrodesk/RetroDeskThemeProvider';
+import { isRetroDeskFamily } from '@/lib/theme/theme-registry';
 import '@/styles/retrodesk-theme.css';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {

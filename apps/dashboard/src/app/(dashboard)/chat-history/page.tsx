@@ -17,8 +17,8 @@ import {
 } from 'lucide-react';
 import { toast, Badge, Button, Input, Skeleton } from '@bemindlabs/unicore-ui';
 import { api } from '@/lib/api';
-import { getAgents } from '@/lib/backoffice/store';
-import type { BackofficeAgent } from '@/lib/backoffice/types';
+import { getAgents } from '@/lib/agents/store';
+import type { BackofficeAgent } from '@/lib/agents/types';
 import { ConversationIntelligenceSidebar } from '@/components/chat-intelligence/ConversationIntelligenceSidebar';
 import { useIntelligenceStream } from '@/hooks/use-intelligence-stream';
 import { ContactProfileSidebar } from '@/components/conversations/contact-profile-sidebar';

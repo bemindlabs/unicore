@@ -2,7 +2,7 @@
 
 import type { BoardTask } from '@/lib/tasks/types';
 import { PRIORITY_CONFIG } from '@/lib/tasks/types';
-import { RetroDeskOnly, DefaultOnly } from '@/components/backoffice/retrodesk/RetroDeskThemeProvider';
+import { RetroDeskOnly, DefaultOnly } from '@/components/retrodesk/RetroDeskThemeProvider';
 import { RetroDeskTaskCard } from './RetroDeskTaskCard';
 
 function relativeTime(iso: string): string {

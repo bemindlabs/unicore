@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { resolveTheme, isRetroDeskFamily } from '@/lib/backoffice/theme-registry';
+import { resolveTheme, isRetroDeskFamily } from '@/lib/theme/theme-registry';
 
 type Theme = 'light' | 'dark';
 
@@ -49,7 +49,7 @@ export function useTheme() {
     }
   }, []);
 
-  /** Legacy toggle (light ↔ dark) used by non-backoffice pages. */
+  /** Legacy toggle (light ↔ dark) for non-themed pages. */
   const toggleTheme = useCallback(() => {
     setTheme((prev) => {
       const next = prev === 'light' ? 'dark' : 'light';
