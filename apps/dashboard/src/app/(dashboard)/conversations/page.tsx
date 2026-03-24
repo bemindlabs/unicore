@@ -396,6 +396,7 @@ function ConversationThread({
         authorId: msg.authorId,
         authorType: msg.authorType,
         channel: msg.channel,
+        isAiGenerated: msg.authorType === 'agent',
         timestamp: msg.timestamp ?? new Date().toISOString(),
       },
     ]);
