@@ -19,7 +19,7 @@ async function bootstrap() {
   await app.listen(httpPort);
 
   logger.log(`OpenClaw Gateway HTTP health server running on port ${httpPort}`);
-  logger.log('OpenClaw Gateway WebSocket hub running on wss://localhost:18789');
+  logger.log('OpenClaw Gateway WebSocket hub running on ws://localhost:18789');
 }
 
 bootstrap();
