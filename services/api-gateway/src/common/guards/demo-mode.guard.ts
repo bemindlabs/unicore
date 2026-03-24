@@ -1,8 +1,8 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException, Inject, Optional } from '@nestjs/common';
 import { AuditService } from '../../audit/audit.service';
 
-/** Paths that always pass through (auth, health, webhooks) */
-const PUBLIC_PATHS = ['/auth/', '/health', '/webhooks/', '/demo-status'];
+/** Paths that always pass through (auth, health, webhooks, license activation) */
+const PUBLIC_PATHS = ['/auth/', '/health', '/webhooks/', '/demo-status', '/api/v1/license/activate', '/api/v1/license/status', '/api/v1/license/revalidate'];
 
 /** Paths always blocked in demo mode (no user check — public endpoints like wizard) */
 const ALWAYS_BLOCKED_PATHS = [
