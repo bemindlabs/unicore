@@ -274,6 +274,40 @@ export class LicenseController {
   }
 
   /**
+   * POST /api/v1/license/activate-addon
+   * Activates an add-on feature (Geek CLI or AI-DLC) on the current license.
+   *
+   * Authentication: X-Platform-Secret header matching PLATFORM_CALLBACK_SECRET env var.
+   * Called by the unicore-platform addon-worker after a successful add-on purchase.
+   */
+  @Post('activate-addon')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  async activateAddon(
+    @Body() dto: ActivateAddonDto,
+    @Headers('x-platform-secret') platformSecret: string,
+  ) {
+    // Validate platform secret
+    const expectedSecret = process.env.PLATFORM_CALLBACK_SECRET;
+    if (!platformSecret || !expectedSecret || platformSecret !== expectedSecret) {
+      throw new UnauthorizedException('Invalid or missing X-Platform-Secret header');
+    }
+
+    try {
+      await this.licenseService.activateAddon(dto.addonType);
+    } catch (err) {
+      this.logger.error(
+        `Failed to activate add-on "${dto.addonType}": ${(err as Error).message}`,
+      );
+      throw new InternalServerErrorException(
+        `Failed to activate add-on: ${(err as Error).message}`,
+      );
+    }
+
+    return { success: true, addon: dto.addonType };
+  }
+
+  /**
    * POST /api/v1/license/revalidate
    * Forces an immediate re-validation against the license server.
    * Useful after updating the license key without restarting.
