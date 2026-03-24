@@ -7,13 +7,16 @@ import {
   Req,
   HttpCode,
   HttpStatus,
+  BadRequestException,
   ConflictException,
   InternalServerErrorException,
   UnauthorizedException,
   UseGuards,
+  Logger,
 } from '@nestjs/common';
 import { LicenseService } from './license.service';
 import { ActivateLicenseDto } from './dto/activate-license.dto';
+import { ActivateAddonDto } from './dto/activate-addon.dto';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { Public } from '../auth/decorators/public.decorator';
 
