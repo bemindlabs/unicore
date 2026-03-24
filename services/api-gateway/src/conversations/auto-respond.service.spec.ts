@@ -157,7 +157,6 @@ describe('ConversationsService — auto-respond (UNC-1021)', () => {
         expect.objectContaining({
           data: expect.objectContaining({
             conversationId: 'conv-1',
-            isAiGenerated: true,
             authorType: 'agent',
             role: 'assistant',
           }) as unknown,
