@@ -224,11 +224,7 @@ describe('InboundRouterService', () => {
       expect(mockGateway.emitMessageInbound).toHaveBeenCalled();
     });
 
-<<<<<<< HEAD
-    it('routes to assigned agent when conversation has assigneeId', async () => {
-=======
     it('routes to assigned agent when conversation has assignedAgentId', async () => {
->>>>>>> main
       const assignedConversation = { ...mockConversation, assigneeId: 'agent-42', status: 'ASSIGNED' };
       mockPrisma.conversation.findFirst.mockResolvedValue(assignedConversation);
 
