@@ -333,24 +333,15 @@ export default function AgentsPage() {
         </div>
       )}
 
-      {/* Backoffice link */}
+      {/* Virtual Office link */}
       <Link
-        href="/backoffice"
+        href="/virtual-office"
         className="flex items-center justify-center gap-2 rounded-lg border border-dashed p-4 text-sm text-muted-foreground hover:border-primary hover:text-primary transition-colors"
       >
         <Bot className="h-4 w-4" />
-        Open Backoffice — Full Agent Management
+        Open Virtual Office — Full Agent Management
         <ExternalLink className="h-3.5 w-3.5" />
       </Link>
-
-      {/* Terminal slide-in */}
-      {terminalAgent && (
-        <AgentTerminal
-          agent={terminalAgent}
-          open={!!terminalAgent}
-          onClose={() => setTerminalAgent(null)}
-        />
-      )}
     </div>
   );
 }
