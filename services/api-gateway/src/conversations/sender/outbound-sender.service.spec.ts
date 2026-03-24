@@ -1,4 +1,5 @@
 import { NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ChannelsService } from '../../channels/channels.service';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -89,12 +90,9 @@ describe('OutboundSenderService', () => {
         { provide: PrismaService, useValue: prismaMock },
         { provide: ChannelsService, useValue: channelsMock },
         { provide: ConversationsGateway, useValue: gatewayMock },
-        { provide: 'ConfigService', useValue: configMock },
+        { provide: ConfigService, useValue: configMock },
       ],
-    })
-      .overrideProvider('ConfigService')
-      .useValue(configMock)
-      .compile();
+    }).compile();
 
     service = module.get<OutboundSenderService>(OutboundSenderService);
   });

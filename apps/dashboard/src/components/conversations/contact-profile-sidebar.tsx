@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   User,
   ExternalLink,
@@ -22,14 +22,14 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from '@unicore/ui/components/sheet';
-import { Button } from '@unicore/ui/components/button';
-import { Badge } from '@unicore/ui/components/badge';
-import { Textarea } from '@unicore/ui/components/textarea';
-import { Input } from '@unicore/ui/components/input';
-import { Separator } from '@unicore/ui/components/separator';
-import { Skeleton } from '@unicore/ui/components/skeleton';
-import { toast } from '@unicore/ui/components/toast';
+  Button,
+  Badge,
+  Textarea,
+  Input,
+  Separator,
+  Skeleton,
+  toast,
+} from '@unicore/ui';
 import { api } from '@/lib/api';
 
 /* ------------------------------------------------------------------ */
@@ -423,7 +423,7 @@ export function ContactProfileSidebar({
   /* ------------------------------------------------------------------ */
 
   return (
-    <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Sheet open={open} onOpenChange={(v: boolean) => { if (!v) onClose(); }}>
       <SheetContent side="right" className="w-[400px] sm:w-[480px] overflow-y-auto p-0">
         {/* Header */}
         <SheetHeader className="px-5 pt-5 pb-4 border-b">
@@ -575,10 +575,10 @@ export function ContactProfileSidebar({
               <div className="space-y-2 mb-3">
                 <Textarea
                   value={noteText}
-                  onChange={(e) => setNoteText(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNoteText(e.target.value)}
                   placeholder={editingNote ? 'Edit note…' : 'Add a note…'}
                   className="text-xs min-h-[72px] resize-none"
-                  onKeyDown={(e) => {
+                  onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
                     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
                       e.preventDefault();
                       void handleSaveNote();
@@ -656,7 +656,7 @@ export function ContactProfileSidebar({
                   <Input
                     placeholder="Search by name or email…"
                     value={mergeSearch}
-                    onChange={(e) => setMergeSearch(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMergeSearch(e.target.value)}
                     className="text-xs h-8"
                   />
                   {mergeResults.length > 0 && (
@@ -667,7 +667,7 @@ export function ContactProfileSidebar({
                             type="checkbox"
                             id={`merge-${c.id}`}
                             checked={selectedDuplicates.has(c.id)}
-                            onChange={(e) => {
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                               setSelectedDuplicates((prev) => {
                                 const next = new Set(prev);
                                 if (e.target.checked) next.add(c.id);

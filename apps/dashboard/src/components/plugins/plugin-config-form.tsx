@@ -53,10 +53,10 @@ export interface JsonSchema {
 }
 
 // ---------------------------------------------------------------------------
-// Validation helpers
+// Validation helpers (exported for testing)
 // ---------------------------------------------------------------------------
 
-function validateField(key: string, schema: JsonSchemaProperty, value: unknown): string | null {
+export function validateField(key: string, schema: JsonSchemaProperty, value: unknown): string | null {
   const label = schema.title ?? key;
 
   if (schema.type === 'string' || !schema.type) {
@@ -86,7 +86,7 @@ function validateField(key: string, schema: JsonSchemaProperty, value: unknown):
   return null;
 }
 
-function validateAll(
+export function validateAll(
   schema: JsonSchema,
   values: Record<string, unknown>,
 ): Record<string, string> {
@@ -122,7 +122,7 @@ function validateAll(
 // Default value builders
 // ---------------------------------------------------------------------------
 
-function defaultForSchema(schema: JsonSchemaProperty): unknown {
+export function defaultForSchema(schema: JsonSchemaProperty): unknown {
   if (schema.default !== undefined) return schema.default;
   switch (schema.type) {
     case 'boolean': return false;
@@ -140,7 +140,7 @@ function defaultForSchema(schema: JsonSchemaProperty): unknown {
   }
 }
 
-function buildDefaults(schema: JsonSchema): Record<string, unknown> {
+export function buildDefaults(schema: JsonSchema): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [key, propSchema] of Object.entries(schema.properties ?? {})) {
     out[key] = defaultForSchema(propSchema);
@@ -427,7 +427,7 @@ export function PluginConfigForm({
     let cancelled = false;
     setIsLoading(true);
     api
-      .get<Record<string, unknown>>(`/api/v1/plugins/${pluginId}/config`)
+      .get<Record<string, unknown>>(`/api/v1/plugins/${pluginId}/configure`)
       .then((data) => {
         if (cancelled) return;
         setValues({ ...buildDefaults(configSchema), ...data });
@@ -463,7 +463,7 @@ export function PluginConfigForm({
 
     setIsSaving(true);
     try {
-      await api.put(`/api/v1/plugins/${pluginId}/config`, values);
+      await api.put(`/api/v1/plugins/${pluginId}/configure`, values);
       toast({ title: 'Configuration saved', description: `${pluginName} settings have been updated.` });
       onSaved?.();
       onClose();

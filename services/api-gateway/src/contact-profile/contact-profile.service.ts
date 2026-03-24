@@ -30,17 +30,6 @@ export class ContactProfileService {
     return res.json() as Promise<T>;
   }
 
-  private async erpPut<T = unknown>(path: string, body: unknown): Promise<T> {
-    const res = await fetch(`${ERP_BASE}/api/v1${path}`, {
-      method: 'PUT',
-      headers: INTERNAL_HEADER,
-      body: JSON.stringify(body),
-    });
-    if (res.status === 404) throw new NotFoundException(`ERP resource not found: ${path}`);
-    if (!res.ok) throw new BadRequestException(`ERP error ${res.status}: ${path}`);
-    return res.json() as Promise<T>;
-  }
-
   private async erpDelete(path: string): Promise<void> {
     const res = await fetch(`${ERP_BASE}/api/v1${path}`, {
       method: 'DELETE',
@@ -57,7 +46,7 @@ export class ContactProfileService {
   async getProfile(contactId: string) {
     const [erpContact, channels, notes, conversationHistory] = await Promise.all([
       this.erpGet(`/contacts/${contactId}`),
-      this.prisma.contactChannel.findMany({ where: { contactId }, orderBy: { createdAt: 'asc' } }),
+      this.prisma.contactChannel.findMany({ where: { erpContactId: contactId }, orderBy: { createdAt: 'asc' } }),
       this.prisma.agentNote.findMany({ where: { contactId }, orderBy: { createdAt: 'desc' } }),
       this.prisma.conversation.findMany({
         where: { contactId },
@@ -134,32 +123,34 @@ export class ContactProfileService {
   // ------------------------------------------------------------------
 
   async listChannels(contactId: string) {
-    return this.prisma.contactChannel.findMany({ where: { contactId }, orderBy: { channel: 'asc' } });
+    return this.prisma.contactChannel.findMany({ where: { erpContactId: contactId }, orderBy: { channel: 'asc' } });
   }
 
   async upsertChannel(contactId: string, dto: UpsertContactChannelDto) {
+    const channelEnum = dto.channel as import('../generated/prisma').ConversationChannel;
     return this.prisma.contactChannel.upsert({
-      where: { contactId_channel: { contactId, channel: dto.channel } },
+      where: { channel_externalId: { channel: channelEnum, externalId: dto.channelUserId } },
       create: {
-        contactId,
-        channel: dto.channel,
-        channelUserId: dto.channelUserId,
+        channel: channelEnum,
+        externalId: dto.channelUserId,
+        erpContactId: contactId,
         displayName: dto.displayName,
       },
       update: {
-        channelUserId: dto.channelUserId,
+        externalId: dto.channelUserId,
         displayName: dto.displayName,
-        isActive: true,
+        erpContactId: contactId,
       },
     });
   }
 
   async removeChannel(contactId: string, channel: string) {
-    const record = await this.prisma.contactChannel.findUnique({
-      where: { contactId_channel: { contactId, channel } },
+    const channelEnum = channel as import('../generated/prisma').ConversationChannel;
+    const record = await this.prisma.contactChannel.findFirst({
+      where: { erpContactId: contactId, channel: channelEnum },
     });
     if (!record) throw new NotFoundException(`Channel binding not found`);
-    await this.prisma.contactChannel.delete({ where: { contactId_channel: { contactId, channel } } });
+    await this.prisma.contactChannel.delete({ where: { id: record.id } });
     return { deleted: true };
   }
 
@@ -182,7 +173,7 @@ export class ContactProfileService {
         data: { contactId: dto.primaryId },
       }),
       this.prisma.contactChannel.deleteMany({
-        where: { contactId: { in: dto.duplicateIds } },
+        where: { erpContactId: { in: dto.duplicateIds } },
       }),
       this.prisma.conversation.updateMany({
         where: { contactId: { in: dto.duplicateIds } },

@@ -16,7 +16,7 @@ import type { NormalizedMessage } from './inbound-router.service';
  * receive live updates whenever a new message arrives from any channel
  * (Telegram, LINE, WhatsApp, email, webchat, etc.).
  *
- * WebSocket endpoint: ws://<host>:4000/webhooks-ws
+ * WebSocket endpoint: wss://<host>:4000/webhooks-ws
  * Events emitted:
  *   - inbound_message: { channel, senderId, senderName, text, timestamp, rawPayload? }
  */

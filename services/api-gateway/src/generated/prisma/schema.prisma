@@ -219,22 +219,29 @@ model Gamification {
 // ---------------------------------------------------------------------------
 
 model Plugin {
-  id            String               @id @default(uuid())
-  name          String
-  slug          String               @unique
-  type          String // 'integration' | 'ai' | 'workflow' | 'ui' | 'utility'
-  author        String
-  version       String // latest published version
-  description   String
-  icon          String?
-  downloads     Int                  @default(0)
-  rating        Float                @default(0)
-  versions      PluginVersion[]
-  installations PluginInstallation[]
-  createdAt     DateTime             @default(now())
-  updatedAt     DateTime             @updatedAt
+  id              String               @id @default(uuid())
+  name            String
+  slug            String               @unique
+  type            String // 'integration' | 'ai' | 'workflow' | 'ui' | 'utility'
+  author          String
+  version         String // latest published version
+  description     String
+  icon            String?
+  downloads       Int                  @default(0)
+  rating          Float                @default(0)
+  status          String               @default("draft") // 'draft' | 'pending' | 'approved' | 'rejected'
+  submittedBy     String? // userId of the developer who submitted
+  rejectionReason String?
+  reviewedBy      String? // userId of admin who reviewed
+  reviewedAt      DateTime?
+  versions        PluginVersion[]
+  installations   PluginInstallation[]
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
 
   @@index([type])
+  @@index([status])
+  @@index([submittedBy])
   @@map("plugins")
 }
 
@@ -428,7 +435,7 @@ model Message {
 }
 
 /// Operators or agents participating in a conversation
-// UNC-1031: extended with participantType, participantColor, autoAssigned, invitedBy, isActive
+// UNC-1031: extended with participantType, participantColor, autoAssigned, invitedBy, isActive, autoRespond
 model ConversationParticipant {
   id               String       @id @default(uuid())
   conversationId   String
@@ -446,7 +453,11 @@ model ConversationParticipant {
   autoAssigned     Boolean      @default(false)
   /// Who invited this participant (userId), null if self-joined or auto
   invitedBy        String?
+  /// Alias for invitedBy — userId who added this participant (UNC-1031)
+  addedBy          String?
   isActive         Boolean      @default(true)
+  /// When true, this AI agent will auto-respond to incoming messages (UNC-1031)
+  autoRespond      Boolean      @default(true)
   joinedAt         DateTime     @default(now())
   leftAt           DateTime?
   updatedAt        DateTime     @updatedAt
@@ -456,6 +467,25 @@ model ConversationParticipant {
   @@index([participantId])
   @@index([conversationId, isActive])
   @@map("conversation_participants")
+}
+
+// ---------------------------------------------------------------------------
+// Agent Notes (UNC-1013) — operator/agent notes on contact profiles
+// ---------------------------------------------------------------------------
+
+/// Notes written by operators or AI agents about a contact
+model AgentNote {
+  id         String   @id @default(uuid())
+  contactId  String
+  body       String
+  authorId   String
+  authorName String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([contactId])
+  @@index([authorId])
+  @@map("agent_notes")
 }
 
 // ---------------------------------------------------------------------------

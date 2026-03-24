@@ -5,6 +5,10 @@ import { ConversationsService } from './conversations.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { InviteParticipantType } from './dto/invite-participant.dto';
 
+const mockConfigService = {
+  get: jest.fn().mockReturnValue(undefined),
+};
+
 const mockPrisma = {
   conversation: {
     findMany: jest.fn(),

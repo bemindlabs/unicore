@@ -25,7 +25,7 @@ const VALID_AGENT_TYPES = new Set<string>([
 /**
  * MentionParserService
  *
- * Parses @agentType mentions from a user message to enable direct routing
+ * Parses `@agentType` mentions from a user message to enable direct routing
  * to specialist agents mid-conversation, bypassing LLM intent classification.
  *
  * Example: "@finance what is our Q3 burn rate?" routes directly to FinanceAgent
@@ -36,7 +36,7 @@ const VALID_AGENT_TYPES = new Set<string>([
 @Injectable()
 export class MentionParserService {
   /**
-   * Extract @mentions from content and strip the primary mention.
+   * Extract @mentions from `content` and strip the primary mention.
    *
    * @param content  Raw user message text.
    * @returns        Parse result containing the primary mention and cleaned content.

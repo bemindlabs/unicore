@@ -1,3 +1,4 @@
+// Updated: 2026-03-23
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -21,7 +22,10 @@ import {
   Bot,
   GitBranch,
   BarChart3,
-  Layers,
+  Plus,
+  Trash2,
+  Save,
+  Settings2,
 } from 'lucide-react';
 import {
   Badge,
@@ -36,6 +40,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  Input,
   Separator,
   Tabs,
   TabsContent,
@@ -204,6 +209,97 @@ const CATEGORY_ICONS: Record<PluginCategory, React.ElementType> = {
   analytics: BarChart3,
   security: Shield,
 };
+
+// ---------------------------------------------------------------------------
+// Config panel
+// ---------------------------------------------------------------------------
+
+interface ConfigEntry { key: string; value: string }
+
+function ConfigPanel({ slug, onSaved }: { slug: string; onSaved?: () => void }) {
+  const [entries, setEntries] = useState<ConfigEntry[]>([{ key: '', value: '' }]);
+  const [saving, setSaving] = useState(false);
+
+  function addEntry() {
+    setEntries((prev) => [...prev, { key: '', value: '' }]);
+  }
+
+  function removeEntry(idx: number) {
+    setEntries((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  function updateEntry(idx: number, field: 'key' | 'value', val: string) {
+    setEntries((prev) => prev.map((e, i) => (i === idx ? { ...e, [field]: val } : e)));
+  }
+
+  async function handleSave() {
+    const config: Record<string, unknown> = {};
+    for (const e of entries) {
+      if (e.key.trim()) config[e.key.trim()] = e.value;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/proxy/ai/plugins/${slug}/configure`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ config }),
+      });
+      if (!res.ok) throw new Error('Save failed');
+      toast({ title: 'Configuration saved', description: 'Plugin settings have been updated.' });
+      onSaved?.();
+    } catch {
+      toast({ title: 'Save failed', description: 'Could not save plugin configuration.', variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Add key-value configuration pairs for this plugin. Settings are stored securely and injected at runtime.
+      </p>
+      <div className="space-y-2">
+        {entries.map((entry, idx) => (
+          <div key={idx} className="flex gap-2">
+            <Input
+              placeholder="Key"
+              value={entry.key}
+              onChange={(e) => updateEntry(idx, 'key', e.target.value)}
+              className="font-mono text-sm"
+            />
+            <Input
+              placeholder="Value"
+              value={entry.value}
+              onChange={(e) => updateEntry(idx, 'value', e.target.value)}
+              className="font-mono text-sm"
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="shrink-0 text-muted-foreground hover:text-destructive"
+              onClick={() => removeEntry(idx)}
+              disabled={entries.length === 1}
+              aria-label="Remove entry"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <Button variant="outline" size="sm" onClick={addEntry}>
+          <Plus className="mr-1.5 h-3.5 w-3.5" />
+          Add field
+        </Button>
+        <Button size="sm" onClick={handleSave} disabled={saving}>
+          <Save className="mr-1.5 h-3.5 w-3.5" />
+          {saving ? 'Saving…' : 'Save configuration'}
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -621,6 +717,12 @@ export default function PluginDetailPage() {
                     {plugin.reviewCount}
                   </Badge>
                 </TabsTrigger>
+                {installed && (
+                  <TabsTrigger value="configure">
+                    <Settings2 className="mr-1.5 h-3.5 w-3.5" />
+                    Configure
+                  </TabsTrigger>
+                )}
               </TabsList>
 
               <TabsContent value="overview" className="mt-4 space-y-4">
@@ -685,6 +787,22 @@ export default function PluginDetailPage() {
                   </CardContent>
                 </Card>
               </TabsContent>
+
+              {installed && (
+                <TabsContent value="configure" className="mt-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Settings2 className="h-4 w-4" />
+                        Plugin Configuration
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ConfigPanel slug={plugin.slug} />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              )}
             </Tabs>
           </div>
 

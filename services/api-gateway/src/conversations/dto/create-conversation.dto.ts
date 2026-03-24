@@ -1,5 +1,19 @@
 import { IsString, IsOptional, MaxLength, IsEmail } from 'class-validator';
 
+/** Enum mirror of the ConversationChannel Prisma enum for DTO validation */
+export enum ConversationChannelDto {
+  TELEGRAM = 'TELEGRAM',
+  LINE = 'LINE',
+  FACEBOOK = 'FACEBOOK',
+  INSTAGRAM = 'INSTAGRAM',
+  WHATSAPP = 'WHATSAPP',
+  SLACK = 'SLACK',
+  DISCORD = 'DISCORD',
+  EMAIL = 'EMAIL',
+  SMS = 'SMS',
+  LIVE_CHAT = 'LIVE_CHAT',
+}
+
 export class CreateConversationDto {
   @IsOptional()
   @IsString()

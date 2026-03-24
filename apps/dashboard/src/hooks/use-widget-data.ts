@@ -6,11 +6,9 @@ import type { WidgetData, WidgetType } from '@/types/widget';
 
 type FetcherKey = keyof typeof widgetDataFetchers;
 
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true' || process.env.NODE_ENV === 'development';
-
 /**
  * Generic hook that fetches data for any widget type.
- * Falls back to mock data when the API is unavailable or in development mode.
+ * Always calls the real API first; falls back to mock data when the API fails.
  */
 export function useWidgetData<T>(
   type: WidgetType,
@@ -31,19 +29,9 @@ export function useWidgetData<T>(
     setError(null);
 
     try {
-      let result: T;
-
-      if (USE_MOCK) {
-        // Simulate slight network delay in mock mode
-        await new Promise((resolve) => setTimeout(resolve, 100 + Math.random() * 200));
-        const mockFn = mockWidgetData[type as keyof typeof mockWidgetData];
-        if (!mockFn) throw new Error(`No mock data for widget type: ${type}`);
-        result = (mockFn as () => T)();
-      } else {
-        const fetcher = widgetDataFetchers[type as FetcherKey];
-        if (!fetcher) throw new Error(`No fetcher for widget type: ${type}`);
-        result = (await (fetcher as (o: Record<string, unknown>) => Promise<T>)(options ?? {})) as T;
-      }
+      const fetcher = widgetDataFetchers[type as FetcherKey];
+      if (!fetcher) throw new Error(`No fetcher for widget type: ${type}`);
+      const result = (await (fetcher as (o: Record<string, unknown>) => Promise<T>)(options ?? {})) as T;
 
       if (mountedRef.current) {
         setData(result);

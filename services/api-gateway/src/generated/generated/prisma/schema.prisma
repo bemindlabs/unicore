@@ -1,0 +1,600 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  name          String
+  password      String?
+  role          Role           @default(VIEWER)
+  sessions      Session[]
+  notifications Notification[]
+  oauthAccounts OAuthAccount[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model OAuthAccount {
+  id                String   @id @default(uuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider          String // "google" | "github"
+  providerAccountId String
+  email             String?
+  name              String?
+  avatarUrl         String?
+  accessToken       String?
+  refreshToken      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("oauth_accounts")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token        String   @unique
+  refreshToken String?  @unique
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+}
+
+enum Role {
+  OWNER
+  OPERATOR
+  MARKETER
+  FINANCE
+  VIEWER
+}
+
+// ---------------------------------------------------------------------------
+// Custom Domain Routing (UNC-55)
+// ---------------------------------------------------------------------------
+
+/// A custom domain owned by a tenant, used to route incoming requests.
+model CustomDomain {
+  id             String   @id @default(uuid())
+  /// Normalized hostname without port (e.g. "app.acme.com")
+  hostname       String   @unique
+  /// UUID of the owning tenant
+  tenantId       String
+  /// DNS-verified flag — unverified domains are stored but not routed
+  isVerified     Boolean  @default(false)
+  /// Allowed CORS origins for this domain (JSON array stored as Text[])
+  allowedOrigins String[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("custom_domains")
+}
+
+// ---------------------------------------------------------------------------
+// Audit Logging
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  timestamp  DateTime @default(now())
+  userId     String?
+  userEmail  String?
+  action     String // create, update, delete, login, logout
+  resource   String // contacts, orders, users, auth
+  resourceId String?
+  detail     String? // e.g. "Created contact John Doe"
+  ip         String?
+  success    Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  @@index([timestamp])
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+  @@map("audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Settings Persistence (key-value JSON store for dashboard settings)
+// ---------------------------------------------------------------------------
+
+model Settings {
+  id        String   @id @default("default")
+  data      Json     @default("{}")
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Tasks Board
+// ---------------------------------------------------------------------------
+
+model Task {
+  id            String    @id @default(uuid())
+  title         String
+  description   String?
+  status        String    @default("todo")
+  priority      String    @default("medium")
+  labels        String[]  @default([])
+  assigneeId    String?
+  assigneeType  String?
+  assigneeName  String?
+  assigneeColor String?
+  creatorId     String
+  creatorType   String    @default("human")
+  progress      Int       @default(0)
+  agentTaskRef  String?
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([status])
+  @@map("tasks")
+}
+
+// ---------------------------------------------------------------------------
+// Chat History (UNC-118)
+// ---------------------------------------------------------------------------
+
+model ChatHistory {
+  id                String    @id @default(uuid())
+  agentId           String
+  agentName         String
+  userId            String
+  userName          String
+  messages          Json      @default("[]")
+  summary           String?
+  channel           String    @default("command")
+  aiSummary         String?
+  sentimentOverall  String? // 'positive' | 'neutral' | 'negative'
+  messageSentiments Json      @default("[]")
+  intentHistory     Json      @default("[]")
+  keyEntities       Json      @default("[]")
+  intelligenceAt    DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([agentId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([agentId, createdAt])
+  @@index([userId, createdAt])
+  @@map("chat_histories")
+}
+
+// ---------------------------------------------------------------------------
+// Chat Messages (OpenClaw WebSocket persistence)
+// Individual persisted messages for history, replay, and dashboard load.
+// ---------------------------------------------------------------------------
+
+model ChatMessage {
+  id          String   @id @default(uuid())
+  messageId   String   @unique
+  channel     String
+  fromAgentId String
+  data        Json     @default("{}")
+  createdAt   DateTime @default(now())
+
+  @@index([channel])
+  @@index([channel, createdAt])
+  @@index([fromAgentId])
+  @@map("chat_messages")
+}
+
+// ---------------------------------------------------------------------------
+// Gamification (UNC-523) — Geek CLI game stats synced from CLI clients
+// ---------------------------------------------------------------------------
+
+model Gamification {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  xp              Int      @default(0)
+  level           Int      @default(1)
+  tier            String   @default("Intern")
+  currentStreak   Int      @default(0)
+  longestStreak   Int      @default(0)
+  achievements    Json     @default("[]")
+  actionCounts    Json     @default("{}")
+  totalPlayTimeMs Int      @default(0)
+  lastSyncedAt    DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([xp])
+  @@index([level])
+  @@map("gamification")
+}
+
+// ---------------------------------------------------------------------------
+// Plugin Registry (UNC-537)
+// ---------------------------------------------------------------------------
+
+model Plugin {
+  id            String               @id @default(uuid())
+  name          String
+  slug          String               @unique
+  type          String // 'integration' | 'ai' | 'workflow' | 'ui' | 'utility'
+  author        String
+  version       String // latest published version
+  description   String
+  icon          String?
+  downloads     Int                  @default(0)
+  rating        Float                @default(0)
+  versions      PluginVersion[]
+  installations PluginInstallation[]
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  @@index([type])
+  @@map("plugins")
+}
+
+model PluginVersion {
+  id            String   @id @default(uuid())
+  pluginId      String
+  plugin        Plugin   @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  semver        String
+  changelog     String?
+  artifactUrl   String
+  checksum      String
+  compatibility Json     @default("{}") // { minApiVersion?, maxApiVersion?, nodeVersion? }
+  createdAt     DateTime @default(now())
+
+  @@unique([pluginId, semver])
+  @@index([pluginId])
+  @@map("plugin_versions")
+}
+
+model PluginInstallation {
+  id          String   @id @default(uuid())
+  instanceId  String
+  pluginId    String
+  plugin      Plugin   @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  version     String
+  enabled     Boolean  @default(true)
+  config      Json     @default("{}")
+  installedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([instanceId, pluginId])
+  @@index([instanceId])
+  @@index([pluginId])
+  @@map("plugin_installations")
+}
+
+// ---------------------------------------------------------------------------
+// Omni-Channel Conversation Hub (UNC-1014)
+// ---------------------------------------------------------------------------
+
+enum ConversationChannel {
+  TELEGRAM
+  LINE
+  FACEBOOK
+  INSTAGRAM
+  WHATSAPP
+  SLACK
+  DISCORD
+  EMAIL
+  SMS
+  LIVE_CHAT
+}
+
+enum ConversationStatus {
+  OPEN
+  PENDING
+  ASSIGNED
+  RESOLVED
+  CLOSED
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  AUDIO
+  VIDEO
+  STICKER
+  LOCATION
+  TEMPLATE
+  SYSTEM
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+/// A contact's identity on a specific messaging channel
+model ContactChannel {
+  id            String              @id @default(uuid())
+  channel       ConversationChannel
+  /// Unique identifier on the channel (e.g. Telegram user_id, LINE userId)
+  externalId    String
+  displayName   String?
+  avatarUrl     String?
+  /// Raw profile metadata from the channel
+  metadata      Json                @default("{}")
+  /// Link to an ERP contact after de-duplication
+  erpContactId  String?
+  conversations Conversation[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@unique([channel, externalId])
+  @@index([channel])
+  @@index([erpContactId])
+  @@map("contact_channels")
+}
+
+/// An omni-channel conversation thread
+model Conversation {
+  id               String                    @id @default(uuid())
+  channel          ConversationChannel
+  status           ConversationStatus        @default(OPEN)
+  subject          String?
+  title            String?
+  /// The dashboard user who owns / created this conversation
+  userId           String?
+  /// Assigned operator name
+  assigneeName     String?
+  contactId        String?
+  contactName      String?
+  contactEmail     String?
+  /// External conversation/room ID from the originating channel
+  externalId       String?
+  /// Assigned operator user ID
+  assigneeId       String?
+  /// When true, inbound messages are routed to the Router Agent automatically (UNC-1021)
+  autoRespond      Boolean                   @default(false)
+  contactChannelId String?
+  contactChannel   ContactChannel?           @relation(fields: [contactChannelId], references: [id])
+  messages         Message[]
+  convMessages     ConversationMessage[]
+  participants     ConversationParticipant[]
+  resolvedAt       DateTime?
+  closedAt         DateTime?
+  lastMessageAt    DateTime?
+  metadata         Json                      @default("{}")
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+
+  @@index([channel])
+  @@index([status])
+  @@index([userId])
+  @@index([assigneeId])
+  @@index([externalId])
+  @@index([contactChannelId])
+  @@index([lastMessageAt])
+  @@map("conversations")
+}
+
+/// Operator/agent messages in a conversation (simple model for dashboard hub)
+model ConversationMessage {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  content        String?
+  /// 'user' | 'assistant' | 'system'
+  role           String       @default("user")
+  authorId       String?
+  authorName     String?
+  /// 'human' | 'agent' | 'system'
+  authorType     String       @default("human")
+  metadata       Json         @default("{}")
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+  @@index([conversationId, createdAt])
+  @@map("conversation_messages")
+}
+
+/// A single message within a conversation (inbound or outbound)
+model Message {
+  id             String           @id @default(uuid())
+  conversationId String
+  conversation   Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  direction      MessageDirection
+  type           MessageType      @default(TEXT)
+  content        String?
+  /// Attachments: [{ url, mimeType, filename, size }]
+  attachments    Json             @default("[]")
+  /// External message ID from the channel
+  externalId     String?
+  /// Sender: { id, name, avatarUrl, type: 'contact'|'operator'|'bot' }
+  sender         Json             @default("{}")
+  isRead         Boolean          @default(false)
+  readAt         DateTime?
+  deliveredAt    DateTime?
+  failedAt       DateTime?
+  errorMessage   String?
+  /// True when this message was generated by an AI agent via auto-respond (UNC-1021)
+  isAiGenerated  Boolean          @default(false)
+  metadata       Json             @default("{}")
+  createdAt      DateTime         @default(now())
+
+  @@index([conversationId])
+  @@index([conversationId, createdAt])
+  @@index([externalId])
+  @@map("messages")
+}
+
+/// Operators or agents participating in a conversation
+// UNC-1031: extended with participantType, participantColor, autoAssigned, invitedBy, isActive, autoRespond
+model ConversationParticipant {
+  id               String       @id @default(uuid())
+  conversationId   String
+  conversation     Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  /// Agent ID (OpenClaw registry) or User ID
+  participantId    String
+  /// "human" | "ai" | "USER" | "AGENT"
+  participantType  String       @default("human")
+  participantName  String
+  /// Hex colour for avatar badge (e.g. "#6366f1")
+  participantColor String       @default("#6366f1")
+  /// Role in the conversation: 'OWNER' | 'MEMBER' | 'operator'
+  role             String       @default("operator")
+  /// True when the participant was auto-assigned (not manually invited)
+  autoAssigned     Boolean      @default(false)
+  /// Who invited this participant (userId), null if self-joined or auto
+  invitedBy        String?
+  /// Alias for invitedBy — userId who added this participant (UNC-1031)
+  addedBy          String?
+  isActive         Boolean      @default(true)
+  /// When true, this AI agent will auto-respond to incoming messages (UNC-1031)
+  autoRespond      Boolean      @default(true)
+  joinedAt         DateTime     @default(now())
+  leftAt           DateTime?
+  updatedAt        DateTime     @updatedAt
+
+  @@unique([conversationId, participantId, participantType])
+  @@index([conversationId])
+  @@index([participantId])
+  @@index([conversationId, isActive])
+  @@map("conversation_participants")
+}
+
+// ---------------------------------------------------------------------------
+// Agent Notes (UNC-1013) — operator/agent notes on contact profiles
+// ---------------------------------------------------------------------------
+
+/// Notes written by operators or AI agents about a contact
+model AgentNote {
+  id         String   @id @default(uuid())
+  contactId  String
+  body       String
+  authorId   String
+  authorName String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([contactId])
+  @@index([authorId])
+  @@map("agent_notes")
+}
+
+// ---------------------------------------------------------------------------
+// Channel Messages (UNC-1016) — normalized inbound messages from all channels
+// ---------------------------------------------------------------------------
+
+model ChannelMessage {
+  id             String   @id @default(uuid())
+  /// Source channel: telegram | line | whatsapp | discord | slack | email | webchat
+  channel        String
+  /// Message ID as provided by the source channel
+  externalId     String
+  /// Chat / room / conversation ID in the source channel
+  conversationId String
+  senderId       String
+  senderName     String
+  senderAvatar   String?
+  /// Extracted plain-text content
+  text           String
+  /// Primary content type: text | image | video | audio | file | sticker | location | unknown
+  contentType    String   @default("text")
+  /// JSON array of MessageAttachment objects
+  attachments    Json     @default("[]")
+  /// External message ID being replied to, if applicable
+  replyToId      String?
+  isBot          Boolean  @default(false)
+  /// Original send time reported by the source channel
+  timestamp      DateTime
+  /// Channel-specific extras (thread_ts, subject, etc.)
+  metadata       Json     @default("{}")
+  /// Verbatim raw payload for audit / replay
+  rawPayload     Json
+  createdAt      DateTime @default(now())
+
+  @@unique([channel, externalId])
+  @@index([conversationId])
+  @@index([channel, conversationId])
+  @@index([channel, createdAt])
+  @@map("channel_messages")
+}
+
+// ---------------------------------------------------------------------------
+// Notifications
+// ---------------------------------------------------------------------------
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // 'info' | 'warning' | 'success' | 'error'
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  link      String? // optional link to navigate to
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
+
+// ---------------------------------------------------------------------------
+// Agent Handoff (UNC-1027)
+// Tracks escalations from AI to human and back, with SLA timers.
+// ---------------------------------------------------------------------------
+
+model Handoff {
+  id             String    @id @default(uuid())
+  /// Link to Conversation record (optional)
+  conversationId String?
+  /// WebSocket channel / session ID (e.g. "chat-agent-router")
+  channel        String
+  /// The end-user's ID whose conversation is being escalated
+  userId         String
+  /// What triggered the handoff
+  trigger        String // 'low_confidence' | 'explicit_request' | 'user_request'
+  /// AI confidence score at time of escalation (0-1); null for non-AI triggers
+  confidence     Float?
+  /// Current lifecycle state
+  status         String    @default("pending") // 'pending' | 'active' | 'resolved' | 'ai_resumed'
+  /// Human operator who claimed this handoff
+  assignedTo     String?
+  /// AI-generated context summary passed to the human agent
+  contextSummary String?
+  /// SLA window in minutes (default 15)
+  slaMinutes     Int       @default(15)
+  /// Hard deadline — computed as createdAt + slaMinutes
+  slaDeadline    DateTime
+  /// Set to true once the deadline passes without resolution
+  slaBreached    Boolean   @default(false)
+  resolvedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([status])
+  @@index([userId])
+  @@index([channel])
+  @@index([assignedTo])
+  @@index([slaDeadline])
+  @@map("handoffs")
+}
+
+// ---------------------------------------------------------------------------
+// Canned Responses (UNC-1020) — pre-written reply shortcuts for the composer
+// ---------------------------------------------------------------------------
+
+model CannedResponse {
+  id        String   @id @default(uuid())
+  shortcut  String   @unique
+  text      String
+  category  String?
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([shortcut])
+  @@map("canned_responses")
+}

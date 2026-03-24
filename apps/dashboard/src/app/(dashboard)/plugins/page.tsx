@@ -1,7 +1,10 @@
 'use client';
 
+// Updated: 2026-03-23
+
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import { api } from '@/lib/api';
 import {
   Bot,
   Search,
@@ -16,7 +19,6 @@ import {
   TrendingUp,
   Sparkles,
   ArrowUpDown,
-  Info,
   Database,
   Code2,
   Palette,
@@ -80,155 +82,6 @@ interface Plugin {
   createdAt: string;
 }
 
-const MOCK_PLUGINS: Plugin[] = [
-  {
-    id: '1', slug: 'gpt-4o-agent', name: 'GPT-4o Agent',
-    description: 'Deploy a powerful GPT-4o powered agent with advanced reasoning and multimodal capabilities.',
-    author: 'OpenAI Labs', version: '2.1.0', category: 'agents',
-    tags: ['gpt-4o', 'multimodal', 'reasoning'], rating: 4.8, reviewCount: 234,
-    installCount: 15420, icon: '🤖', price: null, featured: true, createdAt: '2025-12-01',
-  },
-  {
-    id: '2', slug: 'slack-channel', name: 'Slack Integration',
-    description: 'Connect your UniCore agents to Slack workspaces with rich message formatting and event hooks.',
-    author: 'UniCore Team', version: '1.4.2', category: 'channels',
-    tags: ['slack', 'messaging', 'notifications'], rating: 4.6, reviewCount: 189,
-    installCount: 12300, icon: '💬', price: null, featured: true, createdAt: '2025-11-15',
-  },
-  {
-    id: '3', slug: 'advanced-analytics', name: 'Advanced Analytics',
-    description: 'Funnel analysis, cohort tracking, retention metrics, and custom event dashboards.',
-    author: 'DataCraft', version: '3.0.1', category: 'analytics',
-    tags: ['analytics', 'metrics', 'dashboards'], rating: 4.7, reviewCount: 156,
-    installCount: 9870, icon: '📊', price: 29, featured: true, createdAt: '2025-10-20',
-  },
-  {
-    id: '4', slug: 'n8n-workflow-bridge', name: 'n8n Workflow Bridge',
-    description: 'Bridge UniCore workflows with n8n automation flows for 400+ integrations.',
-    author: 'n8n Community', version: '1.2.0', category: 'workflows',
-    tags: ['n8n', 'automation', 'integration'], rating: 4.5, reviewCount: 98,
-    installCount: 7650, icon: '🔀', price: null, createdAt: '2025-11-05',
-  },
-  {
-    id: '5', slug: 'crm-pro-app', name: 'CRM Pro',
-    description: 'Enhanced CRM with deal pipelines, email sequences, and lead scoring automation.',
-    author: 'SalesTech Inc.', version: '2.3.0', category: 'apps',
-    tags: ['crm', 'sales', 'pipeline'], rating: 4.4, reviewCount: 203,
-    installCount: 11200, icon: '🏆', price: 49, createdAt: '2025-09-30',
-  },
-  {
-    id: '6', slug: 'waf-security', name: 'WAF & Security Monitor',
-    description: 'Web Application Firewall with real-time threat detection and automatic IP blocking.',
-    author: 'SecureCore Labs', version: '1.8.3', category: 'security',
-    tags: ['waf', 'security', 'firewall'], rating: 4.9, reviewCount: 87,
-    installCount: 5430, icon: '🛡️', price: 19, featured: true, createdAt: '2025-12-10',
-  },
-  {
-    id: '7', slug: 'discord-bot', name: 'Discord Bot Builder',
-    description: 'Create and deploy Discord bots powered by your UniCore AI agents.',
-    author: 'BotForge', version: '1.1.0', category: 'channels',
-    tags: ['discord', 'bot', 'community'], rating: 4.3, reviewCount: 145,
-    installCount: 8900, icon: '🎮', price: null, createdAt: '2025-11-28',
-  },
-  {
-    id: '8', slug: 'langchain-agent', name: 'LangChain Agent',
-    description: 'Run LangChain chains and agents directly within the UniCore agent framework.',
-    author: 'LangChain OSS', version: '0.9.1', category: 'agents',
-    tags: ['langchain', 'chains', 'tools'], rating: 4.2, reviewCount: 112,
-    installCount: 6700, icon: '🔗', price: null, createdAt: '2025-10-15',
-  },
-  {
-    id: '9', slug: 'zapier-connect', name: 'Zapier Connect',
-    description: '5000+ app integrations via Zapier triggers and actions for your workflows.',
-    author: 'Zapier Corp', version: '2.0.0', category: 'workflows',
-    tags: ['zapier', 'automation', 'triggers'], rating: 4.6, reviewCount: 267,
-    installCount: 19800, icon: '⚡', price: null, createdAt: '2025-08-20',
-  },
-  {
-    id: '10', slug: 'hr-module', name: 'HR & Payroll Module',
-    description: 'Employee management, leave tracking, payroll, and performance reviews.',
-    author: 'HRCore', version: '1.5.2', category: 'apps',
-    tags: ['hr', 'payroll', 'employees'], rating: 4.3, reviewCount: 78,
-    installCount: 4200, icon: '👥', price: 39, createdAt: '2025-09-10',
-  },
-  {
-    id: '11', slug: 'whatsapp-channel', name: 'WhatsApp Business',
-    description: 'Official WhatsApp Business API integration with template messages and media support.',
-    author: 'UniCore Team', version: '1.3.1', category: 'channels',
-    tags: ['whatsapp', 'messaging', 'business'], rating: 4.7, reviewCount: 321,
-    installCount: 22100, icon: '📱', price: null, featured: true, createdAt: '2025-07-15',
-  },
-  {
-    id: '12', slug: 'seo-analyzer', name: 'SEO Analyzer',
-    description: 'AI-powered SEO analysis, keyword tracking, and content optimization suggestions.',
-    author: 'SEOBot', version: '1.0.4', category: 'analytics',
-    tags: ['seo', 'keywords', 'content'], rating: 4.1, reviewCount: 56,
-    installCount: 3100, icon: '🔍', price: 15, createdAt: '2025-12-05',
-  },
-  {
-    id: '13', slug: 'postgres-connector', name: 'PostgreSQL Connector',
-    description: 'Query and sync PostgreSQL databases directly from workflows and agents.',
-    author: 'DataBridge Labs', version: '1.0.0', category: 'data',
-    tags: ['postgres', 'database', 'sql'], rating: 4.6, reviewCount: 94,
-    installCount: 8100, icon: '🗄️', price: null, featured: true, createdAt: '2025-11-20',
-  },
-  {
-    id: '14', slug: 'csv-importer', name: 'CSV / Excel Importer',
-    description: 'Bulk import and transform CSV and Excel files into structured data with AI mapping.',
-    author: 'SheetFlow', version: '2.0.3', category: 'data',
-    tags: ['csv', 'excel', 'import'], rating: 4.4, reviewCount: 132,
-    installCount: 10500, icon: '📋', price: null, createdAt: '2025-10-10',
-  },
-  {
-    id: '15', slug: 'redis-cache', name: 'Redis Cache Manager',
-    description: 'Manage Redis caches, TTL policies, and key patterns from a visual dashboard.',
-    author: 'CacheOps', version: '1.2.1', category: 'data',
-    tags: ['redis', 'cache', 'performance'], rating: 4.3, reviewCount: 41,
-    installCount: 2900, icon: '⚡', price: 9, createdAt: '2025-12-08',
-  },
-  {
-    id: '16', slug: 'api-tester', name: 'API Tester',
-    description: 'Postman-like REST and GraphQL client embedded in your UniCore dashboard.',
-    author: 'DevKit', version: '1.5.0', category: 'dev-tools',
-    tags: ['api', 'rest', 'testing'], rating: 4.7, reviewCount: 178,
-    installCount: 13600, icon: '🔧', price: null, featured: true, createdAt: '2025-09-25',
-  },
-  {
-    id: '17', slug: 'log-viewer', name: 'Log Viewer Pro',
-    description: 'Real-time log streaming, structured search, and alerting for all UniCore services.',
-    author: 'LogStack', version: '2.1.0', category: 'dev-tools',
-    tags: ['logs', 'monitoring', 'debugging'], rating: 4.5, reviewCount: 89,
-    installCount: 7200, icon: '📝', price: 12, createdAt: '2025-11-01',
-  },
-  {
-    id: '18', slug: 'openapi-generator', name: 'OpenAPI Generator',
-    description: 'Auto-generate TypeScript and Python SDK clients from your OpenAPI 3.0 specs.',
-    author: 'CodeGen OSS', version: '1.0.0', category: 'dev-tools',
-    tags: ['openapi', 'sdk', 'codegen'], rating: 4.2, reviewCount: 54,
-    installCount: 4400, icon: '⚙️', price: null, createdAt: '2025-12-12',
-  },
-  {
-    id: '19', slug: 'dark-pro-theme', name: 'Dark Pro Theme',
-    description: 'Sleek dark theme with customizable accent colors, glassmorphism panels, and smooth animations.',
-    author: 'UniCore Design', version: '1.0.0', category: 'themes',
-    tags: ['dark', 'design', 'ui'], rating: 4.8, reviewCount: 203,
-    installCount: 18700, icon: '🌙', price: null, featured: true, createdAt: '2025-10-30',
-  },
-  {
-    id: '20', slug: 'retro-terminal-theme', name: 'Retro Terminal',
-    description: 'Green-on-black terminal aesthetic with scan-line effects and monospace typography.',
-    author: 'RetroUI', version: '2.0.0', category: 'themes',
-    tags: ['retro', 'terminal', 'green'], rating: 4.6, reviewCount: 117,
-    installCount: 9300, icon: '💻', price: null, createdAt: '2025-11-10',
-  },
-  {
-    id: '21', slug: 'brand-kit-theme', name: 'Brand Kit',
-    description: 'Upload your logo and set brand colors — generate a fully customized white-label dashboard.',
-    author: 'WhiteLabel Studio', version: '1.4.0', category: 'themes',
-    tags: ['branding', 'white-label', 'custom'], rating: 4.5, reviewCount: 76,
-    installCount: 5800, icon: '🎨', price: 19, createdAt: '2025-09-18',
-  },
-];
 
 const CATEGORIES: { value: PluginCategory; label: string; icon: React.ElementType }[] = [
   { value: 'all', label: 'All', icon: Layers },
@@ -251,19 +104,6 @@ const SORT_OPTIONS = [
 
 const PAGE_SIZE = 12;
 
-async function fetchPluginsFromAPI(): Promise<Plugin[] | null> {
-  try {
-    const res = await fetch('/api/proxy/bootstrap/plugins', {
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (Array.isArray(data) && data.length > 0) return data;
-    return null;
-  } catch {
-    return null;
-  }
-}
 
 function PriceLabel({ price }: { price: number | null }) {
   if (price === null) {
@@ -459,12 +299,10 @@ function PluginDetailDialog({
   plugin,
   open,
   onClose,
-  isPreview,
 }: {
   plugin: Plugin | null;
   open: boolean;
   onClose: () => void;
-  isPreview: boolean;
 }) {
   if (!plugin) return null;
 
@@ -536,11 +374,6 @@ function PluginDetailDialog({
             </div>
           </div>
 
-          {isPreview && (
-            <p className="text-xs italic text-muted-foreground">
-              This is sample data. Live plugin details will be available when the Plugin API is connected.
-            </p>
-          )}
         </div>
       </DialogContent>
     </Dialog>
@@ -551,21 +384,26 @@ export default function PluginsMarketplacePage() {
   const [category, setCategory] = useState<PluginCategory>('all');
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('popular');
-  const [plugins, setPlugins] = useState<Plugin[]>(MOCK_PLUGINS);
-  const [isPreview, setIsPreview] = useState(true);
+  const [plugins, setPlugins] = useState<Plugin[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedPlugin, setSelectedPlugin] = useState<Plugin | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [page, setPage] = useState(1);
 
   useEffect(() => {
     let cancelled = false;
-    fetchPluginsFromAPI().then((data) => {
-      if (cancelled) return;
-      if (data) {
-        setPlugins(data);
-        setIsPreview(false);
-      }
-    });
+    setLoading(true);
+    api.get<Plugin[]>('/api/v1/plugins')
+      .then((data) => {
+        if (cancelled) return;
+        setPlugins(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        if (!cancelled) setPlugins([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
     return () => { cancelled = true; };
   }, []);
 
@@ -610,14 +448,7 @@ export default function PluginsMarketplacePage() {
             <Puzzle className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold tracking-tight">Plugin Marketplace</h1>
-              {isPreview && (
-                <Badge variant="secondary" className="text-xs font-normal">
-                  Preview
-                </Badge>
-              )}
-            </div>
+            <h1 className="text-2xl font-bold tracking-tight">Plugin Marketplace</h1>
             <p className="text-muted-foreground">Extend UniCore with community and official plugins</p>
           </div>
         </div>
@@ -627,20 +458,6 @@ export default function PluginsMarketplacePage() {
           </Button>
         </div>
       </div>
-
-      {/* Preview Banner */}
-      {isPreview && (
-        <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950/50">
-          <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600 dark:text-blue-400" />
-          <div className="flex-1 text-sm text-blue-800 dark:text-blue-300">
-            <p className="font-medium">Plugin Marketplace (Preview)</p>
-            <p className="mt-0.5 text-blue-700 dark:text-blue-400">
-              You are viewing sample plugins. The marketplace will be connected to the Plugin API in a future update.
-              Plugin installation is not yet available.
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Search + Sort */}
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -668,8 +485,24 @@ export default function PluginsMarketplacePage() {
         </Select>
       </div>
 
+      {/* Loading skeleton */}
+      {loading && (
+        <div className="space-y-6">
+          <div className="flex gap-4 overflow-hidden">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-48 w-64 flex-shrink-0 animate-pulse rounded-xl bg-muted" />
+            ))}
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="h-44 animate-pulse rounded-xl bg-muted" />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Featured Carousel */}
-      {showFeatured && (
+      {!loading && showFeatured && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
@@ -680,7 +513,7 @@ export default function PluginsMarketplacePage() {
       )}
 
       {/* Category Tabs */}
-      <Tabs value={category} onValueChange={(v) => setCategory(v as PluginCategory)}>
+      {!loading && <Tabs value={category} onValueChange={(v) => setCategory(v as PluginCategory)}>
         <TabsList className="flex h-auto flex-wrap gap-1 bg-transparent p-0">
           {CATEGORIES.map(({ value, label, icon: Icon }) => (
             <TabsTrigger
@@ -699,8 +532,10 @@ export default function PluginsMarketplacePage() {
             {paginated.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <Puzzle className="mb-3 h-12 w-12 text-muted-foreground/40" />
-                <p className="text-muted-foreground">No plugins found</p>
-                {search && (
+                <p className="text-muted-foreground">
+                  {plugins.length === 0 ? 'No plugins available yet' : 'No plugins found'}
+                </p>
+                {search && plugins.length > 0 && (
                   <Button variant="link" onClick={() => setSearch('')}>
                     Clear search
                   </Button>
@@ -718,30 +553,31 @@ export default function PluginsMarketplacePage() {
             )}
           </TabsContent>
         ))}
-      </Tabs>
+      </Tabs>}
 
       {/* Footer stats */}
-      <div className="flex items-center justify-between border-t pt-3 text-xs text-muted-foreground">
-        <span>
-          {allFiltered.length} plugin{allFiltered.length !== 1 ? 's' : ''}
-          {totalPages > 1 && (
-            <span className="ml-1 text-muted-foreground/70">
-              · page {page} of {totalPages}
-            </span>
-          )}
-        </span>
-        <div className="flex items-center gap-1">
-          <TrendingUp className="h-3 w-3" />
-          <span>{plugins.reduce((sum, p) => sum + p.installCount, 0).toLocaleString()} total installs</span>
+      {!loading && (
+        <div className="flex items-center justify-between border-t pt-3 text-xs text-muted-foreground">
+          <span>
+            {allFiltered.length} plugin{allFiltered.length !== 1 ? 's' : ''}
+            {totalPages > 1 && (
+              <span className="ml-1 text-muted-foreground/70">
+                · page {page} of {totalPages}
+              </span>
+            )}
+          </span>
+          <div className="flex items-center gap-1">
+            <TrendingUp className="h-3 w-3" />
+            <span>{plugins.reduce((sum, p) => sum + p.installCount, 0).toLocaleString()} total installs</span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Plugin Detail Dialog */}
       <PluginDetailDialog
         plugin={selectedPlugin}
         open={detailOpen}
         onClose={() => setDetailOpen(false)}
-        isPreview={isPreview}
       />
     </div>
   );

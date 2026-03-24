@@ -10,6 +10,7 @@ import { InvoicesModule } from './invoices/invoices.module';
 import { ExpensesModule } from './expenses/expenses.module';
 import { ReportsModule } from './reports/reports.module';
 import { CommsModule } from './comms/comms.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 import { ErpEventInterceptor } from './kafka/erp-event.interceptor';
 
 /**
@@ -27,6 +28,7 @@ import { ErpEventInterceptor } from './kafka/erp-event.interceptor';
     ExpensesModule,
     ReportsModule,
     CommsModule,
+    DashboardModule,
   ],
   providers: [
     {

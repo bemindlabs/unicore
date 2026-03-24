@@ -10,17 +10,23 @@ FROM base AS deps
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
 COPY packages/config/package.json ./packages/config/
 COPY packages/shared-types/package.json ./packages/shared-types/
+COPY packages/plugin-sdk/package.json ./packages/plugin-sdk/
 COPY services/api-gateway/package.json ./services/api-gateway/
 RUN pnpm install --frozen-lockfile --filter @unicore/api-gateway...
 
 FROM base AS build
 COPY packages/config ./packages/config
 COPY packages/shared-types ./packages/shared-types
+COPY packages/plugin-sdk ./packages/plugin-sdk
 COPY services/api-gateway ./services/api-gateway
 COPY tsconfig.json ./
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/services/api-gateway/node_modules ./services/api-gateway/node_modules
-RUN cd services/api-gateway && npx prisma generate --schema=src/prisma/schema.prisma 2>/dev/null; pnpm run build
+RUN cd packages/plugin-sdk && npx tsc -p tsconfig.json && npx tsc -p tsconfig.cjs.json && \
+    echo '{"type":"commonjs"}' > dist/cjs/package.json && \
+    cd /app/services/api-gateway && \
+    (npx prisma generate --schema=src/prisma/schema.prisma 2>/dev/null || true) && \
+    pnpm run build
 
 ARG VERSION=0.0.0
 FROM --platform=$TARGETPLATFORM node:20.20.1-alpine AS runner
@@ -32,11 +38,16 @@ LABEL org.opencontainers.image.title="unicore-api-gateway"
 LABEL org.opencontainers.image.description="NestJS REST API gateway and authentication service"
 LABEL org.opencontainers.image.version="${VERSION}"
 COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/packages/plugin-sdk ./packages/plugin-sdk
 COPY --from=build /app/services/api-gateway/node_modules ./services/api-gateway/node_modules
 COPY --from=build /app/services/api-gateway/dist ./services/api-gateway/dist
 COPY --from=build /app/services/api-gateway/package.json ./services/api-gateway/
 COPY --from=build /app/services/api-gateway/src/prisma ./services/api-gateway/prisma
 COPY --from=build /app/services/api-gateway/src/generated ./services/api-gateway/dist/generated
+RUN mkdir -p node_modules/@unicore && \
+    ln -sf /app/packages/plugin-sdk node_modules/@unicore/plugin-sdk && \
+    mkdir -p services/api-gateway/node_modules/@unicore && \
+    ln -sf /app/packages/plugin-sdk services/api-gateway/node_modules/@unicore/plugin-sdk
 WORKDIR /app/services/api-gateway
 RUN addgroup -g 1001 -S nodejs && adduser -S -u 1001 appuser
 USER appuser

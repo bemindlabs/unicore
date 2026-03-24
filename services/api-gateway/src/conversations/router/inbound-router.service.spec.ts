@@ -29,9 +29,13 @@ const mockMessage = {
   content: 'Hello!',
   externalId: 'tg-msg-1',
   sender: { id: 'user-789', name: 'Alice', type: 'contact' },
+<<<<<<< HEAD
   metadata: { channel: 'telegram', rawPayload: {} },
   isRead: false,
   isAiGenerated: false,
+=======
+  metadata: { channel: 'telegram', rawPayload: {}, routedTo: 'pending' },
+>>>>>>> main
   createdAt: new Date(),
 };
 
@@ -149,7 +153,11 @@ describe('InboundRouterService', () => {
       rawPayload: {},
     };
 
+<<<<<<< HEAD
     it('creates a new message in the message table', async () => {
+=======
+    it('creates a new message', async () => {
+>>>>>>> main
       mockPrisma.message.findFirst.mockResolvedValue(null);
       mockPrisma.message.create.mockResolvedValue(mockMessage);
 
@@ -162,7 +170,10 @@ describe('InboundRouterService', () => {
           type: 'TEXT',
           content: 'Hello!',
           externalId: 'tg-msg-1',
+<<<<<<< HEAD
           sender: { id: 'user-789', name: 'Alice', type: 'contact' },
+=======
+>>>>>>> main
         }) as unknown,
       });
       expect(result).toEqual(mockMessage);
@@ -179,7 +190,11 @@ describe('InboundRouterService', () => {
 
     it('creates message without dedup check when no externalMessageId', async () => {
       const dtoNoId = { ...dto, externalMessageId: undefined };
+<<<<<<< HEAD
       mockPrisma.message.create.mockResolvedValue({ ...mockMessage, externalId: null });
+=======
+      mockPrisma.message.create.mockResolvedValue({ ...mockMessage, externalMessageId: null });
+>>>>>>> main
 
       await service.saveMessage('conv-123', dtoNoId);
 
@@ -204,6 +219,10 @@ describe('InboundRouterService', () => {
       mockPrisma.message.findFirst.mockResolvedValue(null);
       mockPrisma.message.create.mockResolvedValue(mockMessage);
       mockPrisma.conversation.update.mockResolvedValue(mockConversation);
+<<<<<<< HEAD
+=======
+      mockPrisma.message.updateMany.mockResolvedValue({ count: 1 });
+>>>>>>> main
       mockPrisma.settings.findUnique.mockResolvedValue(null);
 
       // Mock fetch globally
@@ -226,7 +245,11 @@ describe('InboundRouterService', () => {
       expect(mockGateway.emitMessageInbound).toHaveBeenCalled();
     });
 
+<<<<<<< HEAD
     it('routes to assigned agent when conversation has assigneeId', async () => {
+=======
+    it('routes to assigned agent when conversation has assignedAgentId', async () => {
+>>>>>>> main
       const assignedConversation = { ...mockConversation, assigneeId: 'agent-42', status: 'ASSIGNED' };
       mockPrisma.conversation.findFirst.mockResolvedValue(assignedConversation);
 
@@ -234,6 +257,7 @@ describe('InboundRouterService', () => {
 
       expect(result.routedTo).toBe('agent');
       expect(result.agentId).toBe('agent-42');
+
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('/api/v1/channels/inbound') as string,
         expect.objectContaining({ method: 'POST' }) as unknown,

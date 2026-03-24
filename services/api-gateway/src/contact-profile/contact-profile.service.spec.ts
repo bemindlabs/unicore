@@ -10,6 +10,7 @@ global.fetch = mockFetch;
 const mockPrisma = {
   contactChannel: {
     findMany: jest.fn(),
+    findFirst: jest.fn(),
     findUnique: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
@@ -162,7 +163,7 @@ describe('ContactProfileService', () => {
   describe('removeChannel', () => {
     it('deletes an existing channel binding', async () => {
       const binding = { id: 'ch1', contactId: 'c1', channel: 'telegram', channelUserId: '@alice' };
-      mockPrisma.contactChannel.findUnique.mockResolvedValue(binding);
+      mockPrisma.contactChannel.findFirst.mockResolvedValue(binding);
       mockPrisma.contactChannel.delete.mockResolvedValue(binding);
 
       const result = await service.removeChannel('c1', 'telegram');
@@ -170,7 +171,7 @@ describe('ContactProfileService', () => {
     });
 
     it('throws NotFoundException when binding does not exist', async () => {
-      mockPrisma.contactChannel.findUnique.mockResolvedValue(null);
+      mockPrisma.contactChannel.findFirst.mockResolvedValue(null);
 
       await expect(service.removeChannel('c1', 'telegram')).rejects.toThrow(NotFoundException);
     });

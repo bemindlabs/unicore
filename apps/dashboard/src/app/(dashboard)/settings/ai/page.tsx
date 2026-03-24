@@ -25,7 +25,8 @@ interface ProviderDef {
   keyOptional?: boolean;
 }
 
-const PROVIDERS: ProviderDef[] = [
+/** Static fallback used when the API is unavailable */
+const PROVIDERS_FALLBACK: ProviderDef[] = [
   { id: 'openai',     name: 'OpenAI',              keyField: 'openaiKey',     getKeyUrl: 'https://platform.openai.com/api-keys',          models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'o3-mini', 'o4-mini'],                                                         defaultBaseUrl: 'https://api.openai.com/v1' },
   { id: 'anthropic',  name: 'Anthropic',           keyField: 'anthropicKey',  getKeyUrl: 'https://console.anthropic.com/settings/keys',   models: ['claude-sonnet-4-20250514', 'claude-opus-4-20250514', 'claude-haiku-4-5-20251001'],                                       defaultBaseUrl: 'https://api.anthropic.com' },
   { id: 'deepseek',   name: 'DeepSeek',            keyField: 'deepseekKey',   getKeyUrl: 'https://platform.deepseek.com/api_keys',        models: ['deepseek-chat', 'deepseek-reasoner'],                                                                                  defaultBaseUrl: 'https://api.deepseek.com/v1' },
@@ -108,12 +109,29 @@ function ModelSearch({ models, value, onChange, placeholder }: {
   );
 }
 
+// ── Provider Skeleton ─────────────────────────────────────────────────────
+
+function ProviderSkeleton() {
+  return (
+    <div className="space-y-5">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className="space-y-1.5 animate-pulse">
+          <div className="h-4 w-32 rounded bg-muted" />
+          <div className="h-9 w-full rounded bg-muted" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────
 
 export default function AiSettingsPage() {
   const { isPro } = useLicense();
   const { user } = useAuth();
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [providers, setProviders] = useState<ProviderDef[]>(PROVIDERS_FALLBACK);
+  const [loadingProviders, setLoadingProviders] = useState(true);
   const [config, setConfig] = useState<Record<string, any> | null>(null);
   const [keys, setKeys] = useState<Record<string, string>>({});
   const [baseUrls, setBaseUrls] = useState<Record<string, string>>({});
@@ -143,17 +161,29 @@ export default function AiSettingsPage() {
     }
   }, [user?.email]);
 
+  const fetchProviders = useCallback(async () => {
+    setLoadingProviders(true);
+    try {
+      const data = await api.get<{ providers: ProviderDef[] }>('/api/proxy/ai/llm/providers');
+      if (data.providers?.length) setProviders(data.providers);
+    } catch {
+      // Keep fallback
+    } finally {
+      setLoadingProviders(false);
+    }
+  }, []);
+
   const fetchConfig = useCallback(async () => {
     try {
       const data = await api.get<Record<string, any>>('/api/v1/settings/ai-config');
       setConfig(data);
       const newKeys: Record<string, string> = {};
-      for (const p of PROVIDERS) {
+      for (const p of providers) {
         if (p.keyField) newKeys[p.keyField] = data[p.keyField] || '';
       }
       setKeys(newKeys);
       const urls: Record<string, string> = {};
-      for (const p of PROVIDERS) {
+      for (const p of providers) {
         urls[p.id] = data[`${p.id}BaseUrl`] || '';
       }
       setBaseUrls(urls);
@@ -161,20 +191,24 @@ export default function AiSettingsPage() {
       setDefaultModel(data.defaultModel || '');
       setOpenaiAuthType(data.openaiAuthType || 'api-key');
     } catch { /* ignore */ }
-  }, []);
+  }, [providers]);
 
+  useEffect(() => { fetchProviders(); }, [fetchProviders]);
   useEffect(() => { fetchConfig(); }, [fetchConfig]);
 
   const fetchModels = useCallback(async () => {
     setLoadingModels(true);
     try {
-      const data = await api.get<{ models?: string[] }>('/api/proxy/ai/llm/models');
+      const url = defaultProvider
+        ? `/api/proxy/ai/llm/models?provider=${encodeURIComponent(defaultProvider)}`
+        : '/api/proxy/ai/llm/models';
+      const data = await api.get<{ models?: string[] }>(url);
       if (data.models?.length) setLiveModels(data.models);
     } catch { setLiveModels([]); }
     finally { setLoadingModels(false); }
-  }, []);
+  }, [defaultProvider]);
 
-  const activeProvider = PROVIDERS.find((p) => p.id === defaultProvider);
+  const activeProvider = providers.find((p) => p.id === defaultProvider);
   const models = liveModels.length > 0 ? liveModels : (activeProvider?.models ?? []);
 
   const handleTest = async () => {
@@ -221,7 +255,7 @@ export default function AiSettingsPage() {
       setConfig(data);
       const newKeys: Record<string, string> = {};
       const newUrls: Record<string, string> = {};
-      for (const p of PROVIDERS) {
+      for (const p of providers) {
         if (p.keyField) newKeys[p.keyField] = data[p.keyField] || '';
         newUrls[p.id] = data[`${p.id}BaseUrl`] || '';
       }
@@ -235,7 +269,7 @@ export default function AiSettingsPage() {
     } finally { setSaving(false); }
   };
 
-  const configuredCount = PROVIDERS.filter((p) => p.keyField && config?.[`has${p.keyField[0].toUpperCase()}${p.keyField.slice(1)}`]).length;
+  const configuredCount = providers.filter((p) => p.keyField && config?.[`has${p.keyField[0].toUpperCase()}${p.keyField.slice(1)}`]).length;
 
   return (
     <div className="space-y-6">
@@ -244,7 +278,7 @@ export default function AiSettingsPage() {
           <Bot className="h-6 w-6 text-primary" />
           <div>
             <h1 className="text-2xl font-bold">AI Configuration</h1>
-            <p className="text-muted-foreground">{configuredCount} provider{configuredCount !== 1 ? 's' : ''} configured &middot; {PROVIDERS.length - 1} available</p>
+            <p className="text-muted-foreground">{configuredCount} provider{configuredCount !== 1 ? 's' : ''} configured &middot; {providers.length - 1} available</p>
           </div>
         </div>
         <Link href="/settings/ai/usage">
@@ -271,18 +305,22 @@ export default function AiSettingsPage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="provider">Provider</Label>
-            <select
-              id="provider"
-              value={defaultProvider}
-              onChange={(e) => { setDefaultProvider(e.target.value); setDefaultModel(''); }}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            >
-              {PROVIDERS.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}{p.description ? ` — ${p.description}` : ''}
-                </option>
-              ))}
-            </select>
+            {loadingProviders ? (
+              <div className="h-10 w-full rounded-md bg-muted animate-pulse" />
+            ) : (
+              <select
+                id="provider"
+                value={defaultProvider}
+                onChange={(e) => { setDefaultProvider(e.target.value); setDefaultModel(''); setLiveModels([]); }}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                {providers.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}{p.description ? ` — ${p.description}` : ''}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -354,114 +392,118 @@ export default function AiSettingsPage() {
             {!isPro && (
               <Badge variant="secondary" className="gap-1 shrink-0 bg-amber-500/10 text-amber-600 border-amber-300/40">
                 <Crown className="h-3 w-3" />
-                {COMMUNITY_PROVIDER_IDS.size} / {PROVIDERS.length} providers
+                {COMMUNITY_PROVIDER_IDS.size} / {providers.length} providers
               </Badge>
             )}
           </div>
         </CardHeader>
         <CardContent className="space-y-5">
-          {PROVIDERS.filter((p) => p.keyField).map((p) => {
-            const hasKey = config?.[`has${p.keyField[0].toUpperCase()}${p.keyField.slice(1)}`];
-            const hasCustomUrl = !!baseUrls[p.id]?.trim();
-            const isLocked = !isPro && !COMMUNITY_PROVIDER_IDS.has(p.id);
-            return (
-              <div key={p.id} className={`space-y-1.5 ${isLocked ? 'opacity-50' : ''}`}>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor={p.keyField} className="text-sm flex items-center gap-2">
-                    {p.name}
-                    {hasKey && !isLocked && <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500" title="Configured" />}
-                    {p.description && <span className="text-[10px] text-muted-foreground font-normal">({p.description})</span>}
-                    {isLocked && (
-                      <span className="inline-flex items-center gap-0.5 text-[10px] text-amber-600 font-normal">
-                        <Lock className="h-2.5 w-2.5" /> Pro
-                      </span>
+          {loadingProviders ? (
+            <ProviderSkeleton />
+          ) : (
+            providers.filter((p) => p.keyField).map((p) => {
+              const hasKey = config?.[`has${p.keyField[0].toUpperCase()}${p.keyField.slice(1)}`];
+              const hasCustomUrl = !!baseUrls[p.id]?.trim();
+              const isLocked = !isPro && !COMMUNITY_PROVIDER_IDS.has(p.id);
+              return (
+                <div key={p.id} className={`space-y-1.5 ${isLocked ? 'opacity-50' : ''}`}>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor={p.keyField} className="text-sm flex items-center gap-2">
+                      {p.name}
+                      {hasKey && !isLocked && <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500" title="Configured" />}
+                      {p.description && <span className="text-[10px] text-muted-foreground font-normal">({p.description})</span>}
+                      {isLocked && (
+                        <span className="inline-flex items-center gap-0.5 text-[10px] text-amber-600 font-normal">
+                          <Lock className="h-2.5 w-2.5" /> Pro
+                        </span>
+                      )}
+                    </Label>
+                    {!isLocked && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          className={`text-[10px] ${showUrls[p.id] || hasCustomUrl ? 'text-primary font-medium' : 'text-muted-foreground hover:text-foreground'}`}
+                          onClick={() => setShowUrls((prev) => ({ ...prev, [p.id]: !prev[p.id] }))}
+                        >
+                          {hasCustomUrl ? 'Custom URL' : 'Base URL'}
+                        </button>
+                        {p.getKeyUrl && (
+                          <Button variant="link" size="sm" className="h-auto p-0 text-xs gap-1" onClick={() => window.open(p.getKeyUrl, '_blank')}>
+                            Get Key <ExternalLink className="h-2.5 w-2.5" />
+                          </Button>
+                        )}
+                      </div>
                     )}
-                  </Label>
-                  {!isLocked && (
-                    <div className="flex items-center gap-2">
-                      <button
-                        className={`text-[10px] ${showUrls[p.id] || hasCustomUrl ? 'text-primary font-medium' : 'text-muted-foreground hover:text-foreground'}`}
-                        onClick={() => setShowUrls((prev) => ({ ...prev, [p.id]: !prev[p.id] }))}
-                      >
-                        {hasCustomUrl ? 'Custom URL' : 'Base URL'}
-                      </button>
-                      {p.getKeyUrl && (
-                        <Button variant="link" size="sm" className="h-auto p-0 text-xs gap-1" onClick={() => window.open(p.getKeyUrl, '_blank')}>
-                          Get Key <ExternalLink className="h-2.5 w-2.5" />
+                  </div>
+                  <div className="flex gap-1.5">
+                    <Input
+                      id={p.keyField}
+                      type={showKeys[p.keyField] ? 'text' : 'password'}
+                      value={isLocked ? '' : (keys[p.keyField] || '')}
+                      onChange={(e) => !isLocked && setKeys((prev) => ({ ...prev, [p.keyField]: e.target.value }))}
+                      placeholder={isLocked ? 'Available in Pro' : (p.keyOptional ? (hasKey ? 'Saved (optional)' : 'Optional — for authenticated servers') : (hasKey ? 'Saved (enter new to replace)' : 'sk-...'))}
+                      className="font-mono text-xs h-9"
+                      disabled={isLocked}
+                      title={isLocked ? 'Available in Pro' : undefined}
+                    />
+                    {!isLocked && (
+                      <>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => setShowKeys((prev) => ({ ...prev, [p.keyField]: !prev[p.keyField] }))}>
+                          {showKeys[p.keyField] ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                        </Button>
+                        {hasKey && (
+                          <Button
+                            variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-red-500 hover:text-red-600"
+                            title="Delete key"
+                            onClick={async () => {
+                              if (!window.confirm(`Delete ${p.name} API key?`)) return;
+                              try {
+                                await api.put('/api/v1/settings/ai-config', { [p.keyField]: '__DELETE__' });
+                                setKeys((prev) => ({ ...prev, [p.keyField]: '' }));
+                                fetchConfig();
+                                setStatus({ type: 'success', message: `${p.name} key deleted` });
+                              } catch { /* ignore */ }
+                            }}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                  {(showUrls[p.id] || hasCustomUrl) && (
+                    <div className="flex gap-1.5">
+                      <Input
+                        value={baseUrls[p.id] || ''}
+                        onChange={(e) => setBaseUrls((prev) => ({ ...prev, [p.id]: e.target.value }))}
+                        placeholder={p.defaultBaseUrl}
+                        className="font-mono text-[11px] h-8 text-muted-foreground"
+                      />
+                      {hasCustomUrl && (
+                        <Button
+                          variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
+                          title="Reset to default"
+                          onClick={() => setBaseUrls((prev) => ({ ...prev, [p.id]: '' }))}
+                        >
+                          <RefreshCw className="h-3 w-3" />
                         </Button>
                       )}
                     </div>
                   )}
                 </div>
-                <div className="flex gap-1.5">
-                  <Input
-                    id={p.keyField}
-                    type={showKeys[p.keyField] ? 'text' : 'password'}
-                    value={isLocked ? '' : (keys[p.keyField] || '')}
-                    onChange={(e) => !isLocked && setKeys((prev) => ({ ...prev, [p.keyField]: e.target.value }))}
-                    placeholder={isLocked ? 'Available in Pro' : (p.keyOptional ? (hasKey ? 'Saved (optional)' : 'Optional — for authenticated servers') : (hasKey ? 'Saved (enter new to replace)' : 'sk-...'))}
-                    className="font-mono text-xs h-9"
-                    disabled={isLocked}
-                    title={isLocked ? 'Available in Pro' : undefined}
-                  />
-                  {!isLocked && (
-                    <>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => setShowKeys((prev) => ({ ...prev, [p.keyField]: !prev[p.keyField] }))}>
-                        {showKeys[p.keyField] ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                      </Button>
-                      {hasKey && (
-                        <Button
-                          variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-red-500 hover:text-red-600"
-                          title="Delete key"
-                          onClick={async () => {
-                            if (!window.confirm(`Delete ${p.name} API key?`)) return;
-                            try {
-                              await api.put('/api/v1/settings/ai-config', { [p.keyField]: '__DELETE__' });
-                              setKeys((prev) => ({ ...prev, [p.keyField]: '' }));
-                              fetchConfig();
-                              setStatus({ type: 'success', message: `${p.name} key deleted` });
-                            } catch { /* ignore */ }
-                          }}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      )}
-                    </>
-                  )}
-                </div>
-                {(showUrls[p.id] || hasCustomUrl) && (
-                  <div className="flex gap-1.5">
-                    <Input
-                      value={baseUrls[p.id] || ''}
-                      onChange={(e) => setBaseUrls((prev) => ({ ...prev, [p.id]: e.target.value }))}
-                      placeholder={p.defaultBaseUrl}
-                      className="font-mono text-[11px] h-8 text-muted-foreground"
-                    />
-                    {hasCustomUrl && (
-                      <Button
-                        variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
-                        title="Reset to default"
-                        onClick={() => setBaseUrls((prev) => ({ ...prev, [p.id]: '' }))}
-                      >
-                        <RefreshCw className="h-3 w-3" />
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+              );
+            })
+          )}
 
-          {/* Unlock all 13 providers CTA */}
-          {!isPro && (
+          {/* Unlock all providers CTA */}
+          {!isPro && !loadingProviders && (
             <div className="mt-2 flex items-center justify-between rounded-lg border border-dashed border-amber-300/60 bg-amber-500/5 px-4 py-3">
               <div className="flex items-center gap-2 text-sm">
                 <Crown className="h-4 w-4 text-amber-500" />
                 <span className="font-medium text-amber-700 dark:text-amber-400">
-                  Unlock all {PROVIDERS.length} providers
+                  Unlock all {providers.length} providers
                 </span>
                 <span className="text-muted-foreground">
-                  — {PROVIDERS.length - COMMUNITY_PROVIDER_IDS.size} more available in Pro
+                  — {providers.length - COMMUNITY_PROVIDER_IDS.size} more available in Pro
                 </span>
               </div>
               <Button

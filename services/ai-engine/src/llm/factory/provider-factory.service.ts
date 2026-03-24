@@ -14,6 +14,18 @@ import { OpenAiProvider } from '../providers/openai.provider';
 import { AnthropicProvider } from '../providers/anthropic.provider';
 import { OllamaProvider } from '../providers/ollama.provider';
 
+export interface ProviderInfo {
+  id: string;
+  name: string;
+  keyField: string;
+  getKeyUrl: string;
+  models: string[];
+  description?: string;
+  defaultBaseUrl: string;
+  keyOptional?: boolean;
+  configured: boolean;
+}
+
 export class ProviderUnavailableError extends Error {
   constructor(
     public readonly attemptedProviders: string[],
@@ -31,6 +43,22 @@ export class ProviderUnavailableError extends Error {
 export class ProviderFactoryService implements OnModuleInit {
   private readonly logger = new Logger(ProviderFactoryService.name);
   private readonly registry = new Map<string, ILlmProvider>();
+
+  private static readonly PROVIDER_CATALOG: Omit<ProviderInfo, 'configured'>[] = [
+    { id: 'openai',     name: 'OpenAI',             keyField: 'openaiKey',     getKeyUrl: 'https://platform.openai.com/api-keys',          models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'o3-mini', 'o4-mini'],                                                         defaultBaseUrl: 'https://api.openai.com/v1' },
+    { id: 'anthropic',  name: 'Anthropic',           keyField: 'anthropicKey',  getKeyUrl: 'https://console.anthropic.com/settings/keys',   models: ['claude-sonnet-4-20250514', 'claude-opus-4-20250514', 'claude-haiku-4-5-20251001'],                                       defaultBaseUrl: 'https://api.anthropic.com' },
+    { id: 'deepseek',   name: 'DeepSeek',            keyField: 'deepseekKey',   getKeyUrl: 'https://platform.deepseek.com/api_keys',        models: ['deepseek-chat', 'deepseek-reasoner'],                                                                                  defaultBaseUrl: 'https://api.deepseek.com/v1' },
+    { id: 'groq',       name: 'Groq',                keyField: 'groqKey',       getKeyUrl: 'https://console.groq.com/keys',                 models: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'],    description: 'Ultra-fast inference',  defaultBaseUrl: 'https://api.groq.com/openai/v1' },
+    { id: 'gemini',     name: 'Google Gemini',       keyField: 'geminiKey',     getKeyUrl: 'https://aistudio.google.com/apikey',            models: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash'],                                                              defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai' },
+    { id: 'moonshot',   name: 'Moonshot AI / Kimi',  keyField: 'moonshotKey',   getKeyUrl: 'https://platform.moonshot.cn/console/api-keys',  models: ['kimi-k2', 'moonshot-v1-128k', 'moonshot-v1-32k'],                                                                     defaultBaseUrl: 'https://api.moonshot.cn/v1' },
+    { id: 'mistral',    name: 'Mistral AI',          keyField: 'mistralKey',    getKeyUrl: 'https://console.mistral.ai/api-keys/',           models: ['mistral-large-latest', 'mistral-small-latest', 'codestral-latest'],                                                    defaultBaseUrl: 'https://api.mistral.ai/v1' },
+    { id: 'xai',        name: 'xAI (Grok)',          keyField: 'xaiKey',        getKeyUrl: 'https://console.x.ai/',                         models: ['grok-3', 'grok-3-mini', 'grok-3-fast'],                                                                                defaultBaseUrl: 'https://api.x.ai/v1' },
+    { id: 'openrouter', name: 'OpenRouter',          keyField: 'openrouterKey', getKeyUrl: 'https://openrouter.ai/keys',                    models: ['openai/gpt-4o', 'anthropic/claude-sonnet-4-20250514', 'google/gemini-2.5-flash', 'meta-llama/llama-3.3-70b-instruct'], description: '200+ models, free tier', defaultBaseUrl: 'https://openrouter.ai/api/v1' },
+    { id: 'together',   name: 'Together AI',         keyField: 'togetherKey',   getKeyUrl: 'https://api.together.xyz/settings/api-keys',    models: ['meta-llama/Llama-3.3-70B-Instruct-Turbo', 'mistralai/Mixtral-8x7B-Instruct-v0.1'],                                     defaultBaseUrl: 'https://api.together.xyz/v1' },
+    { id: 'fireworks',  name: 'Fireworks AI',        keyField: 'fireworksKey',  getKeyUrl: 'https://fireworks.ai/api-keys',                 models: ['accounts/fireworks/models/llama-v3p1-70b-instruct'],                                                                   defaultBaseUrl: 'https://api.fireworks.ai/inference/v1' },
+    { id: 'cohere',     name: 'Cohere',              keyField: 'cohereKey',     getKeyUrl: 'https://dashboard.cohere.com/api-keys',         models: ['command-r-plus', 'command-r', 'command-light'],                                                                        defaultBaseUrl: 'https://api.cohere.com/v1' },
+    { id: 'ollama',     name: 'Ollama (local)',      keyField: 'ollamaToken',   getKeyUrl: '',                                              models: ['llama3.2', 'llama3.1', 'mistral', 'codellama', 'phi3'],                      description: 'Free, runs locally',    defaultBaseUrl: 'http://localhost:11434', keyOptional: true },
+  ];
   private primaryProviderId: string;
   private failoverProviderIds: string[];
   private failoverEnabled: boolean;
@@ -59,9 +87,24 @@ export class ProviderFactoryService implements OnModuleInit {
   }
 
   /**
-   * List available models from all registered providers that support /models endpoint.
+   * List all known providers with their static metadata and configured status.
    */
-  async listModels(): Promise<string[]> {
+  listProviders(): ProviderInfo[] {
+    return ProviderFactoryService.PROVIDER_CATALOG.map((p) => ({
+      ...p,
+      configured: this.registry.has(p.id),
+    }));
+  }
+
+  /**
+   * List available models. If providerId is given, returns models for that provider only
+   * (tries live API, falls back to static catalog). Otherwise returns all live models.
+   */
+  async listModels(providerId?: string): Promise<string[]> {
+    if (providerId) {
+      return this.listModelsForProvider(providerId);
+    }
+
     const models: string[] = [];
     for (const [id, provider] of this.registry) {
       try {
@@ -79,6 +122,26 @@ export class ProviderFactoryService implements OnModuleInit {
       }
     }
     return models.sort();
+  }
+
+  private async listModelsForProvider(providerId: string): Promise<string[]> {
+    const catalog = ProviderFactoryService.PROVIDER_CATALOG.find((p) => p.id === providerId);
+    const provider = this.registry.get(providerId);
+    if (provider) {
+      try {
+        const p = provider as any;
+        if (p.client?.models?.list) {
+          const response = await p.client.models.list();
+          const data = response?.data ?? response?.body?.data ?? [];
+          if (data.length > 0) {
+            return data.map((m: any) => m.id ?? m.name ?? String(m)).sort();
+          }
+        }
+      } catch (err) {
+        this.logger.debug(`Could not list models from ${providerId}: ${err instanceof Error ? err.message : err}`);
+      }
+    }
+    return catalog?.models ?? [];
   }
 
   /**

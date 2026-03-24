@@ -104,6 +104,11 @@ export type Message = $Result.DefaultSelection<Prisma.$MessagePayload>
  */
 export type ConversationParticipant = $Result.DefaultSelection<Prisma.$ConversationParticipantPayload>
 /**
+ * Model AgentNote
+ * Notes written by operators or AI agents about a contact
+ */
+export type AgentNote = $Result.DefaultSelection<Prisma.$AgentNotePayload>
+/**
  * Model ChannelMessage
  * 
  */
@@ -507,6 +512,16 @@ export class PrismaClient<
     * ```
     */
   get conversationParticipant(): Prisma.ConversationParticipantDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.agentNote`: Exposes CRUD operations for the **AgentNote** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AgentNotes
+    * const agentNotes = await prisma.agentNote.findMany()
+    * ```
+    */
+  get agentNote(): Prisma.AgentNoteDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.channelMessage`: Exposes CRUD operations for the **ChannelMessage** model.
@@ -1006,6 +1021,7 @@ export namespace Prisma {
     ConversationMessage: 'ConversationMessage',
     Message: 'Message',
     ConversationParticipant: 'ConversationParticipant',
+    AgentNote: 'AgentNote',
     ChannelMessage: 'ChannelMessage',
     Notification: 'Notification',
     Handoff: 'Handoff',
@@ -1028,7 +1044,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "oAuthAccount" | "session" | "customDomain" | "auditLog" | "settings" | "task" | "chatHistory" | "chatMessage" | "gamification" | "plugin" | "pluginVersion" | "pluginInstallation" | "contactChannel" | "conversation" | "conversationMessage" | "message" | "conversationParticipant" | "channelMessage" | "notification" | "handoff" | "cannedResponse"
+      modelProps: "user" | "oAuthAccount" | "session" | "customDomain" | "auditLog" | "settings" | "task" | "chatHistory" | "chatMessage" | "gamification" | "plugin" | "pluginVersion" | "pluginInstallation" | "contactChannel" | "conversation" | "conversationMessage" | "message" | "conversationParticipant" | "agentNote" | "channelMessage" | "notification" | "handoff" | "cannedResponse"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2364,6 +2380,80 @@ export namespace Prisma {
           }
         }
       }
+      AgentNote: {
+        payload: Prisma.$AgentNotePayload<ExtArgs>
+        fields: Prisma.AgentNoteFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AgentNoteFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentNotePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AgentNoteFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentNotePayload>
+          }
+          findFirst: {
+            args: Prisma.AgentNoteFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentNotePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AgentNoteFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentNotePayload>
+          }
+          findMany: {
+            args: Prisma.AgentNoteFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentNotePayload>[]
+          }
+          create: {
+            args: Prisma.AgentNoteCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentNotePayload>
+          }
+          createMany: {
+            args: Prisma.AgentNoteCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AgentNoteCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentNotePayload>[]
+          }
+          delete: {
+            args: Prisma.AgentNoteDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentNotePayload>
+          }
+          update: {
+            args: Prisma.AgentNoteUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentNotePayload>
+          }
+          deleteMany: {
+            args: Prisma.AgentNoteDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AgentNoteUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.AgentNoteUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentNotePayload>[]
+          }
+          upsert: {
+            args: Prisma.AgentNoteUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentNotePayload>
+          }
+          aggregate: {
+            args: Prisma.AgentNoteAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAgentNote>
+          }
+          groupBy: {
+            args: Prisma.AgentNoteGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AgentNoteGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AgentNoteCountArgs<ExtArgs>
+            result: $Utils.Optional<AgentNoteCountAggregateOutputType> | number
+          }
+        }
+      }
       ChannelMessage: {
         payload: Prisma.$ChannelMessagePayload<ExtArgs>
         fields: Prisma.ChannelMessageFieldRefs
@@ -2774,6 +2864,7 @@ export namespace Prisma {
     conversationMessage?: ConversationMessageOmit
     message?: MessageOmit
     conversationParticipant?: ConversationParticipantOmit
+    agentNote?: AgentNoteOmit
     channelMessage?: ChannelMessageOmit
     notification?: NotificationOmit
     handoff?: HandoffOmit
@@ -13933,6 +14024,11 @@ export namespace Prisma {
     icon: string | null
     downloads: number | null
     rating: number | null
+    status: string | null
+    submittedBy: string | null
+    rejectionReason: string | null
+    reviewedBy: string | null
+    reviewedAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -13948,6 +14044,11 @@ export namespace Prisma {
     icon: string | null
     downloads: number | null
     rating: number | null
+    status: string | null
+    submittedBy: string | null
+    rejectionReason: string | null
+    reviewedBy: string | null
+    reviewedAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -13963,6 +14064,11 @@ export namespace Prisma {
     icon: number
     downloads: number
     rating: number
+    status: number
+    submittedBy: number
+    rejectionReason: number
+    reviewedBy: number
+    reviewedAt: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -13990,6 +14096,11 @@ export namespace Prisma {
     icon?: true
     downloads?: true
     rating?: true
+    status?: true
+    submittedBy?: true
+    rejectionReason?: true
+    reviewedBy?: true
+    reviewedAt?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -14005,6 +14116,11 @@ export namespace Prisma {
     icon?: true
     downloads?: true
     rating?: true
+    status?: true
+    submittedBy?: true
+    rejectionReason?: true
+    reviewedBy?: true
+    reviewedAt?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -14020,6 +14136,11 @@ export namespace Prisma {
     icon?: true
     downloads?: true
     rating?: true
+    status?: true
+    submittedBy?: true
+    rejectionReason?: true
+    reviewedBy?: true
+    reviewedAt?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -14122,6 +14243,11 @@ export namespace Prisma {
     icon: string | null
     downloads: number
     rating: number
+    status: string
+    submittedBy: string | null
+    rejectionReason: string | null
+    reviewedBy: string | null
+    reviewedAt: Date | null
     createdAt: Date
     updatedAt: Date
     _count: PluginCountAggregateOutputType | null
@@ -14156,6 +14282,11 @@ export namespace Prisma {
     icon?: boolean
     downloads?: boolean
     rating?: boolean
+    status?: boolean
+    submittedBy?: boolean
+    rejectionReason?: boolean
+    reviewedBy?: boolean
+    reviewedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     versions?: boolean | Plugin$versionsArgs<ExtArgs>
@@ -14174,6 +14305,11 @@ export namespace Prisma {
     icon?: boolean
     downloads?: boolean
     rating?: boolean
+    status?: boolean
+    submittedBy?: boolean
+    rejectionReason?: boolean
+    reviewedBy?: boolean
+    reviewedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["plugin"]>
@@ -14189,6 +14325,11 @@ export namespace Prisma {
     icon?: boolean
     downloads?: boolean
     rating?: boolean
+    status?: boolean
+    submittedBy?: boolean
+    rejectionReason?: boolean
+    reviewedBy?: boolean
+    reviewedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["plugin"]>
@@ -14204,11 +14345,16 @@ export namespace Prisma {
     icon?: boolean
     downloads?: boolean
     rating?: boolean
+    status?: boolean
+    submittedBy?: boolean
+    rejectionReason?: boolean
+    reviewedBy?: boolean
+    reviewedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type PluginOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "slug" | "type" | "author" | "version" | "description" | "icon" | "downloads" | "rating" | "createdAt" | "updatedAt", ExtArgs["result"]["plugin"]>
+  export type PluginOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "slug" | "type" | "author" | "version" | "description" | "icon" | "downloads" | "rating" | "status" | "submittedBy" | "rejectionReason" | "reviewedBy" | "reviewedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["plugin"]>
   export type PluginInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     versions?: boolean | Plugin$versionsArgs<ExtArgs>
     installations?: boolean | Plugin$installationsArgs<ExtArgs>
@@ -14234,6 +14380,11 @@ export namespace Prisma {
       icon: string | null
       downloads: number
       rating: number
+      status: string
+      submittedBy: string | null
+      rejectionReason: string | null
+      reviewedBy: string | null
+      reviewedAt: Date | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["plugin"]>
@@ -14671,6 +14822,11 @@ export namespace Prisma {
     readonly icon: FieldRef<"Plugin", 'String'>
     readonly downloads: FieldRef<"Plugin", 'Int'>
     readonly rating: FieldRef<"Plugin", 'Float'>
+    readonly status: FieldRef<"Plugin", 'String'>
+    readonly submittedBy: FieldRef<"Plugin", 'String'>
+    readonly rejectionReason: FieldRef<"Plugin", 'String'>
+    readonly reviewedBy: FieldRef<"Plugin", 'String'>
+    readonly reviewedAt: FieldRef<"Plugin", 'DateTime'>
     readonly createdAt: FieldRef<"Plugin", 'DateTime'>
     readonly updatedAt: FieldRef<"Plugin", 'DateTime'>
   }
@@ -22142,7 +22298,9 @@ export namespace Prisma {
     role: string | null
     autoAssigned: boolean | null
     invitedBy: string | null
+    addedBy: string | null
     isActive: boolean | null
+    autoRespond: boolean | null
     joinedAt: Date | null
     leftAt: Date | null
     updatedAt: Date | null
@@ -22158,7 +22316,9 @@ export namespace Prisma {
     role: string | null
     autoAssigned: boolean | null
     invitedBy: string | null
+    addedBy: string | null
     isActive: boolean | null
+    autoRespond: boolean | null
     joinedAt: Date | null
     leftAt: Date | null
     updatedAt: Date | null
@@ -22174,7 +22334,9 @@ export namespace Prisma {
     role: number
     autoAssigned: number
     invitedBy: number
+    addedBy: number
     isActive: number
+    autoRespond: number
     joinedAt: number
     leftAt: number
     updatedAt: number
@@ -22192,7 +22354,9 @@ export namespace Prisma {
     role?: true
     autoAssigned?: true
     invitedBy?: true
+    addedBy?: true
     isActive?: true
+    autoRespond?: true
     joinedAt?: true
     leftAt?: true
     updatedAt?: true
@@ -22208,7 +22372,9 @@ export namespace Prisma {
     role?: true
     autoAssigned?: true
     invitedBy?: true
+    addedBy?: true
     isActive?: true
+    autoRespond?: true
     joinedAt?: true
     leftAt?: true
     updatedAt?: true
@@ -22224,7 +22390,9 @@ export namespace Prisma {
     role?: true
     autoAssigned?: true
     invitedBy?: true
+    addedBy?: true
     isActive?: true
+    autoRespond?: true
     joinedAt?: true
     leftAt?: true
     updatedAt?: true
@@ -22313,7 +22481,9 @@ export namespace Prisma {
     role: string
     autoAssigned: boolean
     invitedBy: string | null
+    addedBy: string | null
     isActive: boolean
+    autoRespond: boolean
     joinedAt: Date
     leftAt: Date | null
     updatedAt: Date
@@ -22346,7 +22516,9 @@ export namespace Prisma {
     role?: boolean
     autoAssigned?: boolean
     invitedBy?: boolean
+    addedBy?: boolean
     isActive?: boolean
+    autoRespond?: boolean
     joinedAt?: boolean
     leftAt?: boolean
     updatedAt?: boolean
@@ -22363,7 +22535,9 @@ export namespace Prisma {
     role?: boolean
     autoAssigned?: boolean
     invitedBy?: boolean
+    addedBy?: boolean
     isActive?: boolean
+    autoRespond?: boolean
     joinedAt?: boolean
     leftAt?: boolean
     updatedAt?: boolean
@@ -22380,7 +22554,9 @@ export namespace Prisma {
     role?: boolean
     autoAssigned?: boolean
     invitedBy?: boolean
+    addedBy?: boolean
     isActive?: boolean
+    autoRespond?: boolean
     joinedAt?: boolean
     leftAt?: boolean
     updatedAt?: boolean
@@ -22397,13 +22573,15 @@ export namespace Prisma {
     role?: boolean
     autoAssigned?: boolean
     invitedBy?: boolean
+    addedBy?: boolean
     isActive?: boolean
+    autoRespond?: boolean
     joinedAt?: boolean
     leftAt?: boolean
     updatedAt?: boolean
   }
 
-  export type ConversationParticipantOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "conversationId" | "participantId" | "participantType" | "participantName" | "participantColor" | "role" | "autoAssigned" | "invitedBy" | "isActive" | "joinedAt" | "leftAt" | "updatedAt", ExtArgs["result"]["conversationParticipant"]>
+  export type ConversationParticipantOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "conversationId" | "participantId" | "participantType" | "participantName" | "participantColor" | "role" | "autoAssigned" | "invitedBy" | "addedBy" | "isActive" | "autoRespond" | "joinedAt" | "leftAt" | "updatedAt", ExtArgs["result"]["conversationParticipant"]>
   export type ConversationParticipantInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     conversation?: boolean | ConversationDefaultArgs<ExtArgs>
   }
@@ -22447,7 +22625,15 @@ export namespace Prisma {
        * Who invited this participant (userId), null if self-joined or auto
        */
       invitedBy: string | null
+      /**
+       * Alias for invitedBy — userId who added this participant (UNC-1031)
+       */
+      addedBy: string | null
       isActive: boolean
+      /**
+       * When true, this AI agent will auto-respond to incoming messages (UNC-1031)
+       */
+      autoRespond: boolean
       joinedAt: Date
       leftAt: Date | null
       updatedAt: Date
@@ -22884,7 +23070,9 @@ export namespace Prisma {
     readonly role: FieldRef<"ConversationParticipant", 'String'>
     readonly autoAssigned: FieldRef<"ConversationParticipant", 'Boolean'>
     readonly invitedBy: FieldRef<"ConversationParticipant", 'String'>
+    readonly addedBy: FieldRef<"ConversationParticipant", 'String'>
     readonly isActive: FieldRef<"ConversationParticipant", 'Boolean'>
+    readonly autoRespond: FieldRef<"ConversationParticipant", 'Boolean'>
     readonly joinedAt: FieldRef<"ConversationParticipant", 'DateTime'>
     readonly leftAt: FieldRef<"ConversationParticipant", 'DateTime'>
     readonly updatedAt: FieldRef<"ConversationParticipant", 'DateTime'>
@@ -23299,6 +23487,1027 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: ConversationParticipantInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model AgentNote
+   */
+
+  export type AggregateAgentNote = {
+    _count: AgentNoteCountAggregateOutputType | null
+    _min: AgentNoteMinAggregateOutputType | null
+    _max: AgentNoteMaxAggregateOutputType | null
+  }
+
+  export type AgentNoteMinAggregateOutputType = {
+    id: string | null
+    contactId: string | null
+    body: string | null
+    authorId: string | null
+    authorName: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type AgentNoteMaxAggregateOutputType = {
+    id: string | null
+    contactId: string | null
+    body: string | null
+    authorId: string | null
+    authorName: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type AgentNoteCountAggregateOutputType = {
+    id: number
+    contactId: number
+    body: number
+    authorId: number
+    authorName: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type AgentNoteMinAggregateInputType = {
+    id?: true
+    contactId?: true
+    body?: true
+    authorId?: true
+    authorName?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type AgentNoteMaxAggregateInputType = {
+    id?: true
+    contactId?: true
+    body?: true
+    authorId?: true
+    authorName?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type AgentNoteCountAggregateInputType = {
+    id?: true
+    contactId?: true
+    body?: true
+    authorId?: true
+    authorName?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type AgentNoteAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AgentNote to aggregate.
+     */
+    where?: AgentNoteWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentNotes to fetch.
+     */
+    orderBy?: AgentNoteOrderByWithRelationInput | AgentNoteOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AgentNoteWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentNotes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentNotes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AgentNotes
+    **/
+    _count?: true | AgentNoteCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AgentNoteMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AgentNoteMaxAggregateInputType
+  }
+
+  export type GetAgentNoteAggregateType<T extends AgentNoteAggregateArgs> = {
+        [P in keyof T & keyof AggregateAgentNote]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAgentNote[P]>
+      : GetScalarType<T[P], AggregateAgentNote[P]>
+  }
+
+
+
+
+  export type AgentNoteGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AgentNoteWhereInput
+    orderBy?: AgentNoteOrderByWithAggregationInput | AgentNoteOrderByWithAggregationInput[]
+    by: AgentNoteScalarFieldEnum[] | AgentNoteScalarFieldEnum
+    having?: AgentNoteScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AgentNoteCountAggregateInputType | true
+    _min?: AgentNoteMinAggregateInputType
+    _max?: AgentNoteMaxAggregateInputType
+  }
+
+  export type AgentNoteGroupByOutputType = {
+    id: string
+    contactId: string
+    body: string
+    authorId: string
+    authorName: string
+    createdAt: Date
+    updatedAt: Date
+    _count: AgentNoteCountAggregateOutputType | null
+    _min: AgentNoteMinAggregateOutputType | null
+    _max: AgentNoteMaxAggregateOutputType | null
+  }
+
+  type GetAgentNoteGroupByPayload<T extends AgentNoteGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AgentNoteGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AgentNoteGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AgentNoteGroupByOutputType[P]>
+            : GetScalarType<T[P], AgentNoteGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AgentNoteSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    contactId?: boolean
+    body?: boolean
+    authorId?: boolean
+    authorName?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["agentNote"]>
+
+  export type AgentNoteSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    contactId?: boolean
+    body?: boolean
+    authorId?: boolean
+    authorName?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["agentNote"]>
+
+  export type AgentNoteSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    contactId?: boolean
+    body?: boolean
+    authorId?: boolean
+    authorName?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["agentNote"]>
+
+  export type AgentNoteSelectScalar = {
+    id?: boolean
+    contactId?: boolean
+    body?: boolean
+    authorId?: boolean
+    authorName?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type AgentNoteOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "contactId" | "body" | "authorId" | "authorName" | "createdAt" | "updatedAt", ExtArgs["result"]["agentNote"]>
+
+  export type $AgentNotePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AgentNote"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      contactId: string
+      body: string
+      authorId: string
+      authorName: string
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["agentNote"]>
+    composites: {}
+  }
+
+  type AgentNoteGetPayload<S extends boolean | null | undefined | AgentNoteDefaultArgs> = $Result.GetResult<Prisma.$AgentNotePayload, S>
+
+  type AgentNoteCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<AgentNoteFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: AgentNoteCountAggregateInputType | true
+    }
+
+  export interface AgentNoteDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AgentNote'], meta: { name: 'AgentNote' } }
+    /**
+     * Find zero or one AgentNote that matches the filter.
+     * @param {AgentNoteFindUniqueArgs} args - Arguments to find a AgentNote
+     * @example
+     * // Get one AgentNote
+     * const agentNote = await prisma.agentNote.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AgentNoteFindUniqueArgs>(args: SelectSubset<T, AgentNoteFindUniqueArgs<ExtArgs>>): Prisma__AgentNoteClient<$Result.GetResult<Prisma.$AgentNotePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one AgentNote that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {AgentNoteFindUniqueOrThrowArgs} args - Arguments to find a AgentNote
+     * @example
+     * // Get one AgentNote
+     * const agentNote = await prisma.agentNote.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AgentNoteFindUniqueOrThrowArgs>(args: SelectSubset<T, AgentNoteFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AgentNoteClient<$Result.GetResult<Prisma.$AgentNotePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AgentNote that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentNoteFindFirstArgs} args - Arguments to find a AgentNote
+     * @example
+     * // Get one AgentNote
+     * const agentNote = await prisma.agentNote.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AgentNoteFindFirstArgs>(args?: SelectSubset<T, AgentNoteFindFirstArgs<ExtArgs>>): Prisma__AgentNoteClient<$Result.GetResult<Prisma.$AgentNotePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AgentNote that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentNoteFindFirstOrThrowArgs} args - Arguments to find a AgentNote
+     * @example
+     * // Get one AgentNote
+     * const agentNote = await prisma.agentNote.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AgentNoteFindFirstOrThrowArgs>(args?: SelectSubset<T, AgentNoteFindFirstOrThrowArgs<ExtArgs>>): Prisma__AgentNoteClient<$Result.GetResult<Prisma.$AgentNotePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more AgentNotes that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentNoteFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AgentNotes
+     * const agentNotes = await prisma.agentNote.findMany()
+     * 
+     * // Get first 10 AgentNotes
+     * const agentNotes = await prisma.agentNote.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const agentNoteWithIdOnly = await prisma.agentNote.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AgentNoteFindManyArgs>(args?: SelectSubset<T, AgentNoteFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentNotePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a AgentNote.
+     * @param {AgentNoteCreateArgs} args - Arguments to create a AgentNote.
+     * @example
+     * // Create one AgentNote
+     * const AgentNote = await prisma.agentNote.create({
+     *   data: {
+     *     // ... data to create a AgentNote
+     *   }
+     * })
+     * 
+     */
+    create<T extends AgentNoteCreateArgs>(args: SelectSubset<T, AgentNoteCreateArgs<ExtArgs>>): Prisma__AgentNoteClient<$Result.GetResult<Prisma.$AgentNotePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many AgentNotes.
+     * @param {AgentNoteCreateManyArgs} args - Arguments to create many AgentNotes.
+     * @example
+     * // Create many AgentNotes
+     * const agentNote = await prisma.agentNote.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AgentNoteCreateManyArgs>(args?: SelectSubset<T, AgentNoteCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many AgentNotes and returns the data saved in the database.
+     * @param {AgentNoteCreateManyAndReturnArgs} args - Arguments to create many AgentNotes.
+     * @example
+     * // Create many AgentNotes
+     * const agentNote = await prisma.agentNote.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AgentNotes and only return the `id`
+     * const agentNoteWithIdOnly = await prisma.agentNote.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AgentNoteCreateManyAndReturnArgs>(args?: SelectSubset<T, AgentNoteCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentNotePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a AgentNote.
+     * @param {AgentNoteDeleteArgs} args - Arguments to delete one AgentNote.
+     * @example
+     * // Delete one AgentNote
+     * const AgentNote = await prisma.agentNote.delete({
+     *   where: {
+     *     // ... filter to delete one AgentNote
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AgentNoteDeleteArgs>(args: SelectSubset<T, AgentNoteDeleteArgs<ExtArgs>>): Prisma__AgentNoteClient<$Result.GetResult<Prisma.$AgentNotePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one AgentNote.
+     * @param {AgentNoteUpdateArgs} args - Arguments to update one AgentNote.
+     * @example
+     * // Update one AgentNote
+     * const agentNote = await prisma.agentNote.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AgentNoteUpdateArgs>(args: SelectSubset<T, AgentNoteUpdateArgs<ExtArgs>>): Prisma__AgentNoteClient<$Result.GetResult<Prisma.$AgentNotePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more AgentNotes.
+     * @param {AgentNoteDeleteManyArgs} args - Arguments to filter AgentNotes to delete.
+     * @example
+     * // Delete a few AgentNotes
+     * const { count } = await prisma.agentNote.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AgentNoteDeleteManyArgs>(args?: SelectSubset<T, AgentNoteDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AgentNotes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentNoteUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AgentNotes
+     * const agentNote = await prisma.agentNote.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AgentNoteUpdateManyArgs>(args: SelectSubset<T, AgentNoteUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AgentNotes and returns the data updated in the database.
+     * @param {AgentNoteUpdateManyAndReturnArgs} args - Arguments to update many AgentNotes.
+     * @example
+     * // Update many AgentNotes
+     * const agentNote = await prisma.agentNote.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more AgentNotes and only return the `id`
+     * const agentNoteWithIdOnly = await prisma.agentNote.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends AgentNoteUpdateManyAndReturnArgs>(args: SelectSubset<T, AgentNoteUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentNotePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one AgentNote.
+     * @param {AgentNoteUpsertArgs} args - Arguments to update or create a AgentNote.
+     * @example
+     * // Update or create a AgentNote
+     * const agentNote = await prisma.agentNote.upsert({
+     *   create: {
+     *     // ... data to create a AgentNote
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AgentNote we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AgentNoteUpsertArgs>(args: SelectSubset<T, AgentNoteUpsertArgs<ExtArgs>>): Prisma__AgentNoteClient<$Result.GetResult<Prisma.$AgentNotePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of AgentNotes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentNoteCountArgs} args - Arguments to filter AgentNotes to count.
+     * @example
+     * // Count the number of AgentNotes
+     * const count = await prisma.agentNote.count({
+     *   where: {
+     *     // ... the filter for the AgentNotes we want to count
+     *   }
+     * })
+    **/
+    count<T extends AgentNoteCountArgs>(
+      args?: Subset<T, AgentNoteCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AgentNoteCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AgentNote.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentNoteAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AgentNoteAggregateArgs>(args: Subset<T, AgentNoteAggregateArgs>): Prisma.PrismaPromise<GetAgentNoteAggregateType<T>>
+
+    /**
+     * Group by AgentNote.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentNoteGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AgentNoteGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AgentNoteGroupByArgs['orderBy'] }
+        : { orderBy?: AgentNoteGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AgentNoteGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAgentNoteGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AgentNote model
+   */
+  readonly fields: AgentNoteFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AgentNote.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AgentNoteClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AgentNote model
+   */
+  interface AgentNoteFieldRefs {
+    readonly id: FieldRef<"AgentNote", 'String'>
+    readonly contactId: FieldRef<"AgentNote", 'String'>
+    readonly body: FieldRef<"AgentNote", 'String'>
+    readonly authorId: FieldRef<"AgentNote", 'String'>
+    readonly authorName: FieldRef<"AgentNote", 'String'>
+    readonly createdAt: FieldRef<"AgentNote", 'DateTime'>
+    readonly updatedAt: FieldRef<"AgentNote", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AgentNote findUnique
+   */
+  export type AgentNoteFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentNote
+     */
+    select?: AgentNoteSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentNote
+     */
+    omit?: AgentNoteOmit<ExtArgs> | null
+    /**
+     * Filter, which AgentNote to fetch.
+     */
+    where: AgentNoteWhereUniqueInput
+  }
+
+  /**
+   * AgentNote findUniqueOrThrow
+   */
+  export type AgentNoteFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentNote
+     */
+    select?: AgentNoteSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentNote
+     */
+    omit?: AgentNoteOmit<ExtArgs> | null
+    /**
+     * Filter, which AgentNote to fetch.
+     */
+    where: AgentNoteWhereUniqueInput
+  }
+
+  /**
+   * AgentNote findFirst
+   */
+  export type AgentNoteFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentNote
+     */
+    select?: AgentNoteSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentNote
+     */
+    omit?: AgentNoteOmit<ExtArgs> | null
+    /**
+     * Filter, which AgentNote to fetch.
+     */
+    where?: AgentNoteWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentNotes to fetch.
+     */
+    orderBy?: AgentNoteOrderByWithRelationInput | AgentNoteOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AgentNotes.
+     */
+    cursor?: AgentNoteWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentNotes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentNotes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AgentNotes.
+     */
+    distinct?: AgentNoteScalarFieldEnum | AgentNoteScalarFieldEnum[]
+  }
+
+  /**
+   * AgentNote findFirstOrThrow
+   */
+  export type AgentNoteFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentNote
+     */
+    select?: AgentNoteSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentNote
+     */
+    omit?: AgentNoteOmit<ExtArgs> | null
+    /**
+     * Filter, which AgentNote to fetch.
+     */
+    where?: AgentNoteWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentNotes to fetch.
+     */
+    orderBy?: AgentNoteOrderByWithRelationInput | AgentNoteOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AgentNotes.
+     */
+    cursor?: AgentNoteWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentNotes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentNotes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AgentNotes.
+     */
+    distinct?: AgentNoteScalarFieldEnum | AgentNoteScalarFieldEnum[]
+  }
+
+  /**
+   * AgentNote findMany
+   */
+  export type AgentNoteFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentNote
+     */
+    select?: AgentNoteSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentNote
+     */
+    omit?: AgentNoteOmit<ExtArgs> | null
+    /**
+     * Filter, which AgentNotes to fetch.
+     */
+    where?: AgentNoteWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentNotes to fetch.
+     */
+    orderBy?: AgentNoteOrderByWithRelationInput | AgentNoteOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AgentNotes.
+     */
+    cursor?: AgentNoteWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentNotes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentNotes.
+     */
+    skip?: number
+    distinct?: AgentNoteScalarFieldEnum | AgentNoteScalarFieldEnum[]
+  }
+
+  /**
+   * AgentNote create
+   */
+  export type AgentNoteCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentNote
+     */
+    select?: AgentNoteSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentNote
+     */
+    omit?: AgentNoteOmit<ExtArgs> | null
+    /**
+     * The data needed to create a AgentNote.
+     */
+    data: XOR<AgentNoteCreateInput, AgentNoteUncheckedCreateInput>
+  }
+
+  /**
+   * AgentNote createMany
+   */
+  export type AgentNoteCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AgentNotes.
+     */
+    data: AgentNoteCreateManyInput | AgentNoteCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * AgentNote createManyAndReturn
+   */
+  export type AgentNoteCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentNote
+     */
+    select?: AgentNoteSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentNote
+     */
+    omit?: AgentNoteOmit<ExtArgs> | null
+    /**
+     * The data used to create many AgentNotes.
+     */
+    data: AgentNoteCreateManyInput | AgentNoteCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * AgentNote update
+   */
+  export type AgentNoteUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentNote
+     */
+    select?: AgentNoteSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentNote
+     */
+    omit?: AgentNoteOmit<ExtArgs> | null
+    /**
+     * The data needed to update a AgentNote.
+     */
+    data: XOR<AgentNoteUpdateInput, AgentNoteUncheckedUpdateInput>
+    /**
+     * Choose, which AgentNote to update.
+     */
+    where: AgentNoteWhereUniqueInput
+  }
+
+  /**
+   * AgentNote updateMany
+   */
+  export type AgentNoteUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AgentNotes.
+     */
+    data: XOR<AgentNoteUpdateManyMutationInput, AgentNoteUncheckedUpdateManyInput>
+    /**
+     * Filter which AgentNotes to update
+     */
+    where?: AgentNoteWhereInput
+    /**
+     * Limit how many AgentNotes to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AgentNote updateManyAndReturn
+   */
+  export type AgentNoteUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentNote
+     */
+    select?: AgentNoteSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentNote
+     */
+    omit?: AgentNoteOmit<ExtArgs> | null
+    /**
+     * The data used to update AgentNotes.
+     */
+    data: XOR<AgentNoteUpdateManyMutationInput, AgentNoteUncheckedUpdateManyInput>
+    /**
+     * Filter which AgentNotes to update
+     */
+    where?: AgentNoteWhereInput
+    /**
+     * Limit how many AgentNotes to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AgentNote upsert
+   */
+  export type AgentNoteUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentNote
+     */
+    select?: AgentNoteSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentNote
+     */
+    omit?: AgentNoteOmit<ExtArgs> | null
+    /**
+     * The filter to search for the AgentNote to update in case it exists.
+     */
+    where: AgentNoteWhereUniqueInput
+    /**
+     * In case the AgentNote found by the `where` argument doesn't exist, create a new AgentNote with this data.
+     */
+    create: XOR<AgentNoteCreateInput, AgentNoteUncheckedCreateInput>
+    /**
+     * In case the AgentNote was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AgentNoteUpdateInput, AgentNoteUncheckedUpdateInput>
+  }
+
+  /**
+   * AgentNote delete
+   */
+  export type AgentNoteDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentNote
+     */
+    select?: AgentNoteSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentNote
+     */
+    omit?: AgentNoteOmit<ExtArgs> | null
+    /**
+     * Filter which AgentNote to delete.
+     */
+    where: AgentNoteWhereUniqueInput
+  }
+
+  /**
+   * AgentNote deleteMany
+   */
+  export type AgentNoteDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AgentNotes to delete
+     */
+    where?: AgentNoteWhereInput
+    /**
+     * Limit how many AgentNotes to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * AgentNote without action
+   */
+  export type AgentNoteDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentNote
+     */
+    select?: AgentNoteSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentNote
+     */
+    omit?: AgentNoteOmit<ExtArgs> | null
   }
 
 
@@ -27967,6 +29176,11 @@ export namespace Prisma {
     icon: 'icon',
     downloads: 'downloads',
     rating: 'rating',
+    status: 'status',
+    submittedBy: 'submittedBy',
+    rejectionReason: 'rejectionReason',
+    reviewedBy: 'reviewedBy',
+    reviewedAt: 'reviewedAt',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -28090,13 +29304,28 @@ export namespace Prisma {
     role: 'role',
     autoAssigned: 'autoAssigned',
     invitedBy: 'invitedBy',
+    addedBy: 'addedBy',
     isActive: 'isActive',
+    autoRespond: 'autoRespond',
     joinedAt: 'joinedAt',
     leftAt: 'leftAt',
     updatedAt: 'updatedAt'
   };
 
   export type ConversationParticipantScalarFieldEnum = (typeof ConversationParticipantScalarFieldEnum)[keyof typeof ConversationParticipantScalarFieldEnum]
+
+
+  export const AgentNoteScalarFieldEnum: {
+    id: 'id',
+    contactId: 'contactId',
+    body: 'body',
+    authorId: 'authorId',
+    authorName: 'authorName',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type AgentNoteScalarFieldEnum = (typeof AgentNoteScalarFieldEnum)[keyof typeof AgentNoteScalarFieldEnum]
 
 
   export const ChannelMessageScalarFieldEnum: {
@@ -29154,6 +30383,11 @@ export namespace Prisma {
     icon?: StringNullableFilter<"Plugin"> | string | null
     downloads?: IntFilter<"Plugin"> | number
     rating?: FloatFilter<"Plugin"> | number
+    status?: StringFilter<"Plugin"> | string
+    submittedBy?: StringNullableFilter<"Plugin"> | string | null
+    rejectionReason?: StringNullableFilter<"Plugin"> | string | null
+    reviewedBy?: StringNullableFilter<"Plugin"> | string | null
+    reviewedAt?: DateTimeNullableFilter<"Plugin"> | Date | string | null
     createdAt?: DateTimeFilter<"Plugin"> | Date | string
     updatedAt?: DateTimeFilter<"Plugin"> | Date | string
     versions?: PluginVersionListRelationFilter
@@ -29171,6 +30405,11 @@ export namespace Prisma {
     icon?: SortOrderInput | SortOrder
     downloads?: SortOrder
     rating?: SortOrder
+    status?: SortOrder
+    submittedBy?: SortOrderInput | SortOrder
+    rejectionReason?: SortOrderInput | SortOrder
+    reviewedBy?: SortOrderInput | SortOrder
+    reviewedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     versions?: PluginVersionOrderByRelationAggregateInput
@@ -29191,6 +30430,11 @@ export namespace Prisma {
     icon?: StringNullableFilter<"Plugin"> | string | null
     downloads?: IntFilter<"Plugin"> | number
     rating?: FloatFilter<"Plugin"> | number
+    status?: StringFilter<"Plugin"> | string
+    submittedBy?: StringNullableFilter<"Plugin"> | string | null
+    rejectionReason?: StringNullableFilter<"Plugin"> | string | null
+    reviewedBy?: StringNullableFilter<"Plugin"> | string | null
+    reviewedAt?: DateTimeNullableFilter<"Plugin"> | Date | string | null
     createdAt?: DateTimeFilter<"Plugin"> | Date | string
     updatedAt?: DateTimeFilter<"Plugin"> | Date | string
     versions?: PluginVersionListRelationFilter
@@ -29208,6 +30452,11 @@ export namespace Prisma {
     icon?: SortOrderInput | SortOrder
     downloads?: SortOrder
     rating?: SortOrder
+    status?: SortOrder
+    submittedBy?: SortOrderInput | SortOrder
+    rejectionReason?: SortOrderInput | SortOrder
+    reviewedBy?: SortOrderInput | SortOrder
+    reviewedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: PluginCountOrderByAggregateInput
@@ -29231,6 +30480,11 @@ export namespace Prisma {
     icon?: StringNullableWithAggregatesFilter<"Plugin"> | string | null
     downloads?: IntWithAggregatesFilter<"Plugin"> | number
     rating?: FloatWithAggregatesFilter<"Plugin"> | number
+    status?: StringWithAggregatesFilter<"Plugin"> | string
+    submittedBy?: StringNullableWithAggregatesFilter<"Plugin"> | string | null
+    rejectionReason?: StringNullableWithAggregatesFilter<"Plugin"> | string | null
+    reviewedBy?: StringNullableWithAggregatesFilter<"Plugin"> | string | null
+    reviewedAt?: DateTimeNullableWithAggregatesFilter<"Plugin"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Plugin"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Plugin"> | Date | string
   }
@@ -29790,7 +31044,9 @@ export namespace Prisma {
     role?: StringFilter<"ConversationParticipant"> | string
     autoAssigned?: BoolFilter<"ConversationParticipant"> | boolean
     invitedBy?: StringNullableFilter<"ConversationParticipant"> | string | null
+    addedBy?: StringNullableFilter<"ConversationParticipant"> | string | null
     isActive?: BoolFilter<"ConversationParticipant"> | boolean
+    autoRespond?: BoolFilter<"ConversationParticipant"> | boolean
     joinedAt?: DateTimeFilter<"ConversationParticipant"> | Date | string
     leftAt?: DateTimeNullableFilter<"ConversationParticipant"> | Date | string | null
     updatedAt?: DateTimeFilter<"ConversationParticipant"> | Date | string
@@ -29807,7 +31063,9 @@ export namespace Prisma {
     role?: SortOrder
     autoAssigned?: SortOrder
     invitedBy?: SortOrderInput | SortOrder
+    addedBy?: SortOrderInput | SortOrder
     isActive?: SortOrder
+    autoRespond?: SortOrder
     joinedAt?: SortOrder
     leftAt?: SortOrderInput | SortOrder
     updatedAt?: SortOrder
@@ -29828,7 +31086,9 @@ export namespace Prisma {
     role?: StringFilter<"ConversationParticipant"> | string
     autoAssigned?: BoolFilter<"ConversationParticipant"> | boolean
     invitedBy?: StringNullableFilter<"ConversationParticipant"> | string | null
+    addedBy?: StringNullableFilter<"ConversationParticipant"> | string | null
     isActive?: BoolFilter<"ConversationParticipant"> | boolean
+    autoRespond?: BoolFilter<"ConversationParticipant"> | boolean
     joinedAt?: DateTimeFilter<"ConversationParticipant"> | Date | string
     leftAt?: DateTimeNullableFilter<"ConversationParticipant"> | Date | string | null
     updatedAt?: DateTimeFilter<"ConversationParticipant"> | Date | string
@@ -29845,7 +31105,9 @@ export namespace Prisma {
     role?: SortOrder
     autoAssigned?: SortOrder
     invitedBy?: SortOrderInput | SortOrder
+    addedBy?: SortOrderInput | SortOrder
     isActive?: SortOrder
+    autoRespond?: SortOrder
     joinedAt?: SortOrder
     leftAt?: SortOrderInput | SortOrder
     updatedAt?: SortOrder
@@ -29867,10 +31129,74 @@ export namespace Prisma {
     role?: StringWithAggregatesFilter<"ConversationParticipant"> | string
     autoAssigned?: BoolWithAggregatesFilter<"ConversationParticipant"> | boolean
     invitedBy?: StringNullableWithAggregatesFilter<"ConversationParticipant"> | string | null
+    addedBy?: StringNullableWithAggregatesFilter<"ConversationParticipant"> | string | null
     isActive?: BoolWithAggregatesFilter<"ConversationParticipant"> | boolean
+    autoRespond?: BoolWithAggregatesFilter<"ConversationParticipant"> | boolean
     joinedAt?: DateTimeWithAggregatesFilter<"ConversationParticipant"> | Date | string
     leftAt?: DateTimeNullableWithAggregatesFilter<"ConversationParticipant"> | Date | string | null
     updatedAt?: DateTimeWithAggregatesFilter<"ConversationParticipant"> | Date | string
+  }
+
+  export type AgentNoteWhereInput = {
+    AND?: AgentNoteWhereInput | AgentNoteWhereInput[]
+    OR?: AgentNoteWhereInput[]
+    NOT?: AgentNoteWhereInput | AgentNoteWhereInput[]
+    id?: StringFilter<"AgentNote"> | string
+    contactId?: StringFilter<"AgentNote"> | string
+    body?: StringFilter<"AgentNote"> | string
+    authorId?: StringFilter<"AgentNote"> | string
+    authorName?: StringFilter<"AgentNote"> | string
+    createdAt?: DateTimeFilter<"AgentNote"> | Date | string
+    updatedAt?: DateTimeFilter<"AgentNote"> | Date | string
+  }
+
+  export type AgentNoteOrderByWithRelationInput = {
+    id?: SortOrder
+    contactId?: SortOrder
+    body?: SortOrder
+    authorId?: SortOrder
+    authorName?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AgentNoteWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: AgentNoteWhereInput | AgentNoteWhereInput[]
+    OR?: AgentNoteWhereInput[]
+    NOT?: AgentNoteWhereInput | AgentNoteWhereInput[]
+    contactId?: StringFilter<"AgentNote"> | string
+    body?: StringFilter<"AgentNote"> | string
+    authorId?: StringFilter<"AgentNote"> | string
+    authorName?: StringFilter<"AgentNote"> | string
+    createdAt?: DateTimeFilter<"AgentNote"> | Date | string
+    updatedAt?: DateTimeFilter<"AgentNote"> | Date | string
+  }, "id">
+
+  export type AgentNoteOrderByWithAggregationInput = {
+    id?: SortOrder
+    contactId?: SortOrder
+    body?: SortOrder
+    authorId?: SortOrder
+    authorName?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: AgentNoteCountOrderByAggregateInput
+    _max?: AgentNoteMaxOrderByAggregateInput
+    _min?: AgentNoteMinOrderByAggregateInput
+  }
+
+  export type AgentNoteScalarWhereWithAggregatesInput = {
+    AND?: AgentNoteScalarWhereWithAggregatesInput | AgentNoteScalarWhereWithAggregatesInput[]
+    OR?: AgentNoteScalarWhereWithAggregatesInput[]
+    NOT?: AgentNoteScalarWhereWithAggregatesInput | AgentNoteScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"AgentNote"> | string
+    contactId?: StringWithAggregatesFilter<"AgentNote"> | string
+    body?: StringWithAggregatesFilter<"AgentNote"> | string
+    authorId?: StringWithAggregatesFilter<"AgentNote"> | string
+    authorName?: StringWithAggregatesFilter<"AgentNote"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"AgentNote"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"AgentNote"> | Date | string
   }
 
   export type ChannelMessageWhereInput = {
@@ -31132,6 +32458,11 @@ export namespace Prisma {
     icon?: string | null
     downloads?: number
     rating?: number
+    status?: string
+    submittedBy?: string | null
+    rejectionReason?: string | null
+    reviewedBy?: string | null
+    reviewedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     versions?: PluginVersionCreateNestedManyWithoutPluginInput
@@ -31149,6 +32480,11 @@ export namespace Prisma {
     icon?: string | null
     downloads?: number
     rating?: number
+    status?: string
+    submittedBy?: string | null
+    rejectionReason?: string | null
+    reviewedBy?: string | null
+    reviewedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     versions?: PluginVersionUncheckedCreateNestedManyWithoutPluginInput
@@ -31166,6 +32502,11 @@ export namespace Prisma {
     icon?: NullableStringFieldUpdateOperationsInput | string | null
     downloads?: IntFieldUpdateOperationsInput | number
     rating?: FloatFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    submittedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     versions?: PluginVersionUpdateManyWithoutPluginNestedInput
@@ -31183,6 +32524,11 @@ export namespace Prisma {
     icon?: NullableStringFieldUpdateOperationsInput | string | null
     downloads?: IntFieldUpdateOperationsInput | number
     rating?: FloatFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    submittedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     versions?: PluginVersionUncheckedUpdateManyWithoutPluginNestedInput
@@ -31200,6 +32546,11 @@ export namespace Prisma {
     icon?: string | null
     downloads?: number
     rating?: number
+    status?: string
+    submittedBy?: string | null
+    rejectionReason?: string | null
+    reviewedBy?: string | null
+    reviewedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -31215,6 +32566,11 @@ export namespace Prisma {
     icon?: NullableStringFieldUpdateOperationsInput | string | null
     downloads?: IntFieldUpdateOperationsInput | number
     rating?: FloatFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    submittedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -31230,6 +32586,11 @@ export namespace Prisma {
     icon?: NullableStringFieldUpdateOperationsInput | string | null
     downloads?: IntFieldUpdateOperationsInput | number
     rating?: FloatFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    submittedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -31870,7 +33231,9 @@ export namespace Prisma {
     role?: string
     autoAssigned?: boolean
     invitedBy?: string | null
+    addedBy?: string | null
     isActive?: boolean
+    autoRespond?: boolean
     joinedAt?: Date | string
     leftAt?: Date | string | null
     updatedAt?: Date | string
@@ -31887,7 +33250,9 @@ export namespace Prisma {
     role?: string
     autoAssigned?: boolean
     invitedBy?: string | null
+    addedBy?: string | null
     isActive?: boolean
+    autoRespond?: boolean
     joinedAt?: Date | string
     leftAt?: Date | string | null
     updatedAt?: Date | string
@@ -31902,7 +33267,9 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     autoAssigned?: BoolFieldUpdateOperationsInput | boolean
     invitedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    addedBy?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    autoRespond?: BoolFieldUpdateOperationsInput | boolean
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     leftAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -31919,7 +33286,9 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     autoAssigned?: BoolFieldUpdateOperationsInput | boolean
     invitedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    addedBy?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    autoRespond?: BoolFieldUpdateOperationsInput | boolean
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     leftAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -31935,7 +33304,9 @@ export namespace Prisma {
     role?: string
     autoAssigned?: boolean
     invitedBy?: string | null
+    addedBy?: string | null
     isActive?: boolean
+    autoRespond?: boolean
     joinedAt?: Date | string
     leftAt?: Date | string | null
     updatedAt?: Date | string
@@ -31950,7 +33321,9 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     autoAssigned?: BoolFieldUpdateOperationsInput | boolean
     invitedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    addedBy?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    autoRespond?: BoolFieldUpdateOperationsInput | boolean
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     leftAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -31966,9 +33339,81 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     autoAssigned?: BoolFieldUpdateOperationsInput | boolean
     invitedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    addedBy?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    autoRespond?: BoolFieldUpdateOperationsInput | boolean
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     leftAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AgentNoteCreateInput = {
+    id?: string
+    contactId: string
+    body: string
+    authorId: string
+    authorName: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type AgentNoteUncheckedCreateInput = {
+    id?: string
+    contactId: string
+    body: string
+    authorId: string
+    authorName: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type AgentNoteUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    contactId?: StringFieldUpdateOperationsInput | string
+    body?: StringFieldUpdateOperationsInput | string
+    authorId?: StringFieldUpdateOperationsInput | string
+    authorName?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AgentNoteUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    contactId?: StringFieldUpdateOperationsInput | string
+    body?: StringFieldUpdateOperationsInput | string
+    authorId?: StringFieldUpdateOperationsInput | string
+    authorName?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AgentNoteCreateManyInput = {
+    id?: string
+    contactId: string
+    body: string
+    authorId: string
+    authorName: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type AgentNoteUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    contactId?: StringFieldUpdateOperationsInput | string
+    body?: StringFieldUpdateOperationsInput | string
+    authorId?: StringFieldUpdateOperationsInput | string
+    authorName?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AgentNoteUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    contactId?: StringFieldUpdateOperationsInput | string
+    body?: StringFieldUpdateOperationsInput | string
+    authorId?: StringFieldUpdateOperationsInput | string
+    authorName?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -33086,6 +34531,11 @@ export namespace Prisma {
     icon?: SortOrder
     downloads?: SortOrder
     rating?: SortOrder
+    status?: SortOrder
+    submittedBy?: SortOrder
+    rejectionReason?: SortOrder
+    reviewedBy?: SortOrder
+    reviewedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -33106,6 +34556,11 @@ export namespace Prisma {
     icon?: SortOrder
     downloads?: SortOrder
     rating?: SortOrder
+    status?: SortOrder
+    submittedBy?: SortOrder
+    rejectionReason?: SortOrder
+    reviewedBy?: SortOrder
+    reviewedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -33121,6 +34576,11 @@ export namespace Prisma {
     icon?: SortOrder
     downloads?: SortOrder
     rating?: SortOrder
+    status?: SortOrder
+    submittedBy?: SortOrder
+    rejectionReason?: SortOrder
+    reviewedBy?: SortOrder
+    reviewedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -33548,7 +35008,9 @@ export namespace Prisma {
     role?: SortOrder
     autoAssigned?: SortOrder
     invitedBy?: SortOrder
+    addedBy?: SortOrder
     isActive?: SortOrder
+    autoRespond?: SortOrder
     joinedAt?: SortOrder
     leftAt?: SortOrder
     updatedAt?: SortOrder
@@ -33564,7 +35026,9 @@ export namespace Prisma {
     role?: SortOrder
     autoAssigned?: SortOrder
     invitedBy?: SortOrder
+    addedBy?: SortOrder
     isActive?: SortOrder
+    autoRespond?: SortOrder
     joinedAt?: SortOrder
     leftAt?: SortOrder
     updatedAt?: SortOrder
@@ -33580,9 +35044,41 @@ export namespace Prisma {
     role?: SortOrder
     autoAssigned?: SortOrder
     invitedBy?: SortOrder
+    addedBy?: SortOrder
     isActive?: SortOrder
+    autoRespond?: SortOrder
     joinedAt?: SortOrder
     leftAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AgentNoteCountOrderByAggregateInput = {
+    id?: SortOrder
+    contactId?: SortOrder
+    body?: SortOrder
+    authorId?: SortOrder
+    authorName?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AgentNoteMaxOrderByAggregateInput = {
+    id?: SortOrder
+    contactId?: SortOrder
+    body?: SortOrder
+    authorId?: SortOrder
+    authorName?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AgentNoteMinOrderByAggregateInput = {
+    id?: SortOrder
+    contactId?: SortOrder
+    body?: SortOrder
+    authorId?: SortOrder
+    authorName?: SortOrder
+    createdAt?: SortOrder
     updatedAt?: SortOrder
   }
 
@@ -35157,6 +36653,11 @@ export namespace Prisma {
     icon?: string | null
     downloads?: number
     rating?: number
+    status?: string
+    submittedBy?: string | null
+    rejectionReason?: string | null
+    reviewedBy?: string | null
+    reviewedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     installations?: PluginInstallationCreateNestedManyWithoutPluginInput
@@ -35173,6 +36674,11 @@ export namespace Prisma {
     icon?: string | null
     downloads?: number
     rating?: number
+    status?: string
+    submittedBy?: string | null
+    rejectionReason?: string | null
+    reviewedBy?: string | null
+    reviewedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     installations?: PluginInstallationUncheckedCreateNestedManyWithoutPluginInput
@@ -35205,6 +36711,11 @@ export namespace Prisma {
     icon?: NullableStringFieldUpdateOperationsInput | string | null
     downloads?: IntFieldUpdateOperationsInput | number
     rating?: FloatFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    submittedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     installations?: PluginInstallationUpdateManyWithoutPluginNestedInput
@@ -35221,6 +36732,11 @@ export namespace Prisma {
     icon?: NullableStringFieldUpdateOperationsInput | string | null
     downloads?: IntFieldUpdateOperationsInput | number
     rating?: FloatFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    submittedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     installations?: PluginInstallationUncheckedUpdateManyWithoutPluginNestedInput
@@ -35237,6 +36753,11 @@ export namespace Prisma {
     icon?: string | null
     downloads?: number
     rating?: number
+    status?: string
+    submittedBy?: string | null
+    rejectionReason?: string | null
+    reviewedBy?: string | null
+    reviewedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     versions?: PluginVersionCreateNestedManyWithoutPluginInput
@@ -35253,6 +36774,11 @@ export namespace Prisma {
     icon?: string | null
     downloads?: number
     rating?: number
+    status?: string
+    submittedBy?: string | null
+    rejectionReason?: string | null
+    reviewedBy?: string | null
+    reviewedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     versions?: PluginVersionUncheckedCreateNestedManyWithoutPluginInput
@@ -35285,6 +36811,11 @@ export namespace Prisma {
     icon?: NullableStringFieldUpdateOperationsInput | string | null
     downloads?: IntFieldUpdateOperationsInput | number
     rating?: FloatFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    submittedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     versions?: PluginVersionUpdateManyWithoutPluginNestedInput
@@ -35301,6 +36832,11 @@ export namespace Prisma {
     icon?: NullableStringFieldUpdateOperationsInput | string | null
     downloads?: IntFieldUpdateOperationsInput | number
     rating?: FloatFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    submittedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     versions?: PluginVersionUncheckedUpdateManyWithoutPluginNestedInput
@@ -35524,7 +37060,9 @@ export namespace Prisma {
     role?: string
     autoAssigned?: boolean
     invitedBy?: string | null
+    addedBy?: string | null
     isActive?: boolean
+    autoRespond?: boolean
     joinedAt?: Date | string
     leftAt?: Date | string | null
     updatedAt?: Date | string
@@ -35539,7 +37077,9 @@ export namespace Prisma {
     role?: string
     autoAssigned?: boolean
     invitedBy?: string | null
+    addedBy?: string | null
     isActive?: boolean
+    autoRespond?: boolean
     joinedAt?: Date | string
     leftAt?: Date | string | null
     updatedAt?: Date | string
@@ -35688,7 +37228,9 @@ export namespace Prisma {
     role?: StringFilter<"ConversationParticipant"> | string
     autoAssigned?: BoolFilter<"ConversationParticipant"> | boolean
     invitedBy?: StringNullableFilter<"ConversationParticipant"> | string | null
+    addedBy?: StringNullableFilter<"ConversationParticipant"> | string | null
     isActive?: BoolFilter<"ConversationParticipant"> | boolean
+    autoRespond?: BoolFilter<"ConversationParticipant"> | boolean
     joinedAt?: DateTimeFilter<"ConversationParticipant"> | Date | string
     leftAt?: DateTimeNullableFilter<"ConversationParticipant"> | Date | string | null
     updatedAt?: DateTimeFilter<"ConversationParticipant"> | Date | string
@@ -36446,7 +37988,9 @@ export namespace Prisma {
     role?: string
     autoAssigned?: boolean
     invitedBy?: string | null
+    addedBy?: string | null
     isActive?: boolean
+    autoRespond?: boolean
     joinedAt?: Date | string
     leftAt?: Date | string | null
     updatedAt?: Date | string
@@ -36548,7 +38092,9 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     autoAssigned?: BoolFieldUpdateOperationsInput | boolean
     invitedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    addedBy?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    autoRespond?: BoolFieldUpdateOperationsInput | boolean
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     leftAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -36563,7 +38109,9 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     autoAssigned?: BoolFieldUpdateOperationsInput | boolean
     invitedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    addedBy?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    autoRespond?: BoolFieldUpdateOperationsInput | boolean
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     leftAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -36578,7 +38126,9 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     autoAssigned?: BoolFieldUpdateOperationsInput | boolean
     invitedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    addedBy?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    autoRespond?: BoolFieldUpdateOperationsInput | boolean
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     leftAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string

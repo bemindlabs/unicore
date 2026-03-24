@@ -1,5 +1,7 @@
 'use client';
 
+// Updated: 2026-03-23
+
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
@@ -23,8 +25,6 @@ import {
   Badge,
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
   Dialog,
   DialogContent,
   DialogHeader,
@@ -33,8 +33,6 @@ import {
   DialogClose,
 } from '@unicore/ui';
 import { api } from '@/lib/api';
-
-// Updated: 2026-03-23
 
 type PluginStatus = 'active' | 'disabled' | 'error';
 
@@ -54,92 +52,6 @@ interface InstalledPlugin {
   errorMessage?: string;
   hasUpdate?: boolean;
 }
-
-const MOCK_INSTALLED: InstalledPlugin[] = [
-  {
-    id: '1',
-    slug: 'gpt-4o-agent',
-    name: 'GPT-4o Agent',
-    description: 'Deploy a powerful GPT-4o powered agent with advanced reasoning and multimodal capabilities.',
-    author: 'OpenAI Labs',
-    version: '2.1.0',
-    latestVersion: '2.2.0',
-    category: 'agents',
-    icon: '🤖',
-    status: 'active',
-    installedAt: '2026-02-10T08:00:00Z',
-    updatedAt: '2026-03-01T12:00:00Z',
-    hasUpdate: true,
-  },
-  {
-    id: '2',
-    slug: 'slack-integration',
-    name: 'Slack Integration',
-    description: 'Connect your workspace with Slack for real-time notifications, alerts, and two-way messaging.',
-    author: 'UniCore Labs',
-    version: '1.4.2',
-    category: 'apps',
-    icon: '💬',
-    status: 'active',
-    installedAt: '2026-01-20T09:00:00Z',
-    updatedAt: '2026-03-10T14:00:00Z',
-  },
-  {
-    id: '3',
-    slug: 'advanced-analytics',
-    name: 'Advanced Analytics',
-    description: 'Deep dive into your business metrics with AI-powered insights and predictive analytics.',
-    author: 'DataCore Inc.',
-    version: '3.0.1',
-    latestVersion: '3.1.0',
-    category: 'analytics',
-    icon: '📊',
-    status: 'disabled',
-    installedAt: '2026-02-05T11:00:00Z',
-    updatedAt: '2026-02-28T09:00:00Z',
-    hasUpdate: true,
-  },
-  {
-    id: '4',
-    slug: 'workflow-automation',
-    name: 'Workflow Automation Pro',
-    description: 'Build complex multi-step workflows with conditional logic, loops, and AI decision nodes.',
-    author: 'FlowTech',
-    version: '1.1.0',
-    category: 'workflows',
-    icon: '⚡',
-    status: 'error',
-    installedAt: '2026-03-01T10:00:00Z',
-    updatedAt: '2026-03-15T08:00:00Z',
-    errorMessage: 'Failed to connect to external workflow service. Check API credentials in configuration.',
-  },
-  {
-    id: '5',
-    slug: 'telegram-channel',
-    name: 'Telegram Channel',
-    description: 'Deploy AI agents directly to Telegram with full message handling and inline buttons.',
-    author: 'UniCore Labs',
-    version: '2.3.1',
-    category: 'channels',
-    icon: '✈️',
-    status: 'active',
-    installedAt: '2026-01-15T07:00:00Z',
-    updatedAt: '2026-03-18T11:00:00Z',
-  },
-  {
-    id: '6',
-    slug: 'security-scanner',
-    name: 'Security Scanner',
-    description: 'Automated vulnerability scanning and compliance checks for your AI agent configurations.',
-    author: 'SecureAI',
-    version: '1.0.3',
-    category: 'security',
-    icon: '🛡️',
-    status: 'active',
-    installedAt: '2026-02-22T13:00:00Z',
-    updatedAt: '2026-03-05T16:00:00Z',
-  },
-];
 
 function StatusBadge({ status }: { status: PluginStatus }) {
   if (status === 'active') {
@@ -313,10 +225,10 @@ export default function InstalledPluginsPage() {
   const fetchInstalled = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await api.get<InstalledPlugin[]>('/api/proxy/ai/plugins/installed');
-      setPlugins(data);
+      const data = await api.get<InstalledPlugin[]>('/api/v1/plugins/installed');
+      setPlugins(Array.isArray(data) ? data : []);
     } catch {
-      setPlugins(MOCK_INSTALLED);
+      setPlugins([]);
     } finally {
       setLoading(false);
     }
@@ -338,7 +250,7 @@ export default function InstalledPluginsPage() {
       const target = plugins.find(p => p.id === id);
       if (!target) return;
       const action = target.status === 'active' ? 'disable' : 'enable';
-      await api.post(`/api/proxy/ai/plugins/${id}/${action}`, {});
+      await api.post(`/api/v1/plugins/${id}/${action}`, {});
     } catch {
       // revert on failure
       setPlugins(prev =>
@@ -354,7 +266,7 @@ export default function InstalledPluginsPage() {
   const handleUpdate = useCallback(async (id: string) => {
     setUpdatingId(id);
     try {
-      await api.post(`/api/proxy/ai/plugins/${id}/update`, {});
+      await api.post(`/api/v1/plugins/${id}/update`, {});
       setPlugins(prev =>
         prev.map(p => {
           if (p.id !== id) return p;
@@ -362,7 +274,7 @@ export default function InstalledPluginsPage() {
         })
       );
     } catch {
-      // silently ignore in demo
+      // silently ignore
     } finally {
       setUpdatingId(null);
     }
@@ -372,7 +284,7 @@ export default function InstalledPluginsPage() {
     if (!uninstallTarget) return;
     setUninstalling(true);
     try {
-      await api.delete(`/api/proxy/ai/plugins/${uninstallTarget.id}`);
+      await api.delete(`/api/v1/plugins/${uninstallTarget.id}`);
       setPlugins(prev => prev.filter(p => p.id !== uninstallTarget.id));
     } catch {
       setPlugins(prev => prev.filter(p => p.id !== uninstallTarget.id));

@@ -4,6 +4,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { ConversationsGateway } from '../conversations.gateway';
 import { KafkaProducerService } from '../kafka/kafka-producer.service';
 import { NormalizedMessageDto } from '../dto/normalized-message.dto';
+import { ConversationChannel } from '../../generated/prisma';
 
 export type ConversationStatus = 'unassigned' | 'assigned' | 'open' | 'closed';
 
@@ -61,7 +62,7 @@ export class InboundRouterService {
     });
 
     // 4. Publish to Kafka (fire-and-forget, graceful degradation)
-    const routedTo = conversation.assigneeId ? 'agent' : 'unassigned';
+    const routedTo: 'agent' | 'unassigned' = conversation.assigneeId ? 'agent' : 'unassigned';
     const kafkaEvent = {
       conversationId: conversation.id,
       messageId: savedMsg.id,
@@ -118,10 +119,11 @@ export class InboundRouterService {
     contactName: string,
     contactId: string,
   ) {
+    const channelEnum = channel as ConversationChannel;
     // Look for an existing non-closed conversation on this channel+externalId
     const existing = await this.prisma.conversation.findFirst({
       where: {
-        channel,
+        channel: channelEnum,
         externalId,
         status: { not: 'CLOSED' },
       },
@@ -135,7 +137,7 @@ export class InboundRouterService {
     // Create a new conversation
     const created = await this.prisma.conversation.create({
       data: {
-        channel,
+        channel: channelEnum,
         externalId,
         status: 'OPEN',
         contactName,
@@ -185,11 +187,20 @@ export class InboundRouterService {
           id: msg.senderId,
           name: msg.senderName ?? msg.senderId,
           type: 'contact',
+<<<<<<< HEAD
         },
         metadata: {
           channel: msg.channel,
           rawPayload: msg.rawPayload ?? {},
         },
+=======
+        } as unknown as import('../../generated/prisma').Prisma.InputJsonValue,
+        metadata: {
+          channel: msg.channel,
+          rawPayload: msg.rawPayload ?? {},
+          routedTo: 'pending',
+        } as unknown as import('../../generated/prisma').Prisma.InputJsonValue,
+>>>>>>> main
       },
     });
   }
@@ -257,6 +268,10 @@ export class InboundRouterService {
    * Mark the conversation as unassigned (waiting for human or agent pickup).
    */
   private async routeToUnassigned(conversationId: string): Promise<void> {
+<<<<<<< HEAD
+=======
+    // Messages are tracked in the Message model; log for monitoring
+>>>>>>> main
     this.logger.log(
       `Conversation ${conversationId} placed in unassigned queue`,
     );
