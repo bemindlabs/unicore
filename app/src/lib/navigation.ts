@@ -189,7 +189,7 @@ export const menuSections: NavSection[] = [
         icon: Terminal,
         href: process.env.NEXT_PUBLIC_GEEK_PORTAL_URL ?? 'https://geek-unicore-demo.bemind.tech',
         roles: [UserRole.Owner, UserRole.Operator],
-        license: { tier: 'pro', feature: 'featGeekCli', upgradeLabel: 'Pro' },
+        license: { tier: 'pro', feature: 'geekCli', upgradeLabel: 'Pro' },
         external: true,
       },
       {
