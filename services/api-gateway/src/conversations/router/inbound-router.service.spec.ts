@@ -160,10 +160,6 @@ describe('InboundRouterService', () => {
           type: 'TEXT',
           content: 'Hello!',
           externalId: 'tg-msg-1',
-<<<<<<< HEAD
-          sender: { id: 'user-789', name: 'Alice', type: 'contact' },
-=======
->>>>>>> main
         }) as unknown,
       });
       expect(result).toEqual(mockMessage);
