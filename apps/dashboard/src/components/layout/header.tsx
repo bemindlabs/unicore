@@ -150,8 +150,6 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
         />
       </div>
 
-      <TerminalModal open={terminalOpen} onClose={closeTerminal} onConnected={setTerminalConnected} />
-
       <LicenseBadge />
 
       {/* User avatar dropdown */}
