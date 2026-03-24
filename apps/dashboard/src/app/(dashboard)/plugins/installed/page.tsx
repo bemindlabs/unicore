@@ -31,7 +31,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogClose,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 import { api } from '@/lib/api';
 
 type PluginStatus = 'active' | 'disabled' | 'error';

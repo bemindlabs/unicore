@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { X, Check, Minus, Crown, MessageSquare } from 'lucide-react';
-import { Button } from '@unicore/ui';
+import { Button } from '@bemindlabs/unicore-ui';
 
 interface Props {
   open: boolean;

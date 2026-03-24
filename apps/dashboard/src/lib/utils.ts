@@ -1,1 +1,1 @@
-export { cn } from '@unicore/ui';
+export { cn } from '@bemindlabs/unicore-ui';

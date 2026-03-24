@@ -1,4 +1,4 @@
-// CSS theme generator for @unicore/branding (community edition)
+// CSS theme generator for @bemindlabs/unicore-branding (community edition)
 // Converts BrandingConfig → CSS custom properties (variables) + font imports
 
 import type { BrandingConfig, BrandingFont, CssGeneratorOptions } from './types';

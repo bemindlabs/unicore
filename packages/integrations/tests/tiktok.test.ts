@@ -1,4 +1,4 @@
-// TikTok Adapter tests — @unicore/integrations
+// TikTok Adapter tests — @bemindlabs/unicore-integrations
 
 import { TiktokAdapter } from '../src/adapters/tiktok/index';
 import type { ITiktokClient } from '../src/adapters/tiktok/index';

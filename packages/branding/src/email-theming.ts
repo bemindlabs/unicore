@@ -1,4 +1,4 @@
-// Email template theming for @unicore/branding (pro edition)
+// Email template theming for @bemindlabs/unicore-branding (pro edition)
 // Generates email-compatible inline styles and CSS from a pro BrandingConfig.
 
 import type { BrandingConfig } from './types';

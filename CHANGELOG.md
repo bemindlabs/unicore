@@ -39,7 +39,7 @@ Updated: 2026-03-22
 ## [0.0.2] - 2026-03-20
 
 ### Added
-- `TiktokAdapter` in `@unicore/integrations` — TikTok Marketing API v1.3 adapter with campaigns, ad groups, ads sync, injectable `ITiktokClient`, and 14 unit tests (UNC-459)
+- `TiktokAdapter` in `@bemindlabs/unicore-integrations` — TikTok Marketing API v1.3 adapter with campaigns, ad groups, ads sync, injectable `ITiktokClient`, and 14 unit tests (UNC-459)
 - `DELETE /api/v1/admin/users/:id` endpoint with self-deletion guard, last-OWNER guard, ChatHistory cleanup, Task assignee nullification, and audit logging (UNC-460)
 - Admin user delete button + confirmation dialog in dashboard (UNC-461)
 - `admin.controller.spec.ts` — 14 unit tests for AdminController (UNC-462)

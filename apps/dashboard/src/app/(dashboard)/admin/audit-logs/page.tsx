@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
   toast,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 import { api } from '@/lib/api';
 
 interface AuditEntry {

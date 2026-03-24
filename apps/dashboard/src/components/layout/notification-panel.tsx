@@ -3,7 +3,7 @@
 import { useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Bell, Check, CheckCheck, Trash2, Info, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
-import { Button, Badge, Separator } from '@unicore/ui';
+import { Button, Badge, Separator } from '@bemindlabs/unicore-ui';
 import type { Notification } from '@/hooks/use-notifications';
 
 interface NotificationPanelProps {

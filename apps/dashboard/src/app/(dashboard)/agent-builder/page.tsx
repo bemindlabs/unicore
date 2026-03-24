@@ -11,7 +11,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
   Tabs, TabsContent, TabsList, TabsTrigger,
   Separator,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 import { ProGate } from '@/components/license/pro-gate';
 import { api } from '@/lib/api';
 

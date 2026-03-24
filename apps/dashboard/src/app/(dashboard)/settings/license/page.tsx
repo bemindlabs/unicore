@@ -40,8 +40,8 @@ import {
   Separator,
   Switch,
   toast,
-} from '@unicore/ui';
-import type { LicenseInfo, LicenseStatus } from '@unicore/shared-types';
+} from '@bemindlabs/unicore-ui';
+import type { LicenseInfo, LicenseStatus } from '@bemindlabs/unicore-shared-types';
 import { api } from '@/lib/api';
 import { useAuth } from '@/hooks/use-auth';
 import { useLicense } from '@/hooks/use-license';

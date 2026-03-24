@@ -26,7 +26,7 @@ import {
   Separator,
   Switch,
   toast,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 import { api } from '@/lib/api';
 
 // ---------------------------------------------------------------------------

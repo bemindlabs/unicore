@@ -1,4 +1,4 @@
-// Default theme presets for @unicore/branding (community edition)
+// Default theme presets for @bemindlabs/unicore-branding (community edition)
 
 import type { BrandingConfig, BrandingPreset } from './types';
 

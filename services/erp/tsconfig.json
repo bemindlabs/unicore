@@ -4,7 +4,7 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "paths": {
-      "@unicore/shared-types": ["../../packages/shared-types/src"]
+      "@bemindlabs/unicore-shared-types": ["../../packages/shared-types/src"]
     }
   },
   "include": ["src/**/*", "test/**/*"]

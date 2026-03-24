@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@unicore/ui';
+import { Button } from '@bemindlabs/unicore-ui';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
 export interface PaginationMeta {

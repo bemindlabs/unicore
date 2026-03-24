@@ -64,9 +64,9 @@ UniCore uses [Turborepo](https://turbo.build/) with [pnpm workspaces](https://pn
 ### Running Individual Services
 
 ```bash
-pnpm --filter @unicore/dashboard dev        # Frontend
-pnpm --filter @unicore/api-gateway dev      # API Gateway
-pnpm --filter @unicore/erp dev              # ERP Service
+pnpm --filter @bemindlabs/unicore-dashboard dev        # Frontend
+pnpm --filter @bemindlabs/unicore-api-gateway dev      # API Gateway
+pnpm --filter @bemindlabs/unicore-erp dev              # ERP Service
 ```
 
 ### Database
@@ -161,7 +161,7 @@ test(erp): add inventory CRUD e2e tests
 
 - Use App Router conventions (`app/` directory)
 - Server Components by default; add `'use client'` only when needed
-- Use shadcn/ui components from `@unicore/ui`
+- Use shadcn/ui components from `@bemindlabs/unicore-ui`
 - Style with Tailwind CSS utility classes
 
 ### Backend (NestJS)

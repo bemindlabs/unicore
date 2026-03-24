@@ -1,6 +1,6 @@
 import type { BrandingConfig, BrandingConfigPatch } from './types';
-export { MemoryBrandingStorage } from '@unicore/branding-base/service';
-export type { BrandingStorage } from '@unicore/branding-base/service';
+export { MemoryBrandingStorage } from '@bemindlabs/unicore-branding-base/service';
+export type { BrandingStorage } from '@bemindlabs/unicore-branding-base/service';
 /** JSON file storage adapter (for Node.js server contexts). Pro feature. */
 export declare class FileBrandingStorage {
     private readonly filePath;

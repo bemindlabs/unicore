@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PluginRuntimeService } from './plugin-runtime.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { PluginLoadError } from '@unicore/plugin-sdk';
+import { PluginLoadError } from '@bemindlabs/unicore-plugin-sdk';
 
 // ─── SDK mocks ────────────────────────────────────────────────────────────────
 
@@ -11,7 +11,7 @@ const mockLifecycleDeactivateAll = jest.fn();
 const mockLifecycleGetActive = jest.fn((): unknown[] => []);
 const mockLoaderLoadFromFile = jest.fn();
 
-jest.mock('@unicore/plugin-sdk', () => {
+jest.mock('@bemindlabs/unicore-plugin-sdk', () => {
   class PluginLoadError extends Error {
     constructor(message: string) {
       super(message);

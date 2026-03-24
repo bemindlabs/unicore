@@ -8,7 +8,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 const ROLES = [
   {
     name: 'Owner',

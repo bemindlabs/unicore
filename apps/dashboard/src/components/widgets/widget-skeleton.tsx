@@ -1,6 +1,6 @@
 // Shared loading skeleton used by all stat-style widgets
 
-import { Card, CardContent, CardHeader, Skeleton } from '@unicore/ui';
+import { Card, CardContent, CardHeader, Skeleton } from '@bemindlabs/unicore-ui';
 
 export function WidgetSkeleton(): JSX.Element {
   return (

@@ -15,7 +15,7 @@ import {
   MessagesSquare,
   UserCircle,
 } from 'lucide-react';
-import { toast, Badge, Button, Input, Skeleton } from '@unicore/ui';
+import { toast, Badge, Button, Input, Skeleton } from '@bemindlabs/unicore-ui';
 import { api } from '@/lib/api';
 import { getAgents } from '@/lib/backoffice/store';
 import type { BackofficeAgent } from '@/lib/backoffice/types';

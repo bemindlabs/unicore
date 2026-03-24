@@ -1,5 +1,5 @@
 {
-  "name": "@unicore/api-gateway",
+  "name": "@bemindlabs/unicore-api-gateway",
   "version": "0.0.2",
   "private": true,
   "scripts": {
@@ -61,8 +61,8 @@
     "@types/passport-local": "^1.0.0",
     "@types/supertest": "^6.0.0",
     "@types/ws": "^8.5.0",
-    "@unicore/config": "workspace:*",
-    "@unicore/plugin-sdk": "workspace:*",
+    "@bemindlabs/unicore-config": "workspace:*",
+    "@bemindlabs/unicore-plugin-sdk": "workspace:*",
     "jest": "^29.7.0",
     "prisma": "^6.0.0",
     "source-map-support": "^0.5.21",

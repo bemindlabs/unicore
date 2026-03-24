@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@unicore/ui';
+import { Button } from '@bemindlabs/unicore-ui';
 import { useState } from 'react';
 
 import { ProgressIndicator } from './progress-indicator';

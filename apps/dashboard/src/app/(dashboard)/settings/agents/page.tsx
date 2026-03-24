@@ -9,7 +9,7 @@ import {
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
   Button, Input, Label,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 import { api } from '@/lib/api';
 
 interface Agent {

@@ -31,7 +31,7 @@ import {
   TableRow,
   Textarea,
   toast,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 import { api } from '@/lib/api';
 import { UpgradeGate } from '@/components/upgrade-gate';
 

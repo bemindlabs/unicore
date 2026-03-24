@@ -28,7 +28,7 @@ export interface TailwindThemeExtension {
  *
  * Usage in tailwind.config.ts:
  * ```ts
- * import { brandingToTailwindTheme } from '@unicore/branding';
+ * import { brandingToTailwindTheme } from '@bemindlabs/unicore-branding';
  * const branding = await loadBrandingConfig();
  * export default { theme: { extend: brandingToTailwindTheme(branding) } };
  * ```

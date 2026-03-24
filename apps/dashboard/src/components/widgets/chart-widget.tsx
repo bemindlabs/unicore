@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle, Skeleton } from '@unicore/ui';
+import { Card, CardContent, CardHeader, CardTitle, Skeleton } from '@bemindlabs/unicore-ui';
 import { useChartData } from '@/hooks/use-widget-data';
 import type { ChartPoint } from '@/types/widget';
 import type { WidgetComponentProps } from './widget-registry';

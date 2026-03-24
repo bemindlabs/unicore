@@ -1,5 +1,5 @@
 {
-  "name": "@unicore/workflow",
+  "name": "@bemindlabs/unicore-workflow",
   "version": "0.0.2",
   "private": true,
   "scripts": {
@@ -24,7 +24,7 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "uuid": "^9.0.1",
-    "@unicore/config": "workspace:*"
+    "@bemindlabs/unicore-config": "workspace:*"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.4.0",
@@ -60,7 +60,7 @@
       "<rootDir>/test/"
     ],
     "moduleNameMapper": {
-      "@unicore/shared-types": "<rootDir>/../../packages/shared-types/src"
+      "@bemindlabs/unicore-shared-types": "<rootDir>/../../packages/shared-types/src"
     }
   }
 }

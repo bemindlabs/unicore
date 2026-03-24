@@ -5,7 +5,7 @@ import { useInventoryData } from '@/hooks/use-widget-data';
 import type { WidgetComponentProps } from './widget-registry';
 import { MetricCard } from './metric-card';
 import { WidgetSkeleton, WidgetErrorCard } from './widget-skeleton';
-import { Badge } from '@unicore/ui';
+import { Badge } from '@bemindlabs/unicore-ui';
 
 export function InventoryWidget({ config }: WidgetComponentProps): JSX.Element | null {
   const { data, loading, error } = useInventoryData(config.refreshInterval);

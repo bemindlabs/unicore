@@ -9,7 +9,7 @@ import {
   PluginLifecycleManager,
   PluginLoadError,
   PluginLoader,
-} from '@unicore/plugin-sdk';
+} from '@bemindlabs/unicore-plugin-sdk';
 import { PrismaService } from '../prisma/prisma.service';
 import { PLUGINS_BASE_DIR } from './plugin-artifact.service';
 

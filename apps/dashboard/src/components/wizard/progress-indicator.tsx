@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@unicore/ui';
+import { cn } from '@bemindlabs/unicore-ui';
 
 import { STEP_LABELS } from '@/types/wizard';
 

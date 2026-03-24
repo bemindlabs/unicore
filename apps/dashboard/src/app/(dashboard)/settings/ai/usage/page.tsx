@@ -9,7 +9,7 @@ import {
   Table, TableHeader, TableBody, TableHead, TableRow, TableCell,
   Badge,
   Skeleton,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 import { api } from '@/lib/api';
 import { useLicense } from '@/hooks/use-license';
 import Link from 'next/link';

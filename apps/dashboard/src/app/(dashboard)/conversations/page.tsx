@@ -14,7 +14,7 @@ import {
   ZapOff,
   Sparkles,
 } from 'lucide-react';
-import { Badge, Button, Input, Skeleton, cn } from '@unicore/ui';
+import { Badge, Button, Input, Skeleton, cn } from '@bemindlabs/unicore-ui';
 import { api } from '@/lib/api';
 import { useChatWebSocket, type ChatMessage } from '@/hooks/use-chat-ws';
 

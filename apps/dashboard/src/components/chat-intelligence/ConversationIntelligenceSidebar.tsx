@@ -1,7 +1,7 @@
 'use client';
 
 import { RefreshCw, Brain, TrendingUp, Target, Tag } from 'lucide-react';
-import { Badge, Button } from '@unicore/ui';
+import { Badge, Button } from '@bemindlabs/unicore-ui';
 import type { ConversationIntelligence, Entity } from '@/hooks/use-intelligence-stream';
 
 /* ------------------------------------------------------------------ */

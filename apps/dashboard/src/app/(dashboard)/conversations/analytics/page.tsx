@@ -30,7 +30,7 @@ import {
   TableRow,
   Badge,
   Skeleton,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 import { api } from '@/lib/api';
 
 // ── Types ─────────────────────────────────────────────────────────────────────

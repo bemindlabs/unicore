@@ -19,7 +19,7 @@ import {
   CardTitle,
   Separator,
   toast,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 import { api } from '@/lib/api';
 import { formatCurrency as formatCurrencyBase } from '@/lib/format-currency';
 import { useLicense } from '@/hooks/use-license';

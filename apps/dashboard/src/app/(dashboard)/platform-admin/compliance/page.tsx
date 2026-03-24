@@ -32,7 +32,7 @@ import {
   Label,
   Separator,
   toast,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 import { ProGate } from '@/components/license/pro-gate';
 import { api } from '@/lib/api';
 

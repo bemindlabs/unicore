@@ -5,7 +5,7 @@ import { useChurnData } from '@/hooks/use-widget-data';
 import type { WidgetComponentProps } from './widget-registry';
 import { MetricCard } from './metric-card';
 import { WidgetSkeleton, WidgetErrorCard } from './widget-skeleton';
-import { Progress } from '@unicore/ui';
+import { Progress } from '@bemindlabs/unicore-ui';
 
 export function ChurnWidget({ config }: WidgetComponentProps): JSX.Element | null {
   const { data, loading, error } = useChurnData(config.refreshInterval);

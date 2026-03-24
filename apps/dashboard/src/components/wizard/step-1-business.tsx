@@ -15,8 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
   cn,
-} from '@unicore/ui';
-import type { BusinessTemplate } from '@unicore/shared-types';
+} from '@bemindlabs/unicore-ui';
+import type { BusinessTemplate } from '@bemindlabs/unicore-shared-types';
 
 import { useWizardState } from '@/hooks/use-wizard-state';
 import {

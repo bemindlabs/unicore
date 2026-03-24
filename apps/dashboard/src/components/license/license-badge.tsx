@@ -9,7 +9,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 import { useLicense } from '@/hooks/use-license';
 import { useRouter } from 'next/navigation';
 

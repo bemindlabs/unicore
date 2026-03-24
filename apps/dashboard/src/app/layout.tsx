@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import { Providers } from '@/components/providers';
-import '@unicore/ui/globals.css';
+import '@bemindlabs/unicore-ui/globals.css';
 
 export const metadata: Metadata = {
   title: 'UniCore Dashboard',

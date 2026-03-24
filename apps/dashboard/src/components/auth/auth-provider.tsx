@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import type { User } from '@unicore/shared-types';
+import type { User } from '@bemindlabs/unicore-shared-types';
 import { api } from '@/lib/api';
 
 export interface AuthUser {

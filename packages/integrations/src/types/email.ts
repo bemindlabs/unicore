@@ -1,4 +1,4 @@
-// Email-specific types — @unicore/integrations
+// Email-specific types — @bemindlabs/unicore-integrations
 
 export type EmailProvider = 'smtp' | 'sendgrid' | 'mailgun';
 

@@ -13,7 +13,7 @@ import {
   Shield,
   MessageCircle,
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@unicore/ui';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@bemindlabs/unicore-ui';
 const SETTINGS_LINKS = [
   {
     href: '/settings/erp',

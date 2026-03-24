@@ -20,7 +20,7 @@ import {
   DialogDescription,
   Separator,
   useToast,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 import { api } from '@/lib/api';
 
 // ---------------------------------------------------------------------------

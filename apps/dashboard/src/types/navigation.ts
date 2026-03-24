@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import type { UserRole } from '@unicore/shared-types';
+import type { UserRole } from '@bemindlabs/unicore-shared-types';
 
 export interface NavItemLicense {
   /** Required license tier to access this item */

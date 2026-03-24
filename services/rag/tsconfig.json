@@ -21,7 +21,7 @@
     "outDir": "./dist",
     "baseUrl": ".",
     "paths": {
-      "@unicore/*": ["../../packages/*/src"]
+      "@bemindlabs/unicore-*": ["../../packages/*/src"]
     }
   },
   "include": ["src/**/*"],

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
 import { RetroDeskThemeProvider } from '@/components/backoffice/retrodesk/RetroDeskThemeProvider';
-import '@unicore/ui/globals.css';
+import '@bemindlabs/unicore-ui/globals.css';
 import '@/styles/retrodesk-theme.css';
 
 export default function BackofficeLayout({ children }: { children: ReactNode }) {

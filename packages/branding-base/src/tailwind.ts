@@ -1,4 +1,4 @@
-// Tailwind CSS theme integration for @unicore/branding (community edition)
+// Tailwind CSS theme integration for @bemindlabs/unicore-branding (community edition)
 // Converts a BrandingConfig into a Tailwind `theme.extend` compatible object.
 
 import type { BrandingConfig } from './types';
@@ -38,7 +38,7 @@ function scale(value: string | undefined, fallback = 'transparent'): TailwindCol
  *
  * Usage in tailwind.config.ts:
  * ```ts
- * import { brandingToTailwindTheme } from '@unicore/branding';
+ * import { brandingToTailwindTheme } from '@bemindlabs/unicore-branding';
  * const branding = await loadBrandingConfig();
  * export default { theme: { extend: brandingToTailwindTheme(branding) } };
  * ```

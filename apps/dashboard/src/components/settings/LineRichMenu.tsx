@@ -25,7 +25,7 @@ import {
   SelectValue,
   Separator,
   toast,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 
 interface RichMenuArea {
   label: string;

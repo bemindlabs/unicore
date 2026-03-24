@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { BoardTask, TaskStatus } from '@/lib/tasks/types';
-import type { AgentTask } from '@unicore/shared-types';
+import type { AgentTask } from '@bemindlabs/unicore-shared-types';
 import { uuid } from '@/lib/uuid';
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? 'wss://localhost:18789';

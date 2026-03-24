@@ -5,7 +5,7 @@ import { Paintbrush, Save, RotateCcw, CheckCircle, AlertCircle, Loader2, Crown, 
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
   Button, Input, Label, Switch, Badge,
-} from '@unicore/ui';
+} from '@bemindlabs/unicore-ui';
 import { api } from '@/lib/api';
 import { useLicense } from '@/hooks/use-license';
 
