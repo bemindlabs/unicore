@@ -49,13 +49,13 @@ importers:
 
   apps/dashboard:
     dependencies:
-      '@unicore/branding-base':
+      '@bemindlabs/unicore-branding-base':
         specifier: workspace:*
         version: link:../../packages/branding-base
-      '@unicore/shared-types':
+      '@bemindlabs/unicore-shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
-      '@unicore/ui':
+      '@bemindlabs/unicore-ui':
         specifier: workspace:*
         version: link:../../packages/ui
       '@xterm/addon-fit':
@@ -89,6 +89,9 @@ importers:
         specifier: ^3.23.0
         version: 3.25.76
     devDependencies:
+      '@bemindlabs/unicore-config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@types/jest':
         specifier: ^29.5.0
         version: 29.5.14
@@ -101,9 +104,6 @@ importers:
       '@types/react-dom':
         specifier: ^18.3.0
         version: 18.3.7(@types/react@18.3.28)
-      '@unicore/config':
-        specifier: workspace:*
-        version: link:../../packages/config
       autoprefixer:
         specifier: ^10.4.0
         version: 10.4.27(postcss@8.5.8)
@@ -129,9 +129,89 @@ importers:
         specifier: ^5.5.0
         version: 5.9.3
 
+  apps/portal-ai-dlc:
+    dependencies:
+      lucide-react:
+        specifier: ^0.400.0
+        version: 0.400.0(react@18.3.1)
+      next:
+        specifier: ^16.2.1
+        version: 16.2.1(@babel/core@7.29.0)(@playwright/test@1.58.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next-themes:
+        specifier: ^0.4.4
+        version: 0.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react:
+        specifier: ^18.3.0
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.0
+        version: 18.3.1(react@18.3.1)
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.37
+      '@types/react':
+        specifier: ^18.3.0
+        version: 18.3.28
+      '@types/react-dom':
+        specifier: ^18.3.0
+        version: 18.3.7(@types/react@18.3.28)
+      autoprefixer:
+        specifier: ^10.4.0
+        version: 10.4.27(postcss@8.5.8)
+      postcss:
+        specifier: ^8.4.0
+        version: 8.5.8
+      tailwindcss:
+        specifier: ^3.4.0
+        version: 3.4.19(tsx@4.21.0)
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+
+  apps/portal-geek:
+    dependencies:
+      lucide-react:
+        specifier: ^0.400.0
+        version: 0.400.0(react@18.3.1)
+      next:
+        specifier: ^16.2.1
+        version: 16.2.1(@babel/core@7.29.0)(@playwright/test@1.58.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next-themes:
+        specifier: ^0.4.4
+        version: 0.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react:
+        specifier: ^18.3.0
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.0
+        version: 18.3.1(react@18.3.1)
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.37
+      '@types/react':
+        specifier: ^18.3.0
+        version: 18.3.28
+      '@types/react-dom':
+        specifier: ^18.3.0
+        version: 18.3.7(@types/react@18.3.28)
+      autoprefixer:
+        specifier: ^10.4.0
+        version: 10.4.27(postcss@8.5.8)
+      postcss:
+        specifier: ^8.4.0
+        version: 8.5.8
+      tailwindcss:
+        specifier: ^3.4.0
+        version: 3.4.19(tsx@4.21.0)
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+
   packages/branding:
     dependencies:
-      '@unicore/branding-base':
+      '@bemindlabs/unicore-branding-base':
         specifier: workspace:*
         version: link:../branding-base
       react:
@@ -201,7 +281,7 @@ importers:
 
   packages/integrations:
     dependencies:
-      '@unicore/shared-types':
+      '@bemindlabs/unicore-shared-types':
         specifier: workspace:*
         version: link:../shared-types
     devDependencies:
@@ -223,7 +303,7 @@ importers:
 
   packages/plugin-sdk:
     dependencies:
-      '@unicore/shared-types':
+      '@bemindlabs/unicore-shared-types':
         specifier: workspace:*
         version: link:../shared-types
     devDependencies:
@@ -385,6 +465,9 @@ importers:
         specifier: ^7.8.0
         version: 7.8.2
     devDependencies:
+      '@bemindlabs/unicore-config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@nestjs/cli':
         specifier: ^10.0.0
         version: 10.4.9(@swc/core@1.15.18)
@@ -409,9 +492,6 @@ importers:
       '@types/supertest':
         specifier: ^6.0.0
         version: 6.0.3
-      '@unicore/config':
-        specifier: workspace:*
-        version: link:../../packages/config
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@20.19.37)(ts-node@10.9.2(@swc/core@1.15.18)(@types/node@20.19.37)(typescript@5.9.3))
@@ -512,6 +592,12 @@ importers:
         specifier: ^8.19.0
         version: 8.19.0
     devDependencies:
+      '@bemindlabs/unicore-config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@bemindlabs/unicore-plugin-sdk':
+        specifier: workspace:*
+        version: link:../../packages/plugin-sdk
       '@nestjs/cli':
         specifier: ^10.0.0
         version: 10.4.9(@swc/core@1.15.18)
@@ -557,12 +643,6 @@ importers:
       '@types/ws':
         specifier: ^8.5.0
         version: 8.18.1
-      '@unicore/config':
-        specifier: workspace:*
-        version: link:../../packages/config
-      '@unicore/plugin-sdk':
-        specifier: workspace:*
-        version: link:../../packages/plugin-sdk
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@20.19.37)(ts-node@10.9.2(@swc/core@1.15.18)(@types/node@20.19.37)(typescript@5.9.3))
@@ -590,6 +670,9 @@ importers:
 
   services/bootstrap:
     dependencies:
+      '@bemindlabs/unicore-config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@nestjs/common':
         specifier: ^10.4.0
         version: 10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -602,9 +685,6 @@ importers:
       '@nestjs/platform-express':
         specifier: ^10.4.0
         version: 10.4.22(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)
-      '@unicore/config':
-        specifier: workspace:*
-        version: link:../../packages/config
       class-transformer:
         specifier: ^0.5.1
         version: 0.5.1
@@ -697,6 +777,9 @@ importers:
         specifier: ^9.0.1
         version: 9.0.1
     devDependencies:
+      '@bemindlabs/unicore-config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@nestjs/cli':
         specifier: ^10.4.0
         version: 10.4.9(@swc/core@1.15.18)
@@ -724,9 +807,6 @@ importers:
       '@types/uuid':
         specifier: ^9.0.8
         version: 9.0.8
-      '@unicore/config':
-        specifier: workspace:*
-        version: link:../../packages/config
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@20.19.37)(ts-node@10.9.2(@swc/core@1.15.18)(@types/node@20.19.37)(typescript@5.9.3))
@@ -794,6 +874,9 @@ importers:
         specifier: ^8.18.0
         version: 8.19.0
     devDependencies:
+      '@bemindlabs/unicore-config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@nestjs/cli':
         specifier: ^10.0.0
         version: 10.4.9(@swc/core@1.15.18)
@@ -818,9 +901,6 @@ importers:
       '@types/ws':
         specifier: ^8.5.0
         version: 8.18.1
-      '@unicore/config':
-        specifier: workspace:*
-        version: link:../../packages/config
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@20.19.37)(ts-node@10.9.2(@swc/core@1.15.18)(@types/node@20.19.37)(typescript@5.7.2))
@@ -885,6 +965,9 @@ importers:
         specifier: ^9.0.0
         version: 9.0.1
     devDependencies:
+      '@bemindlabs/unicore-config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@nestjs/cli':
         specifier: ^10.0.0
         version: 10.4.9(@swc/core@1.15.18)
@@ -909,9 +992,6 @@ importers:
       '@types/uuid':
         specifier: ^9.0.0
         version: 9.0.8
-      '@unicore/config':
-        specifier: workspace:*
-        version: link:../../packages/config
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@20.19.37)(ts-node@10.9.2(@swc/core@1.15.18)(@types/node@20.19.37)(typescript@5.9.3))
@@ -936,6 +1016,9 @@ importers:
 
   services/workflow:
     dependencies:
+      '@bemindlabs/unicore-config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@nestjs/common':
         specifier: ^10.4.0
         version: 10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -948,9 +1031,6 @@ importers:
       '@nestjs/platform-express':
         specifier: ^10.4.0
         version: 10.4.22(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)
-      '@unicore/config':
-        specifier: workspace:*
-        version: link:../../packages/config
       class-transformer:
         specifier: ^0.5.1
         version: 0.5.1
@@ -5438,6 +5518,12 @@ packages:
     peerDependenciesMeta:
       typescript:
         optional: true
+
+  next-themes@0.4.6:
+    resolution: {integrity: sha512-pZvgD5L0IEvX5/9GWyHMf3m8BKiVQwsCMHfoFosXtXBMnaS0ZnIJ9ST4b4NqLVKDEm8QBxoNNGNaBv2JNF6XNA==}
+    peerDependencies:
+      react: ^18.3.0
+      react-dom: ^18.3.0
 
   next@16.2.1:
     resolution: {integrity: sha512-VaChzNL7o9rbfdt60HUj8tev4m6d7iC1igAy157526+cJlXOQu5LzsBXNT+xaJnTP/k+utSX5vMv7m0G+zKH+Q==}
@@ -12158,6 +12244,11 @@ snapshots:
       typescript: 5.9.3
     transitivePeerDependencies:
       - '@swc/helpers'
+
+  next-themes@0.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   next@16.2.1(@babel/core@7.29.0)(@playwright/test@1.58.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
