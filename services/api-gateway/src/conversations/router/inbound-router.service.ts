@@ -260,10 +260,7 @@ export class InboundRouterService {
    * Mark the conversation as unassigned (waiting for human or agent pickup).
    */
   private async routeToUnassigned(conversationId: string): Promise<void> {
-<<<<<<< HEAD
-=======
     // Messages are tracked in the Message model; log for monitoring
->>>>>>> main
     this.logger.log(
       `Conversation ${conversationId} placed in unassigned queue`,
     );
