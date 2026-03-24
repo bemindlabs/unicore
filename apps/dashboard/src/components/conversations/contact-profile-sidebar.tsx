@@ -253,7 +253,7 @@ export function ContactProfileSidebar({
     if (!open || !contactId) return;
 
     const wsUrl =
-      (process.env.NEXT_PUBLIC_CONTACT_PROFILE_WS_URL ?? 'wss://localhost:4001') +
+      (process.env.NEXT_PUBLIC_CONTACT_PROFILE_WS_URL ?? 'ws://localhost:4001') +
       '/contact-profile';
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
