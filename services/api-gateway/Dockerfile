@@ -12,7 +12,7 @@ COPY packages/config/package.json ./packages/config/
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY packages/plugin-sdk/package.json ./packages/plugin-sdk/
 COPY services/api-gateway/package.json ./services/api-gateway/
-RUN pnpm install --frozen-lockfile --filter @unicore/api-gateway...
+RUN pnpm install --frozen-lockfile --filter @bemindlabs/unicore-api-gateway...
 
 FROM base AS build
 COPY packages/config ./packages/config
