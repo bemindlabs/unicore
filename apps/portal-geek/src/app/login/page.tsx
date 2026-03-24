@@ -38,7 +38,7 @@ export default function LoginPage() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${data.access_token}`,
+            'Authorization': `Bearer ${data.accessToken}`,
           },
           body: JSON.stringify({}),
         });
