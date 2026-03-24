@@ -49,11 +49,8 @@ export function useTheme() {
     }
   }, []);
 
-<<<<<<< HEAD:apps/dashboard/src/hooks/use-theme.ts
   /** Legacy toggle (light ↔ dark). */
-=======
   /** Legacy toggle (light ↔ dark) for non-themed pages. */
->>>>>>> origin/develop:app/src/hooks/use-theme.ts
   const toggleTheme = useCallback(() => {
     setTheme((prev) => {
       const next = prev === 'light' ? 'dark' : 'light';

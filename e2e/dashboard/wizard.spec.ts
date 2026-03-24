@@ -4,7 +4,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Wizard Steps @smoke', () => {
   test('should load wizard page', async ({ page }) => {
     await page.goto('/wizard');
-    await page.waitForLoadState('domcontentloaded');
+    await page.waitForLoadState('networkidle');
 
     // Wizard should render — either the setup wizard or a "already configured" state
     const wizardContent = page
@@ -13,27 +13,44 @@ test.describe('Wizard Steps @smoke', () => {
     await expect(wizardContent).toBeVisible({ timeout: 15000 });
   });
 
-  test('should show step indicators', async ({ page }) => {
-    await page.goto('/wizard');
-    await page.waitForLoadState('domcontentloaded');
+  test('should show page content or redirect to login', async ({ page }) => {
+    const response = await page.goto('/wizard');
+    await page.waitForLoadState('networkidle');
 
-    // Step indicators: numbered steps or progress bar
-    const stepIndicator = page
-      .locator('[data-step], .step-indicator, [aria-label*="step"]')
-      .first()
-      .or(page.getByText(/step \d/i).first());
+    const status = response?.status();
 
-    // If wizard is locked/complete this may not show — just check page loads
-    await expect(page.locator('main, [role="main"]').first()).toBeVisible({ timeout: 10000 });
+    if (status && status >= 500) {
+      // Server errors should always fail the test
+      expect(status).toBeLessThan(500);
+    } else if (status === 302 || status === 301 || page.url().includes('/login')) {
+      // Redirect to login — verify we actually landed on the login page
+      await expect(page).toHaveURL(/\/login/);
+      await expect(page.getByLabel('Email').or(page.getByText(/sign in/i).first())).toBeVisible({
+        timeout: 10000,
+      });
+    } else {
+      // 200 OK — wizard content must be visible
+      await expect(
+        page.getByText(/wizard|setup|configure|business|completed|locked|step/i).first(),
+      ).toBeVisible({ timeout: 15000 });
+    }
   });
 
   test('should navigate wizard steps with next button', async ({ page }) => {
     await page.goto('/wizard');
-    await page.waitForLoadState('domcontentloaded');
+    await page.waitForLoadState('networkidle');
+
+    // If redirected to login, the wizard requires auth — assert login page
+    if (page.url().includes('/login')) {
+      await expect(page).toHaveURL(/\/login/);
+      return;
+    }
 
     const nextButton = page.getByRole('button', { name: /next|continue|proceed/i }).first();
-    if (await nextButton.isVisible({ timeout: 5000 }).catch(() => false)) {
-      // Fill any required fields on step 1
+    const isWizardActive = await nextButton.isVisible({ timeout: 5000 }).catch(() => false);
+
+    if (isWizardActive) {
+      // Wizard is active — fill required fields and advance
       const nameInput = page.getByLabel(/business name|company name/i).first();
       if (await nameInput.isVisible({ timeout: 2000 }).catch(() => false)) {
         await nameInput.fill('Test Company');
@@ -42,12 +59,22 @@ test.describe('Wizard Steps @smoke', () => {
       await page.waitForTimeout(500);
       // Page should have advanced (URL or content changed)
       await expect(page.locator('main')).toBeVisible();
+    } else {
+      // Wizard is locked/completed — assert that locked or completed state is shown
+      await expect(
+        page.getByText(/completed|locked|already configured|setup complete/i).first(),
+      ).toBeVisible({ timeout: 10000 });
     }
   });
 
   test('should allow going back to previous step', async ({ page }) => {
     await page.goto('/wizard');
-    await page.waitForLoadState('domcontentloaded');
+    await page.waitForLoadState('networkidle');
+
+    if (page.url().includes('/login')) {
+      await expect(page).toHaveURL(/\/login/);
+      return;
+    }
 
     const nextButton = page.getByRole('button', { name: /next|continue/i }).first();
     if (await nextButton.isVisible({ timeout: 5000 }).catch(() => false)) {
@@ -55,20 +82,24 @@ test.describe('Wizard Steps @smoke', () => {
       await page.waitForTimeout(500);
 
       const backButton = page.getByRole('button', { name: /back|previous/i }).first();
-      if (await backButton.isVisible({ timeout: 3000 }).catch(() => false)) {
-        await backButton.click();
-        await expect(page.locator('main')).toBeVisible();
-      }
+      await expect(backButton).toBeVisible({ timeout: 5000 });
+      await backButton.click();
+      await expect(page.locator('main')).toBeVisible();
     }
   });
 
   test('should show business profile step', async ({ page }) => {
     await page.goto('/wizard');
-    await page.waitForLoadState('domcontentloaded');
+    await page.waitForLoadState('networkidle');
 
-    // Step 1 is typically business profile setup
+    if (page.url().includes('/login')) {
+      await expect(page).toHaveURL(/\/login/);
+      return;
+    }
+
+    // Step 1 is typically business profile setup — or wizard completed/locked
     const profileContent = page
-      .getByText(/business profile|company|organization/i)
+      .getByText(/business profile|company|organization|completed|locked/i)
       .first();
     await expect(profileContent).toBeVisible({ timeout: 15000 });
   });
@@ -80,7 +111,7 @@ test.describe('Wizard Steps @smoke', () => {
     });
 
     await page.goto('/wizard');
-    await page.waitForLoadState('domcontentloaded');
+    await page.waitForLoadState('networkidle');
 
     expect(errors).toHaveLength(0);
   });

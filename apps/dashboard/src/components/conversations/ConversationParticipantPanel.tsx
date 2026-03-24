@@ -47,7 +47,7 @@ import {
   type AddParticipantPayload,
 } from '@/hooks/use-conversation-participants';
 import { getAgents } from '@/lib/agents/store';
-import type { BackofficeAgent } from '@/lib/agents/types';
+import type { VirtualOfficeAgent } from '@/lib/agents/types';
 
 // ─── Status indicator ─────────────────────────────────────────────────────
 
@@ -111,7 +111,7 @@ function AddAgentDialog({
   onAdd: (payload: AddParticipantPayload) => Promise<void>;
   onClose: () => void;
 }) {
-  const [agents, setAgents] = useState<BackofficeAgent[]>([]);
+  const [agents, setAgents] = useState<VirtualOfficeAgent[]>([]);
   const [adding, setAdding] = useState<string | null>(null);
 
   useEffect(() => {
@@ -119,7 +119,7 @@ function AddAgentDialog({
   }, []);
 
   const handleAdd = useCallback(
-    async (agent: BackofficeAgent) => {
+    async (agent: VirtualOfficeAgent) => {
       setAdding(agent.id);
       try {
         await onAdd({

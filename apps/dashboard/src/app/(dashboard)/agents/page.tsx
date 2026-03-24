@@ -10,15 +10,12 @@ import {
 } from 'lucide-react';
 import { Badge, Card, CardContent, Button, Input } from '@bemindlabs/unicore-ui';
 import { getAgents } from '@/lib/agents/store';
-import type { BackofficeAgent } from '@/lib/agents/types';
+import type { VirtualOfficeAgent } from '@/lib/agents/types';
 import { useLicense } from '@/hooks/use-license';
 import { useChatWebSocket, type ChatMessage } from '@/hooks/use-chat-ws';
 import { api } from '@/lib/api';
 
-<<<<<<< HEAD:apps/dashboard/src/app/(dashboard)/agents/page.tsx
-=======
 
->>>>>>> origin/develop:app/src/app/(dashboard)/agents/page.tsx
 // ── Icons ─────────────────────────────────────────────────────────────────
 
 const AGENT_ICONS: Record<string, typeof Bot> = {
@@ -28,7 +25,7 @@ const AGENT_ICONS: Record<string, typeof Bot> = {
 
 // ── Inline Agent Chat ─────────────────────────────────────────────────────
 
-function AgentChat({ agent, onClose }: { agent: BackofficeAgent; onClose: () => void }) {
+function AgentChat({ agent, onClose }: { agent: VirtualOfficeAgent; onClose: () => void }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -92,7 +89,7 @@ function AgentChat({ agent, onClose }: { agent: BackofficeAgent; onClose: () => 
 
 // ── Quick Command ─────────────────────────────────────────────────────────
 
-function QuickCommand({ agent: _agent }: { agent: BackofficeAgent }) {
+function QuickCommand({ agent: _agent }: { agent: VirtualOfficeAgent }) {
   const [cmd, setCmd] = useState('');
   const [output, setOutput] = useState('');
   const [running, setRunning] = useState(false);
@@ -140,7 +137,7 @@ function QuickCommand({ agent: _agent }: { agent: BackofficeAgent }) {
 
 export default function AgentsPage() {
   const { maxAgents, isPro } = useLicense();
-  const [agents, setAgents] = useState<BackofficeAgent[]>([]);
+  const [agents, setAgents] = useState<VirtualOfficeAgent[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [chatAgentId, setChatAgentId] = useState<string | null>(null);
@@ -346,10 +343,7 @@ export default function AgentsPage() {
         Open Virtual Office — Full Agent Management
         <ExternalLink className="h-3.5 w-3.5" />
       </Link>
-<<<<<<< HEAD:apps/dashboard/src/app/(dashboard)/agents/page.tsx
-=======
 
->>>>>>> origin/develop:app/src/app/(dashboard)/agents/page.tsx
     </div>
   );
 }

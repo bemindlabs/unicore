@@ -1,28 +1,47 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Agent Management UI @backoffice', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/backoffice');
-    await page.waitForLoadState('networkidle');
-  });
+test.describe('Agent Management UI @virtual-office', () => {
+  test('agents page loads without server error', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('response', (res) => {
+      if (res.status() >= 500) errors.push(`${res.status()} ${res.url()}`);
+    });
 
-  test('backoffice page loads with agent list', async ({ page }) => {
-    await expect(page.locator('header')).toBeVisible({ timeout: 15000 });
+    const response = await page.goto('/agents');
+    await page.waitForLoadState('networkidle');
+
+    expect(errors).toHaveLength(0);
+    expect(response?.status()).toBeLessThan(500);
   });
 
   test('should display total agent count', async ({ page }) => {
-    await expect(page.getByText(/\d+ TOTAL/i)).toBeVisible({ timeout: 15000 });
+    await page.goto('/agents');
+    await page.waitForLoadState('networkidle');
+
+    // Page should show a count badge or "TOTAL" label for agents
+    const agentCount = page.getByText(/\d+\s*TOTAL/i)
+      .or(page.getByText(/\d+\s*agent/i))
+      .first();
+    await expect(agentCount).toBeVisible({ timeout: 15000 });
   });
 
   test('should show at least one agent in active state', async ({ page }) => {
+    await page.goto('/agents');
+    await page.waitForLoadState('networkidle');
+
+    // At least one agent should have ACTIVE status (OpenClaw auto-registers 9 agents)
     await expect(page.getByText(/ACTIVE/i).first()).toBeVisible({ timeout: 15000 });
   });
 
   test('should open chat panel from header', async ({ page }) => {
+    await page.goto('/agents');
+    await page.waitForLoadState('networkidle');
+
     const chatButton = page.locator('header button[title="Team Chat"]');
     await expect(chatButton).toBeVisible({ timeout: 10000 });
     await chatButton.click();
 
+    // Chat input should appear after opening the panel
     const chatInput = page
       .locator('input[placeholder*="message"]')
       .or(page.locator('input[placeholder*="Type"]'));
@@ -30,14 +49,21 @@ test.describe('Agent Management UI @backoffice', () => {
   });
 
   test('should show connected WebSocket status after opening chat', async ({ page }) => {
+    await page.goto('/agents');
+    await page.waitForLoadState('networkidle');
+
     const chatButton = page.locator('header button[title="Team Chat"]');
     await chatButton.click();
 
+    // Green dot indicates connected WebSocket
     const connectedIndicator = page.locator('.bg-green-400, .bg-green-500').first();
     await expect(connectedIndicator).toBeVisible({ timeout: 15000 });
   });
 
   test('should send a chat message', async ({ page }) => {
+    await page.goto('/agents');
+    await page.waitForLoadState('networkidle');
+
     const chatButton = page.locator('header button[title="Team Chat"]');
     await chatButton.click();
 
@@ -51,6 +77,9 @@ test.describe('Agent Management UI @backoffice', () => {
   });
 
   test('should close chat panel', async ({ page }) => {
+    await page.goto('/agents');
+    await page.waitForLoadState('networkidle');
+
     const chatButton = page.locator('header button[title="Team Chat"]');
     await chatButton.click();
 
@@ -70,11 +99,15 @@ test.describe('Agent Management UI @backoffice', () => {
 
   test('settings page lists agent configuration', async ({ page }) => {
     await page.goto('/settings/agents');
-    await page.waitForLoadState('domcontentloaded');
+    await page.waitForLoadState('networkidle');
     await expect(page.getByText(/agent/i).first()).toBeVisible({ timeout: 15000 });
   });
 
-  test('should switch backoffice tabs', async ({ page }) => {
+  test('should switch agent page tabs', async ({ page }) => {
+    await page.goto('/agents');
+    await page.waitForLoadState('networkidle');
+
+    // Try switching between available tabs/sections
     for (const tabName of ['Commander', 'Settings', 'Overview']) {
       const tab = page.getByRole('button', { name: new RegExp(tabName, 'i') });
       if (await tab.isVisible({ timeout: 3000 }).catch(() => false)) {
@@ -82,6 +115,7 @@ test.describe('Agent Management UI @backoffice', () => {
         await page.waitForTimeout(300);
       }
     }
-    await expect(page.locator('main, .backoffice-content').first()).toBeVisible();
+    // Page should remain functional after switching tabs
+    await expect(page.locator('main').first()).toBeVisible();
   });
 });
