@@ -49,6 +49,7 @@ export function useTheme() {
     }
   }, []);
 
+  /** Legacy toggle (light ↔ dark). */
   /** Legacy toggle (light ↔ dark) for non-themed pages. */
   const toggleTheme = useCallback(() => {
     setTheme((prev) => {

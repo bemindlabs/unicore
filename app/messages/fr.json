@@ -1,0 +1,74 @@
+{
+  "common": {
+    "appName": "UniCore",
+    "loading": "Chargement...",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "next": "Suivant",
+    "back": "Retour",
+    "submit": "Soumettre",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "search": "Rechercher...",
+    "signOut": "Déconnexion",
+    "expandSidebar": "Développer la barre latérale",
+    "collapseSidebar": "Réduire la barre latérale",
+    "virtualOffice": "Bureau Virtuel",
+    "upgradeToPro": "Passer à Pro"
+  },
+  "auth": {
+    "welcomeBack": "Bon retour",
+    "signInDescription": "Connectez-vous à votre compte UniCore",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "emailPlaceholder": "vous@exemple.com",
+    "passwordPlaceholder": "Entrez votre mot de passe",
+    "signingIn": "Connexion en cours...",
+    "signIn": "Se connecter",
+    "loginFailed": "Échec de la connexion"
+  },
+  "wizard": {
+    "setupTitle": "Configuration UniCore",
+    "setupSubtitle": "Configurez votre espace de travail",
+    "steps": {
+      "businessProfile": "Profil d'entreprise",
+      "teamRoles": "Équipe et rôles",
+      "aiAgents": "Agents IA",
+      "erpModules": "Modules ERP",
+      "integrations": "Intégrations",
+      "reviewLaunch": "Vérification et lancement"
+    },
+    "business": {
+      "title": "Profil d'entreprise",
+      "description": "Choisissez votre type d'entreprise et configurez les paramètres de base.",
+      "businessType": "Type d'entreprise",
+      "businessName": "Nom de l'entreprise",
+      "businessNamePlaceholder": "Mon Entreprise",
+      "currency": "Devise",
+      "currencyPlaceholder": "Sélectionner la devise",
+      "language": "Langue",
+      "languagePlaceholder": "Sélectionner la langue",
+      "timezone": "Fuseau horaire",
+      "timezonePlaceholder": "Sélectionner le fuseau horaire"
+    },
+    "team": {
+      "title": "Équipe et rôles",
+      "description": "Invitez des membres d'équipe et attribuez leurs rôles.",
+      "emailRequired": "L'e-mail est requis",
+      "invalidEmail": "Adresse e-mail invalide",
+      "duplicateEmail": "Cet e-mail a déjà été ajouté"
+    }
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "agents": "Agents",
+    "workflows": "Flux de travail",
+    "erp": "ERP",
+    "settings": "Paramètres",
+    "analytics": "Analytique"
+  },
+  "metadata": {
+    "title": "Tableau de bord UniCore",
+    "description": "Tableau de bord des opérations commerciales alimenté par l'IA"
+  }
+}
