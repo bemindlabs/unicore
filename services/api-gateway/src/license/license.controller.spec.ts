@@ -37,6 +37,7 @@ describe('LicenseController', () => {
     mockLicenseService.getLicenseStatus.mockResolvedValue(mockProStatus);
     mockLicenseService.activate.mockResolvedValue(mockProStatus);
     mockLicenseService.revalidate.mockResolvedValue(mockProStatus);
+    mockLicenseService.activateAddon.mockResolvedValue(undefined);
   });
 
   it('should be defined', () => {

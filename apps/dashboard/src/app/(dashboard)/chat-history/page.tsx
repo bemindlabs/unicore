@@ -304,11 +304,11 @@ function ConversationRow({ record, expanded, onToggle, onDelete, onOpenProfile, 
                     Contact Profile
                   </Button>
                   <a
-                    href={`/backoffice?agent=${record.agentId}`}
+                    href={`/virtual-office?agent=${record.agentId}`}
                     className="inline-flex items-center gap-1 text-xs text-primary hover:underline px-2 py-1 rounded hover:bg-primary/10 transition-colors"
                   >
                     <ExternalLink className="h-3 w-3" />
-                    Continue in Commander
+                    Continue in Virtual Office
                   </a>
                   <Button
                     variant="ghost"
