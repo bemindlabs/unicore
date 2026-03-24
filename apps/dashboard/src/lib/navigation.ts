@@ -14,6 +14,7 @@ import {
   LayoutDashboard,
   MessageSquare,
   Megaphone,
+  Monitor,
   Package,
   ScrollText,
   Settings,
