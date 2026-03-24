@@ -140,7 +140,6 @@ export default function AgentsPage() {
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [chatAgentId, setChatAgentId] = useState<string | null>(null);
-  const [terminalAgent, setTerminalAgent] = useState<BackofficeAgent | null>(null);
   const [agentDetails, setAgentDetails] = useState<Record<string, any>>({});
 
   useEffect(() => {
