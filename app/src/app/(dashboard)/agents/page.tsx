@@ -15,10 +15,7 @@ import { useLicense } from '@/hooks/use-license';
 import { useChatWebSocket, type ChatMessage } from '@/hooks/use-chat-ws';
 import { api } from '@/lib/api';
 
-<<<<<<< HEAD:apps/dashboard/src/app/(dashboard)/agents/page.tsx
-=======
 
->>>>>>> origin/develop:app/src/app/(dashboard)/agents/page.tsx
 // ── Icons ─────────────────────────────────────────────────────────────────
 
 const AGENT_ICONS: Record<string, typeof Bot> = {
