@@ -14,7 +14,7 @@ import { DemoBanner } from '@/components/demo/DemoBanner';
 import { DeployButton } from '@/components/demo/DeployButton';
 import { UpgradeBanner } from '@/components/license/upgrade-banner';
 const RetroDeskThemeProvider = ({ children }: { children: React.ReactNode }) => <>{children}</>;
-const isRetroDeskFamily = (_theme: string) => false;
+const isRetroDeskFamily = (_theme: string | null) => false;
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
