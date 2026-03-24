@@ -32,7 +32,29 @@ export default function LoginPage() {
         return;
       }
 
+      // Validate license has geekCli flag
+      try {
+        const licRes = await fetch(`${siteConfig.licenseApiUrl}/api/v1/licenses/validate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${data.access_token}`,
+          },
+          body: JSON.stringify({}),
+        });
+        if (licRes.ok) {
+          const licData = await licRes.json();
+          if (!licData.features?.geekCli) {
+            setError('Your license does not include the Geek CLI add-on.');
+            return;
+          }
+        }
+      } catch {
+        // License check failed — allow login but features may be limited
+      }
+
       localStorage.setItem('geek_token', data.access_token);
+      localStorage.setItem('geek_refresh_token', data.refreshToken ?? '');
       localStorage.setItem('geek_user', JSON.stringify(data.user));
       document.cookie = `geek_token=${data.access_token}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 7}`;
       router.push('/portal');
