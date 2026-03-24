@@ -293,7 +293,7 @@ export class AdminController {
       name: 'Bemind Technology Co., Ltd.',
       slug: 'bemind',
       displayName: 'Bemind Technology',
-      customDomain: 'labs.bemind.tech',
+      customDomain: 'unicore-demo.bemind.tech',
       plan: 'ENTERPRISE' as const,
       status: 'ACTIVE' as const,
       ownerEmail: 'info@bemind.tech',
