@@ -176,11 +176,7 @@ describe('InboundRouterService', () => {
 
     it('creates message without dedup check when no externalMessageId', async () => {
       const dtoNoId = { ...dto, externalMessageId: undefined };
-<<<<<<< HEAD
-      mockPrisma.message.create.mockResolvedValue({ ...mockMessage, externalId: null });
-=======
       mockPrisma.message.create.mockResolvedValue({ ...mockMessage, externalMessageId: null });
->>>>>>> main
 
       await service.saveMessage('conv-123', dtoNoId);
 
@@ -205,10 +201,7 @@ describe('InboundRouterService', () => {
       mockPrisma.message.findFirst.mockResolvedValue(null);
       mockPrisma.message.create.mockResolvedValue(mockMessage);
       mockPrisma.conversation.update.mockResolvedValue(mockConversation);
-<<<<<<< HEAD
-=======
       mockPrisma.message.updateMany.mockResolvedValue({ count: 1 });
->>>>>>> main
       mockPrisma.settings.findUnique.mockResolvedValue(null);
 
       // Mock fetch globally
