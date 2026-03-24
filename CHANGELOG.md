@@ -1,7 +1,19 @@
 # Changelog — @unicore (Community Edition)
 
-Updated: 2026-03-22
+Updated: 2026-03-24
 
+
+## [0.1.1] - 2026-03-24
+
+### Added
+- Geek Portal (apps/portal-geek) — landing, auth, dashboard, leaderboard, multiplayer, downloads, plugins, license pages
+- AI-DLC Portal (apps/portal-ai-dlc) — landing, auth, dashboard, chat, analytics, API keys, license pages
+
+### Changed
+- Renamed package scope from @unicore/* to @bemindlabs/unicore-*
+
+### Fixed
+- Dashboard conversations page missing isAiGenerated property
 
 ## [0.1.0] - 2026-03-22
 
