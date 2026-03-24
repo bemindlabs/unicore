@@ -1,4 +1,4 @@
-import type { BackofficeAgent, AgentStatus, RoomId } from "./types";
+import type { VirtualOfficeAgent, AgentStatus, RoomId } from "./types";
 
 interface OpenClawAgent {
   id: string;
