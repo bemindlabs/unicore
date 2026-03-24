@@ -80,11 +80,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
         {/* Navigation sections — scrollable */}
         <nav className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2 py-3 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
-          {sections
-            .filter((section) =>
-              section.items.some((item) => !isNavItemLocked(item, isPro, edition, hasFeature)),
-            )
-            .map((section, idx) => (
+          {sections.map((section, idx) => (
             <div key={section.label} className={cn(idx > 0 && 'mt-4')}>
               {!collapsed && (
                 <p className="mb-1 px-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70">
