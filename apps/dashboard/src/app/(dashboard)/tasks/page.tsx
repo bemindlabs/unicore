@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { BoardTask, TaskStatus } from '@/lib/tasks/types';
 import { getTasks, createTask, updateTask, deleteTask, addComment } from '@/lib/tasks/store';
-import { getAgents } from '@/lib/backoffice/store';
-import type { BackofficeAgent } from '@/lib/backoffice/types';
+import { getAgents } from '@/lib/agents/store';
+import type { BackofficeAgent } from '@/lib/agents/types';
 import { useTaskWebSocket } from '@/hooks/use-task-ws';
 import { TaskBoardShell } from '@/components/tasks/TaskBoardShell';
 import { KanbanBoard } from '@/components/tasks/KanbanBoard';
