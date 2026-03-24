@@ -1,0 +1,74 @@
+{
+  "common": {
+    "appName": "UniCore",
+    "loading": "Laden...",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "next": "Weiter",
+    "back": "Zurück",
+    "submit": "Absenden",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "search": "Suchen...",
+    "signOut": "Abmelden",
+    "expandSidebar": "Seitenleiste erweitern",
+    "collapseSidebar": "Seitenleiste einklappen",
+    "virtualOffice": "Virtual Office",
+    "upgradeToPro": "Auf Pro upgraden"
+  },
+  "auth": {
+    "welcomeBack": "Willkommen zurück",
+    "signInDescription": "Melden Sie sich bei Ihrem UniCore-Konto an",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "emailPlaceholder": "sie@beispiel.com",
+    "passwordPlaceholder": "Passwort eingeben",
+    "signingIn": "Anmeldung läuft...",
+    "signIn": "Anmelden",
+    "loginFailed": "Anmeldung fehlgeschlagen"
+  },
+  "wizard": {
+    "setupTitle": "UniCore-Einrichtung",
+    "setupSubtitle": "Konfigurieren Sie Ihren Arbeitsbereich",
+    "steps": {
+      "businessProfile": "Geschäftsprofil",
+      "teamRoles": "Team & Rollen",
+      "aiAgents": "KI-Agenten",
+      "erpModules": "ERP-Module",
+      "integrations": "Integrationen",
+      "reviewLaunch": "Überprüfung & Start"
+    },
+    "business": {
+      "title": "Geschäftsprofil",
+      "description": "Wählen Sie Ihren Geschäftstyp und konfigurieren Sie die Grundeinstellungen.",
+      "businessType": "Geschäftstyp",
+      "businessName": "Firmenname",
+      "businessNamePlaceholder": "Mein Unternehmen",
+      "currency": "Währung",
+      "currencyPlaceholder": "Währung auswählen",
+      "language": "Sprache",
+      "languagePlaceholder": "Sprache auswählen",
+      "timezone": "Zeitzone",
+      "timezonePlaceholder": "Zeitzone auswählen"
+    },
+    "team": {
+      "title": "Team & Rollen",
+      "description": "Laden Sie Teammitglieder ein und weisen Sie Rollen zu.",
+      "emailRequired": "E-Mail ist erforderlich",
+      "invalidEmail": "Ungültige E-Mail-Adresse",
+      "duplicateEmail": "Diese E-Mail wurde bereits hinzugefügt"
+    }
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "agents": "Agenten",
+    "workflows": "Arbeitsabläufe",
+    "erp": "ERP",
+    "settings": "Einstellungen",
+    "analytics": "Analytik"
+  },
+  "metadata": {
+    "title": "UniCore Dashboard",
+    "description": "KI-gestütztes Dashboard für Geschäftsabläufe"
+  }
+}
