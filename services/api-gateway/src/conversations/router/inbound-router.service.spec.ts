@@ -147,11 +147,7 @@ describe('InboundRouterService', () => {
       rawPayload: {},
     };
 
-<<<<<<< HEAD
-    it('creates a new message in the message table', async () => {
-=======
     it('creates a new message', async () => {
->>>>>>> main
       mockPrisma.message.findFirst.mockResolvedValue(null);
       mockPrisma.message.create.mockResolvedValue(mockMessage);
 
