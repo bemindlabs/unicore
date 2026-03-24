@@ -1,5 +1,5 @@
 import type { Terminal } from '@xterm/xterm';
-import type { BackofficeAgent } from '@/lib/backoffice/types';
+import type { BackofficeAgent } from '@/lib/agents/types';
 
 export interface CommandContext {
   /** xterm.js Terminal instance — use writeln() to print output. */
