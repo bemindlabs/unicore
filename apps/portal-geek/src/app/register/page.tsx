@@ -57,6 +57,7 @@ export default function RegisterPage() {
 
       localStorage.setItem('geek_token', data.access_token);
       localStorage.setItem('geek_user', JSON.stringify(data.user));
+      document.cookie = `geek_token=${data.access_token}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 7}`;
       router.push('/portal');
     } catch {
       setError('Connection failed. Please try again.');
