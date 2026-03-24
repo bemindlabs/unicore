@@ -2,7 +2,7 @@
 
 # UniCore
 
-Updated: 2026-03-22
+Updated: 2026-03-24
 
 **AI-First Ecosystem Dashboard for Solopreneurs**
 
@@ -193,7 +193,7 @@ unicore/
 
 | Service | Port | Description |
 |:--------|:-----|:------------|
-| **Dashboard** | 3000 | Next.js 16 SPA — main operations UI, backoffice, wizard |
+| **Dashboard** | 3000 | Next.js 16 SPA — main operations UI, Virtual Office, wizard |
 | **API Gateway** | 4000 | REST API, JWT/local auth, service proxy, rate limiting |
 | **ERP** | 4100 | CRM (lead scoring), inventory, orders, invoicing, expenses, reports |
 | **AI Engine** | 4200 | Multi-provider LLM orchestration (OpenAI, Anthropic, Ollama) |

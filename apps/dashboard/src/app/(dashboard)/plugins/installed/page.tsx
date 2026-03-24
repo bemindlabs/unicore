@@ -1,0 +1,476 @@
+'use client';
+
+// Updated: 2026-03-23
+
+import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
+import {
+  ArrowLeft,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  RefreshCw,
+  Settings,
+  Trash2,
+  ArrowUpCircle,
+  ToggleLeft,
+  ToggleRight,
+  Puzzle,
+  Search,
+  Package,
+} from 'lucide-react';
+import {
+  Button,
+  Input,
+  Badge,
+  Card,
+  CardContent,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from '@bemindlabs/unicore-ui';
+import { api } from '@/lib/api';
+
+type PluginStatus = 'active' | 'disabled' | 'error';
+
+interface InstalledPlugin {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  author: string;
+  version: string;
+  latestVersion?: string;
+  category: string;
+  icon: string;
+  status: PluginStatus;
+  installedAt: string;
+  updatedAt: string;
+  errorMessage?: string;
+  hasUpdate?: boolean;
+}
+
+function StatusBadge({ status }: { status: PluginStatus }) {
+  if (status === 'active') {
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+        <CheckCircle2 className="h-3.5 w-3.5" />
+        Active
+      </span>
+    );
+  }
+  if (status === 'disabled') {
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+        <XCircle className="h-3.5 w-3.5" />
+        Disabled
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 text-xs font-medium text-red-500 dark:text-red-400">
+      <AlertCircle className="h-3.5 w-3.5" />
+      Error
+    </span>
+  );
+}
+
+function HealthDot({ status }: { status: PluginStatus }) {
+  const color =
+    status === 'active'
+      ? 'bg-emerald-500'
+      : status === 'error'
+        ? 'bg-red-500'
+        : 'bg-gray-400';
+  return (
+    <span className="relative flex h-2 w-2">
+      {status === 'active' && (
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+      )}
+      <span className={`relative inline-flex h-2 w-2 rounded-full ${color}`} />
+    </span>
+  );
+}
+
+interface PluginRowProps {
+  plugin: InstalledPlugin;
+  onToggle: (id: string) => void;
+  onUpdate: (id: string) => void;
+  onUninstall: (plugin: InstalledPlugin) => void;
+  onConfigure: (plugin: InstalledPlugin) => void;
+  updatingId: string | null;
+}
+
+function PluginRow({ plugin, onToggle, onUpdate, onUninstall, onConfigure, updatingId }: PluginRowProps) {
+  const isUpdating = updatingId === plugin.id;
+
+  return (
+    <div
+      className={`flex flex-col gap-3 rounded-lg border bg-card p-4 transition-colors sm:flex-row sm:items-start sm:gap-4 ${
+        plugin.status === 'error' ? 'border-red-200 dark:border-red-900/50' : ''
+      }`}
+    >
+      {/* Icon + health */}
+      <div className="relative flex-shrink-0 self-start">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-2xl">
+          {plugin.icon}
+        </div>
+        <span className="absolute -right-1 -top-1">
+          <HealthDot status={plugin.status} />
+        </span>
+      </div>
+
+      {/* Info */}
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-semibold text-sm">{plugin.name}</span>
+          <StatusBadge status={plugin.status} />
+          {plugin.hasUpdate && (
+            <Badge variant="outline" className="border-blue-300 bg-blue-50 text-blue-700 text-xs dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-400">
+              Update available
+            </Badge>
+          )}
+        </div>
+        <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{plugin.description}</p>
+
+        {plugin.status === 'error' && plugin.errorMessage && (
+          <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">
+            <AlertCircle className="mr-1 inline h-3 w-3" />
+            {plugin.errorMessage}
+          </p>
+        )}
+
+        <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
+          <span>v{plugin.version}</span>
+          <span>by {plugin.author}</span>
+          <span>Updated {new Date(plugin.updatedAt).toLocaleDateString()}</span>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex flex-shrink-0 flex-wrap items-center gap-1.5">
+        {/* Toggle enable/disable */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 gap-1.5 text-xs"
+          onClick={() => onToggle(plugin.id)}
+          title={plugin.status === 'active' ? 'Disable plugin' : 'Enable plugin'}
+        >
+          {plugin.status === 'active' ? (
+            <ToggleRight className="h-4 w-4 text-emerald-500" />
+          ) : (
+            <ToggleLeft className="h-4 w-4 text-muted-foreground" />
+          )}
+          {plugin.status === 'active' ? 'Disable' : 'Enable'}
+        </Button>
+
+        {/* Configure */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 gap-1.5 text-xs"
+          onClick={() => onConfigure(plugin)}
+        >
+          <Settings className="h-3.5 w-3.5" />
+          Configure
+        </Button>
+
+        {/* Update */}
+        {plugin.hasUpdate && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 gap-1.5 text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400"
+            onClick={() => onUpdate(plugin.id)}
+            disabled={isUpdating}
+          >
+            {isUpdating ? (
+              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <ArrowUpCircle className="h-3.5 w-3.5" />
+            )}
+            {isUpdating ? 'Updating…' : `v${plugin.latestVersion}`}
+          </Button>
+        )}
+
+        {/* Uninstall */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 gap-1.5 text-xs text-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30"
+          onClick={() => onUninstall(plugin)}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+          Uninstall
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+export default function InstalledPluginsPage() {
+  const [plugins, setPlugins] = useState<InstalledPlugin[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | PluginStatus>('all');
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [uninstallTarget, setUninstallTarget] = useState<InstalledPlugin | null>(null);
+  const [configureTarget, setConfigureTarget] = useState<InstalledPlugin | null>(null);
+  const [uninstalling, setUninstalling] = useState(false);
+
+  const fetchInstalled = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await api.get<InstalledPlugin[]>('/api/v1/plugins/installed');
+      setPlugins(Array.isArray(data) ? data : []);
+    } catch {
+      setPlugins([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchInstalled();
+  }, [fetchInstalled]);
+
+  const handleToggle = useCallback(async (id: string) => {
+    setPlugins(prev =>
+      prev.map(p => {
+        if (p.id !== id) return p;
+        const next: PluginStatus = p.status === 'active' ? 'disabled' : 'active';
+        return { ...p, status: next };
+      })
+    );
+    try {
+      const target = plugins.find(p => p.id === id);
+      if (!target) return;
+      const action = target.status === 'active' ? 'disable' : 'enable';
+      await api.post(`/api/v1/plugins/${id}/${action}`, {});
+    } catch {
+      // revert on failure
+      setPlugins(prev =>
+        prev.map(p => {
+          if (p.id !== id) return p;
+          const reverted: PluginStatus = p.status === 'active' ? 'disabled' : 'active';
+          return { ...p, status: reverted };
+        })
+      );
+    }
+  }, [plugins]);
+
+  const handleUpdate = useCallback(async (id: string) => {
+    setUpdatingId(id);
+    try {
+      await api.post(`/api/v1/plugins/${id}/update`, {});
+      setPlugins(prev =>
+        prev.map(p => {
+          if (p.id !== id) return p;
+          return { ...p, version: p.latestVersion ?? p.version, hasUpdate: false, latestVersion: undefined };
+        })
+      );
+    } catch {
+      // silently ignore
+    } finally {
+      setUpdatingId(null);
+    }
+  }, []);
+
+  const handleUninstall = useCallback(async () => {
+    if (!uninstallTarget) return;
+    setUninstalling(true);
+    try {
+      await api.delete(`/api/v1/plugins/${uninstallTarget.id}`);
+      setPlugins(prev => prev.filter(p => p.id !== uninstallTarget.id));
+    } catch {
+      setPlugins(prev => prev.filter(p => p.id !== uninstallTarget.id));
+    } finally {
+      setUninstalling(false);
+      setUninstallTarget(null);
+    }
+  }, [uninstallTarget]);
+
+  const filtered = plugins.filter(p => {
+    const matchSearch =
+      !search ||
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.author.toLowerCase().includes(search.toLowerCase()) ||
+      p.category.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = statusFilter === 'all' || p.status === statusFilter;
+    return matchSearch && matchStatus;
+  });
+
+  const counts = {
+    all: plugins.length,
+    active: plugins.filter(p => p.status === 'active').length,
+    disabled: plugins.filter(p => p.status === 'disabled').length,
+    error: plugins.filter(p => p.status === 'error').length,
+  };
+
+  return (
+    <div className="flex flex-col gap-6 p-4 sm:p-6">
+      {/* Header */}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <Link href="/plugins">
+            <Button variant="ghost" size="sm" className="mt-0.5 h-8 gap-1.5 text-xs text-muted-foreground">
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Marketplace
+            </Button>
+          </Link>
+          <div>
+            <h1 className="flex items-center gap-2 text-xl font-bold">
+              <Package className="h-5 w-5 text-primary" />
+              Installed Plugins
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Manage, configure, and monitor your installed plugins.
+            </p>
+          </div>
+        </div>
+        <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={fetchInstalled}>
+          <RefreshCw className="h-3.5 w-3.5" />
+          Refresh
+        </Button>
+      </div>
+
+      {/* Stats bar */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {(
+          [
+            { label: 'Total', key: 'all', color: 'text-foreground' },
+            { label: 'Active', key: 'active', color: 'text-emerald-600 dark:text-emerald-400' },
+            { label: 'Disabled', key: 'disabled', color: 'text-muted-foreground' },
+            { label: 'Error', key: 'error', color: 'text-red-500 dark:text-red-400' },
+          ] as const
+        ).map(stat => (
+          <Card
+            key={stat.key}
+            className={`cursor-pointer transition-colors hover:bg-muted/50 ${statusFilter === stat.key ? 'border-primary/50 bg-primary/5' : ''}`}
+            onClick={() => setStatusFilter(stat.key)}
+          >
+            <CardContent className="flex items-center justify-between p-3">
+              <span className="text-xs text-muted-foreground">{stat.label}</span>
+              <span className={`text-xl font-bold ${stat.color}`}>{counts[stat.key]}</span>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="Search installed plugins…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
+      {/* List */}
+      {loading ? (
+        <div className="flex flex-col gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-24 animate-pulse rounded-lg bg-muted" />
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center gap-3 py-16 text-center">
+            <Puzzle className="h-10 w-10 text-muted-foreground/40" />
+            <div>
+              <p className="font-medium text-muted-foreground">No plugins found</p>
+              <p className="text-sm text-muted-foreground/70">
+                {plugins.length === 0 ? (
+                  <>
+                    You haven&apos;t installed any plugins yet.{' '}
+                    <Link href="/plugins" className="text-primary hover:underline">
+                      Browse the marketplace
+                    </Link>
+                    .
+                  </>
+                ) : (
+                  'Try adjusting your search or filter.'
+                )}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {filtered.map(plugin => (
+            <PluginRow
+              key={plugin.id}
+              plugin={plugin}
+              onToggle={handleToggle}
+              onUpdate={handleUpdate}
+              onUninstall={setUninstallTarget}
+              onConfigure={setConfigureTarget}
+              updatingId={updatingId}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Uninstall confirm dialog */}
+      <Dialog open={!!uninstallTarget} onOpenChange={open => !open && setUninstallTarget(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-4 w-4 text-red-500" />
+              Uninstall Plugin
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to uninstall{' '}
+              <strong>{uninstallTarget?.name}</strong>? This action cannot be undone and will remove
+              all plugin data and configurations.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 pt-2">
+            <DialogClose asChild>
+              <Button variant="outline" size="sm">Cancel</Button>
+            </DialogClose>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleUninstall}
+              disabled={uninstalling}
+              className="gap-1.5"
+            >
+              {uninstalling ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+              {uninstalling ? 'Uninstalling…' : 'Uninstall'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Configure dialog */}
+      <Dialog open={!!configureTarget} onOpenChange={open => !open && setConfigureTarget(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Configure — {configureTarget?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Plugin configuration UI for <strong>{configureTarget?.name}</strong> v{configureTarget?.version}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-lg border border-dashed bg-muted/30 py-10 text-center text-sm text-muted-foreground">
+            Configuration schema coming soon.
+          </div>
+          <div className="flex justify-end pt-2">
+            <DialogClose asChild>
+              <Button variant="outline" size="sm">Close</Button>
+            </DialogClose>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

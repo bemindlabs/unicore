@@ -1,0 +1,74 @@
+{
+  "common": {
+    "appName": "UniCore",
+    "loading": "Cargando...",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "next": "Siguiente",
+    "back": "Atrás",
+    "submit": "Enviar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "search": "Buscar...",
+    "signOut": "Cerrar sesión",
+    "expandSidebar": "Expandir barra lateral",
+    "collapseSidebar": "Colapsar barra lateral",
+    "virtualOffice": "Virtual Office",
+    "upgradeToPro": "Actualizar a Pro"
+  },
+  "auth": {
+    "welcomeBack": "Bienvenido de nuevo",
+    "signInDescription": "Inicia sesión en tu cuenta UniCore",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "emailPlaceholder": "tu@ejemplo.com",
+    "passwordPlaceholder": "Ingresa tu contraseña",
+    "signingIn": "Iniciando sesión...",
+    "signIn": "Iniciar sesión",
+    "loginFailed": "Error al iniciar sesión"
+  },
+  "wizard": {
+    "setupTitle": "Configuración de UniCore",
+    "setupSubtitle": "Configura tu espacio de trabajo",
+    "steps": {
+      "businessProfile": "Perfil de Negocio",
+      "teamRoles": "Equipo y Roles",
+      "aiAgents": "Agentes IA",
+      "erpModules": "Módulos ERP",
+      "integrations": "Integraciones",
+      "reviewLaunch": "Revisión y Lanzamiento"
+    },
+    "business": {
+      "title": "Perfil de Negocio",
+      "description": "Elige tu tipo de negocio y configura los ajustes básicos.",
+      "businessType": "Tipo de Negocio",
+      "businessName": "Nombre del Negocio",
+      "businessNamePlaceholder": "Mi Negocio",
+      "currency": "Moneda",
+      "currencyPlaceholder": "Seleccionar moneda",
+      "language": "Idioma",
+      "languagePlaceholder": "Seleccionar idioma",
+      "timezone": "Zona horaria",
+      "timezonePlaceholder": "Seleccionar zona horaria"
+    },
+    "team": {
+      "title": "Equipo y Roles",
+      "description": "Invita a miembros del equipo y asigna sus roles.",
+      "emailRequired": "El correo electrónico es obligatorio",
+      "invalidEmail": "Dirección de correo inválida",
+      "duplicateEmail": "Este correo ya fue agregado"
+    }
+  },
+  "nav": {
+    "dashboard": "Panel",
+    "agents": "Agentes",
+    "workflows": "Flujos de trabajo",
+    "erp": "ERP",
+    "settings": "Configuración",
+    "analytics": "Analítica"
+  },
+  "metadata": {
+    "title": "Panel UniCore",
+    "description": "Panel de operaciones empresariales impulsado por IA"
+  }
+}
