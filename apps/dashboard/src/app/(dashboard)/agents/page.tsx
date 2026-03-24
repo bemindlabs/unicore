@@ -264,13 +264,6 @@ export default function AgentsPage() {
                       <MessageCircle className="h-3 w-3 mr-1" />
                       Chat
                     </Button>
-                    <Button
-                      variant="ghost" size="sm" className="h-7 px-2 text-xs"
-                      onClick={(e) => { e.stopPropagation(); setTerminalAgent(agent); }}
-                    >
-                      <Terminal className="h-3 w-3 mr-1" />
-                      Terminal
-                    </Button>
                     <Badge variant={agent.status === 'working' ? 'default' : agent.status === 'idle' ? 'secondary' : 'outline'}>
                       {agent.status}
                     </Badge>
