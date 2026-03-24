@@ -425,6 +425,70 @@ export class AuthService implements OnModuleDestroy {
     return { message: 'Password changed successfully' };
   }
 
+  // ---------------------------------------------------------------------------
+  // Cross-domain Token Exchange
+  // ---------------------------------------------------------------------------
+
+  async tokenExchange(
+    platformToken: string,
+    targetApp?: string,
+  ): Promise<AuthResponseDto> {
+    const platformSecret =
+      process.env.PLATFORM_JWT_SECRET || process.env.JWT_SECRET;
+
+    if (!platformSecret) {
+      this.logger.error('Token exchange failed: no PLATFORM_JWT_SECRET or JWT_SECRET configured');
+      throw new UnauthorizedException('Token exchange is not configured');
+    }
+
+    // 1. Verify the platform JWT
+    let payload: { customerId?: string; email?: string; name?: string; sub?: string };
+    try {
+      const secret = new TextEncoder().encode(platformSecret);
+      const { payload: verified } = await jwtVerify(platformToken, secret);
+      payload = verified as typeof payload;
+    } catch (err) {
+      this.logger.warn(
+        `Token exchange failed: invalid platform token — ${(err as Error).message}`,
+      );
+      throw new UnauthorizedException('Invalid or expired platform token');
+    }
+
+    const email = payload.email;
+    if (!email) {
+      throw new UnauthorizedException('Platform token missing email claim');
+    }
+
+    const customerName = payload.name || 'Platform User';
+
+    // 2. Find or create user in API Gateway database
+    let user = await this.prisma.user.findUnique({
+      where: { email },
+      select: { id: true, email: true, name: true, role: true },
+    });
+
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          email,
+          name: customerName,
+          password: null, // Platform-linked account, no local password
+        },
+        select: { id: true, email: true, name: true, role: true },
+      });
+      this.logger.log(`Platform-linked user created via token exchange: ${email}`);
+    }
+
+    // 3. Generate API Gateway tokens
+    const tokens = await this.createTokens(user);
+
+    this.logger.log(
+      `Token exchange successful: ${email}${targetApp ? ` → ${targetApp}` : ''}`,
+    );
+
+    return tokens;
+  }
+
   private async createTokens(user: {
     id: string;
     email: string;
