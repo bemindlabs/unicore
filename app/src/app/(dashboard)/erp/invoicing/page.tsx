@@ -109,7 +109,7 @@ const STATUS_CONFIG: Record<
 > = {
   DRAFT: {
     label: "Draft",
-    className: "bg-zinc-100 text-zinc-700 border-zinc-300",
+    className: "bg-zinc-100 text-zinc-700 border-zinc-300 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-600",
     icon: FileText,
   },
   SENT: {
@@ -139,12 +139,12 @@ const STATUS_CONFIG: Record<
   },
   VOID: {
     label: "Void",
-    className: "bg-gray-100 text-gray-500 border-gray-200",
+    className: "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600",
     icon: Ban,
   },
   WRITTEN_OFF: {
     label: "Written Off",
-    className: "bg-gray-100 text-gray-500 border-gray-200",
+    className: "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600",
     icon: XCircle,
   },
 };

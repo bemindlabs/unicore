@@ -97,7 +97,7 @@ const STATUS_CONFIG: Record<
 > = {
   DRAFT: {
     label: "Draft",
-    className: "bg-zinc-100 text-zinc-700 border-zinc-300",
+    className: "bg-zinc-100 text-zinc-700 border-zinc-300 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-600",
     icon: FileText,
   },
   QUOTED: {
@@ -147,7 +147,7 @@ const STATUS_CONFIG: Record<
   },
   REFUNDED: {
     label: "Refunded",
-    className: "bg-gray-100 text-gray-700 border-gray-300",
+    className: "bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600",
     icon: XCircle,
   },
 };

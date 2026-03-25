@@ -94,9 +94,9 @@ describe('BrandingService', () => {
   it('applyPreset() applies preset colors but keeps appName', async () => {
     const service = makeService();
     await service.patch({ appName: 'MyBrand' });
-    const result = await service.applyPreset('slate-light');
+    const result = await service.applyPreset('zinc-light');
     assert.equal(result.appName, 'MyBrand');
-    assert.equal(result.colors.primary, '#6366f1'); // slate-light primary
+    assert.equal(result.colors.primary, '#6366f1'); // zinc-light primary
   });
 
   it('applyPreset() throws on unknown preset', async () => {
