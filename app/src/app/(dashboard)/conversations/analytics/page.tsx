@@ -125,7 +125,7 @@ const CHANNEL_COLORS: Record<string, string> = {
 };
 
 function channelColor(channel: string): string {
-  return CHANNEL_COLORS[channel] ?? 'bg-slate-500';
+  return CHANNEL_COLORS[channel] ?? 'bg-zinc-500';
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────

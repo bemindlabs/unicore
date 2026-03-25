@@ -90,7 +90,7 @@ const PROVIDER_COLORS: Record<string, string> = {
 };
 
 function getProviderColor(provider: string): string {
-  return PROVIDER_COLORS[provider] ?? 'bg-slate-500';
+  return PROVIDER_COLORS[provider] ?? 'bg-zinc-500';
 }
 
 // ── Summary Cards ────────────────────────────────────────────────────────────

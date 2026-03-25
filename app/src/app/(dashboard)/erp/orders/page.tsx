@@ -97,7 +97,7 @@ const STATUS_CONFIG: Record<
 > = {
   DRAFT: {
     label: "Draft",
-    className: "bg-slate-100 text-slate-700 border-slate-300",
+    className: "bg-zinc-100 text-zinc-700 border-zinc-300",
     icon: FileText,
   },
   QUOTED: {

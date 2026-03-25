@@ -1,8 +1,10 @@
 # Dependencies
 node_modules/
+.pnpm-store/
 
 # Build outputs
 dist/
+build/
 .next/
 out/
 
@@ -25,6 +27,7 @@ coverage/
 .idea/
 *.swp
 *.swo
+*~
 
 # OS
 .DS_Store
@@ -40,6 +43,7 @@ pnpm-debug.log*
 
 # Prisma
 prisma/*.db
+.prisma/
 
 # Misc
 *.pem
