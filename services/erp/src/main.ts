@@ -1,5 +1,7 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { apiReference } from '@scalar/nestjs-api-reference';
 import { AppModule } from './app.module';
 import { getKafkaConfig } from './kafka/kafka.config';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
@@ -8,6 +10,24 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 async function bootstrap(): Promise<void> {
   const logger = new Logger('ERP Bootstrap');
   const app = await NestFactory.create(AppModule);
+
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('UniCore ERP')
+    .setDescription('CRM, inventory, invoicing, reporting, and financial management')
+    .setVersion('0.1.1')
+    .addBearerAuth()
+    .addTag('contacts', 'CRM contacts and lead management')
+    .addTag('products', 'Product catalogue and pricing')
+    .addTag('inventory', 'Warehouse and stock management')
+    .addTag('orders', 'Sales orders and fulfillment')
+    .addTag('invoices', 'Invoice generation and payment tracking')
+    .addTag('expenses', 'Expense recording and approval')
+    .addTag('reports', 'Financial reports — P&L, AR aging, low stock')
+    .addTag('health', 'Health check')
+    .build();
+  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+  app.use('/docs', apiReference({ spec: { content: swaggerDocument }, theme: 'kepler' }));
+  SwaggerModule.setup('swagger', app, swaggerDocument);
 
   // Global prefix for all ERP routes
   app.setGlobalPrefix('api/v1');
