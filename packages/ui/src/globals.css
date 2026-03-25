@@ -5,108 +5,48 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 240 5.9% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 240 5.9% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --popover-foreground: 240 5.9% 10%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
   }
-}
-
-/* Backoffice default theme (non-RetroDesk) — light/dark aware */
-:root {
-  --bo-bg-deep: #ffffff;
-  --bo-bg: #f8fafc;
-  --bo-bg-raised: #ffffff;
-  --bo-bg-elevated: #f1f5f9;
-  --bo-bg-input: #ffffff;
-  --bo-bg-bubble: #f1f5f9;
-  --bo-bg-glass: rgba(248, 250, 252, 0.8);
-  --bo-text-bright: #0f172a;
-  --bo-text-accent: #0e7490;
-  --bo-text-accent-2: #0891b2;
-  --bo-text-body: #1e293b;
-  --bo-text-body-soft: #334155;
-  --bo-text-info: #0891b2;
-  --bo-text-muted: #64748b;
-  --bo-text-dim: #94a3b8;
-  --bo-text-dimmer: #cbd5e1;
-  --bo-border: #e2e8f0;
-  --bo-border-subtle: #f1f5f9;
-  --bo-border-strong: #cbd5e1;
-  --bo-border-accent: rgba(14, 116, 144, 0.3);
-  --bo-border-accent-hover: rgba(14, 116, 144, 0.5);
-  --bo-accent-5: rgba(14, 116, 144, 0.05);
-  --bo-accent-10: rgba(14, 116, 144, 0.08);
-  --bo-accent-15: rgba(14, 116, 144, 0.12);
-  --bo-accent-20: rgba(14, 116, 144, 0.15);
-  --bo-accent-30: rgba(14, 116, 144, 0.25);
-  --bo-glow: none;
-}
-.dark {
-  --bo-bg-deep: #060a14;
-  --bo-bg: #0a0e1a;
-  --bo-bg-raised: #0b1120;
-  --bo-bg-elevated: #0d1225;
-  --bo-bg-input: #060a14;
-  --bo-bg-bubble: #0d1220;
-  --bo-bg-glass: rgba(10, 14, 26, 0.8);
-  --bo-text-bright: #e2e8f0;
-  --bo-text-accent: #22d3ee;
-  --bo-text-accent-2: #67e8f9;
-  --bo-text-body: #a5f3fc;
-  --bo-text-body-soft: rgba(165, 243, 252, 0.8);
-  --bo-text-info: #06b6d4;
-  --bo-text-muted: rgba(8, 145, 178, 0.5);
-  --bo-text-dim: rgba(8, 145, 178, 0.4);
-  --bo-text-dimmer: rgba(8, 145, 178, 0.3);
-  --bo-border: rgba(22, 78, 99, 0.3);
-  --bo-border-subtle: rgba(22, 78, 99, 0.2);
-  --bo-border-strong: rgba(22, 78, 99, 0.4);
-  --bo-border-accent: rgba(6, 182, 212, 0.3);
-  --bo-border-accent-hover: rgba(34, 211, 238, 0.5);
-  --bo-accent-5: rgba(6, 182, 212, 0.05);
-  --bo-accent-10: rgba(6, 182, 212, 0.1);
-  --bo-accent-15: rgba(6, 182, 212, 0.15);
-  --bo-accent-20: rgba(6, 182, 212, 0.2);
-  --bo-accent-30: rgba(6, 182, 212, 0.3);
-  --bo-glow: 0 0 15px rgba(0, 229, 255, 0.1);
 }
 
 @layer base {
