@@ -58,11 +58,8 @@
   }
 }
 
-/* Universal pixel animation — used by PixelAvatar outside any theme scope */
+/* Universal pixel animation — used by PixelAvatar */
 @keyframes pixelBob {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-2px); }
 }
-/* All other pixel animations (pixelFloat, pixelBounce, pixelWave, pixelCelebrate,
-   pixelTwinkle, pixelSleep) are defined in retrodesk-theme.css and loaded by the
-   backoffice layout which uses those RetroDesk components. */
