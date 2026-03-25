@@ -1,6 +1,6 @@
 'use client';
 
-import type { RetroDeskCharacter } from '@/lib/backoffice/retrodesk-characters';
+import type { RetroDeskCharacter } from '@/lib/theme/retrodesk-characters';
 import { useRetroDeskTheme } from './RetroDeskThemeProvider';
 
 type AnimationType = 'idle' | 'bounce' | 'wave' | 'sleep' | 'celebrate' | 'none';

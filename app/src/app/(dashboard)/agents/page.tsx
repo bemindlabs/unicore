@@ -195,7 +195,7 @@ export default function AgentsPage() {
             {isPro ? 'New Agent' : 'New Agent (Pro)'}
           </button>
           <Link
-            href="/virtual-office"
+            href={process.env.NEXT_PUBLIC_VIRTUAL_OFFICE_URL ?? 'https://vo-unicore-demo.bemind.tech'}
             className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors border rounded-md px-2.5 py-1.5"
           >
             <Settings className="h-3.5 w-3.5" /> Virtual Office

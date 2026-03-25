@@ -151,6 +151,6 @@ describe('filterSectionsByRole', () => {
     const allItems = sections.flatMap((s) => s.items);
     const auditLog = allItems.find((i) => i.label === 'Audit Logs');
     expect(auditLog?.license?.tier).toBe('pro');
-    expect(auditLog?.license?.feature).toBe('audit');
+    expect(auditLog?.license?.feature).toBe('auditLogs');
   });
 });

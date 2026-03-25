@@ -107,8 +107,8 @@ const STATUS_COLORS: Record<TenantStatus, string> = {
   ACTIVE: 'bg-emerald-100 text-emerald-800 border-emerald-300',
   SUSPENDED: 'bg-red-100 text-red-800 border-red-300',
   PENDING: 'bg-amber-100 text-amber-800 border-amber-300',
-  DELETED: 'bg-gray-100 text-gray-600 border-gray-300',
-  ARCHIVED: 'bg-gray-100 text-gray-600 border-gray-300',
+  DELETED: 'bg-gray-100 text-gray-600 border-gray-300 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600',
+  ARCHIVED: 'bg-gray-100 text-gray-600 border-gray-300 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600',
 };
 
 // ---------------------------------------------------------------------------

@@ -43,7 +43,7 @@ export function ProgressIndicator({ currentStep, onStepClick }: ProgressIndicato
                 'flex items-center gap-2 text-sm font-medium transition-colors',
                 i === currentStep && 'text-primary',
                 i < currentStep && 'text-primary/70 hover:text-primary',
-                i > currentStep && 'text-gray-400 cursor-not-allowed',
+                i > currentStep && 'text-gray-400 dark:text-gray-500 cursor-not-allowed',
               )}
             >
               <span
@@ -51,7 +51,7 @@ export function ProgressIndicator({ currentStep, onStepClick }: ProgressIndicato
                   'flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all',
                   i === currentStep && 'bg-primary text-white',
                   i < currentStep && 'bg-primary/20 text-primary',
-                  i > currentStep && 'bg-gray-200 text-gray-500',
+                  i > currentStep && 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400',
                 )}
               >
                 {i < currentStep ? '✓' : i + 1}

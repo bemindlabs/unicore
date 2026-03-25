@@ -82,6 +82,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <nav className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2 py-3 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
           {sections
             .filter((section) =>
+              section.label === 'Add-ons' ||
               section.items.some((item) => !isNavItemLocked(item, isPro, edition, hasFeature)),
             )
             .map((section, idx) => (
@@ -99,8 +100,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   const Icon = item.icon;
                   const locked = isNavItemLocked(item, isPro, edition, hasFeature);
 
-                  // Hide menu items that require a higher license tier
-                  if (locked) {
+                  // Hide locked items except in Add-ons section
+                  if (locked && section.label !== 'Add-ons') {
                     return null;
                   }
 
@@ -113,21 +114,30 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                     return (
                       <a
                         key={item.href}
-                        href={item.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href={locked ? '#' : item.href}
+                        target={locked ? undefined : '_blank'}
+                        rel={locked ? undefined : 'noopener noreferrer'}
+                        onClick={locked ? (e) => e.preventDefault() : undefined}
                         className={cn(
                           'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
-                          'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+                          locked
+                            ? 'text-muted-foreground/50 cursor-not-allowed'
+                            : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
                           collapsed && 'justify-center px-2',
                         )}
-                        title={collapsed ? item.label : undefined}
+                        title={collapsed ? item.label : locked ? `${item.label} (${item.license?.upgradeLabel ?? 'Pro'} required)` : undefined}
                       >
                         <Icon className="h-4 w-4 shrink-0" />
                         {!collapsed && (
                           <>
                             <span className="truncate">{item.label}</span>
-                            <ExternalLink className="ml-auto h-3 w-3 shrink-0 opacity-50" />
+                            {locked ? (
+                              <span className="ml-auto shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                                {item.license?.upgradeLabel ?? 'Pro'}
+                              </span>
+                            ) : (
+                              <ExternalLink className="ml-auto h-3 w-3 shrink-0 opacity-50" />
+                            )}
                           </>
                         )}
                       </a>

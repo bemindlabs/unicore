@@ -1,7 +1,7 @@
 'use client';
 
 import { useTheme } from '@/hooks/use-theme';
-import { findCharacterByRole } from '@/lib/backoffice/retrodesk-characters';
+import { findCharacterByRole } from '@/lib/theme/retrodesk-characters';
 
 const mascot = findCharacterByRole('mascot')!;
 const MINI_PX = 2;

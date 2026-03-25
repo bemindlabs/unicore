@@ -25,6 +25,7 @@ import {
   Users,
   UsersRound,
   Wand2,
+  Zap,
   LineChart,
 } from 'lucide-react';
 import { UserRole } from '@bemindlabs/unicore-shared-types';
@@ -41,7 +42,7 @@ export const menuSections: NavSection[] = [
         icon: Wand2,
         href: '/agent-builder',
         roles: [UserRole.Owner, UserRole.Operator],
-        license: { tier: 'pro', feature: 'agentBuilder', upgradeLabel: 'Pro' },
+        license: { tier: 'pro', feature: 'customAgentBuilder', upgradeLabel: 'Pro' },
       },
       {
         label: 'Workflows',
@@ -79,7 +80,7 @@ export const menuSections: NavSection[] = [
         icon: Megaphone,
         href: '/channels',
         roles: [UserRole.Owner, UserRole.Operator],
-        license: { tier: 'pro', feature: 'channels', upgradeLabel: 'Pro' },
+        license: { tier: 'pro', feature: 'allChannels', upgradeLabel: 'Pro' },
       },
       {
         label: 'Conv. Analytics',
@@ -139,7 +140,7 @@ export const menuSections: NavSection[] = [
         icon: Shield,
         href: '/admin/roles',
         roles: [UserRole.Owner],
-        license: { tier: 'pro', feature: 'rbac', upgradeLabel: 'Pro' },
+        license: { tier: 'pro', feature: 'fullRbac', upgradeLabel: 'Pro' },
       },
       {
         label: 'SSO',
@@ -160,7 +161,7 @@ export const menuSections: NavSection[] = [
         icon: ScrollText,
         href: '/admin/audit-logs',
         roles: [UserRole.Owner],
-        license: { tier: 'pro', feature: 'audit', upgradeLabel: 'Pro' },
+        license: { tier: 'pro', feature: 'auditLogs', upgradeLabel: 'Pro' },
       },
       { label: 'System Health', icon: Activity, href: '/admin/health', roles: [UserRole.Owner] },
       { label: 'System Terminal', icon: Terminal, href: '/admin/terminal', roles: [UserRole.Owner] },
@@ -178,9 +179,25 @@ export const menuSections: NavSection[] = [
       {
         label: 'Virtual Office',
         icon: Monitor,
-        href: process.env.NEXT_PUBLIC_VIRTUAL_OFFICE_URL ?? '/virtual-office',
+        href: process.env.NEXT_PUBLIC_VIRTUAL_OFFICE_URL ?? 'https://vo-unicore-demo.bemind.tech',
         roles: [UserRole.Owner, UserRole.Operator],
-        license: { tier: 'pro', feature: 'featVirtualOffice', upgradeLabel: 'Pro' },
+        license: { tier: 'pro', feature: 'virtualOffice', upgradeLabel: 'Pro' },
+        external: true,
+      },
+      {
+        label: 'Geek CLI',
+        icon: Terminal,
+        href: process.env.NEXT_PUBLIC_GEEK_PORTAL_URL ?? 'https://geek-unicore-demo.bemind.tech',
+        roles: [UserRole.Owner, UserRole.Operator],
+        license: { tier: 'pro', feature: 'geekCli', upgradeLabel: 'Pro' },
+        external: true,
+      },
+      {
+        label: 'AI-DLC',
+        icon: Zap,
+        href: process.env.NEXT_PUBLIC_DLC_PORTAL_URL ?? 'https://dlc-unicore-demo.bemind.tech',
+        roles: [UserRole.Owner, UserRole.Operator],
+        license: { tier: 'pro', feature: 'aiDlc', upgradeLabel: 'Pro' },
         external: true,
       },
     ],

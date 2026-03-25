@@ -16,7 +16,7 @@ interface ConversationHubProps {
 const STATUS_COLORS: Record<string, string> = {
   OPEN: 'bg-green-500/20 text-green-400 border-green-500/30',
   ASSIGNED: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  RESOLVED: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+  RESOLVED: 'bg-gray-500/20 text-gray-600 dark:text-gray-400 border-gray-500/30',
   CLOSED: 'bg-red-500/20 text-red-400 border-red-500/30',
 };
 

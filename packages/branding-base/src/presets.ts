@@ -14,31 +14,31 @@ export const BRANDING_PRESETS: readonly BrandingPreset[] = [
         primary: '#6366f1',    // indigo-500
         secondary: '#10b981',  // emerald-500
         accent: '#f59e0b',     // amber-500
-        background: '#0f172a', // slate-900
-        surface: '#1e293b',    // slate-800
+        background: '#0f172a', // zinc-900
+        surface: '#1e293b',    // zinc-800
         onPrimary: '#ffffff',
-        foreground: '#f1f5f9', // slate-100
-        muted: '#94a3b8',      // slate-400
-        border: '#334155',     // slate-700
+        foreground: '#f1f5f9', // zinc-100
+        muted: '#94a3b8',      // zinc-400
+        border: '#334155',     // zinc-700
         destructive: '#ef4444',
       },
     },
   },
   {
-    id: 'slate-light',
-    name: 'Slate Light',
+    id: 'zinc-light',
+    name: 'Zinc Light',
     description: 'Clean, light mode palette for modern SaaS products.',
     config: {
       colors: {
         primary: '#6366f1',    // indigo-500
         secondary: '#0ea5e9',  // sky-500
         accent: '#f59e0b',     // amber-500
-        background: '#f8fafc', // slate-50
+        background: '#f8fafc', // zinc-50
         surface: '#ffffff',
         onPrimary: '#ffffff',
-        foreground: '#0f172a', // slate-900
-        muted: '#64748b',      // slate-500
-        border: '#e2e8f0',     // slate-200
+        foreground: '#0f172a', // zinc-900
+        muted: '#64748b',      // zinc-500
+        border: '#e2e8f0',     // zinc-200
         destructive: '#ef4444',
       },
     },

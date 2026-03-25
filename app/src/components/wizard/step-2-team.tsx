@@ -32,7 +32,7 @@ const ROLE_COLORS: Record<string, string> = {
   operator: "bg-blue-100 text-blue-800",
   marketer: "bg-green-100 text-green-800",
   finance: "bg-amber-100 text-amber-800",
-  viewer: "bg-gray-100 text-gray-800",
+  viewer: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
 };
 
 export function StepTeam() {

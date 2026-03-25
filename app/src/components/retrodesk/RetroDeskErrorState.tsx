@@ -1,6 +1,6 @@
 'use client';
 
-import { findCharacterByRole } from '@/lib/backoffice/retrodesk-characters';
+import { findCharacterByRole } from '@/lib/theme/retrodesk-characters';
 import { PixelCharacter } from './PixelCharacter';
 
 const oopsy = findCharacterByRole('error')!;

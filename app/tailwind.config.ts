@@ -1,6 +1,20 @@
 import baseConfig from '@bemindlabs/unicore-config/tailwind/base';
 import type { Config } from 'tailwindcss';
 
+const zincScale = {
+  50: '#fafafa',
+  100: '#f4f4f5',
+  200: '#e4e4e7',
+  300: '#d4d4d8',
+  400: '#a1a1aa',
+  500: '#71717a',
+  600: '#52525b',
+  700: '#3f3f46',
+  800: '#27272a',
+  900: '#18181b',
+  950: '#09090b',
+};
+
 const config: Config = {
   ...baseConfig,
   content: [
@@ -13,19 +27,18 @@ const config: Config = {
     extend: {
       ...baseConfig.theme?.extend,
       colors: {
-        ...baseConfig.theme?.extend?.colors,
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         primary: {
-          ...(baseConfig.theme?.extend?.colors as Record<string, unknown>)?.['primary'] as Record<string, string>,
+          ...zincScale,
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
         },
         secondary: {
-          ...(baseConfig.theme?.extend?.colors as Record<string, unknown>)?.['secondary'] as Record<string, string>,
+          ...zincScale,
           DEFAULT: 'hsl(var(--secondary))',
           foreground: 'hsl(var(--secondary-foreground))',
         },
@@ -38,7 +51,7 @@ const config: Config = {
           foreground: 'hsl(var(--muted-foreground))',
         },
         accent: {
-          ...(baseConfig.theme?.extend?.colors as Record<string, unknown>)?.['accent'] as Record<string, string>,
+          ...zincScale,
           DEFAULT: 'hsl(var(--accent))',
           foreground: 'hsl(var(--accent-foreground))',
         },

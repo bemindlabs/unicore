@@ -93,7 +93,7 @@ const STATUS_CONFIG: Record<ServiceStatus, { label: string; icon: React.Componen
   HEALTHY: { label: 'Healthy', icon: CheckCircle2, className: 'text-emerald-600', badgeVariant: 'default' },
   DEGRADED: { label: 'Degraded', icon: AlertTriangle, className: 'text-amber-600', badgeVariant: 'secondary' },
   UNHEALTHY: { label: 'Unhealthy', icon: XCircle, className: 'text-red-600', badgeVariant: 'destructive' },
-  UNKNOWN: { label: 'Unknown', icon: Activity, className: 'text-gray-400', badgeVariant: 'outline' },
+  UNKNOWN: { label: 'Unknown', icon: Activity, className: 'text-gray-500 dark:text-gray-400', badgeVariant: 'outline' },
 };
 
 // ---------------------------------------------------------------------------

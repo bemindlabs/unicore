@@ -7,7 +7,6 @@ import {
   Req,
   HttpCode,
   HttpStatus,
-  BadRequestException,
   ConflictException,
   InternalServerErrorException,
   UnauthorizedException,
