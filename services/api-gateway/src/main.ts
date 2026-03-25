@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import helmet from 'helmet';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { apiReference } from '@scalar/nestjs-api-reference';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -22,6 +24,31 @@ async function bootstrap() {
   }
 
   const app = await NestFactory.create(AppModule);
+
+  // Mount Scalar docs before helmet to avoid CSP blocking the UI
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('UniCore API Gateway')
+    .setDescription('REST API, authentication (JWT + local), and service proxy')
+    .setVersion('0.1.1')
+    .addBearerAuth()
+    .addTag('auth', 'Authentication — login, register, token refresh')
+    .addTag('admin', 'Admin — system management and configuration')
+    .addTag('channels', 'Messaging channels — Telegram, LINE, WhatsApp, etc.')
+    .addTag('conversations', 'Conversations — inbox, messages, assignments')
+    .addTag('contacts', 'Contact profiles and CRM integration')
+    .addTag('dashboard', 'Dashboard — metrics and overview')
+    .addTag('settings', 'System settings — AI config, integrations')
+    .addTag('tasks', 'Task management')
+    .addTag('notifications', 'Push and in-app notifications')
+    .addTag('plugins', 'Plugin marketplace')
+    .addTag('audit', 'Audit log')
+    .addTag('proxy', 'Internal service proxy')
+    .addTag('webhooks', 'Inbound webhooks from external platforms')
+    .addTag('health', 'Health check')
+    .build();
+  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+  app.use('/docs', apiReference({ spec: { content: swaggerDocument }, theme: 'kepler' }));
+  SwaggerModule.setup('swagger', app, swaggerDocument);
 
   app.use(
     helmet({

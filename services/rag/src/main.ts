@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import helmet from 'helmet';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { apiReference } from '@scalar/nestjs-api-reference';
 import { RagModule } from './rag.module';
 
 async function bootstrap() {
@@ -12,6 +14,20 @@ async function bootstrap() {
   }
 
   const app = await NestFactory.create(RagModule);
+
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('UniCore RAG')
+    .setDescription('Vector search, document ingestion, and retrieval-augmented generation')
+    .setVersion('0.1.1')
+    .addBearerAuth()
+    .addTag('ingestion', 'Document ingestion — upload, chunk, embed, and index')
+    .addTag('retrieval', 'Semantic search and context retrieval')
+    .addTag('git', 'Git repository ingestion and code search')
+    .addTag('health', 'Health check')
+    .build();
+  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+  app.use('/docs', apiReference({ spec: { content: swaggerDocument }, theme: 'kepler' }));
+  SwaggerModule.setup('swagger', app, swaggerDocument);
 
   app.use(helmet());
 
