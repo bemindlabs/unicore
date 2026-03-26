@@ -51,7 +51,7 @@ const BADGE_CONFIG = {
   pro: {
     label: 'Pro',
     icon: Crown,
-    className: 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:hover:bg-blue-900/60 cursor-pointer',
+    className: 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-900/40 dark:text-zinc-300 dark:hover:bg-zinc-900/60 cursor-pointer',
   },
   enterprise: {
     label: 'Enterprise',

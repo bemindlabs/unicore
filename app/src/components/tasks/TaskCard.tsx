@@ -80,7 +80,7 @@ export function TaskCard({ task, onClick, onDragStart }: Props): JSX.Element {
             {task.assignee.type === 'agent' && task.assignee.color ? (
               <span className="w-4 h-4 rounded-full flex-shrink-0" style={{ background: task.assignee.color }} />
             ) : (
-              <span className="w-4 h-4 rounded-full flex-shrink-0 bg-blue-500 flex items-center justify-center text-[8px] text-white font-bold">
+              <span className="w-4 h-4 rounded-full flex-shrink-0 bg-zinc-500 flex items-center justify-center text-[8px] text-white font-bold">
                 {task.assignee.name.charAt(0)}
               </span>
             )}

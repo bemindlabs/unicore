@@ -29,7 +29,7 @@ const ROLE_OPTIONS = [
 
 const ROLE_COLORS: Record<string, string> = {
   owner: "bg-purple-100 text-purple-800",
-  operator: "bg-blue-100 text-blue-800",
+  operator: "bg-zinc-100 text-zinc-800",
   marketer: "bg-green-100 text-green-800",
   finance: "bg-amber-100 text-amber-800",
   viewer: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",

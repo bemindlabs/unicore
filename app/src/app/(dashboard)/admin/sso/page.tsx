@@ -484,7 +484,7 @@ function SsoContent() {
       {/* ------------------------------------------------------------------ */}
       <Section
         title="OIDC Provider"
-        icon={<Shield className="h-4 w-4 text-blue-500" />}
+        icon={<Shield className="h-4 w-4 text-zinc-500" />}
         defaultOpen={false}
       >
         <div className="flex items-center justify-between pb-2 border-b">

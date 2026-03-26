@@ -83,7 +83,7 @@ const EMPTY_FORM: ContactForm = {
 // ---------------------------------------------------------------------------
 
 const TYPE_COLORS: Record<ContactType, string> = {
-  LEAD: "bg-blue-100 text-blue-800 border-blue-300",
+  LEAD: "bg-zinc-100 text-zinc-800 border-zinc-300",
   CUSTOMER: "bg-emerald-100 text-emerald-800 border-emerald-300",
   VENDOR: "bg-purple-100 text-purple-800 border-purple-300",
   PARTNER: "bg-amber-100 text-amber-800 border-amber-300",

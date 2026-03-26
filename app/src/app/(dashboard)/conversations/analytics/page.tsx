@@ -118,7 +118,7 @@ function formatRelative(iso: string): string {
 
 const CHANNEL_COLORS: Record<string, string> = {
   command: 'bg-violet-500',
-  telegram: 'bg-blue-500',
+  telegram: 'bg-zinc-500',
   line: 'bg-green-500',
   web: 'bg-cyan-500',
   api: 'bg-amber-500',

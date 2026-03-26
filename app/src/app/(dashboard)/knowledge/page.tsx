@@ -104,7 +104,7 @@ function typeVariant(type: string): { label: string; className: string; Icon: Re
       return {
         label: 'URL',
         className:
-          'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800',
+          'bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-950 dark:text-zinc-300 dark:border-zinc-800',
         Icon: Link,
       };
     case 'pdf':

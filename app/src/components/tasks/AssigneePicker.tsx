@@ -50,7 +50,7 @@ export function AssigneePicker({ value, agents, onChange }: Props) {
               <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: value.color }} />
             )}
             {value.type === 'human' && (
-              <span className="w-3 h-3 rounded-full flex-shrink-0 bg-blue-500" />
+              <span className="w-3 h-3 rounded-full flex-shrink-0 bg-zinc-500" />
             )}
             <span>{value.name}</span>
             <span className="text-[10px] text-muted-foreground ml-auto">{value.type}</span>
@@ -79,7 +79,7 @@ export function AssigneePicker({ value, agents, onChange }: Props) {
               {opt.type === 'agent' && opt.color ? (
                 <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: opt.color }} />
               ) : (
-                <span className="w-3 h-3 rounded-full flex-shrink-0 bg-blue-500" />
+                <span className="w-3 h-3 rounded-full flex-shrink-0 bg-zinc-500" />
               )}
               <span>{opt.name}</span>
               <span className="text-[10px] text-muted-foreground ml-auto">{opt.type}</span>

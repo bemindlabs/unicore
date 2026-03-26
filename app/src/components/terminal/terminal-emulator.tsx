@@ -147,7 +147,7 @@ export function TerminalEmulator({ cwd = '/', className = '', onExit }: Terminal
           <span className={`font-mono text-[9px] ${statusColor}`}>{statusText}</span>
         </div>
         {copied && (
-          <span className="font-mono text-[9px] text-blue-400">copied</span>
+          <span className="font-mono text-[9px] text-zinc-400">copied</span>
         )}
       </div>
 

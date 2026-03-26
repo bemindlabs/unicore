@@ -95,7 +95,7 @@ const CHANNELS: ChannelDef[] = [
     icon: Hash,
     pro: true,
     webhookPath: '/api/v1/channels/discord/webhook',
-    color: 'text-indigo-500',
+    color: 'text-zinc-500',
     fields: [
       { key: 'botToken', label: 'Bot Token', placeholder: 'MTI3...', secret: true },
       { key: 'applicationId', label: 'Application ID', placeholder: '123456789012345678' },
@@ -135,7 +135,7 @@ const CHANNELS: ChannelDef[] = [
     icon: Globe,
     pro: true,
     webhookPath: '/api/v1/channels/facebook/webhook',
-    color: 'text-blue-600',
+    color: 'text-zinc-600',
     fields: [
       { key: 'pageAccessToken', label: 'Page Access Token', placeholder: 'EAABcde...', secret: true },
       { key: 'verifyToken', label: 'Verify Token', placeholder: 'my-verify-token', secret: true },
@@ -187,7 +187,7 @@ const CHANNELS: ChannelDef[] = [
     icon: Mail,
     pro: false,
     webhookPath: '/api/v1/channels/email/webhook',
-    color: 'text-blue-500',
+    color: 'text-zinc-500',
     fields: [
       { key: 'smtpHost', label: 'SMTP Host', placeholder: 'smtp.example.com' },
       { key: 'smtpPort', label: 'SMTP Port', placeholder: '587' },
