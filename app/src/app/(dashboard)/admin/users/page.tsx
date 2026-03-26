@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MoreHorizontal, Trash2, UsersRound } from 'lucide-react';
+import { Loader2, MoreHorizontal, Trash2, UsersRound } from 'lucide-react';
 import {
   Avatar,
   AvatarFallback,
@@ -115,16 +115,63 @@ export default function AdminUsersPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-sm text-muted-foreground py-8 text-center">
-              Loading users...
-            </p>
+            <div className="flex items-center justify-center gap-2 py-8">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Loading users...</span>
+            </div>
           ) : users.length === 0 ? (
             <p className="text-sm text-muted-foreground py-8 text-center">
               No users found. The admin users API endpoint may not be available
               yet.
             </p>
           ) : (
-            <div className="overflow-x-auto">
+            {/* Mobile card view */}
+            <div className="block md:hidden space-y-3">
+              {users.map((u) => {
+                const initials = u.name
+                  .split(' ')
+                  .map((n) => n[0])
+                  .join('')
+                  .toUpperCase();
+                return (
+                  <div key={u.id} className="rounded-lg border p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-7 w-7">
+                          <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium text-sm">{u.name}</span>
+                      </div>
+                      <Badge variant={ROLE_VARIANT[u.role] ?? 'outline'}>{u.role}</Badge>
+                    </div>
+                    <div className="text-sm text-muted-foreground">{u.email}</div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Joined {new Date(u.createdAt).toLocaleDateString()}</span>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" aria-label="User actions">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            disabled={u.id === currentUserId}
+                            onClick={() => setDeleteTarget(u)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete user
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop table view */}
+            <div className="hidden md:block overflow-x-auto">
               <Table className="min-w-[500px]">
                 <TableHeader>
                   <TableRow>
@@ -168,7 +215,7 @@ export default function AdminUsersPage() {
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" aria-label="User actions">
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>

@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   Clock,
   FileText,
+  Loader2,
   Package,
   PackageCheck,
   Plus,
@@ -503,8 +504,9 @@ export default function OrdersPage() {
           </div>
 
           {loading ? (
-            <div className="flex h-32 items-center justify-center text-muted-foreground text-sm">
-              Loading…
+            <div className="flex h-32 items-center justify-center gap-2 text-muted-foreground text-sm">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading...
             </div>
           ) : orders.length === 0 ? (
             <div className="flex h-32 items-center justify-center rounded-lg border border-dashed text-muted-foreground text-sm">
