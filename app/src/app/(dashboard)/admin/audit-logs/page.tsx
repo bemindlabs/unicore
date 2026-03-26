@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ScrollText } from 'lucide-react';
+import { Loader2, ScrollText } from 'lucide-react';
 import {
   Badge,
   Card,
@@ -71,53 +71,78 @@ export default function AdminAuditLogsPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-sm text-muted-foreground py-8 text-center">
-              Loading audit logs...
-            </p>
+            <div className="flex items-center justify-center gap-2 py-8">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Loading audit logs...</span>
+            </div>
           ) : logs.length === 0 ? (
             <p className="text-sm text-muted-foreground py-8 text-center">
               No audit logs available. The audit log API endpoint may not be
               available yet.
             </p>
           ) : (
-            <div className="overflow-x-auto">
-              <Table className="min-w-[600px]">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Action</TableHead>
-                    <TableHead>Actor</TableHead>
-                    <TableHead>Resource</TableHead>
-                    <TableHead>Details</TableHead>
-                    <TableHead>Time</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {logs.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell>
-                        <Badge
-                          variant={ACTION_VARIANT[log.action] ?? 'outline'}
-                        >
-                          {log.action}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm font-medium">
-                        {log.actor}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {log.resource}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
-                        {log.details ?? '—'}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+            <>
+              {/* Mobile card view */}
+              <div className="block md:hidden space-y-3">
+                {logs.map((log) => (
+                  <div key={log.id} className="rounded-lg border p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Badge variant={ACTION_VARIANT[log.action] ?? 'outline'}>
+                        {log.action}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
                         {new Date(log.timestamp).toLocaleString()}
-                      </TableCell>
+                      </span>
+                    </div>
+                    <div className="text-sm font-medium">{log.actor}</div>
+                    <div className="text-sm text-muted-foreground">{log.resource}</div>
+                    {log.details && (
+                      <div className="text-sm text-muted-foreground truncate">{log.details}</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop table view */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table className="min-w-[600px]">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Action</TableHead>
+                      <TableHead>Actor</TableHead>
+                      <TableHead>Resource</TableHead>
+                      <TableHead>Details</TableHead>
+                      <TableHead>Time</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {logs.map((log) => (
+                      <TableRow key={log.id}>
+                        <TableCell>
+                          <Badge
+                            variant={ACTION_VARIANT[log.action] ?? 'outline'}
+                          >
+                            {log.action}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm font-medium">
+                          {log.actor}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {log.resource}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                          {log.details ?? '—'}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                          {new Date(log.timestamp).toLocaleString()}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

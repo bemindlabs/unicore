@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   AlertTriangle,
+  Loader2,
   Package,
   Pencil,
   Plus,
@@ -163,7 +164,7 @@ function ProductDialog({
         <div className="space-y-4 py-2">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label htmlFor="p-sku">SKU *</Label>
+              <Label htmlFor="p-sku">SKU <span className="text-red-500">*</span></Label>
               <Input
                 id="p-sku"
                 value={form.sku}
@@ -183,7 +184,7 @@ function ProductDialog({
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="p-name">Name *</Label>
+            <Label htmlFor="p-name">Name <span className="text-red-500">*</span></Label>
             <Input
               id="p-name"
               value={form.name}
@@ -194,7 +195,7 @@ function ProductDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label htmlFor="p-price">Unit Price *</Label>
+              <Label htmlFor="p-price">Unit Price <span className="text-red-500">*</span></Label>
               <Input
                 id="p-price"
                 type="number"
@@ -521,8 +522,9 @@ export default function InventoryPage() {
           </div>
 
           {loading ? (
-            <div className="flex h-32 items-center justify-center text-muted-foreground text-sm">
-              Loading…
+            <div className="flex h-32 items-center justify-center gap-2 text-muted-foreground text-sm">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading...
             </div>
           ) : filtered.length === 0 ? (
             <div className="flex h-32 items-center justify-center rounded-lg border border-dashed text-muted-foreground text-sm">

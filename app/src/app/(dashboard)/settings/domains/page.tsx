@@ -694,8 +694,9 @@ export default function SettingsDomainsPage() {
 
         <CardContent>
           {loading ? (
-            <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
-              Loading domains…
+            <div className="flex h-32 items-center justify-center gap-2 text-sm text-muted-foreground">
+              <RefreshCw className="h-4 w-4 animate-spin" />
+              Loading domains...
             </div>
           ) : domains.length === 0 ? (
             <div className="flex h-32 items-center justify-center rounded-lg border border-dashed text-muted-foreground text-sm">

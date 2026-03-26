@@ -64,7 +64,7 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps): JSX.Element {
                       className={cn(
                         'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
                         isActive
-                          ? 'bg-primary/10 text-primary font-medium'
+                          ? 'bg-zinc-100 text-zinc-900 font-medium dark:bg-zinc-800 dark:text-zinc-100'
                           : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
                       )}
                     >

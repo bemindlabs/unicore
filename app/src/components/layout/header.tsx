@@ -88,7 +88,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
   return (
     <>
     <header className="flex h-14 items-center gap-2 sm:gap-4 border-b bg-card/30 backdrop-blur-sm px-3 sm:px-4 lg:px-6">
-      <Button variant="ghost" size="icon" className="lg:hidden shrink-0" onClick={onMobileMenuToggle}>
+      <Button variant="ghost" size="icon" className="lg:hidden shrink-0" onClick={onMobileMenuToggle} aria-label="Toggle mobile menu">
         <Menu className="h-5 w-5" />
       </Button>
 
@@ -110,7 +110,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
       </div>
 
       {/* Theme toggle — hidden on small mobile */}
-      <Button variant="ghost" size="icon" className="h-8 w-8 hidden sm:inline-flex" onClick={toggleTheme}>
+      <Button variant="ghost" size="icon" className="h-8 w-8 hidden sm:inline-flex" onClick={toggleTheme} aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}>
         {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
       </Button>
 
@@ -121,6 +121,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
         className="relative h-8 w-8 shrink-0"
         onClick={toggleTerminal}
         title="Terminal (Ctrl+`)"
+        aria-label="Toggle terminal"
       >
         <Terminal className="h-4 w-4" />
         {terminalConnected && (
@@ -130,7 +131,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
 
       {/* Notifications */}
       <div className="relative">
-        <Button variant="ghost" size="icon" className="relative h-8 w-8 shrink-0" onClick={toggleNotifPanel}>
+        <Button variant="ghost" size="icon" className="relative h-8 w-8 shrink-0" onClick={toggleNotifPanel} aria-label="Toggle notifications">
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
             <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">
@@ -155,7 +156,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
       {/* User avatar dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+          <Button variant="ghost" className="relative h-8 w-8 rounded-full" aria-label="User menu">
             <Avatar className="h-8 w-8">
               <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
                 {user ? getInitials(user.name) : '?'}

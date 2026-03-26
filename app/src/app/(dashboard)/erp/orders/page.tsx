@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   Clock,
   FileText,
+  Loader2,
   Package,
   PackageCheck,
   Plus,
@@ -261,7 +262,7 @@ function CreateOrderDialog({
 
         <div className="space-y-4 py-2">
           <div className="space-y-1">
-            <Label htmlFor="o-contact">Contact *</Label>
+            <Label htmlFor="o-contact">Contact <span className="text-red-500">*</span></Label>
             <select
               id="o-contact"
               value={form.contactId}
@@ -503,91 +504,98 @@ export default function OrdersPage() {
           </div>
 
           {loading ? (
-            <div className="flex h-32 items-center justify-center text-muted-foreground text-sm">
-              Loading…
+            <div className="flex h-32 items-center justify-center gap-2 text-muted-foreground text-sm">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading...
             </div>
           ) : orders.length === 0 ? (
             <div className="flex h-32 items-center justify-center rounded-lg border border-dashed text-muted-foreground text-sm">
               No orders yet. Create your first order to get started.
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table className="min-w-[600px]">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Order</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Total</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="w-40" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {orders.map((order) => {
-                    const transition =
-                      order.status in TRANSITIONS
-                        ? TRANSITIONS[order.status]
-                        : null;
-                    const busy = transitioning.has(order.id);
-                    const contactName = order.contact?.name ?? order.contactId;
-                    return (
-                      <TableRow key={order.id}>
-                        <TableCell className="font-mono text-sm">
-                          {order.orderNumber ?? order.id.slice(0, 8)}
-                        </TableCell>
-                        <TableCell className="text-sm">{contactName}</TableCell>
-                        <TableCell>
-                          <StatusBadge status={order.status} />
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {fmt(order.total ?? 0, order.currency ?? "USD")}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {formatDateTz(order.createdAt, tz)}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            {transition && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={busy}
-                                onClick={() =>
-                                  handleTransition(order, transition.action)
-                                }
-                              >
-                                {busy ? "…" : transition.label}
-                              </Button>
-                            )}
-                            {["DELIVERED", "SHIPPED", "FULFILLED"].includes(order.status) && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  disabled={busy}
-                                  onClick={() => handleTransition(order, "refund")}
-                                >
-                                  Refund
-                                </Button>
-                            )}
-                            {!["CANCELLED", "REFUNDED", "DELIVERED", "RETURNED", "FULFILLED", "SHIPPED"].includes(order.status) && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                  onClick={() => setCancelTarget(order)}
-                                >
-                                  Cancel
+            <>
+              {/* Mobile card view */}
+              <div className="block md:hidden space-y-3">
+                {orders.map((order) => {
+                  const transition = order.status in TRANSITIONS ? TRANSITIONS[order.status] : null;
+                  const busy = transitioning.has(order.id);
+                  const contactName = order.contact?.name ?? order.contactId;
+                  return (
+                    <div key={order.id} className="rounded-lg border p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-sm font-medium">{order.orderNumber ?? order.id.slice(0, 8)}</span>
+                        <StatusBadge status={order.status} />
+                      </div>
+                      <div className="text-sm">{contactName}</div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">{fmt(order.total ?? 0, order.currency ?? "USD")}</span>
+                        <span className="text-xs text-muted-foreground">{formatDateTz(order.createdAt, tz)}</span>
+                      </div>
+                      <div className="flex items-center gap-1 pt-1">
+                        {transition && (
+                          <Button variant="outline" size="sm" disabled={busy} onClick={() => handleTransition(order, transition.action)}>
+                            {busy ? "…" : transition.label}
+                          </Button>
+                        )}
+                        {["DELIVERED", "SHIPPED", "FULFILLED"].includes(order.status) && (
+                          <Button variant="ghost" size="sm" disabled={busy} onClick={() => handleTransition(order, "refund")}>Refund</Button>
+                        )}
+                        {!["CANCELLED", "REFUNDED", "DELIVERED", "RETURNED", "FULFILLED", "SHIPPED"].includes(order.status) && (
+                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setCancelTarget(order)}>Cancel</Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop table view */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table className="min-w-[600px]">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Order</TableHead>
+                      <TableHead>Contact</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Total</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead className="w-40" />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {orders.map((order) => {
+                      const transition = order.status in TRANSITIONS ? TRANSITIONS[order.status] : null;
+                      const busy = transitioning.has(order.id);
+                      const contactName = order.contact?.name ?? order.contactId;
+                      return (
+                        <TableRow key={order.id}>
+                          <TableCell className="font-mono text-sm">{order.orderNumber ?? order.id.slice(0, 8)}</TableCell>
+                          <TableCell className="text-sm">{contactName}</TableCell>
+                          <TableCell><StatusBadge status={order.status} /></TableCell>
+                          <TableCell className="text-sm">{fmt(order.total ?? 0, order.currency ?? "USD")}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{formatDateTz(order.createdAt, tz)}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              {transition && (
+                                <Button variant="outline" size="sm" disabled={busy} onClick={() => handleTransition(order, transition.action)}>
+                                  {busy ? "…" : transition.label}
                                 </Button>
                               )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
+                              {["DELIVERED", "SHIPPED", "FULFILLED"].includes(order.status) && (
+                                <Button variant="ghost" size="sm" disabled={busy} onClick={() => handleTransition(order, "refund")}>Refund</Button>
+                              )}
+                              {!["CANCELLED", "REFUNDED", "DELIVERED", "RETURNED", "FULFILLED", "SHIPPED"].includes(order.status) && (
+                                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setCancelTarget(order)}>Cancel</Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
           <Pagination meta={meta} onPageChange={setPage} />
         </CardContent>
