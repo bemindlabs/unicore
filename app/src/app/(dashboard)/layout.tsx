@@ -25,6 +25,18 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const demoMode = useDemoMode();
   const isRetroDesk = isRetroDeskFamily(characterTheme);
 
+  // Keyboard shortcut: Ctrl/Cmd+B to toggle sidebar
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
+        e.preventDefault();
+        toggle();
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [toggle]);
+
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.replace('/login');

@@ -23,7 +23,7 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps): JSX.Element {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="w-64 p-0 flex flex-col h-full">
+      <SheetContent side="left" className="w-[min(16rem,85vw)] p-0 flex flex-col h-full">
         <SheetHeader className="border-b px-4 py-3 shrink-0">
           <SheetTitle className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground text-xs font-bold" data-unicore-branding>
