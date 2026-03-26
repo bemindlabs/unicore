@@ -50,7 +50,7 @@ export function LoginForm() {
         <CardContent className="pt-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">{t('email')}</Label>
+              <Label htmlFor="email">{t('email')} <span className="text-red-500">*</span></Label>
               <Input
                 id="email"
                 type="email"
@@ -62,7 +62,7 @@ export function LoginForm() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">{t('password')}</Label>
+              <Label htmlFor="password">{t('password')} <span className="text-red-500">*</span></Label>
               <Input
                 id="password"
                 type="password"

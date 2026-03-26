@@ -10,6 +10,7 @@ import {
   DollarSign,
   Eye,
   FileText,
+  Loader2,
   Plus,
   XCircle,
 } from "lucide-react";
@@ -245,7 +246,7 @@ function CreateInvoiceDialog({
 
         <div className="space-y-4 py-2">
           <div className="space-y-1">
-            <Label htmlFor="inv-contact">Contact *</Label>
+            <Label htmlFor="inv-contact">Contact <span className="text-red-500">*</span></Label>
             <select
               id="inv-contact"
               value={form.contactId}
@@ -391,7 +392,7 @@ function RecordPaymentDialog({
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-1">
-            <Label htmlFor="pay-amount">Amount *</Label>
+            <Label htmlFor="pay-amount">Amount <span className="text-red-500">*</span></Label>
             <Input
               id="pay-amount"
               type="number"
@@ -574,90 +575,97 @@ export default function InvoicingPage() {
           </div>
 
           {loading ? (
-            <div className="flex h-32 items-center justify-center text-muted-foreground text-sm">
-              Loading…
+            <div className="flex h-32 items-center justify-center gap-2 text-muted-foreground text-sm">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading...
             </div>
           ) : invoices.length === 0 ? (
             <div className="flex h-32 items-center justify-center rounded-lg border border-dashed text-muted-foreground text-sm">
               No invoices yet. Create your first invoice to get started.
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table className="min-w-[700px]">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Invoice</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Total</TableHead>
-                    <TableHead>Paid</TableHead>
-                    <TableHead>Due Date</TableHead>
-                    <TableHead className="w-48" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {invoices.map((invoice) => {
-                    const contactName = invoice.contact?.name ?? invoice.contactId;
-                    const busy = sending.has(invoice.id);
-                    return (
-                      <TableRow key={invoice.id}>
-                        <TableCell className="font-mono text-sm">
-                          {invoice.invoiceNumber ?? invoice.id.slice(0, 8)}
-                        </TableCell>
-                        <TableCell className="text-sm">{contactName}</TableCell>
-                        <TableCell>
-                          <StatusBadge status={invoice.status} />
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {fmt(invoice.total, invoice.currency ?? "USD")}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {fmt(invoice.amountPaid ?? 0, invoice.currency ?? "USD")}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {invoice.dueDate
-                            ? formatDateTz(invoice.dueDate, tz)
-                            : "—"}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            {invoice.status === "DRAFT" && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={busy}
-                                onClick={() => handleSend(invoice)}
-                              >
-                                {busy ? "…" : "Send"}
-                              </Button>
-                            )}
-                            {["SENT", "VIEWED", "PARTIALLY_PAID", "OVERDUE"].includes(invoice.status) && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setPaymentTarget(invoice)}
-                              >
-                                Record Payment
-                              </Button>
-                            )}
-                            {["DRAFT", "SENT", "VIEWED"].includes(invoice.status) && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                onClick={() => handleCancel(invoice)}
-                              >
-                                Void
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
+            <>
+              {/* Mobile card view */}
+              <div className="block md:hidden space-y-3">
+                {invoices.map((invoice) => {
+                  const contactName = invoice.contact?.name ?? invoice.contactId;
+                  const busy = sending.has(invoice.id);
+                  return (
+                    <div key={invoice.id} className="rounded-lg border p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-sm font-medium">{invoice.invoiceNumber ?? invoice.id.slice(0, 8)}</span>
+                        <StatusBadge status={invoice.status} />
+                      </div>
+                      <div className="text-sm">{contactName}</div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium">{fmt(invoice.total, invoice.currency ?? "USD")}</span>
+                        <span className="text-muted-foreground">Paid: {fmt(invoice.amountPaid ?? 0, invoice.currency ?? "USD")}</span>
+                      </div>
+                      {invoice.dueDate && (
+                        <div className="text-xs text-muted-foreground">Due: {formatDateTz(invoice.dueDate, tz)}</div>
+                      )}
+                      <div className="flex items-center gap-1 pt-1">
+                        {invoice.status === "DRAFT" && (
+                          <Button variant="outline" size="sm" disabled={busy} onClick={() => handleSend(invoice)}>{busy ? "…" : "Send"}</Button>
+                        )}
+                        {["SENT", "VIEWED", "PARTIALLY_PAID", "OVERDUE"].includes(invoice.status) && (
+                          <Button variant="outline" size="sm" onClick={() => setPaymentTarget(invoice)}>Record Payment</Button>
+                        )}
+                        {["DRAFT", "SENT", "VIEWED"].includes(invoice.status) && (
+                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleCancel(invoice)}>Void</Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop table view */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table className="min-w-[700px]">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Invoice</TableHead>
+                      <TableHead>Contact</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Total</TableHead>
+                      <TableHead>Paid</TableHead>
+                      <TableHead>Due Date</TableHead>
+                      <TableHead className="w-48" />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {invoices.map((invoice) => {
+                      const contactName = invoice.contact?.name ?? invoice.contactId;
+                      const busy = sending.has(invoice.id);
+                      return (
+                        <TableRow key={invoice.id}>
+                          <TableCell className="font-mono text-sm">{invoice.invoiceNumber ?? invoice.id.slice(0, 8)}</TableCell>
+                          <TableCell className="text-sm">{contactName}</TableCell>
+                          <TableCell><StatusBadge status={invoice.status} /></TableCell>
+                          <TableCell className="text-sm">{fmt(invoice.total, invoice.currency ?? "USD")}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{fmt(invoice.amountPaid ?? 0, invoice.currency ?? "USD")}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{invoice.dueDate ? formatDateTz(invoice.dueDate, tz) : "—"}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              {invoice.status === "DRAFT" && (
+                                <Button variant="outline" size="sm" disabled={busy} onClick={() => handleSend(invoice)}>{busy ? "…" : "Send"}</Button>
+                              )}
+                              {["SENT", "VIEWED", "PARTIALLY_PAID", "OVERDUE"].includes(invoice.status) && (
+                                <Button variant="outline" size="sm" onClick={() => setPaymentTarget(invoice)}>Record Payment</Button>
+                              )}
+                              {["DRAFT", "SENT", "VIEWED"].includes(invoice.status) && (
+                                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleCancel(invoice)}>Void</Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

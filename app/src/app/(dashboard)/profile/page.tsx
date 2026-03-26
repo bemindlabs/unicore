@@ -101,7 +101,7 @@ export default function ProfilePage() {
           <CardContent>
             <form onSubmit={handleProfileSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="name">Name <span className="text-red-500">*</span></Label>
                 <Input
                   id="name"
                   value={name}
@@ -112,7 +112,7 @@ export default function ProfilePage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email <span className="text-red-500">*</span></Label>
                 <Input
                   id="email"
                   type="email"
@@ -153,7 +153,7 @@ export default function ProfilePage() {
           <CardContent>
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="currentPassword">Current Password</Label>
+                <Label htmlFor="currentPassword">Current Password <span className="text-red-500">*</span></Label>
                 <Input
                   id="currentPassword"
                   type="password"
@@ -164,7 +164,7 @@ export default function ProfilePage() {
               </div>
               <Separator />
               <div className="space-y-2">
-                <Label htmlFor="newPassword">New Password</Label>
+                <Label htmlFor="newPassword">New Password <span className="text-red-500">*</span></Label>
                 <Input
                   id="newPassword"
                   type="password"
@@ -175,7 +175,7 @@ export default function ProfilePage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <Label htmlFor="confirmPassword">Confirm New Password <span className="text-red-500">*</span></Label>
                 <Input
                   id="confirmPassword"
                   type="password"

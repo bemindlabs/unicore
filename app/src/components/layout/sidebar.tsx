@@ -71,6 +71,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             onClick={onToggle}
             className="h-7 w-7 text-muted-foreground hover:text-foreground"
             title={collapsed ? t('expandSidebar') : t('collapseSidebar')}
+            aria-label={collapsed ? t('expandSidebar') : t('collapseSidebar')}
           >
             {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
           </Button>
@@ -151,7 +152,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                       className={cn(
                         'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
                         isActive
-                          ? 'bg-primary/10 text-primary font-medium'
+                          ? 'bg-zinc-100 text-zinc-900 font-medium dark:bg-zinc-800 dark:text-zinc-100'
                           : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
                         collapsed && 'justify-center px-2',
                       )}
@@ -206,6 +207,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                     className="h-8 w-8 text-muted-foreground hover:text-destructive"
                     onClick={logout}
                     title={t('signOut')}
+                    aria-label={t('signOut')}
                   >
                     <LogOut className="h-4 w-4" />
                   </Button>
@@ -228,6 +230,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                     className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
                     onClick={logout}
                     title={t('signOut')}
+                    aria-label={t('signOut')}
                   >
                     <LogOut className="h-3.5 w-3.5" />
                   </Button>
