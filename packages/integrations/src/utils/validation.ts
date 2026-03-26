@@ -1,4 +1,4 @@
-// Config validation helpers — @unicore/integrations
+// Config validation helpers — @bemindlabs/unicore-integrations
 
 import type { AdapterError } from '../types/adapter.js';
 

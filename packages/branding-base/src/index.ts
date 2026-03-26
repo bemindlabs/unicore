@@ -1,4 +1,4 @@
-// @unicore/branding — Community edition public API
+// @bemindlabs/unicore-branding — Community edition public API
 // Base branding: colors, fonts, dark/light mode
 
 // Types

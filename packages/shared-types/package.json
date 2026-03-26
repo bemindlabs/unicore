@@ -1,5 +1,5 @@
 {
-  "name": "@unicore/shared-types",
+  "name": "@bemindlabs/unicore-shared-types",
   "version": "0.0.2",
   "private": true,
   "type": "module",
@@ -17,7 +17,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc && tsc -p tsconfig.cjs.json",
+    "build": "tsc && tsc -p tsconfig.cjs.json && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
     "typecheck": "tsc --noEmit",
     "test": "jest --passWithNoTests",
     "test:watch": "jest --watch",

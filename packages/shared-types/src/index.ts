@@ -1,4 +1,4 @@
-// @unicore/shared-types — Shared TypeScript type definitions
+// @bemindlabs/unicore-shared-types — Shared TypeScript type definitions
 
 export * from './auth.js';
 export * from './config.js';

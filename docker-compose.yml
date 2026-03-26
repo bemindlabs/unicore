@@ -1,5 +1,6 @@
 # ============================================================================
 # UniCore Community Edition
+# Updated: 2026-03-24
 # ============================================================================
 # Open-source core platform — includes all community services, infrastructure,
 # and the license server integration.
@@ -281,7 +282,7 @@ services:
   unicore-dashboard:
     build:
       context: .
-      dockerfile: apps/dashboard/Dockerfile
+      dockerfile: app/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
         NEXT_PUBLIC_EDITION: community

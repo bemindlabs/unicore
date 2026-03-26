@@ -11,9 +11,11 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
   UseGuards,
+  Logger,
 } from '@nestjs/common';
 import { LicenseService } from './license.service';
 import { ActivateLicenseDto } from './dto/activate-license.dto';
+import { ActivateAddonDto } from './dto/activate-addon.dto';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { Public } from '../auth/decorators/public.decorator';
 
@@ -26,6 +28,8 @@ import { Public } from '../auth/decorators/public.decorator';
  */
 @Controller('api/v1/license')
 export class LicenseController {
+  private readonly logger = new Logger(LicenseController.name);
+
   constructor(private readonly licenseService: LicenseService) {}
 
   /**
@@ -266,6 +270,40 @@ export class LicenseController {
     }));
 
     return { invoices };
+  }
+
+  /**
+   * POST /api/v1/license/activate-addon
+   * Activates an add-on feature (Geek CLI or AI-DLC) on the current license.
+   *
+   * Authentication: X-Platform-Secret header matching PLATFORM_CALLBACK_SECRET env var.
+   * Called by the unicore-platform addon-worker after a successful add-on purchase.
+   */
+  @Post('activate-addon')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  async activateAddon(
+    @Body() dto: ActivateAddonDto,
+    @Headers('x-platform-secret') platformSecret: string,
+  ) {
+    // Validate platform secret
+    const expectedSecret = process.env.PLATFORM_CALLBACK_SECRET;
+    if (!platformSecret || !expectedSecret || platformSecret !== expectedSecret) {
+      throw new UnauthorizedException('Invalid or missing X-Platform-Secret header');
+    }
+
+    try {
+      await this.licenseService.activateAddon(dto.addonType);
+    } catch (err) {
+      this.logger.error(
+        `Failed to activate add-on "${dto.addonType}": ${(err as Error).message}`,
+      );
+      throw new InternalServerErrorException(
+        `Failed to activate add-on: ${(err as Error).message}`,
+      );
+    }
+
+    return { success: true, addon: dto.addonType };
   }
 
   /**

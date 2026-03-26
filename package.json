@@ -1,5 +1,5 @@
 {
-  "name": "unicore",
+  "name": "unicore-dashboard",
   "private": true,
   "packageManager": "pnpm@10.30.3",
   "workspaces": [
@@ -46,5 +46,5 @@
     "turbo": "^2.0.0",
     "typescript": "^5.5.0"
   },
-  "version": "0.1.0"
+  "version": "0.1.2"
 }

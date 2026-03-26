@@ -1,4 +1,4 @@
-// Telegram Channel Adapter — @unicore/integrations
+// Telegram Channel Adapter — @bemindlabs/unicore-integrations
 // Wraps the Telegram Bot API for sending messages, photos, and managing webhooks.
 
 const TELEGRAM_API_BASE = 'https://api.telegram.org';

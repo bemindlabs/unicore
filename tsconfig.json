@@ -26,7 +26,7 @@
     "types": ["jest", "node", "multer", "express"],
     "baseUrl": ".",
     "paths": {
-      "@unicore/*": ["packages/*/src"],
+      "@bemindlabs/unicore-*": ["packages/*/src"],
       "@/*": ["apps/dashboard/src/*"]
     }
   },

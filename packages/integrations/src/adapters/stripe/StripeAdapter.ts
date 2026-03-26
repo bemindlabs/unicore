@@ -1,4 +1,4 @@
-// Stripe Payment Adapter — @unicore/integrations
+// Stripe Payment Adapter — @bemindlabs/unicore-integrations
 // Integrates with the Stripe API to sync payment intents and charges.
 
 import type { IAdapter, AdapterMeta, AdapterHealth, AdapterResult, AdapterError, SyncOptions, SyncResult } from '../../types/adapter.js';

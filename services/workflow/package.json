@@ -1,5 +1,5 @@
 {
-  "name": "@unicore/workflow",
+  "name": "@bemindlabs/unicore-workflow",
   "version": "0.0.2",
   "private": true,
   "scripts": {
@@ -14,17 +14,19 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@bemindlabs/unicore-config": "workspace:*",
     "@nestjs/common": "^10.4.0",
     "@nestjs/core": "^10.4.0",
     "@nestjs/microservices": "^10.4.0",
     "@nestjs/platform-express": "^10.4.0",
+    "@nestjs/swagger": "^11.2.6",
+    "@scalar/nestjs-api-reference": "^1.1.4",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "kafkajs": "^2.2.4",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "uuid": "^9.0.1",
-    "@unicore/config": "workspace:*"
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.4.0",
@@ -60,7 +62,7 @@
       "<rootDir>/test/"
     ],
     "moduleNameMapper": {
-      "@unicore/shared-types": "<rootDir>/../../packages/shared-types/src"
+      "@bemindlabs/unicore-shared-types": "<rootDir>/../../packages/shared-types/src"
     }
   }
 }

@@ -99,7 +99,7 @@ describe('InboundRouterService', () => {
       mockPrisma.conversation.findFirst.mockResolvedValue(mockConversation);
 
       const result = await service.findOrCreateConversation(
-        'telegram',
+        'TELEGRAM',
         'chat-456',
         'Alice',
         'user-789',
@@ -114,7 +114,7 @@ describe('InboundRouterService', () => {
       mockPrisma.conversation.create.mockResolvedValue(mockConversation);
 
       const result = await service.findOrCreateConversation(
-        'telegram',
+        'TELEGRAM',
         'chat-456',
         'Alice',
         'user-789',
@@ -122,7 +122,7 @@ describe('InboundRouterService', () => {
 
       expect(mockPrisma.conversation.create).toHaveBeenCalledWith({
         data: {
-          channel: 'telegram',
+          channel: 'TELEGRAM',
           externalId: 'chat-456',
           status: 'OPEN',
           contactName: 'Alice',
@@ -247,8 +247,8 @@ describe('InboundRouterService', () => {
       });
       mockPrisma.conversation.update.mockResolvedValue({
         ...mockConversation,
-        assignedAgentId: 'default-agent-1',
-        status: 'assigned',
+        assigneeId: 'default-agent-1',
+        status: 'ASSIGNED',
       });
 
       const result = await service.route(dto);

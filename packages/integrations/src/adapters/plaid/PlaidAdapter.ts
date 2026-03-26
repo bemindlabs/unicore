@@ -1,4 +1,4 @@
-// Plaid Bank Feed Adapter — @unicore/integrations
+// Plaid Bank Feed Adapter — @bemindlabs/unicore-integrations
 // Syncs accounts and transactions from Plaid.
 
 import type { IAdapter, AdapterMeta, AdapterHealth, AdapterResult, AdapterError, SyncOptions, SyncResult } from '../../types/adapter.js';

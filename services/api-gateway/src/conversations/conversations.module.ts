@@ -7,6 +7,8 @@ import { CannedResponsesService } from './canned-responses.service';
 import { ConversationsController } from './conversations.controller';
 import { ConversationsGateway } from './conversations.gateway';
 import { ConversationsService } from './conversations.service';
+import { InboundRouterService } from './router/inbound-router.service';
+import { KafkaProducerService } from './kafka/kafka-producer.service';
 import { MessageNormalizerService } from './normalizer/message-normalizer.service';
 import { OutboundSenderService } from './sender/outbound-sender.service';
 
@@ -19,7 +21,9 @@ import { OutboundSenderService } from './sender/outbound-sender.service';
     CannedResponsesService,
     MessageNormalizerService,
     OutboundSenderService,
+    InboundRouterService,
+    KafkaProducerService,
   ],
-  exports: [ConversationsService, CannedResponsesService, MessageNormalizerService, OutboundSenderService],
+  exports: [ConversationsService, CannedResponsesService, MessageNormalizerService, OutboundSenderService, InboundRouterService],
 })
 export class ConversationsModule {}

@@ -1,4 +1,4 @@
-// Stripe-specific types — @unicore/integrations
+// Stripe-specific types — @bemindlabs/unicore-integrations
 
 export interface StripeConfig {
   /** Stripe secret key (sk_live_… or sk_test_…). */

@@ -239,7 +239,7 @@ unicore/services/api-gateway/
     plugin-storage.service.ts      — Redis-backed scoped key-value store
     plugin-sidecar.service.ts      — Docker sidecar manager for heavy plugins
 
-packages/plugin-sdk/               — Published as @unicore/plugin-sdk
+packages/plugin-sdk/               — Published as @bemindlabs/unicore-plugin-sdk
   src/
     types.ts                       — UniCorePlugin, PluginContext, manifest types
     api-client.ts                  — Generated typed API client (from OpenAPI)
@@ -255,7 +255,7 @@ packages/plugin-sdk/               — Published as @unicore/plugin-sdk
 ### Phase 1 — Foundation (Sprint 1–2)
 - Define `manifest.json` schema and validation (zod)
 - Implement `PluginManagerModule` in API Gateway with SQLite-backed registry
-- Scaffold `@unicore/plugin-sdk` package with typed interfaces
+- Scaffold `@bemindlabs/unicore-plugin-sdk` package with typed interfaces
 - Basic `isolated-vm` runner with lifecycle hooks
 - Plugin enable/disable/uninstall API endpoints
 

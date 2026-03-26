@@ -1,7 +1,19 @@
 # Changelog — @unicore (Community Edition)
 
-Updated: 2026-03-22
+Updated: 2026-03-24
 
+
+## [0.1.2] - 2026-03-24
+
+### Added
+- Geek Portal (apps/portal-geek) — landing, auth, dashboard, leaderboard, multiplayer, downloads, plugins, license pages
+- AI-DLC Portal (apps/portal-ai-dlc) — landing, auth, dashboard, chat, analytics, API keys, license pages
+
+### Changed
+- Renamed package scope from @unicore/* to @bemindlabs/unicore-*
+
+### Fixed
+- Dashboard conversations page missing isAiGenerated property
 
 ## [0.1.0] - 2026-03-22
 
@@ -39,7 +51,7 @@ Updated: 2026-03-22
 ## [0.0.2] - 2026-03-20
 
 ### Added
-- `TiktokAdapter` in `@unicore/integrations` — TikTok Marketing API v1.3 adapter with campaigns, ad groups, ads sync, injectable `ITiktokClient`, and 14 unit tests (UNC-459)
+- `TiktokAdapter` in `@bemindlabs/unicore-integrations` — TikTok Marketing API v1.3 adapter with campaigns, ad groups, ads sync, injectable `ITiktokClient`, and 14 unit tests (UNC-459)
 - `DELETE /api/v1/admin/users/:id` endpoint with self-deletion guard, last-OWNER guard, ChatHistory cleanup, Task assignee nullification, and audit logging (UNC-460)
 - Admin user delete button + confirmation dialog in dashboard (UNC-461)
 - `admin.controller.spec.ts` — 14 unit tests for AdminController (UNC-462)

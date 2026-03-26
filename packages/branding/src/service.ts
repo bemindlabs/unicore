@@ -5,8 +5,8 @@ import type { BrandingConfig, BrandingConfigPatch } from './types';
 import { getDefaultConfig, findPreset } from './presets';
 
 // Re-export community storage primitives so consumers get a single import point
-export { MemoryBrandingStorage } from '@unicore/branding-base/service';
-export type { BrandingStorage } from '@unicore/branding-base/service';
+export { MemoryBrandingStorage } from '@bemindlabs/unicore-branding-base/service';
+export type { BrandingStorage } from '@bemindlabs/unicore-branding-base/service';
 
 function isNodeError(err: unknown): err is { code: string } {
   return typeof err === 'object' && err !== null && 'code' in err;
