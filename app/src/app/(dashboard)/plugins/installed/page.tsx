@@ -129,7 +129,7 @@ function PluginRow({ plugin, onToggle, onUpdate, onUninstall, onConfigure, updat
           <span className="font-semibold text-sm">{plugin.name}</span>
           <StatusBadge status={plugin.status} />
           {plugin.hasUpdate && (
-            <Badge variant="outline" className="border-blue-300 bg-blue-50 text-blue-700 text-xs dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-400">
+            <Badge variant="outline" className="border-zinc-300 bg-zinc-50 text-zinc-700 text-xs dark:border-zinc-800 dark:bg-zinc-950/50 dark:text-zinc-400">
               Update available
             </Badge>
           )}
@@ -184,7 +184,7 @@ function PluginRow({ plugin, onToggle, onUpdate, onUninstall, onConfigure, updat
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 gap-1.5 text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400"
+            className="h-8 gap-1.5 text-xs text-zinc-600 hover:text-zinc-700 dark:text-zinc-400"
             onClick={() => onUpdate(plugin.id)}
             disabled={isUpdating}
           >

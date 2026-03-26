@@ -69,14 +69,14 @@ const CHANNEL_LABELS: Record<ChannelType, string> = {
 };
 
 const CHANNEL_COLORS: Record<ChannelType, string> = {
-  web: 'bg-blue-500',
+  web: 'bg-zinc-500',
   telegram: 'bg-sky-500',
   line: 'bg-green-500',
-  facebook: 'bg-blue-700',
+  facebook: 'bg-zinc-700',
   instagram: 'bg-pink-500',
   whatsapp: 'bg-emerald-500',
   slack: 'bg-purple-600',
-  discord: 'bg-indigo-500',
+  discord: 'bg-zinc-500',
 };
 
 /* ------------------------------------------------------------------ */

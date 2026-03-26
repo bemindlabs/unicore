@@ -91,7 +91,7 @@ const STATUS_COLORS: Record<TenantStatus, string> = {
 };
 
 const PLAN_COLORS: Record<TenantPlan, string> = {
-  STARTER: 'bg-blue-100 text-blue-800 border-blue-300',
+  STARTER: 'bg-zinc-100 text-zinc-800 border-zinc-300',
   GROWTH: 'bg-violet-100 text-violet-800 border-violet-300',
   ENTERPRISE: 'bg-amber-100 text-amber-800 border-amber-300',
   CUSTOM: 'bg-pink-100 text-pink-800 border-pink-300',

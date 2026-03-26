@@ -59,7 +59,7 @@ const AVAILABLE_TOOLS: AgentTool[] = [
 ];
 
 const AUTONOMY_LABELS: Record<AutonomyLevel, { label: string; color: string }> = {
-  1: { label: 'Ask every step', color: 'text-blue-500' },
+  1: { label: 'Ask every step', color: 'text-zinc-500' },
   2: { label: 'Confirm actions', color: 'text-green-500' },
   3: { label: 'Balanced', color: 'text-yellow-500' },
   4: { label: 'Mostly autonomous', color: 'text-orange-500' },

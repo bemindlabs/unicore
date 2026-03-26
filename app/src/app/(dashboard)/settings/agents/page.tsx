@@ -43,7 +43,7 @@ const AGENT_ICONS: Record<string, typeof Bot> = {
 
 const STATE_COLORS: Record<string, string> = {
   running: 'text-green-500', idle: 'text-yellow-500',
-  spawning: 'text-blue-500', terminated: 'text-red-500',
+  spawning: 'text-zinc-500', terminated: 'text-red-500',
 };
 
 const AGENT_TYPES = ['router', 'comms', 'finance', 'growth', 'ops', 'research', 'sentinel', 'builder', 'erp', 'custom'];
@@ -366,7 +366,7 @@ export default function AgentSettingsPage() {
                         <Label className="text-xs">Tags</Label>
                         <div className="flex flex-wrap gap-1">
                           {editingAgent.tags?.map((tag: string, i: number) => (
-                            <span key={i} className="inline-flex items-center gap-1 bg-blue-100 dark:bg-blue-900 px-2 py-0.5 rounded text-[10px]">
+                            <span key={i} className="inline-flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 px-2 py-0.5 rounded text-[10px]">
                               {tag}
                               <button
                                 className="text-muted-foreground hover:text-red-500 text-xs"

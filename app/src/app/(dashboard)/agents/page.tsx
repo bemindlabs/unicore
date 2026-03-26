@@ -336,7 +336,7 @@ export default function AgentsPage() {
 
       {/* Virtual Office link */}
       <Link
-        href="/virtual-office"
+        href="/conversations"
         className="flex items-center justify-center gap-2 rounded-lg border border-dashed p-4 text-sm text-muted-foreground hover:border-primary hover:text-primary transition-colors"
       >
         <Bot className="h-4 w-4" />

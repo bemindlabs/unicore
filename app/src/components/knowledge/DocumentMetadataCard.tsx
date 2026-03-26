@@ -24,7 +24,7 @@ interface DocumentMetadataCardProps {
 
 function typeIcon(type: string) {
   switch (type?.toLowerCase()) {
-    case 'url': return <Link className="h-4 w-4 text-blue-500" />;
+    case 'url': return <Link className="h-4 w-4 text-zinc-500" />;
     case 'pdf': return <File className="h-4 w-4 text-red-500" />;
     default: return <FileText className="h-4 w-4 text-muted-foreground" />;
   }

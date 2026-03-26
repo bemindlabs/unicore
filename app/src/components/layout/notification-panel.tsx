@@ -39,7 +39,7 @@ const typeIcons: Record<string, typeof Info> = {
 };
 
 const typeColors: Record<string, string> = {
-  info: 'text-blue-500',
+  info: 'text-zinc-500',
   warning: 'text-yellow-500',
   success: 'text-green-500',
   error: 'text-destructive',

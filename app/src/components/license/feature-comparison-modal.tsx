@@ -72,7 +72,7 @@ export function FeatureComparisonModal({ open, onOpenChange }: Props) {
               <tr>
                 <th className="w-1/2 pb-3 text-left font-medium text-muted-foreground">Feature</th>
                 <th className="w-[16.67%] pb-3 text-center font-semibold">Community</th>
-                <th className="w-[16.67%] pb-3 text-center font-semibold text-blue-600 dark:text-blue-400">
+                <th className="w-[16.67%] pb-3 text-center font-semibold text-zinc-600 dark:text-zinc-400">
                   Pro
                 </th>
                 <th className="w-[16.67%] pb-3 text-center font-semibold text-purple-600 dark:text-purple-400">

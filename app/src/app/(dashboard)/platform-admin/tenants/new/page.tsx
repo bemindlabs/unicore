@@ -81,7 +81,7 @@ const EMPTY: WizardData = {
 };
 
 const PLANS: Array<{ value: TenantPlan; label: string; desc: string; color: string }> = [
-  { value: 'STARTER', label: 'Starter', desc: '5 users · 5 GB · 10K API/day', color: 'border-blue-300 bg-blue-50' },
+  { value: 'STARTER', label: 'Starter', desc: '5 users · 5 GB · 10K API/day', color: 'border-zinc-300 bg-zinc-50' },
   { value: 'GROWTH', label: 'Growth', desc: '25 users · 50 GB · 100K API/day', color: 'border-violet-300 bg-violet-50' },
   { value: 'ENTERPRISE', label: 'Enterprise', desc: '200 users · 500 GB · 1M API/day', color: 'border-amber-300 bg-amber-50' },
   { value: 'CUSTOM', label: 'Custom', desc: 'Unlimited · negotiated quotas', color: 'border-pink-300 bg-pink-50' },

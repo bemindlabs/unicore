@@ -114,7 +114,7 @@ const STATUS_CONFIG: Record<
   },
   SENT: {
     label: "Sent",
-    className: "bg-blue-100 text-blue-800 border-blue-300",
+    className: "bg-zinc-100 text-zinc-800 border-zinc-300",
     icon: Clock,
   },
   VIEWED: {

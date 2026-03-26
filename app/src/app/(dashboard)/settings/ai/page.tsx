@@ -363,12 +363,12 @@ export default function AiSettingsPage() {
             </div>
             {openaiAuthType === 'oauth' && (
               <>
-                <div className="rounded-lg border border-blue-200 bg-blue-50 p-2.5 text-xs dark:border-blue-800 dark:bg-blue-950">
-                  <p className="font-medium text-blue-800 dark:text-blue-200 mb-1">Get ChatGPT token:</p>
-                  <ol className="list-decimal list-inside text-blue-700 dark:text-blue-300 space-y-0.5">
+                <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 text-xs dark:border-zinc-800 dark:bg-zinc-950">
+                  <p className="font-medium text-zinc-800 dark:text-zinc-200 mb-1">Get ChatGPT token:</p>
+                  <ol className="list-decimal list-inside text-zinc-700 dark:text-zinc-300 space-y-0.5">
                     <li>Log in to <a href="https://chatgpt.com" target="_blank" rel="noreferrer" className="underline">chatgpt.com</a></li>
                     <li>Open <a href="https://chatgpt.com/api/auth/session" target="_blank" rel="noreferrer" className="underline">chatgpt.com/api/auth/session</a></li>
-                    <li>Copy <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">accessToken</code></li>
+                    <li>Copy <code className="bg-zinc-100 dark:bg-zinc-900 px-1 rounded">accessToken</code></li>
                   </ol>
                 </div>
                 <div className="space-y-1">

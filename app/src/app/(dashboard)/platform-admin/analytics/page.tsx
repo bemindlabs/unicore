@@ -84,7 +84,7 @@ function formatNumber(n: number): string {
 }
 
 const PLAN_COLORS: Record<TenantPlan, string> = {
-  STARTER: 'bg-blue-500',
+  STARTER: 'bg-zinc-500',
   GROWTH: 'bg-violet-500',
   ENTERPRISE: 'bg-amber-500',
   CUSTOM: 'bg-pink-500',

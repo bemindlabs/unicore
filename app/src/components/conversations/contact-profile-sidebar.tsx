@@ -122,7 +122,7 @@ const CHANNEL_ICONS: Record<string, string> = {
 
 const STATUS_COLORS: Record<string, string> = {
   OPEN: 'bg-green-500/15 text-green-700 dark:text-green-400',
-  ASSIGNED: 'bg-blue-500/15 text-blue-700 dark:text-blue-400',
+  ASSIGNED: 'bg-zinc-500/15 text-zinc-700 dark:text-zinc-400',
   PENDING: 'bg-yellow-500/15 text-yellow-700 dark:text-yellow-400',
   RESOLVED: 'bg-gray-500/15 text-gray-600 dark:text-gray-400',
   CLOSED: 'bg-red-500/15 text-red-700 dark:text-red-400',
