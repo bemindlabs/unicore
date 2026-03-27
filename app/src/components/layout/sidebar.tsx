@@ -57,19 +57,27 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         )}
       >
         {/* Brand + collapse toggle */}
-        <div className="flex h-14 items-center gap-2 px-4 shrink-0">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-bold" data-unicore-branding>
-            {appName[0] ?? 'U'}
-          </div>
+        <div className={cn(
+          'flex h-14 items-center shrink-0',
+          collapsed ? 'flex-col justify-center gap-0.5 px-1' : 'gap-2 px-4',
+        )}>
           {!collapsed && (
-            <span className="text-base font-semibold tracking-tight" data-unicore-branding>{appName}</span>
+            <>
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-bold" data-unicore-branding>
+                {appName[0] ?? 'U'}
+              </div>
+              <span className="text-base font-semibold tracking-tight" data-unicore-branding>{appName}</span>
+              <div className="flex-1" />
+            </>
           )}
-          <div className="flex-1" />
           <Button
             variant="ghost"
             size="icon"
             onClick={onToggle}
-            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+            className={cn(
+              'text-muted-foreground hover:text-foreground shrink-0',
+              collapsed ? 'h-8 w-8' : 'h-7 w-7',
+            )}
             title={collapsed ? t('expandSidebar') : t('collapseSidebar')}
             aria-label={collapsed ? t('expandSidebar') : t('collapseSidebar')}
           >
