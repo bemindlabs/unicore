@@ -36,7 +36,7 @@ describe('TokenTrackingService', () => {
         operation: 'complete',
       });
 
-      // gpt-4o: $2.5 input + $10 output per 1M tokens → $12.5 total for 1M/1M
+      // gpt-4o: $2.5 input + $10 output per 1M tokens -> $12.5 total for 1M/1M
       expect(record.cost).toBeCloseTo(12.5, 2);
     });
 
@@ -98,7 +98,7 @@ describe('TokenTrackingService', () => {
   describe('estimateCost()', () => {
     it('returns 0 for unknown provider', () => {
       const cost = service.estimateCost('unknown-provider', 'some-model', sampleUsage);
-      // Falls back to openai default pricing — still a valid number
+      // Falls back to openai default pricing -- still a valid number
       expect(typeof cost).toBe('number');
       expect(cost).toBeGreaterThanOrEqual(0);
     });
@@ -106,6 +106,21 @@ describe('TokenTrackingService', () => {
     it('returns 0 for ollama models', () => {
       const cost = service.estimateCost('ollama', 'llama3.2', sampleUsage);
       expect(cost).toBe(0);
+    });
+  });
+
+  describe('reloadPricingOverrides()', () => {
+    it('is a no-op when no ConfigService is injected (unit test mode)', async () => {
+      // service is constructed without ConfigService -- defaults remain active
+      await expect(service.reloadPricingOverrides()).resolves.toBeUndefined();
+    });
+
+    it('getActivePricing() returns the default pricing map before any overrides', () => {
+      const pricing = service.getActivePricing();
+      // Verify a few well-known defaults are present
+      expect(pricing['openai']['gpt-4o'].inputPer1M).toBe(2.5);
+      expect(pricing['anthropic']['default'].inputPer1M).toBe(3.0);
+      expect(pricing['ollama']['default'].inputPer1M).toBe(0);
     });
   });
 
@@ -178,7 +193,7 @@ describe('TokenTrackingService', () => {
 
       const result = service.getAggregatedUsage({ period: 'daily' });
 
-      // deepseek-chat: $0.14 input + $0.28 output per 1M → $0.42 total
+      // deepseek-chat: $0.14 input + $0.28 output per 1M -> $0.42 total
       expect(result.data[0].estimatedCost).toBeCloseTo(0.42, 2);
     });
   });
