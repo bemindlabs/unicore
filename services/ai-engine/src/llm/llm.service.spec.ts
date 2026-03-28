@@ -23,6 +23,7 @@ describe('LlmService', () => {
 
   const mockTokenTracking = {
     track: jest.fn(),
+    reloadPricingOverrides: jest.fn(),
   };
 
   const fakeCompletion: LlmCompletionResult = {
@@ -256,10 +257,14 @@ describe('LlmService', () => {
   });
 
   describe('reloadProviders()', () => {
-    it('delegates to factory.reloadProviders', async () => {
+    it('delegates to factory.reloadProviders and reloads pricing overrides', async () => {
       mockFactory.reloadProviders.mockResolvedValue(['openai', 'ollama']);
+      mockTokenTracking.reloadPricingOverrides.mockResolvedValue(undefined);
+
       const result = await service.reloadProviders();
+
       expect(result).toEqual(['openai', 'ollama']);
+      expect(mockTokenTracking.reloadPricingOverrides).toHaveBeenCalledTimes(1);
     });
   });
 

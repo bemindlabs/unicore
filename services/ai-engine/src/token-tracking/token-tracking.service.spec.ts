@@ -109,6 +109,21 @@ describe('TokenTrackingService', () => {
     });
   });
 
+  describe('reloadPricingOverrides()', () => {
+    it('is a no-op when no ConfigService is injected (unit test mode)', async () => {
+      // service is constructed without ConfigService — defaults remain active
+      await expect(service.reloadPricingOverrides()).resolves.toBeUndefined();
+    });
+
+    it('getActivePricing() returns the default pricing map before any overrides', () => {
+      const pricing = service.getActivePricing();
+      // Verify a few well-known defaults are present
+      expect(pricing['openai']['gpt-4o'].inputPer1M).toBe(2.5);
+      expect(pricing['anthropic']['default'].inputPer1M).toBe(3.0);
+      expect(pricing['ollama']['default'].inputPer1M).toBe(0);
+    });
+  });
+
   describe('getRecords()', () => {
     it('respects limit and offset', () => {
       for (let i = 0; i < 5; i++) {
