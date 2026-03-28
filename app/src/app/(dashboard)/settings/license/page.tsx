@@ -46,13 +46,12 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/hooks/use-auth';
 import { useLicense } from '@/hooks/use-license';
 
-const MOCK_LICENSE: LicenseInfo = {
-  key: 'COMM-XXXX-XXXX-XXXX',
-  edition: 'community',
-  status: 'active',
+// Static capability definitions for the edition comparison table.
+// These reflect the actual tier limits and are intentionally hardcoded
+// as they describe what each edition offers, not the current instance's state.
+const COMMUNITY_TIER = {
   maxAgents: 2,
   maxRoles: 3,
-  expiresAt: '2099-12-31T23:59:59Z',
   features: {
     allAgents: false,
     customAgentBuilder: false,
@@ -67,13 +66,9 @@ const MOCK_LICENSE: LicenseInfo = {
   },
 };
 
-const PRO_FEATURES: LicenseInfo = {
-  key: '',
-  edition: 'pro',
-  status: 'active',
+const PRO_TIER = {
   maxAgents: 50,
   maxRoles: 20,
-  expiresAt: '',
   features: {
     allAgents: true,
     customAgentBuilder: true,
@@ -88,13 +83,9 @@ const PRO_FEATURES: LicenseInfo = {
   },
 };
 
-const ENTERPRISE_FEATURES: LicenseInfo = {
-  key: '',
-  edition: 'enterprise',
-  status: 'active',
+const ENTERPRISE_TIER = {
   maxAgents: 999,
   maxRoles: 999,
-  expiresAt: '',
   features: {
     allAgents: true,
     customAgentBuilder: true,
@@ -119,6 +110,9 @@ const STATUS_CONFIG: Record<
   invalid: { label: 'Invalid', variant: 'outline', icon: AlertTriangle },
 };
 
+// Pricing shown in the upgrade CTA. These match the values configured in
+// unicore-platform's Stripe products and are intentionally kept in sync here
+// as display constants rather than fetched at runtime.
 const MONTHLY_PRICE = 99;
 const ANNUAL_PRICE = 990;
 const ANNUAL_SAVINGS = Math.round((1 - ANNUAL_PRICE / (MONTHLY_PRICE * 12)) * 100);
@@ -184,13 +178,14 @@ function BillingToggle({
 
 export default function SettingsLicensePage() {
   const demoMode = useDemoMode();
-  const [license, setLicense] = useState<LicenseInfo>(MOCK_LICENSE);
+  const [license, setLicense] = useState<LicenseInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [upgradeKey, setUpgradeKey] = useState('');
   const [keyError, setKeyError] = useState('');
   const [isActivating, setIsActivating] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [usersUsed, setUsersUsed] = useState(0);
+  const [agentsUsed, setAgentsUsed] = useState(0);
   const [machineId, setMachineId] = useState<string | null>(null);
   const [isAnnual, setIsAnnual] = useState(true);
   const [isUpgrading, setIsUpgrading] = useState(false);
@@ -224,8 +219,9 @@ export default function SettingsLicensePage() {
     Promise.all([
       api.get<LicenseStatusResponse>('/api/v1/license/status'),
       api.get<{ count: number }>('/api/v1/settings/team/count').catch(() => ({ count: 0 })),
+      api.get<{ agents: { id: string }[] }>('/api/proxy/openclaw/agents').catch(() => ({ agents: [] })),
     ])
-      .then(([raw, teamData]) => {
+      .then(([raw, teamData, agentsData]) => {
         if (!mounted) return;
 
         // Map API response to LicenseInfo format
@@ -261,6 +257,12 @@ export default function SettingsLicensePage() {
 
         setLicense(mapped);
         setUsersUsed(teamData.count);
+        // Count custom (non-built-in) agents from openclaw — built-in agents are
+        // always available and not counted against the license slot limit.
+        const customAgents = Array.isArray(agentsData?.agents)
+          ? agentsData.agents.filter((a: any) => !a.builtIn && !a.isBuiltIn && !a.built_in)
+          : [];
+        setAgentsUsed(customAgents.length);
         if (raw.machineId) setMachineId(raw.machineId);
         setIsLoading(false);
       })
@@ -269,10 +271,6 @@ export default function SettingsLicensePage() {
       });
     return () => { mounted = false; };
   }, []);
-
-  const statusCfg = STATUS_CONFIG[license.status];
-  const StatusIcon = statusCfg.icon;
-  const isEnterprise = license.edition === 'enterprise';
 
   const handleActivate = useCallback(async () => {
     if (!upgradeKey.trim()) return;
@@ -345,14 +343,6 @@ export default function SettingsLicensePage() {
     }
   }, [user?.email]);
 
-  const daysUntilExpiry = (() => {
-    const expiry = new Date(license.expiresAt);
-    const now = new Date();
-    return Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-  })();
-
-  const agentsUsed = 2;
-
   if (isLoading) {
     return <div className="p-8 text-center text-muted-foreground animate-pulse">Loading license...</div>;
   }
@@ -360,6 +350,20 @@ export default function SettingsLicensePage() {
   if (demoMode) {
     return <DemoGuard />;
   }
+
+  // Guard: license is null until the API responds. All hooks are above this
+  // point so the Rules of Hooks are satisfied.
+  if (!license) return null;
+
+  const statusCfg = STATUS_CONFIG[license.status];
+  const StatusIcon = statusCfg.icon;
+  const isEnterprise = license.edition === 'enterprise';
+
+  const daysUntilExpiry = (() => {
+    const expiry = new Date(license.expiresAt);
+    const now = new Date();
+    return Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  })();
 
   return (
     <div className="space-y-6">
@@ -536,14 +540,14 @@ export default function SettingsLicensePage() {
           </div>
           {(
             [
-              ['Max Agents', MOCK_LICENSE.maxAgents, PRO_FEATURES.maxAgents, 'Unlimited'],
-              ['Max Roles', MOCK_LICENSE.maxRoles, PRO_FEATURES.maxRoles, 'Unlimited'],
-              ['All Agents', MOCK_LICENSE.features.allAgents, PRO_FEATURES.features.allAgents, ENTERPRISE_FEATURES.features.allAgents],
-              ['Advanced Workflows', MOCK_LICENSE.features.advancedWorkflows, PRO_FEATURES.features.advancedWorkflows, ENTERPRISE_FEATURES.features.advancedWorkflows],
-              ['White Label', MOCK_LICENSE.features.whiteLabelBranding, PRO_FEATURES.features.whiteLabelBranding, ENTERPRISE_FEATURES.features.whiteLabelBranding],
-              ['Audit Logs', MOCK_LICENSE.features.auditLogs, PRO_FEATURES.features.auditLogs, ENTERPRISE_FEATURES.features.auditLogs],
-              ['SSO', MOCK_LICENSE.features.sso, PRO_FEATURES.features.sso, ENTERPRISE_FEATURES.features.sso],
-              ['Priority Support', MOCK_LICENSE.features.prioritySupport, PRO_FEATURES.features.prioritySupport, ENTERPRISE_FEATURES.features.prioritySupport],
+              ['Max Agents', COMMUNITY_TIER.maxAgents, PRO_TIER.maxAgents, 'Unlimited'],
+              ['Max Roles', COMMUNITY_TIER.maxRoles, PRO_TIER.maxRoles, 'Unlimited'],
+              ['All Agents', COMMUNITY_TIER.features.allAgents, PRO_TIER.features.allAgents, ENTERPRISE_TIER.features.allAgents],
+              ['Advanced Workflows', COMMUNITY_TIER.features.advancedWorkflows, PRO_TIER.features.advancedWorkflows, ENTERPRISE_TIER.features.advancedWorkflows],
+              ['White Label', COMMUNITY_TIER.features.whiteLabelBranding, PRO_TIER.features.whiteLabelBranding, ENTERPRISE_TIER.features.whiteLabelBranding],
+              ['Audit Logs', COMMUNITY_TIER.features.auditLogs, PRO_TIER.features.auditLogs, ENTERPRISE_TIER.features.auditLogs],
+              ['SSO', COMMUNITY_TIER.features.sso, PRO_TIER.features.sso, ENTERPRISE_TIER.features.sso],
+              ['Priority Support', COMMUNITY_TIER.features.prioritySupport, PRO_TIER.features.prioritySupport, ENTERPRISE_TIER.features.prioritySupport],
               ['Multi-tenancy', false, false, true],
               ['HA Cluster', false, false, true],
               ['Compliance Controls', false, false, true],

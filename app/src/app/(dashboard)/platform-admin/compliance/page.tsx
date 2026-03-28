@@ -95,52 +95,13 @@ interface AuditTrailEntry {
   details?: string;
 }
 
-// ---------------------------------------------------------------------------
-// Fallback data — used when compliance API endpoints are unavailable
-// ---------------------------------------------------------------------------
-
-const MOCK_GDPR: GdprExportRequest[] = [
-  { id: 'g1', userId: 'u1', userEmail: 'alice@acme.com', requestedAt: '2026-03-20T10:00:00Z', expiresAt: '2026-03-27T10:00:00Z', status: 'PENDING' },
-  { id: 'g2', userId: 'u2', userEmail: 'bob@acme.com', requestedAt: '2026-03-18T08:30:00Z', completedAt: '2026-03-18T08:45:00Z', expiresAt: '2026-03-25T08:45:00Z', status: 'COMPLETED', downloadUrl: '#' },
-  { id: 'g3', userId: 'u3', userEmail: 'carol@acme.com', requestedAt: '2026-03-10T14:00:00Z', expiresAt: '2026-03-17T14:00:00Z', status: 'EXPIRED' },
-  { id: 'g4', userId: 'u4', userEmail: 'dave@acme.com', requestedAt: '2026-03-22T09:15:00Z', status: 'PROCESSING' },
-];
-
-const MOCK_CCPA: CcpaDeletionRequest[] = [
-  { id: 'c1', userId: 'u5', userEmail: 'eve@startup.io', requestedAt: '2026-03-21T11:00:00Z', status: 'PENDING', dataTypes: ['profile', 'chat', 'analytics'] },
-  { id: 'c2', userId: 'u6', userEmail: 'frank@startup.io', requestedAt: '2026-03-15T16:00:00Z', completedAt: '2026-03-16T09:00:00Z', status: 'COMPLETED', dataTypes: ['profile', 'audit'] },
-  { id: 'c3', userId: 'u7', userEmail: 'grace@corp.com', requestedAt: '2026-03-19T13:45:00Z', status: 'PROCESSING', dataTypes: ['profile', 'chat', 'logs', 'analytics'] },
-];
-
-const MOCK_SOC2: Soc2Control[] = [
-  { id: 's1', category: 'CC1 – Control Environment', control: 'CC1.1', description: 'Commitment to integrity and ethical values', result: 'PASS', lastAssessedAt: '2026-03-01T00:00:00Z' },
-  { id: 's2', category: 'CC1 – Control Environment', control: 'CC1.2', description: 'Board oversight of internal controls', result: 'PASS', lastAssessedAt: '2026-03-01T00:00:00Z' },
-  { id: 's3', category: 'CC2 – Communication', control: 'CC2.1', description: 'Information relevant to internal control is communicated', result: 'PASS', lastAssessedAt: '2026-03-01T00:00:00Z' },
-  { id: 's4', category: 'CC6 – Logical Access', control: 'CC6.1', description: 'Logical access security software, infrastructure, and architectures', result: 'PASS', lastAssessedAt: '2026-03-01T00:00:00Z' },
-  { id: 's5', category: 'CC6 – Logical Access', control: 'CC6.2', description: 'User registration and de-registration procedures', result: 'PASS', lastAssessedAt: '2026-03-01T00:00:00Z' },
-  { id: 's6', category: 'CC6 – Logical Access', control: 'CC6.3', description: 'Privileged access management', result: 'FAIL', lastAssessedAt: '2026-03-10T00:00:00Z', notes: 'MFA not enforced for all admin accounts' },
-  { id: 's7', category: 'CC7 – System Operations', control: 'CC7.1', description: 'Vulnerability management program', result: 'PASS', lastAssessedAt: '2026-03-05T00:00:00Z' },
-  { id: 's8', category: 'CC7 – System Operations', control: 'CC7.2', description: 'Incident response procedures', result: 'NOT_ASSESSED' },
-  { id: 's9', category: 'CC8 – Change Management', control: 'CC8.1', description: 'Change management process for system modifications', result: 'PASS', lastAssessedAt: '2026-03-01T00:00:00Z' },
-  { id: 's10', category: 'CC9 – Risk Management', control: 'CC9.1', description: 'Risk assessment process', result: 'NOT_ASSESSED' },
-  { id: 's11', category: 'A1 – Availability', control: 'A1.1', description: 'Availability commitments are met', result: 'PASS', lastAssessedAt: '2026-03-15T00:00:00Z' },
-  { id: 's12', category: 'C1 – Confidentiality', control: 'C1.1', description: 'Confidential information is protected during transmission', result: 'PASS', lastAssessedAt: '2026-03-15T00:00:00Z' },
-];
-
+// Default retention policy structure — shown when the backend returns no
+// configuration. These are sensible defaults that users can adjust.
 const DEFAULT_RETENTION: RetentionPolicy[] = [
   { dataType: 'user', retentionDays: 365, autoDelete: false, label: 'User Data' },
   { dataType: 'chat', retentionDays: 90, autoDelete: true, label: 'Chat History' },
   { dataType: 'audit', retentionDays: 730, autoDelete: false, label: 'Audit Logs' },
   { dataType: 'logs', retentionDays: 30, autoDelete: true, label: 'System Logs' },
-];
-
-const MOCK_AUDIT: AuditTrailEntry[] = [
-  { id: 'a1', timestamp: '2026-03-23T09:30:00Z', actor: 'Admin', actorEmail: 'admin@unicore.dev', action: 'USER_LOGIN', resource: 'auth', resourceId: 'session-abc', ipAddress: '192.168.1.1', outcome: 'SUCCESS' },
-  { id: 'a2', timestamp: '2026-03-23T09:25:00Z', actor: 'Admin', actorEmail: 'admin@unicore.dev', action: 'SETTINGS_UPDATE', resource: 'platform-settings', resourceId: 'global', ipAddress: '192.168.1.1', outcome: 'SUCCESS', details: 'Updated retention policies' },
-  { id: 'a3', timestamp: '2026-03-23T08:55:00Z', actor: 'System', actorEmail: 'system@unicore.dev', action: 'GDPR_EXPORT_COMPLETED', resource: 'gdpr', resourceId: 'g2', ipAddress: '10.0.0.1', outcome: 'SUCCESS' },
-  { id: 'a4', timestamp: '2026-03-22T17:10:00Z', actor: 'alice@acme.com', actorEmail: 'alice@acme.com', action: 'USER_LOGIN', resource: 'auth', resourceId: 'session-xyz', ipAddress: '203.0.113.42', outcome: 'FAILURE', details: 'Invalid credentials' },
-  { id: 'a5', timestamp: '2026-03-22T16:00:00Z', actor: 'Admin', actorEmail: 'admin@unicore.dev', action: 'ROLE_ASSIGNED', resource: 'user', resourceId: 'u3', ipAddress: '192.168.1.1', outcome: 'SUCCESS', details: 'Assigned OPERATOR role' },
-  { id: 'a6', timestamp: '2026-03-22T15:30:00Z', actor: 'System', actorEmail: 'system@unicore.dev', action: 'CCPA_DELETION_STARTED', resource: 'ccpa', resourceId: 'c3', ipAddress: '10.0.0.1', outcome: 'SUCCESS' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -562,11 +523,14 @@ export default function CompliancePage() {
         api.get<AuditTrailEntry[]>('/api/v1/admin/compliance/audit-trail'),
       ]);
 
-      setGdprRequests(gdpr.status === 'fulfilled' ? gdpr.value : MOCK_GDPR);
-      setCcpaRequests(ccpa.status === 'fulfilled' ? ccpa.value : MOCK_CCPA);
-      setSoc2Controls(soc2.status === 'fulfilled' ? soc2.value : MOCK_SOC2);
+      // Compliance endpoints are Enterprise-only and may not exist yet.
+      // Fall back to empty arrays (or default retention) so the page shows
+      // "No data" empty states rather than fabricated data.
+      setGdprRequests(gdpr.status === 'fulfilled' ? gdpr.value : []);
+      setCcpaRequests(ccpa.status === 'fulfilled' ? ccpa.value : []);
+      setSoc2Controls(soc2.status === 'fulfilled' ? soc2.value : []);
       setRetention(ret.status === 'fulfilled' ? ret.value : DEFAULT_RETENTION);
-      setAuditEntries(audit.status === 'fulfilled' ? audit.value : MOCK_AUDIT);
+      setAuditEntries(audit.status === 'fulfilled' ? audit.value : []);
     } finally {
       setLoading(false);
     }
