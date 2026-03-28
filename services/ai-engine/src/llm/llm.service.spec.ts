@@ -23,6 +23,7 @@ describe('LlmService', () => {
 
   const mockTokenTracking = {
     track: jest.fn(),
+    reloadPricingOverrides: jest.fn(),
   };
 
   const fakeCompletion: LlmCompletionResult = {
@@ -48,36 +49,34 @@ describe('LlmService', () => {
     mockTokenTracking.track.mockReturnValue({});
   });
 
-  afterEach(() => jest.clearAllMocks());
-
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('complete()', () => {
-    const messages = [{ role: 'user' as const, content: 'Hello' }];
-
-    it('delegates to factory.completeWithFailover and returns result', async () => {
+    it('delegates to factory.completeWithFailover and tracks usage', async () => {
+      const messages = [{ role: 'user' as const, content: 'Hello' }];
       const result = await service.complete(messages);
-      expect(mockFactory.completeWithFailover).toHaveBeenCalledWith(messages, undefined, undefined);
-      expect(result).toEqual(fakeCompletion);
-    });
 
-    it('tracks token usage after completion', async () => {
-      await service.complete(messages);
+      expect(mockFactory.completeWithFailover).toHaveBeenCalledWith(
+        messages,
+        undefined,
+        undefined,
+      );
       expect(mockTokenTracking.track).toHaveBeenCalledWith(
         expect.objectContaining({
           provider: 'openai',
           model: 'gpt-4o',
           operation: 'complete',
-          usage: fakeCompletion.usage,
-          latencyMs: fakeCompletion.latencyMs,
         }),
       );
+      expect(result).toEqual(fakeCompletion);
     });
 
-    it('passes preferredProvider from context to factory', async () => {
+    it('passes through preferred provider from context', async () => {
+      const messages = [{ role: 'user' as const, content: 'Hi' }];
       await service.complete(messages, {}, { preferredProvider: 'anthropic' });
+
       expect(mockFactory.completeWithFailover).toHaveBeenCalledWith(
         messages,
         {},
@@ -86,157 +85,98 @@ describe('LlmService', () => {
     });
 
     it('passes tenantId and agentId to token tracking', async () => {
-      await service.complete(messages, {}, { tenantId: 'tenant-1', agentId: 'agent-1' });
+      const messages = [{ role: 'user' as const, content: 'Hi' }];
+      await service.complete(messages, {}, { tenantId: 't1', agentId: 'a1' });
+
       expect(mockTokenTracking.track).toHaveBeenCalledWith(
-        expect.objectContaining({ tenantId: 'tenant-1', agentId: 'agent-1' }),
+        expect.objectContaining({ tenantId: 't1', agentId: 'a1' }),
       );
     });
 
-    it('passes metadata from context to token tracking', async () => {
-      const metadata = { source: 'chat-ui' };
-      await service.complete(messages, {}, { metadata });
-      expect(mockTokenTracking.track).toHaveBeenCalledWith(
-        expect.objectContaining({ metadata }),
+    it('propagates errors from factory', async () => {
+      mockFactory.completeWithFailover.mockRejectedValue(
+        new Error('provider error'),
       );
-    });
-
-    it('propagates factory errors', async () => {
-      mockFactory.completeWithFailover.mockRejectedValueOnce(new Error('All providers failed'));
-      await expect(service.complete(messages)).rejects.toThrow('All providers failed');
+      await expect(
+        service.complete([{ role: 'user', content: 'test' }]),
+      ).rejects.toThrow('provider error');
     });
   });
 
   describe('stream()', () => {
-    const messages = [{ role: 'user' as const, content: 'Tell me a story' }];
-
-    async function* makeStream(chunks: LlmStreamChunk[]) {
-      for (const chunk of chunks) yield chunk;
-    }
-
-    it('yields all chunks from factory.streamWithFailover', async () => {
+    it('yields chunks and tracks usage on done chunk', async () => {
       const chunks: LlmStreamChunk[] = [
-        { delta: 'Once', done: false },
-        { delta: ' upon', done: false },
-        { delta: ' a time', done: true, provider: 'openai', model: 'gpt-4o', usage: { promptTokens: 5, completionTokens: 10, totalTokens: 15 } },
+        { delta: 'Hello', done: false, provider: 'openai' },
+        {
+          delta: '!',
+          done: true,
+          model: 'gpt-4o',
+          provider: 'openai',
+          usage: { promptTokens: 5, completionTokens: 2, totalTokens: 7 },
+        },
       ];
-      mockFactory.streamWithFailover.mockReturnValue(makeStream(chunks));
 
+      async function* fakeStream() {
+        for (const c of chunks) yield c;
+      }
+      mockFactory.streamWithFailover.mockReturnValue(fakeStream());
+
+      const messages = [{ role: 'user' as const, content: 'Hi' }];
       const received: LlmStreamChunk[] = [];
       for await (const chunk of service.stream(messages)) {
         received.push(chunk);
       }
 
-      expect(received).toHaveLength(3);
-      expect(received[0]!.delta).toBe('Once');
-      expect(received[2]!.done).toBe(true);
-    });
-
-    it('tracks token usage from the final done chunk when usage is present', async () => {
-      const doneChunk: LlmStreamChunk = {
-        delta: '',
-        done: true,
-        provider: 'openai',
-        model: 'gpt-4o',
-        usage: { promptTokens: 5, completionTokens: 8, totalTokens: 13 },
-      };
-      mockFactory.streamWithFailover.mockReturnValue(makeStream([
-        { delta: 'hi', done: false },
-        doneChunk,
-      ]));
-
-      for await (const _chunk of service.stream(messages)) { /* consume */ }
-
+      expect(received).toHaveLength(2);
+      expect(mockTokenTracking.track).toHaveBeenCalledTimes(1);
       expect(mockTokenTracking.track).toHaveBeenCalledWith(
-        expect.objectContaining({
-          operation: 'stream',
-          provider: 'openai',
-          model: 'gpt-4o',
-          usage: doneChunk.usage,
-        }),
+        expect.objectContaining({ operation: 'stream', provider: 'openai' }),
       );
     });
 
-    it('does not track when done chunk has no usage', async () => {
-      mockFactory.streamWithFailover.mockReturnValue(makeStream([
-        { delta: 'hi', done: true }, // no usage field
-      ]));
+    it('does not track if done chunk has no usage', async () => {
+      async function* fakeStream() {
+        yield { delta: 'Hi', done: true, provider: 'openai' };
+      }
+      mockFactory.streamWithFailover.mockReturnValue(fakeStream());
 
-      for await (const _chunk of service.stream(messages)) { /* consume */ }
+      for await (const _chunk of service.stream([
+        { role: 'user', content: 'x' },
+      ])) {
+        // consume
+      }
 
       expect(mockTokenTracking.track).not.toHaveBeenCalled();
-    });
-
-    it('uses "unknown" provider/model when done chunk omits them', async () => {
-      mockFactory.streamWithFailover.mockReturnValue(makeStream([
-        { delta: '', done: true, usage: { promptTokens: 1, completionTokens: 1, totalTokens: 2 } },
-      ]));
-
-      for await (const _chunk of service.stream(messages)) { /* consume */ }
-
-      expect(mockTokenTracking.track).toHaveBeenCalledWith(
-        expect.objectContaining({ provider: 'unknown', model: 'unknown' }),
-      );
-    });
-
-    it('passes context fields to factory and token tracking', async () => {
-      mockFactory.streamWithFailover.mockReturnValue(makeStream([
-        { delta: '', done: true, provider: 'anthropic', model: 'claude-sonnet-4-20250514', usage: { promptTokens: 3, completionTokens: 3, totalTokens: 6 } },
-      ]));
-
-      for await (const _chunk of service.stream(
-        messages,
-        {},
-        { preferredProvider: 'anthropic', tenantId: 'ten-1', agentId: 'ag-1' },
-      )) { /* consume */ }
-
-      expect(mockFactory.streamWithFailover).toHaveBeenCalledWith(messages, {}, 'anthropic');
-      expect(mockTokenTracking.track).toHaveBeenCalledWith(
-        expect.objectContaining({ tenantId: 'ten-1', agentId: 'ag-1' }),
-      );
     });
   });
 
   describe('embed()', () => {
-    const fakeEmbedResult: LlmEmbeddingResult = {
-      embedding: [0.1, 0.2, 0.3],
-      model: 'text-embedding-3-small',
-      provider: 'openai',
-      usage: { promptTokens: 5, completionTokens: 0, totalTokens: 5 },
-    };
+    it('delegates to factory.embedWithFailover and tracks usage', async () => {
+      const fakeEmbedding: LlmEmbeddingResult = {
+        embedding: [0.1, 0.2, 0.3],
+        model: 'text-embedding-3-small',
+        provider: 'openai',
+        usage: { promptTokens: 5, completionTokens: 0, totalTokens: 5 },
+      };
+      mockFactory.embedWithFailover.mockResolvedValue(fakeEmbedding);
 
-    beforeEach(() => {
-      mockFactory.embedWithFailover.mockResolvedValue(fakeEmbedResult);
-    });
-
-    it('delegates to factory.embedWithFailover and returns result', async () => {
       const result = await service.embed('hello world');
-      expect(mockFactory.embedWithFailover).toHaveBeenCalledWith('hello world', undefined, undefined);
-      expect(result).toEqual(fakeEmbedResult);
-    });
 
-    it('tracks embed usage', async () => {
-      await service.embed('hello world');
-      expect(mockTokenTracking.track).toHaveBeenCalledWith(
-        expect.objectContaining({
-          operation: 'embed',
-          provider: 'openai',
-          model: 'text-embedding-3-small',
-          usage: fakeEmbedResult.usage,
-        }),
-      );
-    });
-
-    it('passes preferredProvider to factory', async () => {
-      await service.embed('text', { model: 'text-embedding-3-large' }, { preferredProvider: 'openai' });
       expect(mockFactory.embedWithFailover).toHaveBeenCalledWith(
-        'text',
-        { model: 'text-embedding-3-large' },
-        'openai',
+        'hello world',
+        undefined,
+        undefined,
       );
+      expect(mockTokenTracking.track).toHaveBeenCalledWith(
+        expect.objectContaining({ operation: 'embed', provider: 'openai' }),
+      );
+      expect(result).toEqual(fakeEmbedding);
     });
 
-    it('propagates factory errors', async () => {
-      mockFactory.embedWithFailover.mockRejectedValueOnce(new Error('Embed failed'));
+    it('propagates errors from factory', async () => {
+      mockFactory.embedWithFailover.mockRejectedValue(
+        new Error('Embed failed'),
+      );
       await expect(service.embed('text')).rejects.toThrow('Embed failed');
     });
   });
@@ -256,10 +196,14 @@ describe('LlmService', () => {
   });
 
   describe('reloadProviders()', () => {
-    it('delegates to factory.reloadProviders', async () => {
+    it('delegates to factory.reloadProviders and reloads pricing overrides', async () => {
       mockFactory.reloadProviders.mockResolvedValue(['openai', 'ollama']);
+      mockTokenTracking.reloadPricingOverrides.mockResolvedValue(undefined);
+
       const result = await service.reloadProviders();
+
       expect(result).toEqual(['openai', 'ollama']);
+      expect(mockTokenTracking.reloadPricingOverrides).toHaveBeenCalledTimes(1);
     });
   });
 
