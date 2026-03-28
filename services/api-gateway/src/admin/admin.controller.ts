@@ -2,6 +2,7 @@ import { Controller, Get, Post, Patch, Delete, Param, Body, Query, Logger, UseGu
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { TokenBlacklistService } from '../auth/token-blacklist.service';
+import { LicenseService } from '../license/license.service';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { LicenseGuard } from '../license/guards/license.guard';
@@ -13,34 +14,166 @@ import * as os from 'os';
 export class AdminController {
   private readonly logger = new Logger(AdminController.name);
   private readonly startedAt = new Date();
-  private platformSettings = {
-    defaultPlan: 'STARTER' as const,
-    allowedPlans: ['STARTER', 'GROWTH', 'ENTERPRISE', 'CUSTOM'] as string[],
-    defaultUserQuota: 10,
-    defaultStorageQuotaBytes: 5 * 1024 * 1024 * 1024, // 5 GB
-    defaultApiCallQuotaPerDay: 10000,
-    maintenanceMode: false,
-    registrationEnabled: true,
-    featureToggles: {
-      sso: true,
-      whiteLabel: true,
-      advancedWorkflows: true,
-      allChannels: true,
-      customDomains: true,
-      advancedAnalytics: true,
-      prioritySupport: true,
-      dlcChat: true,
-      geekMode: true,
-    } as Record<string, boolean>,
-    updatedAt: new Date().toISOString(),
-    updatedBy: 'system',
-  };
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
     private readonly tokenBlacklist: TokenBlacklistService,
+    private readonly licenseService: LicenseService,
   ) {}
+
+  /**
+   * Returns the persisted platform settings from the Settings table, merging
+   * in live feature toggles from the LicenseService so no toggle can be
+   * hardcoded to true independently of the validated license edition.
+   */
+  private async getPlatformSettings(): Promise<{
+    defaultPlan: string;
+    allowedPlans: string[];
+    defaultUserQuota: number;
+    defaultStorageQuotaBytes: number;
+    defaultApiCallQuotaPerDay: number;
+    maintenanceMode: boolean;
+    registrationEnabled: boolean;
+    featureToggles: Record<string, boolean>;
+    updatedAt: string;
+    updatedBy: string;
+  }> {
+    // Load persisted admin overrides from the Settings table (key: 'platform-admin')
+    let stored: Record<string, any> = {};
+    try {
+      const row = await this.prisma.settings.findUnique({ where: { id: 'platform-admin' } });
+      if (row?.data && typeof row.data === 'object') {
+        stored = row.data as Record<string, any>;
+      }
+    } catch {
+      // Table may not exist on fresh installs — fall back to defaults silently
+    }
+
+    // Feature toggles are derived exclusively from the live license status.
+    // No toggle can be true unless the validated license edition grants it.
+    const [
+      sso,
+      whiteLabel,
+      advancedWorkflows,
+      allChannels,
+      customDomains,
+      advancedAnalytics,
+      prioritySupport,
+      dlcChat,
+      geekMode,
+    ] = await Promise.all([
+      this.licenseService.hasFeature('sso'),
+      this.licenseService.hasFeature('whiteLabelBranding'),
+      this.licenseService.hasFeature('advancedWorkflows'),
+      this.licenseService.hasFeature('allChannels'),
+      this.licenseService.hasFeature('allChannels'),
+      this.licenseService.hasFeature('auditLogs'),
+      this.licenseService.hasFeature('prioritySupport'),
+      this.licenseService.hasFeature('aiDlc'),
+      this.licenseService.hasFeature('geekCli'),
+    ]);
+
+    const featureToggles: Record<string, boolean> = {
+      sso,
+      whiteLabel,
+      advancedWorkflows,
+      allChannels,
+      customDomains,
+      advancedAnalytics,
+      prioritySupport,
+      dlcChat,
+      geekMode,
+    };
+
+    // Quotas and plan config: prefer persisted DB values, then env vars, then
+    // compile-time defaults. This follows the 12-factor config principle.
+    const defaultPlan =
+      (stored.defaultPlan as string | undefined) ??
+      (process.env.PLATFORM_DEFAULT_PLAN ?? 'STARTER');
+
+    const allowedPlans =
+      (stored.allowedPlans as string[] | undefined) ??
+      ['STARTER', 'GROWTH', 'ENTERPRISE', 'CUSTOM'];
+
+    const defaultUserQuota =
+      (stored.defaultUserQuota as number | undefined) ??
+      parseInt(process.env.PLATFORM_DEFAULT_USER_QUOTA ?? '10', 10);
+
+    const defaultStorageQuotaBytes =
+      (stored.defaultStorageQuotaBytes as number | undefined) ??
+      parseInt(process.env.PLATFORM_DEFAULT_STORAGE_BYTES ?? String(5 * 1024 * 1024 * 1024), 10);
+
+    const defaultApiCallQuotaPerDay =
+      (stored.defaultApiCallQuotaPerDay as number | undefined) ??
+      parseInt(process.env.PLATFORM_DEFAULT_API_QUOTA_PER_DAY ?? '10000', 10);
+
+    const maintenanceMode = (stored.maintenanceMode as boolean | undefined) ?? false;
+    const registrationEnabled = (stored.registrationEnabled as boolean | undefined) ?? true;
+    const updatedAt = (stored.updatedAt as string | undefined) ?? new Date().toISOString();
+    const updatedBy = (stored.updatedBy as string | undefined) ?? 'system';
+
+    return {
+      defaultPlan,
+      allowedPlans,
+      defaultUserQuota,
+      defaultStorageQuotaBytes,
+      defaultApiCallQuotaPerDay,
+      maintenanceMode,
+      registrationEnabled,
+      featureToggles,
+      updatedAt,
+      updatedBy,
+    };
+  }
+
+  /**
+   * Builds the tenant record for the single-tenant instance from live database
+   * and license data. Reads the earliest OWNER user for the ownerEmail, derives
+   * the plan from the validated license edition, and reads the custom domain
+   * from environment variables.
+   */
+  private async buildTenantRecord(userCount: number): Promise<Record<string, any>> {
+    const owner = await this.prisma.user.findFirst({
+      where: { role: 'OWNER' },
+      select: { email: true },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const licenseStatus = await this.licenseService.getLicenseStatus();
+    const editionToPlan: Record<string, string> = {
+      enterprise: 'ENTERPRISE',
+      pro: 'GROWTH',
+      community: 'STARTER',
+    };
+    const plan = editionToPlan[licenseStatus.edition] ?? 'STARTER';
+
+    // Derive display domain from APP_URL env var; fall back to 'localhost'
+    const appUrl = process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? '';
+    const customDomain =
+      appUrl.replace(/^https?:\/\//, '').replace(/\/$/, '') || 'localhost';
+
+    const tenantName =
+      process.env.TENANT_NAME ?? process.env.APP_NAME ?? 'UniCore Instance';
+    const tenantSlug =
+      process.env.TENANT_SLUG ?? customDomain.split('.')[0] ?? 'default';
+
+    return {
+      id: `tenant-${tenantSlug}`,
+      name: tenantName,
+      slug: tenantSlug,
+      displayName: tenantName,
+      customDomain,
+      plan,
+      status: 'ACTIVE' as const,
+      ownerEmail: owner?.email ?? 'admin@unicore.dev',
+      memberCount: userCount,
+      storageUsageBytes: 0,
+      apiCallsThisMonth: 0,
+      createdAt: this.startedAt.toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  }
 
   @Get('users')
   async listUsers() {
@@ -283,26 +416,8 @@ export class AdminController {
     const page = query.page ? parseInt(query.page) : 1;
     const limit = query.limit ? parseInt(query.limit) : 20;
 
-    const [userCount, _sessionCount] = await Promise.all([
-      this.prisma.user.count(),
-      this.prisma.session.count(),
-    ]);
-
-    const tenant = {
-      id: 'tenant-bemind-001',
-      name: 'Bemind Technology Co., Ltd.',
-      slug: 'bemind',
-      displayName: 'Bemind Technology',
-      customDomain: 'unicore-demo.bemind.tech',
-      plan: 'ENTERPRISE' as const,
-      status: 'ACTIVE' as const,
-      ownerEmail: 'info@bemind.tech',
-      memberCount: userCount,
-      storageUsageBytes: 0,
-      apiCallsThisMonth: 0,
-      createdAt: this.startedAt.toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    const userCount = await this.prisma.user.count();
+    const tenant = await this.buildTenantRecord(userCount);
 
     const search = query.search?.toLowerCase();
     const statusFilter = query.status;
@@ -331,18 +446,12 @@ export class AdminController {
   @Post('tenants/:id/suspend')
   async suspendTenant(@Param('id') id: string, @Body() body: any) {
     this.logger.warn(`Tenant suspend requested: ${id} — reason: ${body?.reason ?? 'none'}`);
+    const userCount = await this.prisma.user.count();
+    const tenant = await this.buildTenantRecord(userCount);
     return {
+      ...tenant,
       id,
-      name: 'Bemind Technology Co., Ltd.',
-      slug: 'bemind',
-      plan: 'ENTERPRISE',
       status: 'SUSPENDED',
-      ownerEmail: 'info@bemind.tech',
-      memberCount: 0,
-      storageUsageBytes: 0,
-      apiCallsThisMonth: 0,
-      createdAt: this.startedAt.toISOString(),
-      updatedAt: new Date().toISOString(),
       suspendedAt: new Date().toISOString(),
       suspendReason: body?.reason ?? 'Administrative action',
     };
@@ -351,45 +460,56 @@ export class AdminController {
   @Post('tenants/:id/activate')
   async activateTenant(@Param('id') id: string) {
     this.logger.log(`Tenant activate requested: ${id}`);
-    return {
-      id,
-      name: 'Bemind Technology Co., Ltd.',
-      slug: 'bemind',
-      plan: 'ENTERPRISE',
-      status: 'ACTIVE',
-      ownerEmail: 'info@bemind.tech',
-      memberCount: 0,
-      storageUsageBytes: 0,
-      apiCallsThisMonth: 0,
-      createdAt: this.startedAt.toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    const userCount = await this.prisma.user.count();
+    const tenant = await this.buildTenantRecord(userCount);
+    return { ...tenant, id, status: 'ACTIVE' };
   }
 
   // ─── Platform Settings ──────────────────────────────────────────────────
 
   @Get('settings')
-  getSettings() {
-    return this.platformSettings;
+  async getSettings() {
+    return this.getPlatformSettings();
   }
 
   @Patch('settings')
-  updateSettings(@Body() body: any, @CurrentUser() currentUser: any) {
-    if (body.defaultPlan !== undefined) this.platformSettings.defaultPlan = body.defaultPlan;
-    if (body.allowedPlans !== undefined) this.platformSettings.allowedPlans = body.allowedPlans;
-    if (body.defaultUserQuota !== undefined) this.platformSettings.defaultUserQuota = body.defaultUserQuota;
-    if (body.defaultStorageQuotaBytes !== undefined) this.platformSettings.defaultStorageQuotaBytes = body.defaultStorageQuotaBytes;
-    if (body.defaultApiCallQuotaPerDay !== undefined) this.platformSettings.defaultApiCallQuotaPerDay = body.defaultApiCallQuotaPerDay;
-    if (body.maintenanceMode !== undefined) this.platformSettings.maintenanceMode = body.maintenanceMode;
-    if (body.registrationEnabled !== undefined) this.platformSettings.registrationEnabled = body.registrationEnabled;
-    if (body.featureToggles !== undefined) {
-      this.platformSettings.featureToggles = { ...this.platformSettings.featureToggles, ...body.featureToggles };
+  async updateSettings(@Body() body: any, @CurrentUser() currentUser: any) {
+    // Load current persisted state
+    let stored: Record<string, any> = {};
+    try {
+      const row = await this.prisma.settings.findUnique({ where: { id: 'platform-admin' } });
+      if (row?.data && typeof row.data === 'object') {
+        stored = row.data as Record<string, any>;
+      }
+    } catch {
+      // Fresh install — stored stays empty
     }
-    this.platformSettings.updatedAt = new Date().toISOString();
-    this.platformSettings.updatedBy = currentUser?.email ?? 'system';
 
-    this.logger.log(`Platform settings updated by ${this.platformSettings.updatedBy}`);
-    return this.platformSettings;
+    // Apply mutable fields (featureToggles are read-only from the license and
+    // are intentionally excluded here — they cannot be overridden via this endpoint)
+    if (body.defaultPlan !== undefined) stored.defaultPlan = body.defaultPlan;
+    if (body.allowedPlans !== undefined) stored.allowedPlans = body.allowedPlans;
+    if (body.defaultUserQuota !== undefined) stored.defaultUserQuota = body.defaultUserQuota;
+    if (body.defaultStorageQuotaBytes !== undefined) stored.defaultStorageQuotaBytes = body.defaultStorageQuotaBytes;
+    if (body.defaultApiCallQuotaPerDay !== undefined) stored.defaultApiCallQuotaPerDay = body.defaultApiCallQuotaPerDay;
+    if (body.maintenanceMode !== undefined) stored.maintenanceMode = body.maintenanceMode;
+    if (body.registrationEnabled !== undefined) stored.registrationEnabled = body.registrationEnabled;
+    stored.updatedAt = new Date().toISOString();
+    stored.updatedBy = currentUser?.email ?? 'system';
+
+    // Persist to Settings table so changes survive restarts
+    try {
+      await this.prisma.settings.upsert({
+        where: { id: 'platform-admin' },
+        update: { data: stored },
+        create: { id: 'platform-admin', data: stored },
+      });
+    } catch (err: any) {
+      this.logger.warn(`Failed to persist platform settings: ${err?.message}`);
+    }
+
+    this.logger.log(`Platform settings updated by ${stored.updatedBy}`);
+    return this.getPlatformSettings();
   }
 
   // ─── System Metrics ─────────────────────────────────────────────────────
