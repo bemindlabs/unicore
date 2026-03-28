@@ -120,15 +120,15 @@ export class DashboardService {
       const currentRevenue = revenueData.currentMonth
         ?? revenueData.totalRevenue
         ?? (revenueData.byCurrency ? Object.values(revenueData.byCurrency).reduce((s, v) => s + v, 0) : 0);
-      // Estimate previous month as ~85% of current for realistic trend
-      const previousRevenue = revenueData.previousMonth ?? Math.round(currentRevenue * 0.85 * 100) / 100;
+      // Only compute trend when the ERP provides an actual previous-month figure
+      const previousRevenue = revenueData.previousMonth ?? null;
       const chartData = revenueData.chartData ?? await this.getRevenueChartFromErp(30);
-      const trend = trendValue(currentRevenue, previousRevenue);
+      const trend = previousRevenue !== null ? trendValue(currentRevenue, previousRevenue) : null;
 
       return {
         metric: {
           current: currentRevenue,
-          previous: previousRevenue,
+          previous: previousRevenue ?? 0,
           currency: 'USD',
           formatted: formatCurrency(currentRevenue),
         },
@@ -296,30 +296,66 @@ export class DashboardService {
   async getMrrWidget() {
     // Use paid invoices as MRR proxy since no subscriptions table exists
     let mrr = 0;
+    let previousMrr = 0;
     try {
       const invoiceData = await this.erpFetch<{
-        data: Array<{ status: string; total?: string | number; isRecurring?: boolean }>;
+        data: Array<{ status: string; total?: string | number; isRecurring?: boolean; paidAt?: string; createdAt?: string }>;
         meta: { total: number };
-      }>('/invoices?status=PAID&limit=100');
+      }>('/invoices?status=PAID&limit=500');
 
       const paidInvoices = invoiceData.data;
-      const totalRevenue = paidInvoices.reduce((sum, inv) => sum + (Number(inv.total) || 0), 0);
-      // Estimate MRR from total paid invoices (divide by months of data, min 1)
-      mrr = Math.round(totalRevenue / 3 * 100) / 100; // ~3 months of demo data
+
+      // Calculate revenue for current and previous month from paid invoices
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+      mrr = paidInvoices
+        .filter((inv) => {
+          const d = new Date(inv.paidAt ?? inv.createdAt ?? 0);
+          return d >= startOfMonth;
+        })
+        .reduce((sum, inv) => sum + (Number(inv.total) || 0), 0);
+
+      previousMrr = paidInvoices
+        .filter((inv) => {
+          const d = new Date(inv.paidAt ?? inv.createdAt ?? 0);
+          return d >= startOfLastMonth && d < startOfMonth;
+        })
+        .reduce((sum, inv) => sum + (Number(inv.total) || 0), 0);
+
+      // If no current-month data but invoices exist, derive MRR from actual date span
+      if (mrr === 0 && paidInvoices.length > 0) {
+        const timestamps = paidInvoices
+          .map((inv) => new Date(inv.paidAt ?? inv.createdAt ?? 0).getTime())
+          .filter((t) => t > 0);
+        if (timestamps.length > 0) {
+          const oldestMs = Math.min(...timestamps);
+          const spanMonths = Math.max(
+            1,
+            Math.round((Date.now() - oldestMs) / (30 * 24 * 60 * 60 * 1000)),
+          );
+          const totalRevenue = paidInvoices.reduce((sum, inv) => sum + (Number(inv.total) || 0), 0);
+          mrr = Math.round((totalRevenue / spanMonths) * 100) / 100;
+          previousMrr = mrr; // no trend comparison available
+        }
+      }
     } catch {
       mrr = 0;
+      previousMrr = 0;
     }
 
     const arr = mrr * 12;
+    const trend = previousMrr > 0 ? trendValue(mrr, previousMrr) : null;
 
     return {
       metric: {
         current: mrr,
-        previous: 0,
+        previous: previousMrr,
         currency: 'USD',
         formatted: formatCurrency(mrr),
       },
-      trend: { value: 8.2, positive: true, label: 'vs last month' },
+      trend,
       description: 'monthly recurring revenue',
       arr: { current: arr, currency: 'USD', formatted: formatCurrency(arr) },
       expansion: { current: Math.round(mrr * 0.12), currency: 'USD', formatted: formatCurrency(Math.round(mrr * 0.12)) },
@@ -333,27 +369,59 @@ export class DashboardService {
     // Use contact data as proxy for churn since no subscriptions table
     let totalActive = 0;
     let churned = 0;
+    let previousChurned = 0;
+    let previousActive = 0;
     try {
+      const now = new Date();
+      const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
       const contactData = await this.erpFetch<{
-        data: Array<{ type: string }>;
+        data: Array<{ type: string; created_at?: string; createdAt?: string; updatedAt?: string }>;
         meta: { total: number };
-      }>('/contacts?limit=100');
+      }>('/contacts?limit=500');
 
       const contacts = contactData.data;
       totalActive = contacts.filter(c => c.type === 'CUSTOMER').length;
       churned = contacts.filter(c => c.type === 'ARCHIVED').length;
+
+      // Estimate previous month churn from contacts archived last month
+      previousChurned = contacts.filter(c => {
+        if (c.type !== 'ARCHIVED') return false;
+        const d = new Date(c.updatedAt ?? c.created_at ?? c.createdAt ?? 0);
+        return d >= startOfLastMonth && d < startOfMonth;
+      }).length;
+      previousActive = contacts.filter(c => {
+        const d = new Date(c.created_at ?? c.createdAt ?? 0);
+        return d < startOfMonth;
+      }).length;
     } catch {
       totalActive = 0;
       churned = 0;
+      previousChurned = 0;
+      previousActive = 0;
     }
 
     const totalForRate = totalActive + churned;
-    const rate = totalForRate > 0 ? parseFloat(((churned / totalForRate) * 100).toFixed(1)) : 2.1;
+    const rate = totalForRate > 0 ? parseFloat(((churned / totalForRate) * 100).toFixed(1)) : 0;
     const retentionRate = parseFloat((100 - rate).toFixed(1));
+
+    // Calculate previous period rate; for churn a lower value is positive
+    const prevTotalForRate = previousActive + previousChurned;
+    const previousRate = prevTotalForRate > 0
+      ? parseFloat(((previousChurned / prevTotalForRate) * 100).toFixed(1))
+      : null;
+    const trend = previousRate !== null && previousRate > 0
+      ? {
+          value: parseFloat((rate - previousRate).toFixed(1)),
+          positive: rate <= previousRate,
+          label: 'vs last month',
+        }
+      : null;
 
     return {
       metric: { current: rate, unit: '%', formatted: `${rate}%` },
-      trend: { value: -0.5, positive: true, label: 'vs last month' },
+      trend,
       description: 'monthly churn rate',
       churned,
       rate,
