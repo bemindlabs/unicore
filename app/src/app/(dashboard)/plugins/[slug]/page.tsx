@@ -1,4 +1,4 @@
-// Updated: 2026-03-23
+// Updated: 2026-03-27
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -79,127 +79,6 @@ interface Plugin {
   reviews: { id: string; author: string; rating: number; comment: string; date: string }[];
 }
 
-// ---------------------------------------------------------------------------
-// Fallback plugin catalog — used when plugin API is unavailable
-// ---------------------------------------------------------------------------
-
-const MOCK_PLUGINS: Plugin[] = [
-  {
-    id: '1',
-    slug: 'gpt-4o-agent',
-    name: 'GPT-4o Agent',
-    description: 'Deploy a powerful GPT-4o powered agent with advanced reasoning and multimodal capabilities.',
-    longDescription:
-      'The GPT-4o Agent plugin integrates OpenAI\'s most advanced multimodal model directly into your UniCore agent framework. It supports text, image, and audio inputs with state-of-the-art reasoning capabilities. Configure system prompts, tool use, and streaming responses from the dashboard. Ideal for complex reasoning tasks, document analysis, and code generation pipelines.',
-    author: 'OpenAI Labs',
-    authorEmail: 'plugins@openai.com',
-    authorWebsite: 'https://openai.com',
-    version: '2.1.0',
-    category: 'agents',
-    tags: ['gpt-4o', 'multimodal', 'reasoning'],
-    rating: 4.8,
-    reviewCount: 234,
-    installCount: 15420,
-    icon: '🤖',
-    featured: true,
-    createdAt: '2025-12-01',
-    updatedAt: '2026-02-15',
-    permissions: [
-      'Read conversation history',
-      'Send messages on behalf of agents',
-      'Access AI engine configuration',
-      'Make outbound API calls to OpenAI',
-    ],
-    versionHistory: [
-      { version: '2.1.0', date: '2026-02-15', changes: ['GPT-4o-mini fallback support', 'Improved streaming latency', 'Vision input pipeline'] },
-      { version: '2.0.0', date: '2026-01-10', changes: ['Full GPT-4o support', 'Tool calling v2', 'Structured output mode'] },
-      { version: '1.5.3', date: '2025-12-20', changes: ['Bug fix: token count overflow on long contexts', 'Added cost tracking'] },
-      { version: '1.5.0', date: '2025-12-01', changes: ['Initial public release', 'GPT-4 Turbo support'] },
-    ],
-    reviews: [
-      { id: 'r1', author: 'Alice M.', rating: 5, comment: 'Works flawlessly. The multimodal support is a game changer for our document processing pipeline.', date: '2026-03-01' },
-      { id: 'r2', author: 'Bob K.', rating: 5, comment: 'Best agent plugin in the marketplace. Setup was straightforward and streaming is buttery smooth.', date: '2026-02-20' },
-      { id: 'r3', author: 'Carol T.', rating: 4, comment: 'Great plugin overall. Would love better support for function calling with custom schemas.', date: '2026-02-10' },
-      { id: 'r4', author: 'David R.', rating: 5, comment: 'Incredible value. Saved us weeks of integration work.', date: '2026-01-28' },
-    ],
-  },
-  {
-    id: '2',
-    slug: 'slack-channel',
-    name: 'Slack Integration',
-    description: 'Connect your UniCore agents to Slack workspaces with rich message formatting and event hooks.',
-    longDescription:
-      'The Slack Integration plugin bridges UniCore with your Slack workspace, enabling bidirectional communication between your AI agents and team channels. Supports Block Kit message formatting, interactive components, slash commands, and real-time event subscriptions. Agents can post updates, respond to mentions, and trigger workflows from Slack actions.',
-    author: 'UniCore Team',
-    authorEmail: 'plugins@unicore.dev',
-    authorWebsite: 'https://unicore.bemind.tech',
-    version: '1.4.2',
-    category: 'channels',
-    tags: ['slack', 'messaging', 'notifications'],
-    rating: 4.6,
-    reviewCount: 189,
-    installCount: 12300,
-    icon: '💬',
-    featured: true,
-    createdAt: '2025-11-15',
-    updatedAt: '2026-03-01',
-    permissions: [
-      'Read and write to Slack channels',
-      'Manage Slack webhooks',
-      'Access workspace member list',
-      'Send direct messages',
-    ],
-    versionHistory: [
-      { version: '1.4.2', date: '2026-03-01', changes: ['Support for Slack Connect channels', 'Fixed DM threading bug'] },
-      { version: '1.4.0', date: '2026-01-20', changes: ['Block Kit v2 support', 'Interactive button callbacks'] },
-      { version: '1.3.0', date: '2025-12-05', changes: ['Slash command routing', 'Event subscription manager'] },
-      { version: '1.0.0', date: '2025-11-15', changes: ['Initial release'] },
-    ],
-    reviews: [
-      { id: 'r1', author: 'Emma S.', rating: 5, comment: 'Our team uses this every day. The Block Kit support is excellent.', date: '2026-03-10' },
-      { id: 'r2', author: 'Frank L.', rating: 4, comment: 'Solid integration. Would be 5 stars with better error logging.', date: '2026-02-25' },
-      { id: 'r3', author: 'Grace P.', rating: 5, comment: 'Set up in under 10 minutes. Works perfectly with our agent workflows.', date: '2026-02-18' },
-    ],
-  },
-  {
-    id: '6',
-    slug: 'waf-security',
-    name: 'WAF & Security Monitor',
-    description: 'Web Application Firewall with real-time threat detection and automatic IP blocking.',
-    longDescription:
-      'The WAF & Security Monitor plugin adds a comprehensive security layer to your UniCore deployment. It monitors all incoming requests, detects SQL injection, XSS, and CSRF attempts, and automatically blocks malicious IPs. The security dashboard provides real-time threat visualization, geo-blocking, rate limiting rules, and detailed audit logs for compliance reporting.',
-    author: 'SecureCore Labs',
-    authorEmail: 'security@securecore.io',
-    authorWebsite: 'https://securecore.io',
-    version: '1.8.3',
-    category: 'security',
-    tags: ['waf', 'security', 'firewall'],
-    rating: 4.9,
-    reviewCount: 87,
-    installCount: 5430,
-    icon: '🛡️',
-    featured: false,
-    createdAt: '2025-12-10',
-    updatedAt: '2026-03-10',
-    permissions: [
-      'Read all incoming HTTP requests',
-      'Block and allow IP addresses',
-      'Write to security audit log',
-      'Access nginx configuration',
-      'Send security alerts via email',
-    ],
-    versionHistory: [
-      { version: '1.8.3', date: '2026-03-10', changes: ['CVE-2026-1234 patch', 'Improved geo-IP accuracy'] },
-      { version: '1.8.0', date: '2026-02-01', changes: ['AI-powered anomaly detection', 'SIEM export (JSON/CEF)'] },
-      { version: '1.5.0', date: '2026-01-05', changes: ['Geo-blocking rules', 'Rate limit editor'] },
-      { version: '1.0.0', date: '2025-12-10', changes: ['Initial release with basic WAF rules'] },
-    ],
-    reviews: [
-      { id: 'r1', author: 'Henry W.', rating: 5, comment: 'Blocked 2000+ attack attempts in the first week. Absolutely essential.', date: '2026-03-15' },
-      { id: 'r2', author: 'Iris N.', rating: 5, comment: 'The AI anomaly detection caught a zero-day attempt. Incredible.', date: '2026-03-05' },
-    ],
-  },
-];
 
 const CATEGORY_ICONS: Record<PluginCategory, React.ElementType> = {
   agents: Bot,
@@ -544,21 +423,23 @@ export default function PluginDetailPage() {
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
-    // Attempt real API first, fall back to local catalog
-    fetch(`/api/proxy/ai/plugins/${slug}`)
-      .then((res) => (res.ok ? res.json() : null))
+    setNotFound(false);
+    fetch(`/api/v1/plugins/${slug}`)
+      .then((res) => {
+        if (res.status === 404) return null;
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json() as Promise<Plugin>;
+      })
       .catch(() => null)
       .then((data) => {
-        if (data) {
-          setPlugin(data);
-        } else {
-          const found = MOCK_PLUGINS.find((p) => p.slug === slug) ?? null;
-          if (!found) setNotFound(true);
-          setPlugin(found);
-        }
+        if (cancelled) return;
+        if (!data) setNotFound(true);
+        setPlugin(data);
         setLoading(false);
       });
+    return () => { cancelled = true; };
   }, [slug]);
 
   function handleInstall() {
