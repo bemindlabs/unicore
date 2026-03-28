@@ -94,6 +94,14 @@ type DefinitionsResponse =
 
 // ---------------------------------------------------------------------------
 // Action types available in the select
+//
+// UI constant — mirrors the executor classes registered in the workflow service:
+//   call-agent.executor.ts, send-notification.executor.ts,
+//   send-telegram.executor.ts, send-line.executor.ts, update-erp.executor.ts
+//
+// The workflow service does not expose a /action-types endpoint; these values
+// must remain in sync with the ActionExecutorService registry in
+//   unicore/services/workflow/src/engine/action-executor.service.ts
 // ---------------------------------------------------------------------------
 
 const ACTION_TYPES = [
