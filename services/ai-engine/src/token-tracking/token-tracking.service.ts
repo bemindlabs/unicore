@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { LlmUsage } from '../llm/interfaces/llm-provider.interface';
 
 export interface TokenUsageRecord {
@@ -74,14 +75,28 @@ export interface TrackUsageDto {
   metadata?: Record<string, unknown>;
 }
 
+/** Shape of a single model entry in the pricing table. */
+export interface ModelPricing {
+  inputPer1M: number;
+  outputPer1M: number;
+}
+
+/** Pricing map: provider -> model (or "default") -> ModelPricing */
+export type ProviderPricingMap = Record<string, Record<string, ModelPricing>>;
+
 /**
- * Per-million-token cost in USD (input / output).
- * These are approximate list prices and should be updated as pricing changes.
+ * Default per-million-token costs in USD (input / output).
+ * These are approximate list prices used as compile-time fallback defaults.
+ * Runtime overrides are loaded from the Settings table at startup and on
+ * provider reload via TokenTrackingService.reloadPricingOverrides().
+ *
+ * Override format stored in Settings (key: "llmPricingOverrides"):
+ * {
+ *   "openai": { "gpt-4o": { "inputPer1M": 2.5, "outputPer1M": 10.0 } },
+ *   "anthropic": { "default": { "inputPer1M": 3.0, "outputPer1M": 15.0 } }
+ * }
  */
-const PROVIDER_COSTS: Record<
-  string,
-  Record<string, { inputPer1M: number; outputPer1M: number }>
-> = {
+const DEFAULT_PROVIDER_COSTS: ProviderPricingMap = {
   openai: {
     'gpt-4o': { inputPer1M: 2.5, outputPer1M: 10.0 },
     'gpt-4o-mini': { inputPer1M: 0.15, outputPer1M: 0.6 },
@@ -149,13 +164,19 @@ const PROVIDER_COSTS: Record<
     default: { inputPer1M: 1.0, outputPer1M: 1.0 },
   },
   ollama: {
-    default: { inputPer1M: 0, outputPer1M: 0 }, // local — no cost
+    default: { inputPer1M: 0, outputPer1M: 0 }, // local -- no cost
   },
 };
 
 @Injectable()
-export class TokenTrackingService {
+export class TokenTrackingService implements OnModuleInit {
   private readonly logger = new Logger(TokenTrackingService.name);
+
+  /**
+   * Active pricing map -- starts as DEFAULT_PROVIDER_COSTS and is deep-merged
+   * with overrides loaded from the Settings table on startup and on reload.
+   */
+  private activeCosts: ProviderPricingMap = { ...DEFAULT_PROVIDER_COSTS };
 
   /**
    * In-memory ring buffer (last 10 000 records).
@@ -164,6 +185,80 @@ export class TokenTrackingService {
   private readonly records: TokenUsageRecord[] = [];
   private readonly MAX_RECORDS = 10_000;
   private recordCounter = 0;
+
+  constructor(private readonly config?: ConfigService) {}
+
+  async onModuleInit(): Promise<void> {
+    await this.reloadPricingOverrides();
+  }
+
+  /**
+   * Fetch pricing overrides from the Settings table (via API Gateway internal
+   * endpoint) and merge them on top of DEFAULT_PROVIDER_COSTS.
+   *
+   * Overrides are stored under the settings key "llmPricingOverrides" and
+   * follow the same shape as DEFAULT_PROVIDER_COSTS. Only the entries present
+   * in the override object are replaced -- all other defaults remain intact.
+   *
+   * Called automatically on module init and also by LlmService.reloadProviders()
+   * so that POST /api/v1/llm/reload refreshes both provider keys and pricing.
+   */
+  async reloadPricingOverrides(): Promise<void> {
+    if (!this.config) {
+      // No ConfigService injected (e.g. in unit tests) -- use defaults only
+      return;
+    }
+
+    const gatewayUrl = this.config.get<string>(
+      'API_GATEWAY_URL',
+      'http://unicore-api-gateway:4000',
+    );
+
+    try {
+      const res = await fetch(`${gatewayUrl}/api/v1/settings/ai-config/keys`, {
+        headers: { 'X-Internal-Service': 'ai-engine' },
+        signal: AbortSignal.timeout(3000),
+      });
+
+      if (!res.ok) {
+        this.logger.debug(
+          `Pricing override fetch returned ${res.status} -- using defaults`,
+        );
+        return;
+      }
+
+      const data = (await res.json()) as Record<string, unknown>;
+      const raw = data['llmPricingOverrides'];
+
+      if (!raw) {
+        this.logger.debug(
+          'No llmPricingOverrides found in settings -- using defaults',
+        );
+        return;
+      }
+
+      const overrides = this.parsePricingOverrides(raw);
+      this.activeCosts = this.mergePricing(DEFAULT_PROVIDER_COSTS, overrides);
+
+      const providerCount = Object.keys(overrides).length;
+      this.logger.log(
+        `Loaded LLM pricing overrides from settings (${providerCount} provider(s) overridden)`,
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.debug(
+        `Could not fetch pricing overrides from API Gateway: ${msg} -- using defaults`,
+      );
+    }
+  }
+
+  /**
+   * Expose the currently active pricing map (defaults + any loaded overrides).
+   * Useful for inspection via the token-tracking controller.
+   */
+  getActivePricing(): ProviderPricingMap {
+    return this.activeCosts;
+  }
 
   track(dto: TrackUsageDto): TokenUsageRecord {
     const cost = this.estimateCost(dto.provider, dto.model, dto.usage);
@@ -190,7 +285,7 @@ export class TokenTrackingService {
     this.records.push(record);
 
     this.logger.debug(
-      `Tracked ${dto.operation} — provider=${dto.provider} model=${dto.model} ` +
+      `Tracked ${dto.operation} -- provider=${dto.provider} model=${dto.model} ` +
         `tokens=${dto.usage.totalTokens} cost=$${cost.toFixed(6)}`,
     );
 
@@ -364,8 +459,13 @@ export class TokenTrackingService {
     }
   }
 
+  /**
+   * Estimate the cost of a single LLM call using the active pricing table
+   * (defaults merged with any overrides loaded from Settings).
+   */
   estimateCost(provider: string, model: string, usage: LlmUsage): number {
-    const providerPricing = PROVIDER_COSTS[provider] ?? PROVIDER_COSTS['openai'];
+    const providerPricing =
+      this.activeCosts[provider] ?? this.activeCosts['openai'];
     const modelPricing = providerPricing[model] ?? providerPricing['default'];
 
     if (!modelPricing) return 0;
@@ -375,5 +475,92 @@ export class TokenTrackingService {
       (usage.completionTokens / 1_000_000) * modelPricing.outputPer1M;
 
     return inputCost + outputCost;
+  }
+
+  // Private helpers
+
+  /**
+   * Validate and cast raw settings JSON to ProviderPricingMap.
+   * Silently skips malformed entries rather than throwing.
+   */
+  private parsePricingOverrides(raw: unknown): ProviderPricingMap {
+    if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+      this.logger.warn('llmPricingOverrides is not a plain object -- ignoring');
+      return {};
+    }
+
+    const result: ProviderPricingMap = {};
+
+    for (const [providerId, models] of Object.entries(
+      raw as Record<string, unknown>,
+    )) {
+      if (
+        typeof models !== 'object' ||
+        models === null ||
+        Array.isArray(models)
+      ) {
+        this.logger.warn(
+          `Pricing override for provider "${providerId}" is malformed -- skipping`,
+        );
+        continue;
+      }
+
+      result[providerId] = {};
+
+      for (const [modelId, pricing] of Object.entries(
+        models as Record<string, unknown>,
+      )) {
+        if (
+          typeof pricing !== 'object' ||
+          pricing === null ||
+          typeof (pricing as Record<string, unknown>)['inputPer1M'] !==
+            'number' ||
+          typeof (pricing as Record<string, unknown>)['outputPer1M'] !==
+            'number'
+        ) {
+          this.logger.warn(
+            `Pricing override for "${providerId}.${modelId}" is malformed (expected {inputPer1M, outputPer1M}) -- skipping`,
+          );
+          continue;
+        }
+
+        const p = pricing as Record<string, unknown>;
+        result[providerId][modelId] = {
+          inputPer1M: p['inputPer1M'] as number,
+          outputPer1M: p['outputPer1M'] as number,
+        };
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Deep-merge overrides onto defaults. For each provider in overrides, merge
+   * model-level entries on top of the corresponding defaults object. Providers
+   * and models present only in defaults are left untouched.
+   */
+  private mergePricing(
+    defaults: ProviderPricingMap,
+    overrides: ProviderPricingMap,
+  ): ProviderPricingMap {
+    const merged: ProviderPricingMap = {};
+
+    // Copy all defaults first (shallow-clone each provider map)
+    for (const [provider, models] of Object.entries(defaults)) {
+      merged[provider] = { ...models };
+    }
+
+    // Apply overrides on top
+    for (const [provider, models] of Object.entries(overrides)) {
+      if (!merged[provider]) {
+        merged[provider] = {};
+      }
+      for (const [model, pricing] of Object.entries(models)) {
+        merged[provider][model] = pricing;
+      }
+    }
+
+    return merged;
   }
 }

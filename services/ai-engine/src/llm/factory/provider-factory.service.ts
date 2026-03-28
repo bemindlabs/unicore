@@ -44,6 +44,22 @@ export class ProviderFactoryService implements OnModuleInit {
   private readonly logger = new Logger(ProviderFactoryService.name);
   private readonly registry = new Map<string, ILlmProvider>();
 
+  /**
+   * PROVIDER_CATALOG is the compile-time registry of all supported LLM provider
+   * adapters. It defines static metadata (key field names, known model IDs,
+   * dashboard URLs) and is intentionally a compile-time constant -- it controls
+   * which adapters exist, not which are enabled at runtime.
+   *
+   * Runtime behaviour (which provider is active, which model is used, API keys,
+   * primary/failover order) is controlled entirely by:
+   *   1. Environment variables -- LLM_PRIMARY_PROVIDER, LLM_FAILOVER_PROVIDERS,
+   *      LLM_FAILOVER_ENABLED, <PROVIDER>_API_KEY, <PROVIDER>_DEFAULT_MODEL
+   *   2. Settings table (loaded via /api/v1/settings/ai-config/keys on startup
+   *      and on every POST /api/v1/llm/reload)
+   *
+   * To add support for a new provider: add an entry here AND implement the
+   * corresponding adapter (OpenAiProvider-compatible or custom ILlmProvider).
+   */
   private static readonly PROVIDER_CATALOG: Omit<ProviderInfo, 'configured'>[] = [
     { id: 'openai',     name: 'OpenAI',             keyField: 'openaiKey',     getKeyUrl: 'https://platform.openai.com/api-keys',          models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'o3-mini', 'o4-mini'],                                                         defaultBaseUrl: 'https://api.openai.com/v1' },
     { id: 'anthropic',  name: 'Anthropic',           keyField: 'anthropicKey',  getKeyUrl: 'https://console.anthropic.com/settings/keys',   models: ['claude-sonnet-4-20250514', 'claude-opus-4-20250514', 'claude-haiku-4-5-20251001'],                                       defaultBaseUrl: 'https://api.anthropic.com' },
@@ -262,9 +278,19 @@ export class ProviderFactoryService implements OnModuleInit {
       }
     }
 
-    // Update primary provider if set in DB
-    if (dbKeys.defaultProvider && !this.config.get<string>('LLM_PRIMARY_PROVIDER')) {
+    // Resolve the active primary provider:
+    // 1. LLM_PRIMARY_PROVIDER env var takes highest precedence (operator override)
+    // 2. "defaultProvider" from the Settings table (set via the dashboard)
+    // 3. Hardcoded default: 'openai'
+    // Reset to env-configured value first so that clearing the DB setting
+    // reverts to the env default rather than sticking to a previous DB value.
+    const envPrimary = this.config.get<string>('LLM_PRIMARY_PROVIDER');
+    if (envPrimary) {
+      this.primaryProviderId = envPrimary;
+    } else if (dbKeys.defaultProvider) {
       this.primaryProviderId = dbKeys.defaultProvider;
+    } else {
+      this.primaryProviderId = 'openai';
     }
 
     // Ollama is always registered — it's local and requires no key
