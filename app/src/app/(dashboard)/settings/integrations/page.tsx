@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   CheckCircle2,
   ExternalLink,
@@ -40,33 +40,11 @@ import {
   toast,
 } from '@bemindlabs/unicore-ui';
 import type { IntegrationConfig } from '@bemindlabs/unicore-shared-types';
-import { api } from '@/lib/api';
 import { TelegramConfig } from '../../../../components/settings/TelegramConfig';
 import { LineConfig } from '../../../../components/settings/LineConfig';
 import { LineRichMenu } from '../../../../components/settings/LineRichMenu';
 import { LineFlexTemplates } from '../../../../components/settings/LineFlexTemplates';
 import { useLicense } from '@/hooks/use-license';
-
-// ---------------------------------------------------------------------------
-// Backend response shapes
-// ---------------------------------------------------------------------------
-
-/** Entry returned by GET /api/v1/channels/status */
-interface ChannelStatusEntry {
-  channelType: string;
-  configured: boolean;
-  label: string;
-}
-
-/**
- * Shape persisted under the Settings key "integrations" via
- * PUT /api/v1/settings/integrations (generic catch-all endpoint).
- * Stores per-provider config and enabled flag for non-channel integrations.
- */
-interface PersistedIntegrationEntry {
-  enabled: boolean;
-  config: Record<string, string>;
-}
 
 // ---------------------------------------------------------------------------
 // Integration definitions
@@ -90,10 +68,6 @@ interface IntegrationDef {
   fields: IntegrationField[];
 }
 
-// UI-only constants: provider metadata (labels, fields, docs links).
-// The `configured` state for channel-category providers is fetched from
-// GET /api/v1/channels/status; non-channel integrations load from
-// GET /api/v1/settings/integrations (persisted in the Settings table).
 const INTEGRATION_DEFS: IntegrationDef[] = [
   // ── Channels (Social) ────────────────────────────────────────────────────
   {
@@ -340,70 +314,6 @@ export default function SettingsIntegrationsPage() {
   const [configValues, setConfigValues] = useState<Record<string, string>>({});
   const [search, setSearch] = useState('');
 
-  // ── Load configured status from the backend on mount ─────────────────────
-  //
-  // Channel-category providers: authoritative source is GET /api/v1/channels/status
-  //   (ChannelsService reads credentials from the Settings → Channels table).
-  // Non-channel integrations: persisted in Settings table under key "integrations"
-  //   via the generic PUT /api/v1/settings/integrations endpoint.
-  //
-  // Both fetches are non-blocking; the page is usable with the default state on failure.
-
-  useEffect(() => {
-    let cancelled = false;
-
-    // Fetch channel configured-status
-    const channelFetch = api
-      .get<{ channels: ChannelStatusEntry[] }>('/api/v1/channels/status')
-      .then((res) => res.channels ?? [])
-      .catch(() => [] as ChannelStatusEntry[]);
-
-    // Fetch persisted non-channel integrations
-    const integrationsFetch = api
-      .get<Record<string, PersistedIntegrationEntry>>('/api/v1/settings/integrations')
-      .then((res) => res ?? {})
-      .catch(() => ({} as Record<string, PersistedIntegrationEntry>));
-
-    Promise.all([channelFetch, integrationsFetch]).then(([channelStatuses, savedIntegrations]) => {
-      if (cancelled) return;
-
-      // Build a lookup from channelType → configured
-      const channelConfigured = new Map<string, boolean>(
-        channelStatuses.map((e) => [e.channelType, e.configured]),
-      );
-
-      setIntegrations((prev) =>
-        prev.map((state) => {
-          const def = INTEGRATION_DEFS.find((d) => d.provider === state.provider);
-          if (!def) return state;
-
-          if (def.category === 'channels' && channelConfigured.has(def.provider)) {
-            // Use live channel status from ChannelsService
-            const configured = channelConfigured.get(def.provider) ?? false;
-            return { ...state, isConfigured: configured, enabled: configured };
-          }
-
-          // Use persisted settings for non-channel providers
-          const persisted = savedIntegrations[def.provider];
-          if (persisted) {
-            return {
-              ...state,
-              isConfigured: true,
-              enabled: persisted.enabled,
-              config: persisted.config ?? {},
-            };
-          }
-
-          return state;
-        }),
-      );
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   // Count connected integrations per category
   const connectedCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -439,43 +349,22 @@ export default function SettingsIntegrationsPage() {
 
   const handleConfigSave = useCallback(() => {
     if (!configTarget) return;
-
-    const updatedIntegrations = integrations.map((i) =>
-      i.provider === configTarget.provider
-        ? { ...i, enabled: true, isConfigured: true, config: configValues }
-        : i,
+    setIntegrations((prev) =>
+      prev.map((i) =>
+        i.provider === configTarget.provider
+          ? { ...i, enabled: true, isConfigured: true, config: configValues }
+          : i,
+      ),
     );
-    setIntegrations(updatedIntegrations);
-
-    // Persist non-channel integrations to the backend Settings table.
-    // Channel integrations (telegram, line, etc.) are managed through their
-    // dedicated PUT /api/v1/settings/telegram|line endpoints in the
-    // TelegramConfig / LineConfig components — skip here to avoid collision.
-    if (configTarget.category !== 'channels') {
-      const payload: Record<string, PersistedIntegrationEntry> = {};
-      for (const state of updatedIntegrations) {
-        const def = INTEGRATION_DEFS.find((d) => d.provider === state.provider);
-        if (def && def.category !== 'channels' && state.isConfigured) {
-          payload[state.provider] = {
-            enabled: state.enabled,
-            config: state.config as Record<string, string>,
-          };
-        }
-      }
-      api.put('/api/v1/settings/integrations', payload).catch(() => {
-        // Non-fatal: state is already updated locally
-      });
-    }
-
     toast({ title: 'Integration connected', description: `${configTarget.name} is now active.` });
     setConfigTarget(null);
     setConfigValues({});
-  }, [configTarget, configValues, integrations]);
+  }, [configTarget, configValues]);
 
   const toggleEnabled = useCallback(
     (provider: string, enabled: boolean) => {
-      setIntegrations((prev) => {
-        const updated = prev.map((i) => {
+      setIntegrations((prev) =>
+        prev.map((i) => {
           if (i.provider !== provider) return i;
           if (enabled && !i.isConfigured) {
             const def = INTEGRATION_DEFS.find((d) => d.provider === provider);
@@ -483,62 +372,21 @@ export default function SettingsIntegrationsPage() {
             return i;
           }
           return { ...i, enabled };
-        });
-
-        // Persist enabled-toggle for non-channel integrations
-        const def = INTEGRATION_DEFS.find((d) => d.provider === provider);
-        if (def && def.category !== 'channels') {
-          const payload: Record<string, PersistedIntegrationEntry> = {};
-          for (const state of updated) {
-            const d = INTEGRATION_DEFS.find((x) => x.provider === state.provider);
-            if (d && d.category !== 'channels' && state.isConfigured) {
-              payload[state.provider] = {
-                enabled: state.enabled,
-                config: state.config as Record<string, string>,
-              };
-            }
-          }
-          api.put('/api/v1/settings/integrations', payload).catch(() => {
-            // Non-fatal
-          });
-        }
-
-        return updated;
-      });
+        }),
+      );
     },
     [openConfig],
   );
 
-  const handleDisconnect = useCallback(
-    (provider: string) => {
-      const updatedIntegrations = integrations.map((i) =>
+  const handleDisconnect = useCallback((provider: string) => {
+    setIntegrations((prev) =>
+      prev.map((i) =>
         i.provider === provider ? { ...i, enabled: false, isConfigured: false, config: {} } : i,
-      );
-      setIntegrations(updatedIntegrations);
-
-      const def = INTEGRATION_DEFS.find((d) => d.provider === provider);
-
-      // Persist removal for non-channel integrations
-      if (def && def.category !== 'channels') {
-        const payload: Record<string, PersistedIntegrationEntry> = {};
-        for (const state of updatedIntegrations) {
-          const d = INTEGRATION_DEFS.find((x) => x.provider === state.provider);
-          if (d && d.category !== 'channels' && state.isConfigured) {
-            payload[state.provider] = {
-              enabled: state.enabled,
-              config: state.config as Record<string, string>,
-            };
-          }
-        }
-        api.put('/api/v1/settings/integrations', payload).catch(() => {
-          // Non-fatal
-        });
-      }
-
-      toast({ title: 'Disconnected', description: `${def?.name ?? provider} has been removed.` });
-    },
-    [integrations],
-  );
+      ),
+    );
+    const def = INTEGRATION_DEFS.find((d) => d.provider === provider);
+    toast({ title: 'Disconnected', description: `${def?.name ?? provider} has been removed.` });
+  }, []);
 
   // ── Render helpers ──────────────────────────────────────────────────────
 

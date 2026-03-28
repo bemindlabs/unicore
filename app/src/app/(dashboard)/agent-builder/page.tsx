@@ -44,12 +44,6 @@ interface ChatMessage {
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-//
-// AVAILABLE_TOOLS: UI constant defining the tool palette shown in the builder.
-// OpenClaw does not expose a /tools or /capabilities enumeration endpoint.
-// Tool IDs here are capability names that OpenClaw agents recognise at runtime
-// (see AgentCapability in unicore/services/openclaw-gateway/src/registry).
-// When adding new tool capabilities to OpenClaw agents, add a matching entry here.
 
 const AVAILABLE_TOOLS: AgentTool[] = [
   { id: 'web_search', label: 'Web Search', description: 'Search the web for information' },

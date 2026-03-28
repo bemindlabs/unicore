@@ -1,6 +1,6 @@
 'use client';
 
-import { Crown, Lock, MessageCircle, Webhook, Mail, Globe, CheckCircle2, Loader2 } from 'lucide-react';
+import { Crown, Lock, MessageCircle, Webhook, Mail, Globe } from 'lucide-react';
 import {
   Badge,
   Button,
@@ -12,23 +12,12 @@ import {
 } from '@bemindlabs/unicore-ui';
 import { useLicense } from '@/hooks/use-license';
 import { useAuth } from '@/hooks/use-auth';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { api } from '@/lib/api';
 import { toast } from '@bemindlabs/unicore-ui';
+import { Loader2 } from 'lucide-react';
 
-// ── Channel definitions (UI constants — display metadata only) ────────────
-//
-// The `configured` state for each channel is fetched at runtime from
-// GET /api/v1/channels/status (ChannelsService.getStatus). These constants
-// provide display metadata (icon, description, pro flag) only.
-
-// ── Backend response shape from GET /api/v1/channels/status ─────────────
-
-interface ChannelStatusEntry {
-  channelType: string;
-  configured: boolean;
-  label: string;
-}
+// ── Channel definitions ────────────────────────────────────────────────────
 
 interface ChannelDef {
   id: string;
@@ -110,12 +99,10 @@ const CHANNELS: ChannelDef[] = [
 function ChannelCard({
   channel,
   locked,
-  configured,
   onUpgrade,
 }: {
   channel: ChannelDef;
   locked: boolean;
-  configured: boolean;
   onUpgrade: () => void;
 }) {
   const Icon = channel.icon;
@@ -127,15 +114,6 @@ function ChannelCard({
             <Icon className="h-5 w-5 text-primary" />
           </div>
           <div className="flex items-center gap-2">
-            {configured && (
-              <Badge
-                variant="secondary"
-                className="gap-1 text-xs bg-emerald-500/10 text-emerald-600 border-emerald-300/40"
-              >
-                <CheckCircle2 className="h-2.5 w-2.5" />
-                Configured
-              </Badge>
-            )}
             {channel.pro && (
               <Badge
                 variant="secondary"
@@ -163,7 +141,7 @@ function ChannelCard({
           </Button>
         ) : (
           <Button variant="outline" size="sm" className="w-full">
-            {configured ? 'Reconfigure' : 'Configure'}
+            Configure
           </Button>
         )}
       </CardContent>
@@ -177,35 +155,6 @@ export default function ChannelsSettingsPage() {
   const { isPro } = useLicense();
   const { user } = useAuth();
   const [isUpgrading, setIsUpgrading] = useState(false);
-
-  // Fetched from GET /api/v1/channels/status — keyed by channelType
-  const [channelStatus, setChannelStatus] = useState<Record<string, boolean>>({});
-  const [statusLoading, setStatusLoading] = useState(true);
-
-  // Fetch channel configured-status from the backend on mount
-  useEffect(() => {
-    let cancelled = false;
-    setStatusLoading(true);
-    api
-      .get<{ channels: ChannelStatusEntry[] }>('/api/v1/channels/status')
-      .then((res) => {
-        if (cancelled) return;
-        const map: Record<string, boolean> = {};
-        for (const entry of res.channels ?? []) {
-          map[entry.channelType] = entry.configured;
-        }
-        setChannelStatus(map);
-      })
-      .catch(() => {
-        // Non-fatal: fall back to all unconfigured — UI remains fully functional
-      })
-      .finally(() => {
-        if (!cancelled) setStatusLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const handleUpgrade = useCallback(async () => {
     setIsUpgrading(true);
@@ -237,27 +186,22 @@ export default function ChannelsSettingsPage() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {statusLoading && (
-            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-          )}
-          {!isPro && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5 border-amber-400/50 text-amber-700 hover:bg-amber-500/10 dark:text-amber-400"
-              onClick={handleUpgrade}
-              disabled={isUpgrading}
-            >
-              {isUpgrading ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Crown className="h-3.5 w-3.5" />
-              )}
-              Unlock all channels
-            </Button>
-          )}
-        </div>
+        {!isPro && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 border-amber-400/50 text-amber-700 hover:bg-amber-500/10 dark:text-amber-400"
+            onClick={handleUpgrade}
+            disabled={isUpgrading}
+          >
+            {isUpgrading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Crown className="h-3.5 w-3.5" />
+            )}
+            Unlock all channels
+          </Button>
+        )}
       </div>
 
       {/* Community channels */}
@@ -271,7 +215,6 @@ export default function ChannelsSettingsPage() {
               key={channel.id}
               channel={channel}
               locked={false}
-              configured={channelStatus[channel.id] ?? false}
               onUpgrade={handleUpgrade}
             />
           ))}
@@ -298,7 +241,6 @@ export default function ChannelsSettingsPage() {
               key={channel.id}
               channel={channel}
               locked={!isPro}
-              configured={channelStatus[channel.id] ?? false}
               onUpgrade={handleUpgrade}
             />
           ))}

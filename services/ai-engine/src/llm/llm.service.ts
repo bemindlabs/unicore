@@ -120,11 +120,7 @@ export class LlmService {
   }
 
   async reloadProviders(): Promise<string[]> {
-    const providers = await this.factory.reloadProviders();
-    // Reload pricing overrides in sync so that cost estimates use the latest
-    // data after a settings change (same trigger as provider key reload).
-    await this.tokenTracking.reloadPricingOverrides();
-    return providers;
+    return this.factory.reloadProviders();
   }
 
   listProviders(): ProviderInfo[] {
