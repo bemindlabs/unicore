@@ -195,6 +195,8 @@ enum StockMovementType {
 /// Supports full lead-to-customer lifecycle with AI-assisted lead scoring.
 model Contact {
   id           String      @id @default(uuid()) @db.Uuid
+  /// Owning tenant (SaaS phase 4.4). RLS-enforced; backfilled to the default tenant.
+  tenantId     String      @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   type         ContactType @default(LEAD)
   /// Display name — person full name or company trading name
   name         String
@@ -236,6 +238,7 @@ model Contact {
   updatedAt    DateTime    @updatedAt
   archivedAt   DateTime?
 
+  @@index([tenantId])
   @@index([type])
   @@index([leadStage])
   @@index([email])
@@ -246,6 +249,7 @@ model Contact {
 /// Types: "call" | "email" | "meeting" | "task" | "note"
 model ContactNote {
   id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   contactId String   @db.Uuid
   contact   Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
   type      String   @default("note")
@@ -255,6 +259,7 @@ model ContactNote {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([tenantId])
   @@index([contactId])
   @@index([createdAt])
 }
@@ -266,6 +271,7 @@ model ContactNote {
 /// A physical product, digital good, or billable service.
 model Product {
   id             String          @id @default(uuid()) @db.Uuid
+  tenantId       String          @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   sku            String          @unique
   name           String
   description    String?
@@ -293,6 +299,7 @@ model Product {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
+  @@index([tenantId])
   @@index([sku])
   @@index([isActive])
   @@index([category])
@@ -301,6 +308,7 @@ model Product {
 /// A physical storage location — warehouse, store room, or virtual dropship.
 model Warehouse {
   id             String          @id @default(uuid()) @db.Uuid
+  tenantId       String          @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   name           String
   /// Short unique code used in stock-transfer references
   code           String          @unique
@@ -312,12 +320,15 @@ model Warehouse {
   stockMovements StockMovement[]
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
+
+  @@index([tenantId])
 }
 
 /// Current stock position for a Product at a Warehouse.
 /// quantityAvailable = quantityOnHand - quantityReserved
 model InventoryItem {
   id                String    @id @default(uuid()) @db.Uuid
+  tenantId          String    @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   productId         String    @db.Uuid
   product           Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
   warehouseId       String    @db.Uuid
@@ -341,6 +352,7 @@ model InventoryItem {
   updatedAt         DateTime  @updatedAt
 
   @@unique([productId, warehouseId])
+  @@index([tenantId])
   @@index([productId])
   @@index([warehouseId])
   @@index([quantityAvailable])
@@ -349,6 +361,7 @@ model InventoryItem {
 /// Immutable audit log for every stock quantity change.
 model StockMovement {
   id            String            @id @default(uuid()) @db.Uuid
+  tenantId      String            @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   productId     String            @db.Uuid
   product       Product           @relation(fields: [productId], references: [id])
   warehouseId   String            @db.Uuid
@@ -367,6 +380,7 @@ model StockMovement {
   createdById   String            @db.Uuid
   createdAt     DateTime          @default(now())
 
+  @@index([tenantId])
   @@index([productId, createdAt])
   @@index([warehouseId])
   @@index([referenceId])
@@ -380,6 +394,7 @@ model StockMovement {
 /// Status transitions emit order.created / order.fulfilled Kafka events.
 model Order {
   id                 String            @id @default(uuid()) @db.Uuid
+  tenantId           String            @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   /// Human-readable reference e.g. "ORD-2025-00042"
   orderNumber        String            @unique
   contactId          String?           @db.Uuid
@@ -420,6 +435,7 @@ model Order {
   confirmedAt        DateTime?
   cancelledAt        DateTime?
 
+  @@index([tenantId])
   @@index([status])
   @@index([fulfillmentStatus])
   @@index([contactId])
@@ -431,6 +447,7 @@ model Order {
 /// Tracks snapshot pricing and per-item fulfillment / return quantities.
 model OrderItem {
   id           String   @id @default(uuid()) @db.Uuid
+  tenantId     String   @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   orderId      String   @db.Uuid
   order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId    String   @db.Uuid
@@ -451,6 +468,7 @@ model OrderItem {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  @@index([tenantId])
   @@index([orderId])
   @@index([productId])
 }
@@ -459,6 +477,7 @@ model OrderItem {
 /// Multiple fulfillments per order support split-shipment scenarios.
 model Fulfillment {
   id             String            @id @default(uuid()) @db.Uuid
+  tenantId       String            @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   orderId        String            @db.Uuid
   order          Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
   status         FulfillmentStatus @default(PENDING)
@@ -474,6 +493,7 @@ model Fulfillment {
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 
+  @@index([tenantId])
   @@index([orderId])
   @@index([status])
 }
@@ -487,6 +507,7 @@ model Fulfillment {
 /// nextGenerationAt is polled by the scheduler to auto-generate instances.
 model Invoice {
   id                  String             @id @default(uuid()) @db.Uuid
+  tenantId            String             @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   /// Human-readable reference e.g. "INV-2025-00017"
   invoiceNumber       String             @unique
   contactId           String?            @db.Uuid
@@ -531,6 +552,7 @@ model Invoice {
   sentAt              DateTime?
   voidedAt            DateTime?
 
+  @@index([tenantId])
   @@index([status])
   @@index([contactId])
   @@index([orderId])
@@ -542,6 +564,7 @@ model Invoice {
 /// A line item on an Invoice — optionally linked to a Product.
 model InvoiceLine {
   id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   invoiceId   String   @db.Uuid
   invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   productId   String?  @db.Uuid
@@ -557,6 +580,7 @@ model InvoiceLine {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  @@index([tenantId])
   @@index([invoiceId])
 }
 
@@ -564,6 +588,7 @@ model InvoiceLine {
 /// Multiple records support partial-payment workflows.
 model Payment {
   id            String        @id @default(uuid()) @db.Uuid
+  tenantId      String        @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   invoiceId     String        @db.Uuid
   invoice       Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   amount        Decimal       @db.Decimal(18, 4)
@@ -579,6 +604,7 @@ model Payment {
   createdById   String        @db.Uuid
   createdAt     DateTime      @default(now())
 
+  @@index([tenantId])
   @@index([invoiceId])
   @@index([paidAt])
 }
@@ -591,6 +617,7 @@ model Payment {
 /// Feeds into v_pnl_monthly and the Finance Agent cost analysis.
 model Expense {
   id              String          @id @default(uuid()) @db.Uuid
+  tenantId        String          @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   title           String
   description     String?
   category        ExpenseCategory @default(OTHER)
@@ -629,6 +656,7 @@ model Expense {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
+  @@index([tenantId])
   @@index([status])
   @@index([category])
   @@index([expenseDate])
@@ -643,6 +671,7 @@ model Expense {
 /// Computed output is cached in data and versioned via ReportSnapshot.
 model Report {
   id          String         @id @default(uuid()) @db.Uuid
+  tenantId    String         @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   name        String
   type        ReportType
   period      ReportPeriod   @default(MONTHLY)
@@ -667,6 +696,7 @@ model Report {
   updatedAt   DateTime       @updatedAt
   snapshots   ReportSnapshot[]
 
+  @@index([tenantId])
   @@index([type])
   @@index([createdById])
   @@index([nextRunAt])
@@ -675,6 +705,7 @@ model Report {
 /// Immutable historical snapshot of a Report computed output.
 model ReportSnapshot {
   id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   reportId  String   @db.Uuid
   report    Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
   /// Matches Report.dataVersion at the time of capture
@@ -683,6 +714,7 @@ model ReportSnapshot {
   createdAt DateTime @default(now())
 
   @@unique([reportId, version])
+  @@index([tenantId])
   @@index([reportId])
 }
 
@@ -694,6 +726,8 @@ model ReportSnapshot {
 /// Monthly P&L aggregation.
 /// Revenue = paid Invoice totals. Expenses = approved Expense amounts.
 view PnlMonthly {
+  /// Owning tenant (SaaS phase 4.4) — flows from RLS on the base tables.
+  tenantId      String  @db.Uuid
   /// "YYYY-MM" bucket e.g. "2025-03"
   month         String  @unique
   currency      String  @db.Char(3)
@@ -708,6 +742,7 @@ view PnlMonthly {
 /// Classifies outstanding Invoice.amountDue into standard aging buckets.
 view ArAging {
   id            String  @unique @db.Uuid
+  tenantId      String  @db.Uuid
   invoiceNumber String
   contactName   String
   total         Decimal @db.Decimal(18, 4)
@@ -723,6 +758,7 @@ view ArAging {
 /// Polled by the Kafka inventory.low event publisher service.
 view LowStockAlert {
   id                String @unique @db.Uuid
+  tenantId          String @db.Uuid
   sku               String
   productName       String
   warehouseName     String

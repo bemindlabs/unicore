@@ -10,8 +10,12 @@
 -- Returns monthly P&L with date_trunc applied in the given IANA timezone.
 -- Usage: SELECT * FROM fn_pnl_monthly('Asia/Bangkok');
 -- ---------------------------------------------------------------------------
+-- SaaS phase 4.4: tenant_id is carried through. This function is INVOKER
+-- security by default (LANGUAGE sql, not SECURITY DEFINER), so RLS on
+-- "Invoice"/"Expense" applies automatically per the caller's app.tenant_id.
 CREATE OR REPLACE FUNCTION fn_pnl_monthly(tz TEXT DEFAULT 'UTC')
 RETURNS TABLE (
+  "tenantId"      UUID,
   month        TEXT,
   currency     CHAR(3),
   "totalRevenue"  NUMERIC,
@@ -22,36 +26,39 @@ LANGUAGE sql STABLE
 AS $$
   WITH revenue AS (
     SELECT
+      "tenantId" AS tenant_id,
       to_char(date_trunc('month', "paidAt" AT TIME ZONE tz), 'YYYY-MM') AS month,
       currency,
       COALESCE(SUM(total), 0) AS total_revenue
     FROM "Invoice"
     WHERE status = 'PAID'
       AND "paidAt" IS NOT NULL
-    GROUP BY 1, 2
+    GROUP BY 1, 2, 3
   ),
   expenses AS (
     SELECT
+      "tenantId" AS tenant_id,
       to_char(date_trunc('month', "expenseDate" AT TIME ZONE tz), 'YYYY-MM') AS month,
       currency,
       COALESCE(SUM(COALESCE("baseAmount", amount)), 0) AS total_expenses
     FROM "Expense"
     WHERE status = 'APPROVED'
-    GROUP BY 1, 2
+    GROUP BY 1, 2, 3
   ),
   months AS (
-    SELECT month, currency FROM revenue
+    SELECT tenant_id, month, currency FROM revenue
     UNION
-    SELECT month, currency FROM expenses
+    SELECT tenant_id, month, currency FROM expenses
   )
   SELECT
+    m.tenant_id,
     m.month,
     m.currency,
     COALESCE(r.total_revenue,  0)                                  AS "totalRevenue",
     COALESCE(e.total_expenses, 0)                                  AS "totalExpenses",
     COALESCE(r.total_revenue,  0) - COALESCE(e.total_expenses, 0)  AS "grossProfit"
   FROM months m
-  LEFT JOIN revenue  r ON r.month = m.month AND r.currency = m.currency
-  LEFT JOIN expenses e ON e.month = m.month AND e.currency = m.currency
+  LEFT JOIN revenue  r ON r.tenant_id = m.tenant_id AND r.month = m.month AND r.currency = m.currency
+  LEFT JOIN expenses e ON e.tenant_id = m.tenant_id AND e.month = m.month AND e.currency = m.currency
   ORDER BY m.month DESC, m.currency;
 $$;
