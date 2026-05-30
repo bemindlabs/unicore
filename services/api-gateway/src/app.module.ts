@@ -34,12 +34,16 @@ import { PluginsModule } from './plugins/plugins.module';
 import { EmailModule } from './email/email.module';
 import { TenancyModule } from './common/tenancy/tenancy.module';
 import { TenantContextMiddleware } from './common/tenancy/tenant-context.middleware';
+import { TenantContextInterceptor } from './common/tenancy/tenant-context.interceptor';
 @Module({
   imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule, AdminModule, AuditModule, SettingsModule, TasksModule, WebhooksModule, ChatHistoryModule, NotificationsModule, GamificationModule, ChannelsModule, ConversationsAnalyticsModule, ConversationsModule, ContactProfileModule, ConversationIntelligenceModule, PluginsModule, EmailModule, TenancyModule],
   controllers: [AppController],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
     { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
+    // Seeds the request-scoped tenant store (runs after JwtAuthGuard, so
+    // req.user.tenantId is resolved) for the gateway's own RLS-scoped queries.
+    { provide: APP_INTERCEPTOR, useClass: TenantContextInterceptor },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
     { provide: APP_GUARD, useClass: DemoModeGuard },
