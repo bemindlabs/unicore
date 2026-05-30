@@ -1,6 +1,11 @@
 {
   "name": "@bemindlabs/unicore-config",
   "version": "0.0.2",
+  "author": {
+    "name": "Bemind Technology Co., Ltd.",
+    "url": "https://bemind.tech"
+  },
+  "license": "BUSL-1.1",
   "private": true,
   "type": "module",
   "exports": {
