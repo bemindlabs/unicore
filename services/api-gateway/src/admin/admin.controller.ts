@@ -8,6 +8,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { LicenseGuard } from '../license/guards/license.guard';
 import { ProFeatureRequired } from '../license/decorators/pro-feature.decorator';
 import { SuperAdminGuard } from '../common/guards/super-admin.guard';
+import { TenantUsageService } from '../common/tenancy/tenant-usage.service';
 import * as os from 'os';
 
 @Roles('OWNER')
@@ -22,6 +23,7 @@ export class AdminController {
     private readonly auditService: AuditService,
     private readonly tokenBlacklist: TokenBlacklistService,
     private readonly licenseService: LicenseService,
+    private readonly tenantUsage: TenantUsageService,
   ) {}
 
   /**
@@ -133,9 +135,10 @@ export class AdminController {
    * Maps a real `Tenant` row to the control-plane tenant DTO consumed by the
    * platform-admin frontend. Enriches the row with the live member count and the
    * earliest OWNER's email (both real queries). Per-tenant `storageUsageBytes`
-   * and `apiCallsThisMonth` have no usage-metering source yet, so they are
-   * reported as 0 — the DTO shape is preserved for the frontend, and these
-   * become live the moment a usage source lands (no shape change required).
+   * is reported as 0. `apiCallsThisMonth` is the LIVE per-tenant monthly usage
+   * counter (FU-04), read from TenantUsageService (Redis-backed, the same
+   * counter TenantRateLimitGuard enforces the plan cap against). The DTO shape
+   * is preserved for the frontend.
    */
   private async mapTenantRecord(tenant: {
     id: string;
@@ -147,13 +150,14 @@ export class AdminController {
     createdAt: Date;
     updatedAt: Date;
   }): Promise<Record<string, any>> {
-    const [memberCount, owner] = await Promise.all([
+    const [memberCount, owner, apiCallsThisMonth] = await Promise.all([
       this.prisma.user.count({ where: { tenantId: tenant.id } }),
       this.prisma.user.findFirst({
         where: { tenantId: tenant.id, role: 'OWNER' },
         select: { email: true },
         orderBy: { createdAt: 'asc' },
       }),
+      this.tenantUsage.current(tenant.id),
     ]);
 
     return {
@@ -167,7 +171,7 @@ export class AdminController {
       ownerEmail: owner?.email ?? null,
       memberCount,
       storageUsageBytes: 0,
-      apiCallsThisMonth: 0,
+      apiCallsThisMonth,
       createdAt: tenant.createdAt.toISOString(),
       updatedAt: tenant.updatedAt.toISOString(),
     };

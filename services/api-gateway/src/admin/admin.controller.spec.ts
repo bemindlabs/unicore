@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { TokenBlacklistService } from '../auth/token-blacklist.service';
 import { LicenseService } from '../license/license.service';
+import { TenantUsageService } from '../common/tenancy/tenant-usage.service';
 
 describe('AdminController', () => {
   let controller: AdminController;
@@ -45,6 +46,7 @@ describe('AdminController', () => {
 
   const mockAuditService = { log: jest.fn() };
   const mockTokenBlacklist = { blacklist: jest.fn() };
+  const mockTenantUsage = { current: jest.fn().mockResolvedValue(0), increment: jest.fn() };
 
   const currentUser = {
     id: 'owner-1',
@@ -60,6 +62,7 @@ describe('AdminController', () => {
         { provide: AuditService, useValue: mockAuditService },
         { provide: TokenBlacklistService, useValue: mockTokenBlacklist },
         { provide: LicenseService, useValue: mockLicenseService },
+        { provide: TenantUsageService, useValue: mockTenantUsage },
       ],
     }).compile();
 

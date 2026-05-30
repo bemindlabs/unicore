@@ -32,6 +32,17 @@ export interface PlanDefinition {
   amount: number;
   /** License edition this plan grants (Stripe plan → license edition chain). */
   edition: LicenseEditionForPlan;
+  /**
+   * Noisy-neighbor protection (FU-04), saas mode only. These are PLACEHOLDER
+   * caps behind env so real limits drop in at launch without code changes:
+   *
+   *  - `rateLimitPerMinute`: short-window burst ceiling enforced per tenant at
+   *    the gateway. STARTER lower, GROWTH higher.
+   *  - `monthlyApiCallCap`: hard monthly usage cap (the `apiCallsThisMonth`
+   *    quota surfaced in the admin tenant DTO). Exceeding it returns HTTP 429.
+   */
+  rateLimitPerMinute: number;
+  monthlyApiCallCap: number;
 }
 
 /** Length of the free trial in days (fixed product decision). */
@@ -55,6 +66,8 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
     priceId: process.env.STRIPE_PRICE_STARTER || 'price_starter_placeholder',
     amount: parseInt(process.env.STRIPE_AMOUNT_STARTER || '0', 10),
     edition: 'community',
+    rateLimitPerMinute: parseInt(process.env.RATE_LIMIT_STARTER_PER_MIN || '120', 10),
+    monthlyApiCallCap: parseInt(process.env.API_CAP_STARTER_MONTHLY || '50000', 10),
   },
   GROWTH: {
     key: 'GROWTH',
@@ -62,8 +75,36 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
     priceId: process.env.STRIPE_PRICE_GROWTH || 'price_growth_placeholder',
     amount: parseInt(process.env.STRIPE_AMOUNT_GROWTH || '0', 10),
     edition: 'pro',
+    rateLimitPerMinute: parseInt(process.env.RATE_LIMIT_GROWTH_PER_MIN || '600', 10),
+    monthlyApiCallCap: parseInt(process.env.API_CAP_GROWTH_MONTHLY || '500000', 10),
   },
 };
+
+/**
+ * Per-minute burst limit for the given plan key. Reads env LIVE (not the cached
+ * PLANS object) so caps can be tuned via env without a rebuild, and so tests
+ * can override per-case.
+ */
+export function rateLimitForPlan(key: string | null | undefined): number {
+  const plan = getPlan(key);
+  const env =
+    plan.key === 'GROWTH'
+      ? process.env.RATE_LIMIT_GROWTH_PER_MIN
+      : process.env.RATE_LIMIT_STARTER_PER_MIN;
+  const parsed = parseInt(env ?? '', 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : plan.rateLimitPerMinute;
+}
+
+/** Monthly API-call cap for the given plan key. Reads env LIVE (see above). */
+export function monthlyApiCapForPlan(key: string | null | undefined): number {
+  const plan = getPlan(key);
+  const env =
+    plan.key === 'GROWTH'
+      ? process.env.API_CAP_GROWTH_MONTHLY
+      : process.env.API_CAP_STARTER_MONTHLY;
+  const parsed = parseInt(env ?? '', 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : plan.monthlyApiCallCap;
+}
 
 /** Look up a plan by key; defaults to STARTER for unknown values. */
 export function getPlan(key: string | null | undefined): PlanDefinition {

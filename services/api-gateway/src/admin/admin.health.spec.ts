@@ -4,6 +4,9 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { TokenBlacklistService } from '../auth/token-blacklist.service';
 import { LicenseService } from '../license/license.service';
+import { TenantUsageService } from '../common/tenancy/tenant-usage.service';
+
+const mockTenantUsage = { current: jest.fn().mockResolvedValue(0), increment: jest.fn() };
 
 const mockPrismaService = {
   user: { findMany: jest.fn(), findUnique: jest.fn(), update: jest.fn(), delete: jest.fn(), count: jest.fn() },
@@ -32,6 +35,7 @@ describe('AdminController — health endpoint', () => {
         { provide: AuditService, useValue: mockAuditService },
         { provide: TokenBlacklistService, useValue: mockTokenBlacklist },
         { provide: LicenseService, useValue: mockLicenseService },
+        { provide: TenantUsageService, useValue: mockTenantUsage },
       ],
     }).compile();
 
@@ -135,6 +139,7 @@ describe('AdminController — auditLogs endpoint', () => {
         { provide: AuditService, useValue: mockAuditService },
         { provide: TokenBlacklistService, useValue: mockTokenBlacklist },
         { provide: LicenseService, useValue: mockLicenseService },
+        { provide: TenantUsageService, useValue: mockTenantUsage },
       ],
     }).compile();
 
