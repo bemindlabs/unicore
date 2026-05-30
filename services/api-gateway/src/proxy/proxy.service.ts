@@ -14,6 +14,7 @@ export interface ProxyRequestOptions {
   headers: Record<string, string | string[] | undefined>;
   body: Buffer | null;
   userId?: string;
+  tenantId?: string;
 }
 
 export interface ProxyResponse {
@@ -69,6 +70,19 @@ export class ProxyService {
         !/[\r\n\0]/.test(options.userId)
       ) {
         forwardHeaders['x-user-id'] = options.userId;
+      }
+
+      // SaaS phase 4.3: same fail-closed treatment for the tenant context.
+      // Always strip any client-supplied x-tenant-id, then re-inject only the
+      // trusted value resolved from the JWT (`tid`) / self-host default.
+      delete forwardHeaders['x-tenant-id'];
+
+      if (
+        options.tenantId &&
+        typeof options.tenantId === 'string' &&
+        !/[\r\n\0]/.test(options.tenantId)
+      ) {
+        forwardHeaders['x-tenant-id'] = options.tenantId;
       }
 
       delete forwardHeaders['connection'];

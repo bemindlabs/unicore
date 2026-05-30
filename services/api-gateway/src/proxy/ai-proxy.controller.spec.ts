@@ -53,7 +53,7 @@ describe('AiProxyController', () => {
     const res = makeRes();
     mockProxyService.forward.mockResolvedValue({ statusCode: 200, headers: {}, body: Buffer.from('{}') });
 
-    await controller.proxyAi(req, res, 'user-1');
+    await controller.proxyAi(req, res, 'user-1', 'tenant-1');
 
     expect(mockProxyService.forward).toHaveBeenCalledWith(
       expect.objectContaining({ path: '/ai/api/v1/llm/complete' }),
@@ -65,7 +65,7 @@ describe('AiProxyController', () => {
     const res = makeRes();
     mockProxyService.forward.mockResolvedValue({ statusCode: 200, headers: {}, body: Buffer.from('[]') });
 
-    await controller.proxyAi(req, res, 'user-1');
+    await controller.proxyAi(req, res, 'user-1', 'tenant-1');
 
     expect(mockProxyService.forward).toHaveBeenCalledWith(
       expect.objectContaining({ path: '/ai/api/v1/llm/models?provider=openai' }),
@@ -77,7 +77,7 @@ describe('AiProxyController', () => {
     const res = makeRes();
     mockProxyService.forward.mockResolvedValue({ statusCode: 200, headers: {}, body: Buffer.from('{}') });
 
-    await controller.proxyAi(req, res, 'user-xyz');
+    await controller.proxyAi(req, res, 'user-xyz', 'tenant-1');
 
     expect(mockProxyService.forward).toHaveBeenCalledWith(
       expect.objectContaining({ userId: 'user-xyz' }),
@@ -94,7 +94,7 @@ describe('AiProxyController', () => {
       body: Buffer.from('{"status":"ok"}'),
     });
 
-    await controller.proxyAi(req, res, 'user-1');
+    await controller.proxyAi(req, res, 'user-1', 'tenant-1');
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.setHeader).toHaveBeenCalledWith('content-type', 'application/json');
@@ -106,7 +106,7 @@ describe('AiProxyController', () => {
     const res = makeRes();
     mockProxyService.forward.mockRejectedValue(new Error('connection refused'));
 
-    await expect(controller.proxyAi(req, res, 'user-1')).rejects.toMatchObject({
+    await expect(controller.proxyAi(req, res, 'user-1', 'tenant-1')).rejects.toMatchObject({
       status: HttpStatus.BAD_GATEWAY,
     });
   });
@@ -117,7 +117,7 @@ describe('AiProxyController', () => {
     const err = new HttpException('Service unavailable', HttpStatus.SERVICE_UNAVAILABLE);
     mockProxyService.forward.mockRejectedValue(err);
 
-    await expect(controller.proxyAi(req, res, 'user-1')).rejects.toThrow(err);
+    await expect(controller.proxyAi(req, res, 'user-1', 'tenant-1')).rejects.toThrow(err);
   });
 
   it('reads JSON body from req.body', async () => {
@@ -125,7 +125,7 @@ describe('AiProxyController', () => {
     const res = makeRes();
     mockProxyService.forward.mockResolvedValue({ statusCode: 200, headers: {}, body: Buffer.from('{}') });
 
-    await controller.proxyAi(req, res, 'user-1');
+    await controller.proxyAi(req, res, 'user-1', 'tenant-1');
 
     const forwardCall = mockProxyService.forward.mock.calls[0][0];
     expect(forwardCall.body.toString()).toBe(JSON.stringify({ prompt: 'hello' }));
