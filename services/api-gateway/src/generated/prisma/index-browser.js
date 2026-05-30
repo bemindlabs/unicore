@@ -179,6 +179,7 @@ exports.Prisma.CustomDomainScalarFieldEnum = {
 
 exports.Prisma.AuditLogScalarFieldEnum = {
   id: 'id',
+  tenantId: 'tenantId',
   timestamp: 'timestamp',
   userId: 'userId',
   userEmail: 'userEmail',
@@ -193,12 +194,14 @@ exports.Prisma.AuditLogScalarFieldEnum = {
 
 exports.Prisma.SettingsScalarFieldEnum = {
   id: 'id',
+  tenantId: 'tenantId',
   data: 'data',
   updatedAt: 'updatedAt'
 };
 
 exports.Prisma.TaskScalarFieldEnum = {
   id: 'id',
+  tenantId: 'tenantId',
   title: 'title',
   description: 'description',
   status: 'status',
@@ -219,6 +222,7 @@ exports.Prisma.TaskScalarFieldEnum = {
 
 exports.Prisma.ChatHistoryScalarFieldEnum = {
   id: 'id',
+  tenantId: 'tenantId',
   agentId: 'agentId',
   agentName: 'agentName',
   userId: 'userId',
@@ -305,6 +309,7 @@ exports.Prisma.PluginInstallationScalarFieldEnum = {
 
 exports.Prisma.ContactChannelScalarFieldEnum = {
   id: 'id',
+  tenantId: 'tenantId',
   channel: 'channel',
   externalId: 'externalId',
   displayName: 'displayName',
@@ -317,6 +322,7 @@ exports.Prisma.ContactChannelScalarFieldEnum = {
 
 exports.Prisma.ConversationScalarFieldEnum = {
   id: 'id',
+  tenantId: 'tenantId',
   channel: 'channel',
   status: 'status',
   subject: 'subject',

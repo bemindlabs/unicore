@@ -118,6 +118,8 @@ model CustomDomain {
 
 model AuditLog {
   id         String   @id @default(uuid())
+  /// Owning tenant (SaaS phase 4.4). RLS-enforced; backfilled to the default tenant.
+  tenantId   String   @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   timestamp  DateTime @default(now())
   userId     String?
   userEmail  String?
@@ -129,6 +131,7 @@ model AuditLog {
   success    Boolean  @default(true)
   createdAt  DateTime @default(now())
 
+  @@index([tenantId])
   @@index([timestamp])
   @@index([userId])
   @@index([action])
@@ -141,9 +144,14 @@ model AuditLog {
 // ---------------------------------------------------------------------------
 
 model Settings {
+  /// Per-tenant settings row. In self-host the single "default" row carries the
+  /// default tenant; in saas each tenant gets its own row keyed by id == tenantId.
   id        String   @id @default("default")
+  tenantId  String   @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   data      Json     @default("{}")
   updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
 }
 
 // ---------------------------------------------------------------------------
@@ -152,6 +160,7 @@ model Settings {
 
 model Task {
   id            String    @id @default(uuid())
+  tenantId      String    @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   title         String
   description   String?
   status        String    @default("todo")
@@ -169,6 +178,7 @@ model Task {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  @@index([tenantId])
   @@index([status])
   @@map("tasks")
 }
@@ -179,6 +189,7 @@ model Task {
 
 model ChatHistory {
   id                String    @id @default(uuid())
+  tenantId          String    @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   agentId           String
   agentName         String
   userId            String
@@ -195,6 +206,7 @@ model ChatHistory {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
+  @@index([tenantId])
   @@index([agentId])
   @@index([userId])
   @@index([createdAt])
@@ -355,6 +367,7 @@ enum MessageDirection {
 /// A contact's identity on a specific messaging channel
 model ContactChannel {
   id            String              @id @default(uuid())
+  tenantId      String              @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   channel       ConversationChannel
   /// Unique identifier on the channel (e.g. Telegram user_id, LINE userId)
   externalId    String
@@ -369,6 +382,7 @@ model ContactChannel {
   updatedAt     DateTime            @updatedAt
 
   @@unique([channel, externalId])
+  @@index([tenantId])
   @@index([channel])
   @@index([erpContactId])
   @@map("contact_channels")
@@ -377,6 +391,7 @@ model ContactChannel {
 /// An omni-channel conversation thread
 model Conversation {
   id               String                    @id @default(uuid())
+  tenantId         String                    @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   channel          ConversationChannel
   status           ConversationStatus        @default(OPEN)
   subject          String?
@@ -406,6 +421,7 @@ model Conversation {
   createdAt        DateTime                  @default(now())
   updatedAt        DateTime                  @updatedAt
 
+  @@index([tenantId])
   @@index([channel])
   @@index([status])
   @@index([userId])

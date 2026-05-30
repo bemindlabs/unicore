@@ -8826,6 +8826,7 @@ export namespace Prisma {
 
   export type AuditLogMinAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     timestamp: Date | null
     userId: string | null
     userEmail: string | null
@@ -8840,6 +8841,7 @@ export namespace Prisma {
 
   export type AuditLogMaxAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     timestamp: Date | null
     userId: string | null
     userEmail: string | null
@@ -8854,6 +8856,7 @@ export namespace Prisma {
 
   export type AuditLogCountAggregateOutputType = {
     id: number
+    tenantId: number
     timestamp: number
     userId: number
     userEmail: number
@@ -8870,6 +8873,7 @@ export namespace Prisma {
 
   export type AuditLogMinAggregateInputType = {
     id?: true
+    tenantId?: true
     timestamp?: true
     userId?: true
     userEmail?: true
@@ -8884,6 +8888,7 @@ export namespace Prisma {
 
   export type AuditLogMaxAggregateInputType = {
     id?: true
+    tenantId?: true
     timestamp?: true
     userId?: true
     userEmail?: true
@@ -8898,6 +8903,7 @@ export namespace Prisma {
 
   export type AuditLogCountAggregateInputType = {
     id?: true
+    tenantId?: true
     timestamp?: true
     userId?: true
     userEmail?: true
@@ -8985,6 +8991,7 @@ export namespace Prisma {
 
   export type AuditLogGroupByOutputType = {
     id: string
+    tenantId: string
     timestamp: Date
     userId: string | null
     userEmail: string | null
@@ -9016,6 +9023,7 @@ export namespace Prisma {
 
   export type AuditLogSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     timestamp?: boolean
     userId?: boolean
     userEmail?: boolean
@@ -9030,6 +9038,7 @@ export namespace Prisma {
 
   export type AuditLogSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     timestamp?: boolean
     userId?: boolean
     userEmail?: boolean
@@ -9044,6 +9053,7 @@ export namespace Prisma {
 
   export type AuditLogSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     timestamp?: boolean
     userId?: boolean
     userEmail?: boolean
@@ -9058,6 +9068,7 @@ export namespace Prisma {
 
   export type AuditLogSelectScalar = {
     id?: boolean
+    tenantId?: boolean
     timestamp?: boolean
     userId?: boolean
     userEmail?: boolean
@@ -9070,13 +9081,17 @@ export namespace Prisma {
     createdAt?: boolean
   }
 
-  export type AuditLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "timestamp" | "userId" | "userEmail" | "action" | "resource" | "resourceId" | "detail" | "ip" | "success" | "createdAt", ExtArgs["result"]["auditLog"]>
+  export type AuditLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "timestamp" | "userId" | "userEmail" | "action" | "resource" | "resourceId" | "detail" | "ip" | "success" | "createdAt", ExtArgs["result"]["auditLog"]>
 
   export type $AuditLogPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "AuditLog"
     objects: {}
     scalars: $Extensions.GetPayloadResult<{
       id: string
+      /**
+       * Owning tenant (SaaS phase 4.4). RLS-enforced; backfilled to the default tenant.
+       */
+      tenantId: string
       timestamp: Date
       userId: string | null
       userEmail: string | null
@@ -9511,6 +9526,7 @@ export namespace Prisma {
    */
   interface AuditLogFieldRefs {
     readonly id: FieldRef<"AuditLog", 'String'>
+    readonly tenantId: FieldRef<"AuditLog", 'String'>
     readonly timestamp: FieldRef<"AuditLog", 'DateTime'>
     readonly userId: FieldRef<"AuditLog", 'String'>
     readonly userEmail: FieldRef<"AuditLog", 'String'>
@@ -9899,16 +9915,19 @@ export namespace Prisma {
 
   export type SettingsMinAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     updatedAt: Date | null
   }
 
   export type SettingsMaxAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     updatedAt: Date | null
   }
 
   export type SettingsCountAggregateOutputType = {
     id: number
+    tenantId: number
     data: number
     updatedAt: number
     _all: number
@@ -9917,16 +9936,19 @@ export namespace Prisma {
 
   export type SettingsMinAggregateInputType = {
     id?: true
+    tenantId?: true
     updatedAt?: true
   }
 
   export type SettingsMaxAggregateInputType = {
     id?: true
+    tenantId?: true
     updatedAt?: true
   }
 
   export type SettingsCountAggregateInputType = {
     id?: true
+    tenantId?: true
     data?: true
     updatedAt?: true
     _all?: true
@@ -10006,6 +10028,7 @@ export namespace Prisma {
 
   export type SettingsGroupByOutputType = {
     id: string
+    tenantId: string
     data: JsonValue
     updatedAt: Date
     _count: SettingsCountAggregateOutputType | null
@@ -10029,35 +10052,44 @@ export namespace Prisma {
 
   export type SettingsSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     data?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["settings"]>
 
   export type SettingsSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     data?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["settings"]>
 
   export type SettingsSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     data?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["settings"]>
 
   export type SettingsSelectScalar = {
     id?: boolean
+    tenantId?: boolean
     data?: boolean
     updatedAt?: boolean
   }
 
-  export type SettingsOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "data" | "updatedAt", ExtArgs["result"]["settings"]>
+  export type SettingsOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "data" | "updatedAt", ExtArgs["result"]["settings"]>
 
   export type $SettingsPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Settings"
     objects: {}
     scalars: $Extensions.GetPayloadResult<{
+      /**
+       * Per-tenant settings row. In self-host the single "default" row carries the
+       * default tenant; in saas each tenant gets its own row keyed by id == tenantId.
+       */
       id: string
+      tenantId: string
       data: Prisma.JsonValue
       updatedAt: Date
     }, ExtArgs["result"]["settings"]>
@@ -10484,6 +10516,7 @@ export namespace Prisma {
    */
   interface SettingsFieldRefs {
     readonly id: FieldRef<"Settings", 'String'>
+    readonly tenantId: FieldRef<"Settings", 'String'>
     readonly data: FieldRef<"Settings", 'Json'>
     readonly updatedAt: FieldRef<"Settings", 'DateTime'>
   }
@@ -10874,6 +10907,7 @@ export namespace Prisma {
 
   export type TaskMinAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     title: string | null
     description: string | null
     status: string | null
@@ -10893,6 +10927,7 @@ export namespace Prisma {
 
   export type TaskMaxAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     title: string | null
     description: string | null
     status: string | null
@@ -10912,6 +10947,7 @@ export namespace Prisma {
 
   export type TaskCountAggregateOutputType = {
     id: number
+    tenantId: number
     title: number
     description: number
     status: number
@@ -10942,6 +10978,7 @@ export namespace Prisma {
 
   export type TaskMinAggregateInputType = {
     id?: true
+    tenantId?: true
     title?: true
     description?: true
     status?: true
@@ -10961,6 +10998,7 @@ export namespace Prisma {
 
   export type TaskMaxAggregateInputType = {
     id?: true
+    tenantId?: true
     title?: true
     description?: true
     status?: true
@@ -10980,6 +11018,7 @@ export namespace Prisma {
 
   export type TaskCountAggregateInputType = {
     id?: true
+    tenantId?: true
     title?: true
     description?: true
     status?: true
@@ -11087,6 +11126,7 @@ export namespace Prisma {
 
   export type TaskGroupByOutputType = {
     id: string
+    tenantId: string
     title: string
     description: string | null
     status: string
@@ -11126,6 +11166,7 @@ export namespace Prisma {
 
   export type TaskSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     title?: boolean
     description?: boolean
     status?: boolean
@@ -11146,6 +11187,7 @@ export namespace Prisma {
 
   export type TaskSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     title?: boolean
     description?: boolean
     status?: boolean
@@ -11166,6 +11208,7 @@ export namespace Prisma {
 
   export type TaskSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     title?: boolean
     description?: boolean
     status?: boolean
@@ -11186,6 +11229,7 @@ export namespace Prisma {
 
   export type TaskSelectScalar = {
     id?: boolean
+    tenantId?: boolean
     title?: boolean
     description?: boolean
     status?: boolean
@@ -11204,13 +11248,14 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type TaskOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "title" | "description" | "status" | "priority" | "labels" | "assigneeId" | "assigneeType" | "assigneeName" | "assigneeColor" | "creatorId" | "creatorType" | "progress" | "agentTaskRef" | "completedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["task"]>
+  export type TaskOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "title" | "description" | "status" | "priority" | "labels" | "assigneeId" | "assigneeType" | "assigneeName" | "assigneeColor" | "creatorId" | "creatorType" | "progress" | "agentTaskRef" | "completedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["task"]>
 
   export type $TaskPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Task"
     objects: {}
     scalars: $Extensions.GetPayloadResult<{
       id: string
+      tenantId: string
       title: string
       description: string | null
       status: string
@@ -11651,6 +11696,7 @@ export namespace Prisma {
    */
   interface TaskFieldRefs {
     readonly id: FieldRef<"Task", 'String'>
+    readonly tenantId: FieldRef<"Task", 'String'>
     readonly title: FieldRef<"Task", 'String'>
     readonly description: FieldRef<"Task", 'String'>
     readonly status: FieldRef<"Task", 'String'>
@@ -12045,6 +12091,7 @@ export namespace Prisma {
 
   export type ChatHistoryMinAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     agentId: string | null
     agentName: string | null
     userId: string | null
@@ -12060,6 +12107,7 @@ export namespace Prisma {
 
   export type ChatHistoryMaxAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     agentId: string | null
     agentName: string | null
     userId: string | null
@@ -12075,6 +12123,7 @@ export namespace Prisma {
 
   export type ChatHistoryCountAggregateOutputType = {
     id: number
+    tenantId: number
     agentId: number
     agentName: number
     userId: number
@@ -12096,6 +12145,7 @@ export namespace Prisma {
 
   export type ChatHistoryMinAggregateInputType = {
     id?: true
+    tenantId?: true
     agentId?: true
     agentName?: true
     userId?: true
@@ -12111,6 +12161,7 @@ export namespace Prisma {
 
   export type ChatHistoryMaxAggregateInputType = {
     id?: true
+    tenantId?: true
     agentId?: true
     agentName?: true
     userId?: true
@@ -12126,6 +12177,7 @@ export namespace Prisma {
 
   export type ChatHistoryCountAggregateInputType = {
     id?: true
+    tenantId?: true
     agentId?: true
     agentName?: true
     userId?: true
@@ -12218,6 +12270,7 @@ export namespace Prisma {
 
   export type ChatHistoryGroupByOutputType = {
     id: string
+    tenantId: string
     agentId: string
     agentName: string
     userId: string
@@ -12254,6 +12307,7 @@ export namespace Prisma {
 
   export type ChatHistorySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     agentId?: boolean
     agentName?: boolean
     userId?: boolean
@@ -12273,6 +12327,7 @@ export namespace Prisma {
 
   export type ChatHistorySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     agentId?: boolean
     agentName?: boolean
     userId?: boolean
@@ -12292,6 +12347,7 @@ export namespace Prisma {
 
   export type ChatHistorySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     agentId?: boolean
     agentName?: boolean
     userId?: boolean
@@ -12311,6 +12367,7 @@ export namespace Prisma {
 
   export type ChatHistorySelectScalar = {
     id?: boolean
+    tenantId?: boolean
     agentId?: boolean
     agentName?: boolean
     userId?: boolean
@@ -12328,13 +12385,14 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type ChatHistoryOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "agentId" | "agentName" | "userId" | "userName" | "messages" | "summary" | "channel" | "aiSummary" | "sentimentOverall" | "messageSentiments" | "intentHistory" | "keyEntities" | "intelligenceAt" | "createdAt" | "updatedAt", ExtArgs["result"]["chatHistory"]>
+  export type ChatHistoryOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "agentId" | "agentName" | "userId" | "userName" | "messages" | "summary" | "channel" | "aiSummary" | "sentimentOverall" | "messageSentiments" | "intentHistory" | "keyEntities" | "intelligenceAt" | "createdAt" | "updatedAt", ExtArgs["result"]["chatHistory"]>
 
   export type $ChatHistoryPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "ChatHistory"
     objects: {}
     scalars: $Extensions.GetPayloadResult<{
       id: string
+      tenantId: string
       agentId: string
       agentName: string
       userId: string
@@ -12774,6 +12832,7 @@ export namespace Prisma {
    */
   interface ChatHistoryFieldRefs {
     readonly id: FieldRef<"ChatHistory", 'String'>
+    readonly tenantId: FieldRef<"ChatHistory", 'String'>
     readonly agentId: FieldRef<"ChatHistory", 'String'>
     readonly agentName: FieldRef<"ChatHistory", 'String'>
     readonly userId: FieldRef<"ChatHistory", 'String'>
@@ -18790,6 +18849,7 @@ export namespace Prisma {
 
   export type ContactChannelMinAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     channel: $Enums.ConversationChannel | null
     externalId: string | null
     displayName: string | null
@@ -18801,6 +18861,7 @@ export namespace Prisma {
 
   export type ContactChannelMaxAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     channel: $Enums.ConversationChannel | null
     externalId: string | null
     displayName: string | null
@@ -18812,6 +18873,7 @@ export namespace Prisma {
 
   export type ContactChannelCountAggregateOutputType = {
     id: number
+    tenantId: number
     channel: number
     externalId: number
     displayName: number
@@ -18826,6 +18888,7 @@ export namespace Prisma {
 
   export type ContactChannelMinAggregateInputType = {
     id?: true
+    tenantId?: true
     channel?: true
     externalId?: true
     displayName?: true
@@ -18837,6 +18900,7 @@ export namespace Prisma {
 
   export type ContactChannelMaxAggregateInputType = {
     id?: true
+    tenantId?: true
     channel?: true
     externalId?: true
     displayName?: true
@@ -18848,6 +18912,7 @@ export namespace Prisma {
 
   export type ContactChannelCountAggregateInputType = {
     id?: true
+    tenantId?: true
     channel?: true
     externalId?: true
     displayName?: true
@@ -18933,6 +18998,7 @@ export namespace Prisma {
 
   export type ContactChannelGroupByOutputType = {
     id: string
+    tenantId: string
     channel: $Enums.ConversationChannel
     externalId: string
     displayName: string | null
@@ -18962,6 +19028,7 @@ export namespace Prisma {
 
   export type ContactChannelSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     channel?: boolean
     externalId?: boolean
     displayName?: boolean
@@ -18976,6 +19043,7 @@ export namespace Prisma {
 
   export type ContactChannelSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     channel?: boolean
     externalId?: boolean
     displayName?: boolean
@@ -18988,6 +19056,7 @@ export namespace Prisma {
 
   export type ContactChannelSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     channel?: boolean
     externalId?: boolean
     displayName?: boolean
@@ -19000,6 +19069,7 @@ export namespace Prisma {
 
   export type ContactChannelSelectScalar = {
     id?: boolean
+    tenantId?: boolean
     channel?: boolean
     externalId?: boolean
     displayName?: boolean
@@ -19010,7 +19080,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type ContactChannelOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "channel" | "externalId" | "displayName" | "avatarUrl" | "metadata" | "erpContactId" | "createdAt" | "updatedAt", ExtArgs["result"]["contactChannel"]>
+  export type ContactChannelOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "channel" | "externalId" | "displayName" | "avatarUrl" | "metadata" | "erpContactId" | "createdAt" | "updatedAt", ExtArgs["result"]["contactChannel"]>
   export type ContactChannelInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     conversations?: boolean | ContactChannel$conversationsArgs<ExtArgs>
     _count?: boolean | ContactChannelCountOutputTypeDefaultArgs<ExtArgs>
@@ -19025,6 +19095,7 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
+      tenantId: string
       channel: $Enums.ConversationChannel
       /**
        * Unique identifier on the channel (e.g. Telegram user_id, LINE userId)
@@ -19467,6 +19538,7 @@ export namespace Prisma {
    */
   interface ContactChannelFieldRefs {
     readonly id: FieldRef<"ContactChannel", 'String'>
+    readonly tenantId: FieldRef<"ContactChannel", 'String'>
     readonly channel: FieldRef<"ContactChannel", 'ConversationChannel'>
     readonly externalId: FieldRef<"ContactChannel", 'String'>
     readonly displayName: FieldRef<"ContactChannel", 'String'>
@@ -19917,6 +19989,7 @@ export namespace Prisma {
 
   export type ConversationMinAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     channel: $Enums.ConversationChannel | null
     status: $Enums.ConversationStatus | null
     subject: string | null
@@ -19939,6 +20012,7 @@ export namespace Prisma {
 
   export type ConversationMaxAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     channel: $Enums.ConversationChannel | null
     status: $Enums.ConversationStatus | null
     subject: string | null
@@ -19961,6 +20035,7 @@ export namespace Prisma {
 
   export type ConversationCountAggregateOutputType = {
     id: number
+    tenantId: number
     channel: number
     status: number
     subject: number
@@ -19986,6 +20061,7 @@ export namespace Prisma {
 
   export type ConversationMinAggregateInputType = {
     id?: true
+    tenantId?: true
     channel?: true
     status?: true
     subject?: true
@@ -20008,6 +20084,7 @@ export namespace Prisma {
 
   export type ConversationMaxAggregateInputType = {
     id?: true
+    tenantId?: true
     channel?: true
     status?: true
     subject?: true
@@ -20030,6 +20107,7 @@ export namespace Prisma {
 
   export type ConversationCountAggregateInputType = {
     id?: true
+    tenantId?: true
     channel?: true
     status?: true
     subject?: true
@@ -20126,6 +20204,7 @@ export namespace Prisma {
 
   export type ConversationGroupByOutputType = {
     id: string
+    tenantId: string
     channel: $Enums.ConversationChannel
     status: $Enums.ConversationStatus
     subject: string | null
@@ -20166,6 +20245,7 @@ export namespace Prisma {
 
   export type ConversationSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     channel?: boolean
     status?: boolean
     subject?: boolean
@@ -20194,6 +20274,7 @@ export namespace Prisma {
 
   export type ConversationSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     channel?: boolean
     status?: boolean
     subject?: boolean
@@ -20218,6 +20299,7 @@ export namespace Prisma {
 
   export type ConversationSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     channel?: boolean
     status?: boolean
     subject?: boolean
@@ -20242,6 +20324,7 @@ export namespace Prisma {
 
   export type ConversationSelectScalar = {
     id?: boolean
+    tenantId?: boolean
     channel?: boolean
     status?: boolean
     subject?: boolean
@@ -20263,7 +20346,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type ConversationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "channel" | "status" | "subject" | "title" | "userId" | "assigneeName" | "contactId" | "contactName" | "contactEmail" | "externalId" | "assigneeId" | "autoRespond" | "contactChannelId" | "resolvedAt" | "closedAt" | "lastMessageAt" | "metadata" | "createdAt" | "updatedAt", ExtArgs["result"]["conversation"]>
+  export type ConversationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "channel" | "status" | "subject" | "title" | "userId" | "assigneeName" | "contactId" | "contactName" | "contactEmail" | "externalId" | "assigneeId" | "autoRespond" | "contactChannelId" | "resolvedAt" | "closedAt" | "lastMessageAt" | "metadata" | "createdAt" | "updatedAt", ExtArgs["result"]["conversation"]>
   export type ConversationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     contactChannel?: boolean | Conversation$contactChannelArgs<ExtArgs>
     messages?: boolean | Conversation$messagesArgs<ExtArgs>
@@ -20288,6 +20371,7 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
+      tenantId: string
       channel: $Enums.ConversationChannel
       status: $Enums.ConversationStatus
       subject: string | null
@@ -20750,6 +20834,7 @@ export namespace Prisma {
    */
   interface ConversationFieldRefs {
     readonly id: FieldRef<"Conversation", 'String'>
+    readonly tenantId: FieldRef<"Conversation", 'String'>
     readonly channel: FieldRef<"Conversation", 'ConversationChannel'>
     readonly status: FieldRef<"Conversation", 'ConversationStatus'>
     readonly subject: FieldRef<"Conversation", 'String'>
@@ -30390,6 +30475,7 @@ export namespace Prisma {
 
   export const AuditLogScalarFieldEnum: {
     id: 'id',
+    tenantId: 'tenantId',
     timestamp: 'timestamp',
     userId: 'userId',
     userEmail: 'userEmail',
@@ -30407,6 +30493,7 @@ export namespace Prisma {
 
   export const SettingsScalarFieldEnum: {
     id: 'id',
+    tenantId: 'tenantId',
     data: 'data',
     updatedAt: 'updatedAt'
   };
@@ -30416,6 +30503,7 @@ export namespace Prisma {
 
   export const TaskScalarFieldEnum: {
     id: 'id',
+    tenantId: 'tenantId',
     title: 'title',
     description: 'description',
     status: 'status',
@@ -30439,6 +30527,7 @@ export namespace Prisma {
 
   export const ChatHistoryScalarFieldEnum: {
     id: 'id',
+    tenantId: 'tenantId',
     agentId: 'agentId',
     agentName: 'agentName',
     userId: 'userId',
@@ -30543,6 +30632,7 @@ export namespace Prisma {
 
   export const ContactChannelScalarFieldEnum: {
     id: 'id',
+    tenantId: 'tenantId',
     channel: 'channel',
     externalId: 'externalId',
     displayName: 'displayName',
@@ -30558,6 +30648,7 @@ export namespace Prisma {
 
   export const ConversationScalarFieldEnum: {
     id: 'id',
+    tenantId: 'tenantId',
     channel: 'channel',
     status: 'status',
     subject: 'subject',
@@ -31286,6 +31377,7 @@ export namespace Prisma {
     OR?: AuditLogWhereInput[]
     NOT?: AuditLogWhereInput | AuditLogWhereInput[]
     id?: StringFilter<"AuditLog"> | string
+    tenantId?: UuidFilter<"AuditLog"> | string
     timestamp?: DateTimeFilter<"AuditLog"> | Date | string
     userId?: StringNullableFilter<"AuditLog"> | string | null
     userEmail?: StringNullableFilter<"AuditLog"> | string | null
@@ -31300,6 +31392,7 @@ export namespace Prisma {
 
   export type AuditLogOrderByWithRelationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     timestamp?: SortOrder
     userId?: SortOrderInput | SortOrder
     userEmail?: SortOrderInput | SortOrder
@@ -31317,6 +31410,7 @@ export namespace Prisma {
     AND?: AuditLogWhereInput | AuditLogWhereInput[]
     OR?: AuditLogWhereInput[]
     NOT?: AuditLogWhereInput | AuditLogWhereInput[]
+    tenantId?: UuidFilter<"AuditLog"> | string
     timestamp?: DateTimeFilter<"AuditLog"> | Date | string
     userId?: StringNullableFilter<"AuditLog"> | string | null
     userEmail?: StringNullableFilter<"AuditLog"> | string | null
@@ -31331,6 +31425,7 @@ export namespace Prisma {
 
   export type AuditLogOrderByWithAggregationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     timestamp?: SortOrder
     userId?: SortOrderInput | SortOrder
     userEmail?: SortOrderInput | SortOrder
@@ -31351,6 +31446,7 @@ export namespace Prisma {
     OR?: AuditLogScalarWhereWithAggregatesInput[]
     NOT?: AuditLogScalarWhereWithAggregatesInput | AuditLogScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"AuditLog"> | string
+    tenantId?: UuidWithAggregatesFilter<"AuditLog"> | string
     timestamp?: DateTimeWithAggregatesFilter<"AuditLog"> | Date | string
     userId?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
     userEmail?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
@@ -31368,12 +31464,14 @@ export namespace Prisma {
     OR?: SettingsWhereInput[]
     NOT?: SettingsWhereInput | SettingsWhereInput[]
     id?: StringFilter<"Settings"> | string
+    tenantId?: UuidFilter<"Settings"> | string
     data?: JsonFilter<"Settings">
     updatedAt?: DateTimeFilter<"Settings"> | Date | string
   }
 
   export type SettingsOrderByWithRelationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     data?: SortOrder
     updatedAt?: SortOrder
   }
@@ -31383,12 +31481,14 @@ export namespace Prisma {
     AND?: SettingsWhereInput | SettingsWhereInput[]
     OR?: SettingsWhereInput[]
     NOT?: SettingsWhereInput | SettingsWhereInput[]
+    tenantId?: UuidFilter<"Settings"> | string
     data?: JsonFilter<"Settings">
     updatedAt?: DateTimeFilter<"Settings"> | Date | string
   }, "id">
 
   export type SettingsOrderByWithAggregationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     data?: SortOrder
     updatedAt?: SortOrder
     _count?: SettingsCountOrderByAggregateInput
@@ -31401,6 +31501,7 @@ export namespace Prisma {
     OR?: SettingsScalarWhereWithAggregatesInput[]
     NOT?: SettingsScalarWhereWithAggregatesInput | SettingsScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"Settings"> | string
+    tenantId?: UuidWithAggregatesFilter<"Settings"> | string
     data?: JsonWithAggregatesFilter<"Settings">
     updatedAt?: DateTimeWithAggregatesFilter<"Settings"> | Date | string
   }
@@ -31410,6 +31511,7 @@ export namespace Prisma {
     OR?: TaskWhereInput[]
     NOT?: TaskWhereInput | TaskWhereInput[]
     id?: StringFilter<"Task"> | string
+    tenantId?: UuidFilter<"Task"> | string
     title?: StringFilter<"Task"> | string
     description?: StringNullableFilter<"Task"> | string | null
     status?: StringFilter<"Task"> | string
@@ -31430,6 +31532,7 @@ export namespace Prisma {
 
   export type TaskOrderByWithRelationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     title?: SortOrder
     description?: SortOrderInput | SortOrder
     status?: SortOrder
@@ -31453,6 +31556,7 @@ export namespace Prisma {
     AND?: TaskWhereInput | TaskWhereInput[]
     OR?: TaskWhereInput[]
     NOT?: TaskWhereInput | TaskWhereInput[]
+    tenantId?: UuidFilter<"Task"> | string
     title?: StringFilter<"Task"> | string
     description?: StringNullableFilter<"Task"> | string | null
     status?: StringFilter<"Task"> | string
@@ -31473,6 +31577,7 @@ export namespace Prisma {
 
   export type TaskOrderByWithAggregationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     title?: SortOrder
     description?: SortOrderInput | SortOrder
     status?: SortOrder
@@ -31501,6 +31606,7 @@ export namespace Prisma {
     OR?: TaskScalarWhereWithAggregatesInput[]
     NOT?: TaskScalarWhereWithAggregatesInput | TaskScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"Task"> | string
+    tenantId?: UuidWithAggregatesFilter<"Task"> | string
     title?: StringWithAggregatesFilter<"Task"> | string
     description?: StringNullableWithAggregatesFilter<"Task"> | string | null
     status?: StringWithAggregatesFilter<"Task"> | string
@@ -31524,6 +31630,7 @@ export namespace Prisma {
     OR?: ChatHistoryWhereInput[]
     NOT?: ChatHistoryWhereInput | ChatHistoryWhereInput[]
     id?: StringFilter<"ChatHistory"> | string
+    tenantId?: UuidFilter<"ChatHistory"> | string
     agentId?: StringFilter<"ChatHistory"> | string
     agentName?: StringFilter<"ChatHistory"> | string
     userId?: StringFilter<"ChatHistory"> | string
@@ -31543,6 +31650,7 @@ export namespace Prisma {
 
   export type ChatHistoryOrderByWithRelationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     agentId?: SortOrder
     agentName?: SortOrder
     userId?: SortOrder
@@ -31565,6 +31673,7 @@ export namespace Prisma {
     AND?: ChatHistoryWhereInput | ChatHistoryWhereInput[]
     OR?: ChatHistoryWhereInput[]
     NOT?: ChatHistoryWhereInput | ChatHistoryWhereInput[]
+    tenantId?: UuidFilter<"ChatHistory"> | string
     agentId?: StringFilter<"ChatHistory"> | string
     agentName?: StringFilter<"ChatHistory"> | string
     userId?: StringFilter<"ChatHistory"> | string
@@ -31584,6 +31693,7 @@ export namespace Prisma {
 
   export type ChatHistoryOrderByWithAggregationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     agentId?: SortOrder
     agentName?: SortOrder
     userId?: SortOrder
@@ -31609,6 +31719,7 @@ export namespace Prisma {
     OR?: ChatHistoryScalarWhereWithAggregatesInput[]
     NOT?: ChatHistoryScalarWhereWithAggregatesInput | ChatHistoryScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"ChatHistory"> | string
+    tenantId?: UuidWithAggregatesFilter<"ChatHistory"> | string
     agentId?: StringWithAggregatesFilter<"ChatHistory"> | string
     agentName?: StringWithAggregatesFilter<"ChatHistory"> | string
     userId?: StringWithAggregatesFilter<"ChatHistory"> | string
@@ -32044,6 +32155,7 @@ export namespace Prisma {
     OR?: ContactChannelWhereInput[]
     NOT?: ContactChannelWhereInput | ContactChannelWhereInput[]
     id?: StringFilter<"ContactChannel"> | string
+    tenantId?: UuidFilter<"ContactChannel"> | string
     channel?: EnumConversationChannelFilter<"ContactChannel"> | $Enums.ConversationChannel
     externalId?: StringFilter<"ContactChannel"> | string
     displayName?: StringNullableFilter<"ContactChannel"> | string | null
@@ -32057,6 +32169,7 @@ export namespace Prisma {
 
   export type ContactChannelOrderByWithRelationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     channel?: SortOrder
     externalId?: SortOrder
     displayName?: SortOrderInput | SortOrder
@@ -32074,6 +32187,7 @@ export namespace Prisma {
     AND?: ContactChannelWhereInput | ContactChannelWhereInput[]
     OR?: ContactChannelWhereInput[]
     NOT?: ContactChannelWhereInput | ContactChannelWhereInput[]
+    tenantId?: UuidFilter<"ContactChannel"> | string
     channel?: EnumConversationChannelFilter<"ContactChannel"> | $Enums.ConversationChannel
     externalId?: StringFilter<"ContactChannel"> | string
     displayName?: StringNullableFilter<"ContactChannel"> | string | null
@@ -32087,6 +32201,7 @@ export namespace Prisma {
 
   export type ContactChannelOrderByWithAggregationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     channel?: SortOrder
     externalId?: SortOrder
     displayName?: SortOrderInput | SortOrder
@@ -32105,6 +32220,7 @@ export namespace Prisma {
     OR?: ContactChannelScalarWhereWithAggregatesInput[]
     NOT?: ContactChannelScalarWhereWithAggregatesInput | ContactChannelScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"ContactChannel"> | string
+    tenantId?: UuidWithAggregatesFilter<"ContactChannel"> | string
     channel?: EnumConversationChannelWithAggregatesFilter<"ContactChannel"> | $Enums.ConversationChannel
     externalId?: StringWithAggregatesFilter<"ContactChannel"> | string
     displayName?: StringNullableWithAggregatesFilter<"ContactChannel"> | string | null
@@ -32120,6 +32236,7 @@ export namespace Prisma {
     OR?: ConversationWhereInput[]
     NOT?: ConversationWhereInput | ConversationWhereInput[]
     id?: StringFilter<"Conversation"> | string
+    tenantId?: UuidFilter<"Conversation"> | string
     channel?: EnumConversationChannelFilter<"Conversation"> | $Enums.ConversationChannel
     status?: EnumConversationStatusFilter<"Conversation"> | $Enums.ConversationStatus
     subject?: StringNullableFilter<"Conversation"> | string | null
@@ -32147,6 +32264,7 @@ export namespace Prisma {
 
   export type ConversationOrderByWithRelationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     channel?: SortOrder
     status?: SortOrder
     subject?: SortOrderInput | SortOrder
@@ -32177,6 +32295,7 @@ export namespace Prisma {
     AND?: ConversationWhereInput | ConversationWhereInput[]
     OR?: ConversationWhereInput[]
     NOT?: ConversationWhereInput | ConversationWhereInput[]
+    tenantId?: UuidFilter<"Conversation"> | string
     channel?: EnumConversationChannelFilter<"Conversation"> | $Enums.ConversationChannel
     status?: EnumConversationStatusFilter<"Conversation"> | $Enums.ConversationStatus
     subject?: StringNullableFilter<"Conversation"> | string | null
@@ -32204,6 +32323,7 @@ export namespace Prisma {
 
   export type ConversationOrderByWithAggregationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     channel?: SortOrder
     status?: SortOrder
     subject?: SortOrderInput | SortOrder
@@ -32233,6 +32353,7 @@ export namespace Prisma {
     OR?: ConversationScalarWhereWithAggregatesInput[]
     NOT?: ConversationScalarWhereWithAggregatesInput | ConversationScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"Conversation"> | string
+    tenantId?: UuidWithAggregatesFilter<"Conversation"> | string
     channel?: EnumConversationChannelWithAggregatesFilter<"Conversation"> | $Enums.ConversationChannel
     status?: EnumConversationStatusWithAggregatesFilter<"Conversation"> | $Enums.ConversationStatus
     subject?: StringNullableWithAggregatesFilter<"Conversation"> | string | null
@@ -33363,6 +33484,7 @@ export namespace Prisma {
 
   export type AuditLogCreateInput = {
     id?: string
+    tenantId?: string
     timestamp?: Date | string
     userId?: string | null
     userEmail?: string | null
@@ -33377,6 +33499,7 @@ export namespace Prisma {
 
   export type AuditLogUncheckedCreateInput = {
     id?: string
+    tenantId?: string
     timestamp?: Date | string
     userId?: string | null
     userEmail?: string | null
@@ -33391,6 +33514,7 @@ export namespace Prisma {
 
   export type AuditLogUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
     userId?: NullableStringFieldUpdateOperationsInput | string | null
     userEmail?: NullableStringFieldUpdateOperationsInput | string | null
@@ -33405,6 +33529,7 @@ export namespace Prisma {
 
   export type AuditLogUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
     userId?: NullableStringFieldUpdateOperationsInput | string | null
     userEmail?: NullableStringFieldUpdateOperationsInput | string | null
@@ -33419,6 +33544,7 @@ export namespace Prisma {
 
   export type AuditLogCreateManyInput = {
     id?: string
+    tenantId?: string
     timestamp?: Date | string
     userId?: string | null
     userEmail?: string | null
@@ -33433,6 +33559,7 @@ export namespace Prisma {
 
   export type AuditLogUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
     userId?: NullableStringFieldUpdateOperationsInput | string | null
     userEmail?: NullableStringFieldUpdateOperationsInput | string | null
@@ -33447,6 +33574,7 @@ export namespace Prisma {
 
   export type AuditLogUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
     userId?: NullableStringFieldUpdateOperationsInput | string | null
     userEmail?: NullableStringFieldUpdateOperationsInput | string | null
@@ -33461,48 +33589,56 @@ export namespace Prisma {
 
   export type SettingsCreateInput = {
     id?: string
+    tenantId?: string
     data?: JsonNullValueInput | InputJsonValue
     updatedAt?: Date | string
   }
 
   export type SettingsUncheckedCreateInput = {
     id?: string
+    tenantId?: string
     data?: JsonNullValueInput | InputJsonValue
     updatedAt?: Date | string
   }
 
   export type SettingsUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     data?: JsonNullValueInput | InputJsonValue
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SettingsUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     data?: JsonNullValueInput | InputJsonValue
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SettingsCreateManyInput = {
     id?: string
+    tenantId?: string
     data?: JsonNullValueInput | InputJsonValue
     updatedAt?: Date | string
   }
 
   export type SettingsUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     data?: JsonNullValueInput | InputJsonValue
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SettingsUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     data?: JsonNullValueInput | InputJsonValue
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type TaskCreateInput = {
     id?: string
+    tenantId?: string
     title: string
     description?: string | null
     status?: string
@@ -33523,6 +33659,7 @@ export namespace Prisma {
 
   export type TaskUncheckedCreateInput = {
     id?: string
+    tenantId?: string
     title: string
     description?: string | null
     status?: string
@@ -33543,6 +33680,7 @@ export namespace Prisma {
 
   export type TaskUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
@@ -33563,6 +33701,7 @@ export namespace Prisma {
 
   export type TaskUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
@@ -33583,6 +33722,7 @@ export namespace Prisma {
 
   export type TaskCreateManyInput = {
     id?: string
+    tenantId?: string
     title: string
     description?: string | null
     status?: string
@@ -33603,6 +33743,7 @@ export namespace Prisma {
 
   export type TaskUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
@@ -33623,6 +33764,7 @@ export namespace Prisma {
 
   export type TaskUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
@@ -33643,6 +33785,7 @@ export namespace Prisma {
 
   export type ChatHistoryCreateInput = {
     id?: string
+    tenantId?: string
     agentId: string
     agentName: string
     userId: string
@@ -33662,6 +33805,7 @@ export namespace Prisma {
 
   export type ChatHistoryUncheckedCreateInput = {
     id?: string
+    tenantId?: string
     agentId: string
     agentName: string
     userId: string
@@ -33681,6 +33825,7 @@ export namespace Prisma {
 
   export type ChatHistoryUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     agentId?: StringFieldUpdateOperationsInput | string
     agentName?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
@@ -33700,6 +33845,7 @@ export namespace Prisma {
 
   export type ChatHistoryUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     agentId?: StringFieldUpdateOperationsInput | string
     agentName?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
@@ -33719,6 +33865,7 @@ export namespace Prisma {
 
   export type ChatHistoryCreateManyInput = {
     id?: string
+    tenantId?: string
     agentId: string
     agentName: string
     userId: string
@@ -33738,6 +33885,7 @@ export namespace Prisma {
 
   export type ChatHistoryUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     agentId?: StringFieldUpdateOperationsInput | string
     agentName?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
@@ -33757,6 +33905,7 @@ export namespace Prisma {
 
   export type ChatHistoryUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     agentId?: StringFieldUpdateOperationsInput | string
     agentName?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
@@ -34251,6 +34400,7 @@ export namespace Prisma {
 
   export type ContactChannelCreateInput = {
     id?: string
+    tenantId?: string
     channel: $Enums.ConversationChannel
     externalId: string
     displayName?: string | null
@@ -34264,6 +34414,7 @@ export namespace Prisma {
 
   export type ContactChannelUncheckedCreateInput = {
     id?: string
+    tenantId?: string
     channel: $Enums.ConversationChannel
     externalId: string
     displayName?: string | null
@@ -34277,6 +34428,7 @@ export namespace Prisma {
 
   export type ContactChannelUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     channel?: EnumConversationChannelFieldUpdateOperationsInput | $Enums.ConversationChannel
     externalId?: StringFieldUpdateOperationsInput | string
     displayName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34290,6 +34442,7 @@ export namespace Prisma {
 
   export type ContactChannelUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     channel?: EnumConversationChannelFieldUpdateOperationsInput | $Enums.ConversationChannel
     externalId?: StringFieldUpdateOperationsInput | string
     displayName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34303,6 +34456,7 @@ export namespace Prisma {
 
   export type ContactChannelCreateManyInput = {
     id?: string
+    tenantId?: string
     channel: $Enums.ConversationChannel
     externalId: string
     displayName?: string | null
@@ -34315,6 +34469,7 @@ export namespace Prisma {
 
   export type ContactChannelUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     channel?: EnumConversationChannelFieldUpdateOperationsInput | $Enums.ConversationChannel
     externalId?: StringFieldUpdateOperationsInput | string
     displayName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34327,6 +34482,7 @@ export namespace Prisma {
 
   export type ContactChannelUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     channel?: EnumConversationChannelFieldUpdateOperationsInput | $Enums.ConversationChannel
     externalId?: StringFieldUpdateOperationsInput | string
     displayName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34339,6 +34495,7 @@ export namespace Prisma {
 
   export type ConversationCreateInput = {
     id?: string
+    tenantId?: string
     channel: $Enums.ConversationChannel
     status?: $Enums.ConversationStatus
     subject?: string | null
@@ -34365,6 +34522,7 @@ export namespace Prisma {
 
   export type ConversationUncheckedCreateInput = {
     id?: string
+    tenantId?: string
     channel: $Enums.ConversationChannel
     status?: $Enums.ConversationStatus
     subject?: string | null
@@ -34391,6 +34549,7 @@ export namespace Prisma {
 
   export type ConversationUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     channel?: EnumConversationChannelFieldUpdateOperationsInput | $Enums.ConversationChannel
     status?: EnumConversationStatusFieldUpdateOperationsInput | $Enums.ConversationStatus
     subject?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34417,6 +34576,7 @@ export namespace Prisma {
 
   export type ConversationUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     channel?: EnumConversationChannelFieldUpdateOperationsInput | $Enums.ConversationChannel
     status?: EnumConversationStatusFieldUpdateOperationsInput | $Enums.ConversationStatus
     subject?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34443,6 +34603,7 @@ export namespace Prisma {
 
   export type ConversationCreateManyInput = {
     id?: string
+    tenantId?: string
     channel: $Enums.ConversationChannel
     status?: $Enums.ConversationStatus
     subject?: string | null
@@ -34466,6 +34627,7 @@ export namespace Prisma {
 
   export type ConversationUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     channel?: EnumConversationChannelFieldUpdateOperationsInput | $Enums.ConversationChannel
     status?: EnumConversationStatusFieldUpdateOperationsInput | $Enums.ConversationStatus
     subject?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34488,6 +34650,7 @@ export namespace Prisma {
 
   export type ConversationUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     channel?: EnumConversationChannelFieldUpdateOperationsInput | $Enums.ConversationChannel
     status?: EnumConversationStatusFieldUpdateOperationsInput | $Enums.ConversationStatus
     subject?: NullableStringFieldUpdateOperationsInput | string | null
@@ -35686,8 +35849,21 @@ export namespace Prisma {
     _max?: NestedBoolFilter<$PrismaModel>
   }
 
+  export type UuidFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel>
+    in?: string[] | ListStringFieldRefInput<$PrismaModel>
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedUuidFilter<$PrismaModel> | string
+  }
+
   export type AuditLogCountOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     timestamp?: SortOrder
     userId?: SortOrder
     userEmail?: SortOrder
@@ -35702,6 +35878,7 @@ export namespace Prisma {
 
   export type AuditLogMaxOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     timestamp?: SortOrder
     userId?: SortOrder
     userEmail?: SortOrder
@@ -35716,6 +35893,7 @@ export namespace Prisma {
 
   export type AuditLogMinOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     timestamp?: SortOrder
     userId?: SortOrder
     userEmail?: SortOrder
@@ -35726,6 +35904,21 @@ export namespace Prisma {
     ip?: SortOrder
     success?: SortOrder
     createdAt?: SortOrder
+  }
+
+  export type UuidWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel>
+    in?: string[] | ListStringFieldRefInput<$PrismaModel>
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedUuidWithAggregatesFilter<$PrismaModel> | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedStringFilter<$PrismaModel>
+    _max?: NestedStringFilter<$PrismaModel>
   }
   export type JsonFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -35753,17 +35946,20 @@ export namespace Prisma {
 
   export type SettingsCountOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     data?: SortOrder
     updatedAt?: SortOrder
   }
 
   export type SettingsMaxOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     updatedAt?: SortOrder
   }
 
   export type SettingsMinOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     updatedAt?: SortOrder
   }
   export type JsonWithAggregatesFilter<$PrismaModel = never> =
@@ -35817,6 +36013,7 @@ export namespace Prisma {
 
   export type TaskCountOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     title?: SortOrder
     description?: SortOrder
     status?: SortOrder
@@ -35841,6 +36038,7 @@ export namespace Prisma {
 
   export type TaskMaxOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     title?: SortOrder
     description?: SortOrder
     status?: SortOrder
@@ -35860,6 +36058,7 @@ export namespace Prisma {
 
   export type TaskMinOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     title?: SortOrder
     description?: SortOrder
     status?: SortOrder
@@ -35913,6 +36112,7 @@ export namespace Prisma {
 
   export type ChatHistoryCountOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     agentId?: SortOrder
     agentName?: SortOrder
     userId?: SortOrder
@@ -35932,6 +36132,7 @@ export namespace Prisma {
 
   export type ChatHistoryMaxOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     agentId?: SortOrder
     agentName?: SortOrder
     userId?: SortOrder
@@ -35947,6 +36148,7 @@ export namespace Prisma {
 
   export type ChatHistoryMinOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     agentId?: SortOrder
     agentName?: SortOrder
     userId?: SortOrder
@@ -36263,6 +36465,7 @@ export namespace Prisma {
 
   export type ContactChannelCountOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     channel?: SortOrder
     externalId?: SortOrder
     displayName?: SortOrder
@@ -36275,6 +36478,7 @@ export namespace Prisma {
 
   export type ContactChannelMaxOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     channel?: SortOrder
     externalId?: SortOrder
     displayName?: SortOrder
@@ -36286,6 +36490,7 @@ export namespace Prisma {
 
   export type ContactChannelMinOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     channel?: SortOrder
     externalId?: SortOrder
     displayName?: SortOrder
@@ -36349,6 +36554,7 @@ export namespace Prisma {
 
   export type ConversationCountOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     channel?: SortOrder
     status?: SortOrder
     subject?: SortOrder
@@ -36372,6 +36578,7 @@ export namespace Prisma {
 
   export type ConversationMaxOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     channel?: SortOrder
     status?: SortOrder
     subject?: SortOrder
@@ -36394,6 +36601,7 @@ export namespace Prisma {
 
   export type ConversationMinOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     channel?: SortOrder
     status?: SortOrder
     subject?: SortOrder
@@ -37635,6 +37843,31 @@ export namespace Prisma {
     _min?: NestedBoolFilter<$PrismaModel>
     _max?: NestedBoolFilter<$PrismaModel>
   }
+
+  export type NestedUuidFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel>
+    in?: string[] | ListStringFieldRefInput<$PrismaModel>
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedUuidFilter<$PrismaModel> | string
+  }
+
+  export type NestedUuidWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel>
+    in?: string[] | ListStringFieldRefInput<$PrismaModel>
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedUuidWithAggregatesFilter<$PrismaModel> | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedStringFilter<$PrismaModel>
+    _max?: NestedStringFilter<$PrismaModel>
+  }
   export type NestedJsonFilter<$PrismaModel = never> =
     | PatchUndefined<
         Either<Required<NestedJsonFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>,
@@ -38596,6 +38829,7 @@ export namespace Prisma {
 
   export type ConversationCreateWithoutContactChannelInput = {
     id?: string
+    tenantId?: string
     channel: $Enums.ConversationChannel
     status?: $Enums.ConversationStatus
     subject?: string | null
@@ -38621,6 +38855,7 @@ export namespace Prisma {
 
   export type ConversationUncheckedCreateWithoutContactChannelInput = {
     id?: string
+    tenantId?: string
     channel: $Enums.ConversationChannel
     status?: $Enums.ConversationStatus
     subject?: string | null
@@ -38675,6 +38910,7 @@ export namespace Prisma {
     OR?: ConversationScalarWhereInput[]
     NOT?: ConversationScalarWhereInput | ConversationScalarWhereInput[]
     id?: StringFilter<"Conversation"> | string
+    tenantId?: UuidFilter<"Conversation"> | string
     channel?: EnumConversationChannelFilter<"Conversation"> | $Enums.ConversationChannel
     status?: EnumConversationStatusFilter<"Conversation"> | $Enums.ConversationStatus
     subject?: StringNullableFilter<"Conversation"> | string | null
@@ -38698,6 +38934,7 @@ export namespace Prisma {
 
   export type ContactChannelCreateWithoutConversationsInput = {
     id?: string
+    tenantId?: string
     channel: $Enums.ConversationChannel
     externalId: string
     displayName?: string | null
@@ -38710,6 +38947,7 @@ export namespace Prisma {
 
   export type ContactChannelUncheckedCreateWithoutConversationsInput = {
     id?: string
+    tenantId?: string
     channel: $Enums.ConversationChannel
     externalId: string
     displayName?: string | null
@@ -38860,6 +39098,7 @@ export namespace Prisma {
 
   export type ContactChannelUpdateWithoutConversationsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     channel?: EnumConversationChannelFieldUpdateOperationsInput | $Enums.ConversationChannel
     externalId?: StringFieldUpdateOperationsInput | string
     displayName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -38872,6 +39111,7 @@ export namespace Prisma {
 
   export type ContactChannelUncheckedUpdateWithoutConversationsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     channel?: EnumConversationChannelFieldUpdateOperationsInput | $Enums.ConversationChannel
     externalId?: StringFieldUpdateOperationsInput | string
     displayName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -38990,6 +39230,7 @@ export namespace Prisma {
 
   export type ConversationCreateWithoutConvMessagesInput = {
     id?: string
+    tenantId?: string
     channel: $Enums.ConversationChannel
     status?: $Enums.ConversationStatus
     subject?: string | null
@@ -39015,6 +39256,7 @@ export namespace Prisma {
 
   export type ConversationUncheckedCreateWithoutConvMessagesInput = {
     id?: string
+    tenantId?: string
     channel: $Enums.ConversationChannel
     status?: $Enums.ConversationStatus
     subject?: string | null
@@ -39056,6 +39298,7 @@ export namespace Prisma {
 
   export type ConversationUpdateWithoutConvMessagesInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     channel?: EnumConversationChannelFieldUpdateOperationsInput | $Enums.ConversationChannel
     status?: EnumConversationStatusFieldUpdateOperationsInput | $Enums.ConversationStatus
     subject?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39081,6 +39324,7 @@ export namespace Prisma {
 
   export type ConversationUncheckedUpdateWithoutConvMessagesInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     channel?: EnumConversationChannelFieldUpdateOperationsInput | $Enums.ConversationChannel
     status?: EnumConversationStatusFieldUpdateOperationsInput | $Enums.ConversationStatus
     subject?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39106,6 +39350,7 @@ export namespace Prisma {
 
   export type ConversationCreateWithoutMessagesInput = {
     id?: string
+    tenantId?: string
     channel: $Enums.ConversationChannel
     status?: $Enums.ConversationStatus
     subject?: string | null
@@ -39131,6 +39376,7 @@ export namespace Prisma {
 
   export type ConversationUncheckedCreateWithoutMessagesInput = {
     id?: string
+    tenantId?: string
     channel: $Enums.ConversationChannel
     status?: $Enums.ConversationStatus
     subject?: string | null
@@ -39172,6 +39418,7 @@ export namespace Prisma {
 
   export type ConversationUpdateWithoutMessagesInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     channel?: EnumConversationChannelFieldUpdateOperationsInput | $Enums.ConversationChannel
     status?: EnumConversationStatusFieldUpdateOperationsInput | $Enums.ConversationStatus
     subject?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39197,6 +39444,7 @@ export namespace Prisma {
 
   export type ConversationUncheckedUpdateWithoutMessagesInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     channel?: EnumConversationChannelFieldUpdateOperationsInput | $Enums.ConversationChannel
     status?: EnumConversationStatusFieldUpdateOperationsInput | $Enums.ConversationStatus
     subject?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39222,6 +39470,7 @@ export namespace Prisma {
 
   export type ConversationCreateWithoutParticipantsInput = {
     id?: string
+    tenantId?: string
     channel: $Enums.ConversationChannel
     status?: $Enums.ConversationStatus
     subject?: string | null
@@ -39247,6 +39496,7 @@ export namespace Prisma {
 
   export type ConversationUncheckedCreateWithoutParticipantsInput = {
     id?: string
+    tenantId?: string
     channel: $Enums.ConversationChannel
     status?: $Enums.ConversationStatus
     subject?: string | null
@@ -39288,6 +39538,7 @@ export namespace Prisma {
 
   export type ConversationUpdateWithoutParticipantsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     channel?: EnumConversationChannelFieldUpdateOperationsInput | $Enums.ConversationChannel
     status?: EnumConversationStatusFieldUpdateOperationsInput | $Enums.ConversationStatus
     subject?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39313,6 +39564,7 @@ export namespace Prisma {
 
   export type ConversationUncheckedUpdateWithoutParticipantsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     channel?: EnumConversationChannelFieldUpdateOperationsInput | $Enums.ConversationChannel
     status?: EnumConversationStatusFieldUpdateOperationsInput | $Enums.ConversationStatus
     subject?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39660,6 +39912,7 @@ export namespace Prisma {
 
   export type ConversationCreateManyContactChannelInput = {
     id?: string
+    tenantId?: string
     channel: $Enums.ConversationChannel
     status?: $Enums.ConversationStatus
     subject?: string | null
@@ -39682,6 +39935,7 @@ export namespace Prisma {
 
   export type ConversationUpdateWithoutContactChannelInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     channel?: EnumConversationChannelFieldUpdateOperationsInput | $Enums.ConversationChannel
     status?: EnumConversationStatusFieldUpdateOperationsInput | $Enums.ConversationStatus
     subject?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39707,6 +39961,7 @@ export namespace Prisma {
 
   export type ConversationUncheckedUpdateWithoutContactChannelInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     channel?: EnumConversationChannelFieldUpdateOperationsInput | $Enums.ConversationChannel
     status?: EnumConversationStatusFieldUpdateOperationsInput | $Enums.ConversationStatus
     subject?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39732,6 +39987,7 @@ export namespace Prisma {
 
   export type ConversationUncheckedUpdateManyWithoutContactChannelInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     channel?: EnumConversationChannelFieldUpdateOperationsInput | $Enums.ConversationChannel
     status?: EnumConversationStatusFieldUpdateOperationsInput | $Enums.ConversationStatus
     subject?: NullableStringFieldUpdateOperationsInput | string | null
