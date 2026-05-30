@@ -14,7 +14,6 @@ import {
   LayoutDashboard,
   MessageSquare,
   Megaphone,
-  Monitor,
   Package,
   ScrollText,
   Settings,
@@ -25,7 +24,6 @@ import {
   Users,
   UsersRound,
   Wand2,
-  Zap,
   LineChart,
 } from 'lucide-react';
 import { UserRole } from '@bemindlabs/unicore-shared-types';
@@ -171,35 +169,6 @@ export const menuSections: NavSection[] = [
     label: 'System',
     items: [
       { label: 'Settings', icon: Settings, href: '/settings', roles: [UserRole.Owner] },
-    ],
-  },
-  {
-    label: 'Add-ons',
-    items: [
-      {
-        label: 'Virtual Office',
-        icon: Monitor,
-        href: process.env.NEXT_PUBLIC_VIRTUAL_OFFICE_URL ?? 'https://vo-unicore-demo.bemind.tech',
-        roles: [UserRole.Owner, UserRole.Operator],
-        license: { tier: 'pro', feature: 'virtualOffice', upgradeLabel: 'Pro' },
-        external: true,
-      },
-      {
-        label: 'Geek CLI',
-        icon: Terminal,
-        href: process.env.NEXT_PUBLIC_GEEK_PORTAL_URL ?? 'https://geek-unicore-demo.bemind.tech',
-        roles: [UserRole.Owner, UserRole.Operator],
-        license: { tier: 'pro', feature: 'geekCli', upgradeLabel: 'Pro' },
-        external: true,
-      },
-      {
-        label: 'AI-DLC',
-        icon: Zap,
-        href: process.env.NEXT_PUBLIC_DLC_PORTAL_URL ?? 'https://dlc-unicore-demo.bemind.tech',
-        roles: [UserRole.Owner, UserRole.Operator],
-        license: { tier: 'pro', feature: 'aiDlc', upgradeLabel: 'Pro' },
-        external: true,
-      },
     ],
   },
   {

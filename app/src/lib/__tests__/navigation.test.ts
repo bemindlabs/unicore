@@ -44,14 +44,14 @@ describe('isNavItemLocked', () => {
 
   it('returns false for pro items when specific feature is explicitly enabled', () => {
     const item: NavItem = {
-      label: 'Geek CLI',
+      label: 'Custom Agent Builder',
       icon: {} as any,
-      href: '/geek',
+      href: '/agents/builder',
       roles: [UserRole.Owner],
-      license: { tier: 'pro', feature: 'featGeekCli' },
+      license: { tier: 'pro', feature: 'customAgentBuilder' },
     };
-    // Community user with explicit featGeekCli add-on
-    const hasFeatureWithAddon = (f: string) => f === 'featGeekCli';
+    // Community user with explicit customAgentBuilder add-on
+    const hasFeatureWithAddon = (f: string) => f === 'customAgentBuilder';
     expect(isNavItemLocked(item, false, 'community', hasFeatureWithAddon)).toBe(false);
   });
 
