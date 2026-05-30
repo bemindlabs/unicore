@@ -37,8 +37,10 @@ import { TenantContextMiddleware } from './common/tenancy/tenant-context.middlew
 import { TenantContextInterceptor } from './common/tenancy/tenant-context.interceptor';
 import { TenantModule } from './tenant/tenant.module';
 import { SuspendedTenantGuard } from './common/guards/suspended-tenant.guard';
+import { TenantRateLimitGuard } from './common/guards/tenant-rate-limit.guard';
+import { TenantUsageModule } from './common/tenancy/tenant-usage.module';
 @Module({
-  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule, AdminModule, AuditModule, SettingsModule, TasksModule, WebhooksModule, ChatHistoryModule, NotificationsModule, GamificationModule, ChannelsModule, ConversationsAnalyticsModule, ConversationsModule, ContactProfileModule, ConversationIntelligenceModule, PluginsModule, EmailModule, TenancyModule, TenantModule],
+  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule, AdminModule, AuditModule, SettingsModule, TasksModule, WebhooksModule, ChatHistoryModule, NotificationsModule, GamificationModule, ChannelsModule, ConversationsAnalyticsModule, ConversationsModule, ContactProfileModule, ConversationIntelligenceModule, PluginsModule, EmailModule, TenancyModule, TenantUsageModule, TenantModule],
   controllers: [AppController],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
@@ -52,6 +54,9 @@ import { SuspendedTenantGuard } from './common/guards/suspended-tenant.guard';
     // Enforces read-only for SUSPENDED tenants (saas mode); runs after the JWT
     // guard so req.user.tenantId is resolved. Self-host is a pass-through.
     { provide: APP_GUARD, useClass: SuspendedTenantGuard },
+    // Per-tenant noisy-neighbor protection (FU-04): burst rate limit + monthly
+    // usage cap, keyed by the resolved tenant. No-op in self-host mode.
+    { provide: APP_GUARD, useClass: TenantRateLimitGuard },
     RateLimitStore,
     RateLimitMiddleware,
     RequestValidationMiddleware,

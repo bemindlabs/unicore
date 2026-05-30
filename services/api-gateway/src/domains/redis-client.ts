@@ -1,8 +1,9 @@
 /**
  * Minimal Redis RESP2 client using Node's built-in net module.
  *
- * Supports only the subset of commands used by DomainCacheService:
- *   GET, SET (with EX option), DEL, KEYS, PING.
+ * Supports only the subset of commands used by DomainCacheService and the
+ * per-tenant usage counters:
+ *   GET, SET (with EX option), DEL, EXISTS, KEYS, PING, INCR, EXPIRE.
  *
  * This avoids adding an external redis/ioredis dependency while keeping
  * the implementation self-contained. Replace with ioredis / redis@4 when
@@ -102,6 +103,18 @@ export class MinimalRedisClient {
 
   async exists(key: string): Promise<number> {
     const result = await this.sendCommand(['EXISTS', key]);
+    return result as number;
+  }
+
+  /** Atomically increment a counter, returning the new value. */
+  async incr(key: string): Promise<number> {
+    const result = await this.sendCommand(['INCR', key]);
+    return result as number;
+  }
+
+  /** Set a key's TTL in seconds. Returns 1 if applied, 0 if the key is gone. */
+  async expire(key: string, seconds: number): Promise<number> {
+    const result = await this.sendCommand(['EXPIRE', key, String(seconds)]);
     return result as number;
   }
 
