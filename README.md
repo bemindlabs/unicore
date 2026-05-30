@@ -2,7 +2,7 @@
 
 # UniCore
 
-Updated: 2026-03-24
+Updated: 2026-05-30
 
 **AI-First Ecosystem Dashboard for Solopreneurs**
 
@@ -429,5 +429,7 @@ We welcome contributions! Please read our [Contributing Guide](CONTRIBUTING.md) 
 - **Community Edition** — Free for personal and small-team use
 - **Pro Edition** — Requires a valid license key for advanced features
 
-Licensor: [BeMind Technology](https://bemind.tech)
+Licensor: [Bemind Technology Co., Ltd.](https://bemind.tech)
 Contact: license@bemind.tech
+
+© 2026 Bemind Technology Co., Ltd. The Community core remains open-core (BSL 1.1); the hosted SaaS is operated by Bemind Technology Co., Ltd.

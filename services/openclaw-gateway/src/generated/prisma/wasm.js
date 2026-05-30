@@ -156,7 +156,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/var/platforms/unicores/unicore/services/openclaw-gateway/src/generated/prisma",
+      "value": "/Users/lps/workspaces/bmt-opensource/projects/unicore/unicore/services/openclaw-gateway/src/generated/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -165,12 +165,12 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "debian-openssl-3.0.x",
+        "value": "darwin-arm64",
         "native": true
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/var/platforms/unicores/unicore/services/openclaw-gateway/prisma/schema.prisma",
+    "sourceFilePath": "/Users/lps/workspaces/bmt-opensource/projects/unicore/unicore/services/openclaw-gateway/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {

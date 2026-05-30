@@ -46,5 +46,10 @@
     "turbo": "^2.0.0",
     "typescript": "^5.5.0"
   },
-  "version": "0.1.2"
+  "version": "0.1.2",
+  "author": {
+    "name": "Bemind Technology Co., Ltd.",
+    "url": "https://bemind.tech"
+  },
+  "license": "BUSL-1.1"
 }
