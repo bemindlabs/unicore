@@ -172,49 +172,41 @@ export const menuSections: NavSection[] = [
     ],
   },
   {
-    label: 'Enterprise',
+    // Bemind super-admin control plane (M4/E5). Gated on the live `isSuperAdmin`
+    // signal (see SaasContext), not a dead license tier. Dropped "Compliance"
+    // and "HA Cluster" (deleted enterprise edition concerns — SAAS-ARCHITECTURE §6).
+    label: 'Bemind Admin',
+    superAdmin: true,
     items: [
       {
         label: 'Platform Overview',
         icon: Globe,
         href: '/platform-admin',
         roles: [UserRole.Owner],
-        license: { tier: 'enterprise', upgradeLabel: 'Enterprise' },
       },
       {
-        label: 'Multi-Tenancy',
+        label: 'Tenants',
         icon: Building2,
         href: '/platform-admin/tenants',
         roles: [UserRole.Owner],
-        license: { tier: 'enterprise', upgradeLabel: 'Enterprise' },
       },
       {
-        label: 'Compliance',
-        icon: Shield,
-        href: '/platform-admin/compliance',
-        roles: [UserRole.Owner],
-        license: { tier: 'enterprise', upgradeLabel: 'Enterprise' },
-      },
-      {
-        label: 'HA Cluster',
+        label: 'Health',
         icon: Activity,
         href: '/platform-admin/health',
         roles: [UserRole.Owner],
-        license: { tier: 'enterprise', upgradeLabel: 'Enterprise' },
       },
       {
         label: 'Analytics',
         icon: BarChart3,
         href: '/platform-admin/analytics',
         roles: [UserRole.Owner],
-        license: { tier: 'enterprise', upgradeLabel: 'Enterprise' },
       },
       {
         label: 'Platform Settings',
         icon: Shield,
         href: '/platform-admin/settings',
         roles: [UserRole.Owner],
-        license: { tier: 'enterprise', upgradeLabel: 'Enterprise' },
       },
     ],
   },

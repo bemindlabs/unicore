@@ -113,12 +113,22 @@ describe('menuSections', () => {
     }
   });
 
-  it('marks Enterprise section items with license tier enterprise', () => {
-    const enterpriseSection = menuSections.find((s) => s.label === 'Enterprise');
-    expect(enterpriseSection).toBeDefined();
-    for (const item of enterpriseSection!.items) {
-      expect(item.license?.tier).toBe('enterprise');
+  it('exposes the Bemind Admin super-admin control plane (M4/E5)', () => {
+    // The old "Enterprise" license-gated section was relabeled to "Bemind Admin"
+    // and is now gated on the live super-admin signal, not a dead license tier.
+    expect(menuSections.find((s) => s.label === 'Enterprise')).toBeUndefined();
+    const adminSection = menuSections.find((s) => s.label === 'Bemind Admin');
+    expect(adminSection).toBeDefined();
+    expect(adminSection!.superAdmin).toBe(true);
+    // Control-plane items carry no enterprise license tier.
+    for (const item of adminSection!.items) {
+      expect(item.license).toBeUndefined();
     }
+    const labels = adminSection!.items.map((i) => i.label);
+    expect(labels).toContain('Tenants');
+    // Dropped enterprise-edition concerns.
+    expect(labels).not.toContain('Compliance');
+    expect(labels).not.toContain('HA Cluster');
   });
 
 });

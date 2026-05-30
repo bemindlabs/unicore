@@ -23,6 +23,13 @@ export interface AuthState {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
+  /** Self-serve SaaS signup (M3/E3): creates a tenant + OWNER, starts the trial, logs in. */
+  signup: (input: {
+    email: string;
+    password: string;
+    name: string;
+    businessName?: string;
+  }) => Promise<void>;
   logout: () => void;
   updateUser: (updates: Partial<AuthUser>) => void;
 }
@@ -144,6 +151,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [scheduleRefresh],
   );
 
+  const signup = useCallback(
+    async (input: { email: string; password: string; name: string; businessName?: string }) => {
+      const res = await api.post<{
+        accessToken: string;
+        refreshToken: string;
+        expiresIn: number;
+        user: AuthUser;
+      }>('/auth/signup', input);
+      localStorage.setItem('auth_token', res.accessToken);
+      localStorage.setItem('refresh_token', res.refreshToken);
+      syncCookie(res.accessToken);
+      setUser(normalizeUser(res.user));
+      scheduleRefresh(res.accessToken);
+    },
+    [scheduleRefresh],
+  );
+
   const updateUser = useCallback((updates: Partial<AuthUser>) => {
     setUser((prev) => (prev ? { ...prev, ...updates } : prev));
   }, []);
@@ -159,8 +183,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [clearTimer]);
 
   const value = useMemo(
-    () => ({ user, isLoading, isAuthenticated: !!user, login, logout, updateUser }),
-    [user, isLoading, login, logout, updateUser],
+    () => ({ user, isLoading, isAuthenticated: !!user, login, signup, logout, updateUser }),
+    [user, isLoading, login, signup, logout, updateUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
