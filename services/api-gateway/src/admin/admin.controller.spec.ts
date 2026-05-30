@@ -18,6 +18,7 @@ describe('AdminController', () => {
     user: {
       findMany: jest.fn(),
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
       count: jest.fn(),
@@ -25,12 +26,19 @@ describe('AdminController', () => {
     session: {
       findMany: jest.fn(),
       deleteMany: jest.fn(),
+      count: jest.fn(),
     },
     chatHistory: {
       deleteMany: jest.fn(),
     },
     task: {
       updateMany: jest.fn(),
+    },
+    tenant: {
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      count: jest.fn(),
+      update: jest.fn(),
     },
     $queryRaw: jest.fn(),
   };
@@ -275,6 +283,143 @@ describe('AdminController', () => {
       // The deleteUser method does NOT explicitly delete sessions;
       // Prisma handles session cleanup via onDelete: Cascade on the User relation
       expect(mockPrismaService.session.deleteMany).not.toHaveBeenCalled();
+    });
+  });
+
+  // ─── Control plane: real Tenant queries (M4/E5) ───────────────────────────
+
+  describe('listTenants', () => {
+    const tenantRow = {
+      id: 't-1',
+      slug: 'acme',
+      name: 'Acme Inc',
+      status: 'ACTIVE',
+      plan: 'GROWTH',
+      customDomain: 'app.acme.com',
+      createdAt: new Date('2025-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2025-01-02T00:00:00.000Z'),
+    };
+
+    it('queries real Tenant rows, paginates, and maps to the DTO shape', async () => {
+      mockPrismaService.tenant.findMany.mockResolvedValue([tenantRow]);
+      mockPrismaService.tenant.count.mockResolvedValue(1);
+      mockPrismaService.user.count.mockResolvedValue(3);
+      mockPrismaService.user.findFirst.mockResolvedValue({ email: 'owner@acme.com' });
+
+      const result = await controller.listTenants({ page: '2', limit: '10' });
+
+      expect(mockPrismaService.tenant.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 10, take: 10, orderBy: { createdAt: 'desc' } }),
+      );
+      expect(result.total).toBe(1);
+      expect(result.page).toBe(2);
+      expect(result.items[0]).toMatchObject({
+        id: 't-1',
+        slug: 'acme',
+        name: 'Acme Inc',
+        status: 'ACTIVE',
+        plan: 'GROWTH',
+        ownerEmail: 'owner@acme.com',
+        memberCount: 3,
+        storageUsageBytes: 0,
+        apiCallsThisMonth: 0,
+      });
+    });
+
+    it('filters by status and plan', async () => {
+      mockPrismaService.tenant.findMany.mockResolvedValue([]);
+      mockPrismaService.tenant.count.mockResolvedValue(0);
+
+      await controller.listTenants({ status: 'SUSPENDED', plan: 'STARTER' });
+
+      expect(mockPrismaService.tenant.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ status: 'SUSPENDED', plan: 'STARTER' }) }),
+      );
+    });
+  });
+
+  describe('suspendTenant / activateTenant', () => {
+    const tenantRow = {
+      id: 't-1',
+      slug: 'acme',
+      name: 'Acme Inc',
+      status: 'ACTIVE',
+      plan: 'GROWTH',
+      customDomain: null,
+      createdAt: new Date('2025-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2025-01-02T00:00:00.000Z'),
+    };
+
+    it('suspend sets Tenant.status = SUSPENDED on a real row', async () => {
+      mockPrismaService.tenant.findUnique.mockResolvedValue({ id: 't-1' });
+      mockPrismaService.tenant.update.mockResolvedValue({ ...tenantRow, status: 'SUSPENDED' });
+      mockPrismaService.user.count.mockResolvedValue(1);
+      mockPrismaService.user.findFirst.mockResolvedValue({ email: 'owner@acme.com' });
+
+      const result = await controller.suspendTenant('t-1', { reason: 'abuse' }, currentUser);
+
+      expect(mockPrismaService.tenant.update).toHaveBeenCalledWith({
+        where: { id: 't-1' },
+        data: { status: 'SUSPENDED' },
+      });
+      expect(result.status).toBe('SUSPENDED');
+      expect(result.suspendReason).toBe('abuse');
+      expect(mockAuditService.log).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'suspend', resource: 'tenants', resourceId: 't-1' }),
+      );
+    });
+
+    it('activate sets Tenant.status = ACTIVE on a real row', async () => {
+      mockPrismaService.tenant.findUnique.mockResolvedValue({ id: 't-1' });
+      mockPrismaService.tenant.update.mockResolvedValue({ ...tenantRow, status: 'ACTIVE' });
+      mockPrismaService.user.count.mockResolvedValue(1);
+      mockPrismaService.user.findFirst.mockResolvedValue({ email: 'owner@acme.com' });
+
+      const result = await controller.activateTenant('t-1', currentUser);
+
+      expect(mockPrismaService.tenant.update).toHaveBeenCalledWith({
+        where: { id: 't-1' },
+        data: { status: 'ACTIVE' },
+      });
+      expect(result.status).toBe('ACTIVE');
+    });
+
+    it('throws NotFoundException when suspending a missing tenant', async () => {
+      mockPrismaService.tenant.findUnique.mockResolvedValue(null);
+      await expect(
+        controller.suspendTenant('missing', {}, currentUser),
+      ).rejects.toThrow(NotFoundException);
+      expect(mockPrismaService.tenant.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('overview', () => {
+    it('returns real tenant counts by status/subscription', async () => {
+      // Order of count() calls matches the Promise.all in the controller:
+      // user, session, newUsers, tenant total, ACTIVE, SUSPENDED, TRIALING, newTenants
+      mockPrismaService.user.count
+        .mockResolvedValueOnce(42) // total users
+        .mockResolvedValueOnce(5); // new users this week
+      mockPrismaService.session.count.mockResolvedValue(7);
+      mockPrismaService.tenant.count
+        .mockResolvedValueOnce(10) // total
+        .mockResolvedValueOnce(8) // active
+        .mockResolvedValueOnce(1) // suspended
+        .mockResolvedValueOnce(3) // trialing
+        .mockResolvedValueOnce(2); // new this week
+
+      const result = await controller.overview();
+
+      expect(result).toMatchObject({
+        tenantCount: 10,
+        activeTenantCount: 8,
+        suspendedTenantCount: 1,
+        trialingTenantCount: 3,
+        totalUserCount: 42,
+        activeSessionCount: 7,
+        newTenantsThisWeek: 2,
+        newUsersThisWeek: 5,
+      });
     });
   });
 });

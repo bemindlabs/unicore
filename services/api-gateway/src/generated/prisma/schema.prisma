@@ -48,6 +48,13 @@ model User {
   name          String
   password      String?
   role          Role           @default(VIEWER)
+  /// Platform super-admin flag (M4/E5). Distinguishes Bemind ops staff (who may
+  /// administer ALL tenants via /api/v1/admin/* in saas mode) from a tenant
+  /// OWNER (who only governs their own tenant). Always false for normal signups;
+  /// set out-of-band by Bemind ops. In self-host mode this flag is irrelevant —
+  /// the SuperAdminGuard short-circuits to allow the single OWNER. See
+  /// SAAS-ARCHITECTURE.md §6.
+  isSuperAdmin  Boolean        @default(false)
   /// Owning tenant. Nullable for migration; backfilled to the default tenant.
   tenantId      String?
   tenant        Tenant?        @relation(fields: [tenantId], references: [id])

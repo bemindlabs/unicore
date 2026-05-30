@@ -4450,6 +4450,7 @@ export namespace Prisma {
     name: string | null
     password: string | null
     role: $Enums.Role | null
+    isSuperAdmin: boolean | null
     tenantId: string | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -4461,6 +4462,7 @@ export namespace Prisma {
     name: string | null
     password: string | null
     role: $Enums.Role | null
+    isSuperAdmin: boolean | null
     tenantId: string | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -4472,6 +4474,7 @@ export namespace Prisma {
     name: number
     password: number
     role: number
+    isSuperAdmin: number
     tenantId: number
     createdAt: number
     updatedAt: number
@@ -4485,6 +4488,7 @@ export namespace Prisma {
     name?: true
     password?: true
     role?: true
+    isSuperAdmin?: true
     tenantId?: true
     createdAt?: true
     updatedAt?: true
@@ -4496,6 +4500,7 @@ export namespace Prisma {
     name?: true
     password?: true
     role?: true
+    isSuperAdmin?: true
     tenantId?: true
     createdAt?: true
     updatedAt?: true
@@ -4507,6 +4512,7 @@ export namespace Prisma {
     name?: true
     password?: true
     role?: true
+    isSuperAdmin?: true
     tenantId?: true
     createdAt?: true
     updatedAt?: true
@@ -4591,6 +4597,7 @@ export namespace Prisma {
     name: string
     password: string | null
     role: $Enums.Role
+    isSuperAdmin: boolean
     tenantId: string | null
     createdAt: Date
     updatedAt: Date
@@ -4619,6 +4626,7 @@ export namespace Prisma {
     name?: boolean
     password?: boolean
     role?: boolean
+    isSuperAdmin?: boolean
     tenantId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -4635,6 +4643,7 @@ export namespace Prisma {
     name?: boolean
     password?: boolean
     role?: boolean
+    isSuperAdmin?: boolean
     tenantId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -4647,6 +4656,7 @@ export namespace Prisma {
     name?: boolean
     password?: boolean
     role?: boolean
+    isSuperAdmin?: boolean
     tenantId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -4659,12 +4669,13 @@ export namespace Prisma {
     name?: boolean
     password?: boolean
     role?: boolean
+    isSuperAdmin?: boolean
     tenantId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "name" | "password" | "role" | "tenantId" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "name" | "password" | "role" | "isSuperAdmin" | "tenantId" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     tenant?: boolean | User$tenantArgs<ExtArgs>
     sessions?: boolean | User$sessionsArgs<ExtArgs>
@@ -4693,6 +4704,15 @@ export namespace Prisma {
       name: string
       password: string | null
       role: $Enums.Role
+      /**
+       * Platform super-admin flag (M4/E5). Distinguishes Bemind ops staff (who may
+       * administer ALL tenants via /api/v1/admin/* in saas mode) from a tenant
+       * OWNER (who only governs their own tenant). Always false for normal signups;
+       * set out-of-band by Bemind ops. In self-host mode this flag is irrelevant —
+       * the SuperAdminGuard short-circuits to allow the single OWNER. See
+       * SAAS-ARCHITECTURE.md §6.
+       */
+      isSuperAdmin: boolean
       /**
        * Owning tenant. Nullable for migration; backfilled to the default tenant.
        */
@@ -5131,6 +5151,7 @@ export namespace Prisma {
     readonly name: FieldRef<"User", 'String'>
     readonly password: FieldRef<"User", 'String'>
     readonly role: FieldRef<"User", 'Role'>
+    readonly isSuperAdmin: FieldRef<"User", 'Boolean'>
     readonly tenantId: FieldRef<"User", 'String'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
@@ -30488,6 +30509,7 @@ export namespace Prisma {
     name: 'name',
     password: 'password',
     role: 'role',
+    isSuperAdmin: 'isSuperAdmin',
     tenantId: 'tenantId',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -31179,6 +31201,7 @@ export namespace Prisma {
     name?: StringFilter<"User"> | string
     password?: StringNullableFilter<"User"> | string | null
     role?: EnumRoleFilter<"User"> | $Enums.Role
+    isSuperAdmin?: BoolFilter<"User"> | boolean
     tenantId?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
@@ -31194,6 +31217,7 @@ export namespace Prisma {
     name?: SortOrder
     password?: SortOrderInput | SortOrder
     role?: SortOrder
+    isSuperAdmin?: SortOrder
     tenantId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -31212,6 +31236,7 @@ export namespace Prisma {
     name?: StringFilter<"User"> | string
     password?: StringNullableFilter<"User"> | string | null
     role?: EnumRoleFilter<"User"> | $Enums.Role
+    isSuperAdmin?: BoolFilter<"User"> | boolean
     tenantId?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
@@ -31227,6 +31252,7 @@ export namespace Prisma {
     name?: SortOrder
     password?: SortOrderInput | SortOrder
     role?: SortOrder
+    isSuperAdmin?: SortOrder
     tenantId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -31244,6 +31270,7 @@ export namespace Prisma {
     name?: StringWithAggregatesFilter<"User"> | string
     password?: StringNullableWithAggregatesFilter<"User"> | string | null
     role?: EnumRoleWithAggregatesFilter<"User"> | $Enums.Role
+    isSuperAdmin?: BoolWithAggregatesFilter<"User"> | boolean
     tenantId?: StringNullableWithAggregatesFilter<"User"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
@@ -33284,6 +33311,7 @@ export namespace Prisma {
     name: string
     password?: string | null
     role?: $Enums.Role
+    isSuperAdmin?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     tenant?: TenantCreateNestedOneWithoutUsersInput
@@ -33298,6 +33326,7 @@ export namespace Prisma {
     name: string
     password?: string | null
     role?: $Enums.Role
+    isSuperAdmin?: boolean
     tenantId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -33312,6 +33341,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    isSuperAdmin?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tenant?: TenantUpdateOneWithoutUsersNestedInput
@@ -33326,6 +33356,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    isSuperAdmin?: BoolFieldUpdateOperationsInput | boolean
     tenantId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -33340,6 +33371,7 @@ export namespace Prisma {
     name: string
     password?: string | null
     role?: $Enums.Role
+    isSuperAdmin?: boolean
     tenantId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -33351,6 +33383,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    isSuperAdmin?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -33361,6 +33394,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    isSuperAdmin?: BoolFieldUpdateOperationsInput | boolean
     tenantId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -35793,6 +35827,11 @@ export namespace Prisma {
     not?: NestedEnumRoleFilter<$PrismaModel> | $Enums.Role
   }
 
+  export type BoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
   export type TenantNullableScalarRelationFilter = {
     is?: TenantWhereInput | null
     isNot?: TenantWhereInput | null
@@ -35834,6 +35873,7 @@ export namespace Prisma {
     name?: SortOrder
     password?: SortOrder
     role?: SortOrder
+    isSuperAdmin?: SortOrder
     tenantId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -35845,6 +35885,7 @@ export namespace Prisma {
     name?: SortOrder
     password?: SortOrder
     role?: SortOrder
+    isSuperAdmin?: SortOrder
     tenantId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -35856,6 +35897,7 @@ export namespace Prisma {
     name?: SortOrder
     password?: SortOrder
     role?: SortOrder
+    isSuperAdmin?: SortOrder
     tenantId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -35869,6 +35911,14 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumRoleFilter<$PrismaModel>
     _max?: NestedEnumRoleFilter<$PrismaModel>
+  }
+
+  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type UserScalarRelationFilter = {
@@ -35950,11 +36000,6 @@ export namespace Prisma {
     createdAt?: SortOrder
   }
 
-  export type BoolFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolFilter<$PrismaModel> | boolean
-  }
-
   export type StringNullableListFilter<$PrismaModel = never> = {
     equals?: string[] | ListStringFieldRefInput<$PrismaModel> | null
     has?: string | StringFieldRefInput<$PrismaModel> | null
@@ -35989,14 +36034,6 @@ export namespace Prisma {
     isVerified?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-  }
-
-  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedBoolFilter<$PrismaModel>
-    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type UuidFilter<$PrismaModel = never> = {
@@ -37294,6 +37331,10 @@ export namespace Prisma {
     set?: $Enums.Role
   }
 
+  export type BoolFieldUpdateOperationsInput = {
+    set?: boolean
+  }
+
   export type TenantUpdateOneWithoutUsersNestedInput = {
     create?: XOR<TenantCreateWithoutUsersInput, TenantUncheckedCreateWithoutUsersInput>
     connectOrCreate?: TenantCreateOrConnectWithoutUsersInput
@@ -37418,10 +37459,6 @@ export namespace Prisma {
 
   export type CustomDomainCreateallowedOriginsInput = {
     set: string[]
-  }
-
-  export type BoolFieldUpdateOperationsInput = {
-    set?: boolean
   }
 
   export type CustomDomainUpdateallowedOriginsInput = {
@@ -37971,6 +38008,11 @@ export namespace Prisma {
     not?: NestedEnumRoleFilter<$PrismaModel> | $Enums.Role
   }
 
+  export type NestedBoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
   export type NestedEnumRoleWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.Role | EnumRoleFieldRefInput<$PrismaModel>
     in?: $Enums.Role[] | ListEnumRoleFieldRefInput<$PrismaModel>
@@ -37979,11 +38021,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumRoleFilter<$PrismaModel>
     _max?: NestedEnumRoleFilter<$PrismaModel>
-  }
-
-  export type NestedBoolFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolFilter<$PrismaModel> | boolean
   }
 
   export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
@@ -38186,6 +38223,7 @@ export namespace Prisma {
     name: string
     password?: string | null
     role?: $Enums.Role
+    isSuperAdmin?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     sessions?: SessionCreateNestedManyWithoutUserInput
@@ -38199,6 +38237,7 @@ export namespace Prisma {
     name: string
     password?: string | null
     role?: $Enums.Role
+    isSuperAdmin?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
@@ -38241,6 +38280,7 @@ export namespace Prisma {
     name?: StringFilter<"User"> | string
     password?: StringNullableFilter<"User"> | string | null
     role?: EnumRoleFilter<"User"> | $Enums.Role
+    isSuperAdmin?: BoolFilter<"User"> | boolean
     tenantId?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
@@ -38518,6 +38558,7 @@ export namespace Prisma {
     name: string
     password?: string | null
     role?: $Enums.Role
+    isSuperAdmin?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     tenant?: TenantCreateNestedOneWithoutUsersInput
@@ -38531,6 +38572,7 @@ export namespace Prisma {
     name: string
     password?: string | null
     role?: $Enums.Role
+    isSuperAdmin?: boolean
     tenantId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -38560,6 +38602,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    isSuperAdmin?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tenant?: TenantUpdateOneWithoutUsersNestedInput
@@ -38573,6 +38616,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    isSuperAdmin?: BoolFieldUpdateOperationsInput | boolean
     tenantId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -38586,6 +38630,7 @@ export namespace Prisma {
     name: string
     password?: string | null
     role?: $Enums.Role
+    isSuperAdmin?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     tenant?: TenantCreateNestedOneWithoutUsersInput
@@ -38599,6 +38644,7 @@ export namespace Prisma {
     name: string
     password?: string | null
     role?: $Enums.Role
+    isSuperAdmin?: boolean
     tenantId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -38628,6 +38674,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    isSuperAdmin?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tenant?: TenantUpdateOneWithoutUsersNestedInput
@@ -38641,6 +38688,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    isSuperAdmin?: BoolFieldUpdateOperationsInput | boolean
     tenantId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -39735,6 +39783,7 @@ export namespace Prisma {
     name: string
     password?: string | null
     role?: $Enums.Role
+    isSuperAdmin?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     tenant?: TenantCreateNestedOneWithoutUsersInput
@@ -39748,6 +39797,7 @@ export namespace Prisma {
     name: string
     password?: string | null
     role?: $Enums.Role
+    isSuperAdmin?: boolean
     tenantId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -39777,6 +39827,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    isSuperAdmin?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tenant?: TenantUpdateOneWithoutUsersNestedInput
@@ -39790,6 +39841,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    isSuperAdmin?: BoolFieldUpdateOperationsInput | boolean
     tenantId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -39803,6 +39855,7 @@ export namespace Prisma {
     name: string
     password?: string | null
     role?: $Enums.Role
+    isSuperAdmin?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -39813,6 +39866,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    isSuperAdmin?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     sessions?: SessionUpdateManyWithoutUserNestedInput
@@ -39826,6 +39880,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    isSuperAdmin?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
@@ -39839,6 +39894,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    isSuperAdmin?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
