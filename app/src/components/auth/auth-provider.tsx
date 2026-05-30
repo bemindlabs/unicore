@@ -11,6 +11,12 @@ export interface AuthUser {
   name: string;
   role: User['role'];
   avatarUrl?: string;
+  /**
+   * Whether the user may operate the cross-tenant control plane. Surfaced on the
+   * `/auth/me` payload (FU-01) so the dashboard derives it directly instead of
+   * probing the SuperAdminGuard-protected `/admin/overview`. Absent ⇒ false.
+   */
+  isSuperAdmin?: boolean;
 }
 
 /** Normalize role from backend (OWNER) to frontend enum (owner) */
@@ -23,13 +29,17 @@ export interface AuthState {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  /** Self-serve SaaS signup (M3/E3): creates a tenant + OWNER, starts the trial, logs in. */
+  /**
+   * Self-serve SaaS signup (M3/E3): creates a tenant + OWNER, starts the trial,
+   * logs in. Returns the authenticated user so callers can fire funnel analytics
+   * (FU-02) with whatever props are available.
+   */
   signup: (input: {
     email: string;
     password: string;
     name: string;
     businessName?: string;
-  }) => Promise<void>;
+  }) => Promise<AuthUser>;
   logout: () => void;
   updateUser: (updates: Partial<AuthUser>) => void;
 }
@@ -162,8 +172,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('auth_token', res.accessToken);
       localStorage.setItem('refresh_token', res.refreshToken);
       syncCookie(res.accessToken);
-      setUser(normalizeUser(res.user));
+      const authedUser = normalizeUser(res.user);
+      setUser(authedUser);
       scheduleRefresh(res.accessToken);
+      return authedUser;
     },
     [scheduleRefresh],
   );

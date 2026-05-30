@@ -440,6 +440,7 @@ export class AuthService implements OnModuleDestroy {
         email: true,
         name: true,
         role: true,
+        isSuperAdmin: true,
         createdAt: true,
         updatedAt: true,
       },

@@ -12,6 +12,10 @@ import {
   Label,
 } from '@bemindlabs/unicore-ui';
 import { useAuth } from '@/hooks/use-auth';
+import { track } from '@/lib/analytics';
+
+/** Card-less trial plan the signup endpoint starts (mirrors gateway TRIAL_PLAN). */
+const TRIAL_PLAN = 'growth';
 
 /**
  * Card-less SaaS signup (M4/E5, wires the M3 `/auth/signup` endpoint).
@@ -35,12 +39,16 @@ export function SignupForm() {
     setError(null);
     setIsSubmitting(true);
     try {
-      await signup({
+      const user = await signup({
         name,
         email,
         password,
         businessName: businessName.trim() || undefined,
       });
+      // Funnel analytics (FU-02): card-less signup succeeded → trial started.
+      // No-ops unless an analytics transport is configured (see @/lib/analytics).
+      // tenantId is not on the signup response DTO; userId is the closest signal.
+      track('trial_started', { plan: TRIAL_PLAN, userId: user?.id ?? null });
       // First-run setup: hand off to the per-tenant bootstrap wizard.
       router.replace('/wizard');
     } catch (err) {
