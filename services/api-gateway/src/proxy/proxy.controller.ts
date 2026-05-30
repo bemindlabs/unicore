@@ -27,6 +27,7 @@ export class ProxyController {
     @Req() req: Request,
     @Res() res: Response,
     @CurrentUser('id') userId: string,
+    @CurrentUser('tenantId') tenantId: string,
   ) {
     // Strip the controller prefix to get the downstream path
     const prefix = '/api/proxy';
@@ -34,7 +35,7 @@ export class ProxyController {
       ? req.originalUrl.slice(prefix.length) || '/'
       : req.originalUrl;
 
-    return this.handleProxy(req, res, fullPath, userId);
+    return this.handleProxy(req, res, fullPath, userId, tenantId);
   }
 
   private async handleProxy(
@@ -42,6 +43,7 @@ export class ProxyController {
     res: Response,
     path: string,
     userId: string,
+    tenantId?: string,
   ): Promise<void> {
     try {
       const body = await this.readBody(req);
@@ -52,6 +54,7 @@ export class ProxyController {
         headers: req.headers as Record<string, string | string[] | undefined>,
         body,
         userId,
+        tenantId,
       });
 
       res.status(proxyResponse.statusCode);

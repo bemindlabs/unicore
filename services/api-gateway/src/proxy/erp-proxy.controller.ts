@@ -29,6 +29,7 @@ export class ErpProxyController {
     @Req() req: Request,
     @Res() res: Response,
     @CurrentUser('id') userId: string,
+    @CurrentUser('tenantId') tenantId: string,
   ) {
     const prefix = '/api/proxy/erp';
     const subPath = req.originalUrl.startsWith(prefix)
@@ -45,6 +46,7 @@ export class ErpProxyController {
         headers: req.headers as Record<string, string | string[] | undefined>,
         body,
         userId,
+        tenantId,
       });
 
       res.status(proxyResponse.statusCode);

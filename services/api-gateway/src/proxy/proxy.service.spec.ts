@@ -102,6 +102,52 @@ describe('ProxyService', () => {
       expect(headers?.['x-user-id']).toBe('user-abc-123');
     });
 
+    it('injects the trusted x-tenant-id and strips any client-supplied value', async () => {
+      let capturedOptions: Record<string, unknown> | null = null;
+      const fakeRes = createFakeResponse();
+      const fakeReq = createFakeRequest();
+      mockHttpRequest.mockImplementation((opts: unknown, cb: unknown) => {
+        capturedOptions = opts as Record<string, unknown>;
+        process.nextTick(() => {
+          (cb as (res: typeof fakeRes) => void)(fakeRes);
+          process.nextTick(() => { fakeRes.emit('data', Buffer.from('{}')); fakeRes.emit('end'); });
+        });
+        return fakeReq;
+      });
+      await service.forward({
+        method: 'GET',
+        path: '/ai/chat',
+        // Client tries to spoof a tenant header — it must be discarded.
+        headers: { 'x-tenant-id': 'attacker-tenant' },
+        body: null,
+        tenantId: 'trusted-tenant',
+      });
+      const headers = capturedOptions?.['headers'] as Record<string, string> | undefined;
+      expect(headers?.['x-tenant-id']).toBe('trusted-tenant');
+    });
+
+    it('does not forward a client x-tenant-id when no trusted tenantId is resolved', async () => {
+      let capturedOptions: Record<string, unknown> | null = null;
+      const fakeRes = createFakeResponse();
+      const fakeReq = createFakeRequest();
+      mockHttpRequest.mockImplementation((opts: unknown, cb: unknown) => {
+        capturedOptions = opts as Record<string, unknown>;
+        process.nextTick(() => {
+          (cb as (res: typeof fakeRes) => void)(fakeRes);
+          process.nextTick(() => { fakeRes.emit('data', Buffer.from('{}')); fakeRes.emit('end'); });
+        });
+        return fakeReq;
+      });
+      await service.forward({
+        method: 'GET',
+        path: '/ai/chat',
+        headers: { 'x-tenant-id': 'attacker-tenant' },
+        body: null,
+      });
+      const headers = capturedOptions?.['headers'] as Record<string, string> | undefined;
+      expect(headers?.['x-tenant-id']).toBeUndefined();
+    });
+
     it('routes /ai/* to port 4200', async () => {
       let capturedPort: number | null = null;
       const fakeRes = createFakeResponse();
