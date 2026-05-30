@@ -16,6 +16,7 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { AuthResponseDto } from './dto/auth-response.dto';
+import { resolveTenantId } from '../common/tenancy/tenancy.config';
 
 const BCRYPT_ROUNDS = 12;
 const ACCESS_TOKEN_EXPIRY = '15m';
@@ -115,7 +116,13 @@ export class AuthService implements OnModuleDestroy {
     }
 
     this.loginAttempts.delete(email);
-    return { id: user.id, email: user.email, name: user.name, role: user.role };
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      tenantId: user.tenantId,
+    };
   }
 
   // ---------------------------------------------------------------------------
@@ -132,7 +139,7 @@ export class AuthService implements OnModuleDestroy {
       accessToken: string;
       refreshToken: string | null;
     },
-  ): Promise<{ id: string; email: string; name: string; role: string }> {
+  ): Promise<{ id: string; email: string; name: string; role: string; tenantId?: string | null }> {
     // 1. Check if this OAuth account is already linked
     const existing = await this.prisma.oAuthAccount.findUnique({
       where: {
@@ -142,7 +149,7 @@ export class AuthService implements OnModuleDestroy {
         },
       },
       include: {
-        user: { select: { id: true, email: true, name: true, role: true } },
+        user: { select: { id: true, email: true, name: true, role: true, tenantId: true } },
       },
     });
 
@@ -166,7 +173,7 @@ export class AuthService implements OnModuleDestroy {
     if (profile.email) {
       const userByEmail = await this.prisma.user.findUnique({
         where: { email: profile.email },
-        select: { id: true, email: true, name: true, role: true },
+        select: { id: true, email: true, name: true, role: true, tenantId: true },
       });
 
       if (userByEmail) {
@@ -198,7 +205,7 @@ export class AuthService implements OnModuleDestroy {
           },
         },
       },
-      select: { id: true, email: true, name: true, role: true },
+      select: { id: true, email: true, name: true, role: true, tenantId: true },
     });
 
     this.logger.log(`New OAuth user registered (${provider}): ${user.email}`);
@@ -248,7 +255,7 @@ export class AuthService implements OnModuleDestroy {
         name: dto.name,
         password: hashedPassword,
       },
-      select: { id: true, email: true, name: true, role: true },
+      select: { id: true, email: true, name: true, role: true, tenantId: true },
     });
 
     this.logger.log(`User registered: ${user.email}`);
@@ -271,7 +278,7 @@ export class AuthService implements OnModuleDestroy {
       const updated = await this.prisma.user.update({
         where: { email },
         data: { role },
-        select: { id: true, email: true, name: true, role: true },
+        select: { id: true, email: true, name: true, role: true, tenantId: true },
       });
       this.logger.log(`Admin user updated: ${updated.email} → ${role}`);
       return updated;
@@ -281,7 +288,7 @@ export class AuthService implements OnModuleDestroy {
 
     const user = await this.prisma.user.create({
       data: { email, name, password: hashedPassword, role },
-      select: { id: true, email: true, name: true, role: true },
+      select: { id: true, email: true, name: true, role: true, tenantId: true },
     });
 
     this.logger.log(`Admin user provisioned: ${user.email} (${role})`);
@@ -293,6 +300,7 @@ export class AuthService implements OnModuleDestroy {
     email: string;
     name: string;
     role: string;
+    tenantId?: string | null;
   }): Promise<AuthResponseDto> {
     this.logger.log(`User logged in: ${user.email}`);
     return this.createTokens(user);
@@ -303,7 +311,7 @@ export class AuthService implements OnModuleDestroy {
       where: { refreshToken },
       include: {
         user: {
-          select: { id: true, email: true, name: true, role: true },
+          select: { id: true, email: true, name: true, role: true, tenantId: true },
         },
       },
     });
@@ -464,7 +472,7 @@ export class AuthService implements OnModuleDestroy {
     // 2. Find or create user in API Gateway database
     let user = await this.prisma.user.findUnique({
       where: { email },
-      select: { id: true, email: true, name: true, role: true },
+      select: { id: true, email: true, name: true, role: true, tenantId: true },
     });
 
     if (!user) {
@@ -474,7 +482,7 @@ export class AuthService implements OnModuleDestroy {
           name: customerName,
           password: null, // Platform-linked account, no local password
         },
-        select: { id: true, email: true, name: true, role: true },
+        select: { id: true, email: true, name: true, role: true, tenantId: true },
       });
       this.logger.log(`Platform-linked user created via token exchange: ${email}`);
     }
@@ -494,12 +502,17 @@ export class AuthService implements OnModuleDestroy {
     email: string;
     name: string;
     role: string;
+    tenantId?: string | null;
   }): Promise<AuthResponseDto> {
     const jti = randomBytes(16).toString('hex');
+    // Resolve the tenant claim: in self-host this is always the default tenant;
+    // in saas it is the user's tenantId (falling back to the default constant).
+    const tid = resolveTenantId(user.tenantId);
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
       role: user.role,
+      tid,
       jti,
     };
 
