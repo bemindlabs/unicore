@@ -395,7 +395,9 @@ model ContactChannel {
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
 
-  @@unique([channel, externalId])
+  // Unique PER TENANT (FU-03): the same channel identity (e.g. a Telegram
+  // user_id) may contact two different tenants' businesses independently.
+  @@unique([tenantId, channel, externalId])
   @@index([tenantId])
   @@index([channel])
   @@index([erpContactId])

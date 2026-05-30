@@ -36,7 +36,7 @@ describe('InventoryService — CRUD extensions', () => {
 
   describe('create', () => {
     it('throws ConflictException when SKU already exists', async () => {
-      mockPrisma.product.findUnique.mockResolvedValue({ id: 'p1', sku: 'DUPLICATE' });
+      mockPrisma.product.findFirst.mockResolvedValue({ id: 'p1', sku: 'DUPLICATE' });
 
       await expect(
         service.create({ sku: 'DUPLICATE', name: 'Widget', unitPrice: 10 }),
@@ -45,7 +45,7 @@ describe('InventoryService — CRUD extensions', () => {
     });
 
     it('creates product without inventory when quantity is 0', async () => {
-      mockPrisma.product.findUnique.mockResolvedValue(null);
+      mockPrisma.product.findFirst.mockResolvedValue(null);
       mockPrisma.product.create.mockResolvedValue({ id: 'p1', sku: 'NEW1', name: 'Widget' });
 
       const result = await service.create({ sku: 'NEW1', name: 'Widget', unitPrice: 10, quantity: 0 });
@@ -54,7 +54,7 @@ describe('InventoryService — CRUD extensions', () => {
     });
 
     it('creates product with inventory item and existing warehouse', async () => {
-      mockPrisma.product.findUnique.mockResolvedValue(null);
+      mockPrisma.product.findFirst.mockResolvedValue(null);
       mockPrisma.product.create.mockResolvedValue({ id: 'p1', sku: 'NEW2', name: 'Widget' });
       mockPrisma.warehouse.findFirst.mockResolvedValue({ id: 'wh-1', isDefault: true });
       mockPrisma.inventoryItem.create.mockResolvedValue({});
@@ -66,7 +66,7 @@ describe('InventoryService — CRUD extensions', () => {
     });
 
     it('creates default warehouse when none exists', async () => {
-      mockPrisma.product.findUnique.mockResolvedValue(null);
+      mockPrisma.product.findFirst.mockResolvedValue(null);
       mockPrisma.product.create.mockResolvedValue({ id: 'p1', sku: 'NEW3', name: 'Widget' });
       mockPrisma.warehouse.findFirst.mockResolvedValue(null);
       mockPrisma.warehouse.create.mockResolvedValue({ id: 'wh-new', isDefault: true });

@@ -200,7 +200,10 @@ model Contact {
   type         ContactType   @default(LEAD)
   /// Display name — person full name or company trading name
   name         String
-  email        String?       @unique
+  /// Unique PER TENANT (SaaS phase 4.5, FU-03), not globally — two tenants may
+  /// each have a contact with the same email. In self-host the tenantId is the
+  /// constant default so (tenantId, email) behaves as a unique email.
+  email        String?
   phone        String?
   company      String?
   website      String?
@@ -238,10 +241,10 @@ model Contact {
   updatedAt    DateTime      @updatedAt
   archivedAt   DateTime?
 
+  @@unique([tenantId, email])
   @@index([tenantId])
   @@index([type])
   @@index([leadStage])
-  @@index([email])
   @@index([leadScore])
 }
 
@@ -272,7 +275,8 @@ model ContactNote {
 model Product {
   id             String          @id @default(uuid()) @db.Uuid
   tenantId       String          @default("00000000-0000-0000-0000-000000000000") @db.Uuid
-  sku            String          @unique
+  /// Unique PER TENANT (FU-03), not globally — see Contact.email.
+  sku            String
   name           String
   description    String?
   /// "physical" | "digital" | "service"
@@ -299,8 +303,8 @@ model Product {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
+  @@unique([tenantId, sku])
   @@index([tenantId])
-  @@index([sku])
   @@index([isActive])
   @@index([category])
 }
@@ -310,8 +314,8 @@ model Warehouse {
   id             String          @id @default(uuid()) @db.Uuid
   tenantId       String          @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   name           String
-  /// Short unique code used in stock-transfer references
-  code           String          @unique
+  /// Short code used in stock-transfer references — unique PER TENANT (FU-03).
+  code           String
   address        String?
   country        String?         @db.Char(2)
   status         WarehouseStatus @default(ACTIVE)
@@ -321,6 +325,7 @@ model Warehouse {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
+  @@unique([tenantId, code])
   @@index([tenantId])
 }
 
@@ -395,8 +400,8 @@ model StockMovement {
 model Order {
   id                 String            @id @default(uuid()) @db.Uuid
   tenantId           String            @default("00000000-0000-0000-0000-000000000000") @db.Uuid
-  /// Human-readable reference e.g. "ORD-2025-00042"
-  orderNumber        String            @unique
+  /// Human-readable reference e.g. "ORD-2025-00042" — unique PER TENANT (FU-03).
+  orderNumber        String
   contactId          String?           @db.Uuid
   contact            Contact?          @relation(fields: [contactId], references: [id])
   status             OrderStatus       @default(DRAFT)
@@ -435,12 +440,12 @@ model Order {
   confirmedAt        DateTime?
   cancelledAt        DateTime?
 
+  @@unique([tenantId, orderNumber])
   @@index([tenantId])
   @@index([status])
   @@index([fulfillmentStatus])
   @@index([contactId])
   @@index([createdAt])
-  @@index([orderNumber])
 }
 
 /// A single line on an Order.
@@ -508,8 +513,8 @@ model Fulfillment {
 model Invoice {
   id                  String              @id @default(uuid()) @db.Uuid
   tenantId            String              @default("00000000-0000-0000-0000-000000000000") @db.Uuid
-  /// Human-readable reference e.g. "INV-2025-00017"
-  invoiceNumber       String              @unique
+  /// Human-readable reference e.g. "INV-2025-00017" — unique PER TENANT (FU-03).
+  invoiceNumber       String
   contactId           String?             @db.Uuid
   contact             Contact?            @relation(fields: [contactId], references: [id])
   orderId             String?             @db.Uuid
@@ -552,6 +557,7 @@ model Invoice {
   sentAt              DateTime?
   voidedAt            DateTime?
 
+  @@unique([tenantId, invoiceNumber])
   @@index([tenantId])
   @@index([status])
   @@index([contactId])

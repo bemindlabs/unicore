@@ -32295,7 +32295,7 @@ export namespace Prisma {
 
   export type ContactChannelWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    channel_externalId?: ContactChannelChannelExternalIdCompoundUniqueInput
+    tenantId_channel_externalId?: ContactChannelTenantIdChannelExternalIdCompoundUniqueInput
     AND?: ContactChannelWhereInput | ContactChannelWhereInput[]
     OR?: ContactChannelWhereInput[]
     NOT?: ContactChannelWhereInput | ContactChannelWhereInput[]
@@ -32309,7 +32309,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"ContactChannel"> | Date | string
     updatedAt?: DateTimeFilter<"ContactChannel"> | Date | string
     conversations?: ConversationListRelationFilter
-  }, "id" | "channel_externalId">
+  }, "id" | "tenantId_channel_externalId">
 
   export type ContactChannelOrderByWithAggregationInput = {
     id?: SortOrder
@@ -36620,7 +36620,8 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
-  export type ContactChannelChannelExternalIdCompoundUniqueInput = {
+  export type ContactChannelTenantIdChannelExternalIdCompoundUniqueInput = {
+    tenantId: string
     channel: $Enums.ConversationChannel
     externalId: string
   }
