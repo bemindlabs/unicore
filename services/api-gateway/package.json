@@ -1,6 +1,11 @@
 {
   "name": "@bemindlabs/unicore-api-gateway",
   "version": "0.0.2",
+  "author": {
+    "name": "Bemind Technology Co., Ltd.",
+    "url": "https://bemind.tech"
+  },
+  "license": "BUSL-1.1",
   "private": true,
   "scripts": {
     "build": "nest build",
@@ -66,6 +71,9 @@
     "@types/passport-local": "^1.0.0",
     "@types/supertest": "^6.0.0",
     "@types/ws": "^8.5.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.0",
     "jest": "^29.7.0",
     "prisma": "^6.0.0",
     "source-map-support": "^0.5.21",

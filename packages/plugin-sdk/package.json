@@ -1,6 +1,11 @@
 {
   "name": "@bemindlabs/unicore-plugin-sdk",
   "version": "0.0.1",
+  "author": {
+    "name": "Bemind Technology Co., Ltd.",
+    "url": "https://bemind.tech"
+  },
+  "license": "BUSL-1.1",
   "private": true,
   "type": "module",
   "exports": {
@@ -16,11 +21,13 @@
   "bin": {
     "plugin-sdk": "./dist/cli.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc && tsc -p tsconfig.cjs.json",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src/",
+    "lint": "eslint src/ --ext .ts,.tsx",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
@@ -31,6 +38,9 @@
   "devDependencies": {
     "@types/jest": "^29.5.0",
     "@types/node": "^25.5.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.0",
     "jest": "^29.7.0",
     "ts-jest": "^29.2.0",
     "typescript": "^5.5.0"

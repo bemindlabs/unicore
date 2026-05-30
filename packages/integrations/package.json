@@ -1,6 +1,11 @@
 {
   "name": "@bemindlabs/unicore-integrations",
   "version": "0.0.2",
+  "author": {
+    "name": "Bemind Technology Co., Ltd.",
+    "url": "https://bemind.tech"
+  },
+  "license": "BUSL-1.1",
   "private": true,
   "type": "module",
   "exports": {
@@ -40,14 +45,18 @@
     "build": "tsc && tsc -p tsconfig.cjs.json",
     "typecheck": "tsc --noEmit",
     "test": "npx jest --passWithNoTests",
-    "lint": "eslint src/"
+    "lint": "eslint src/ --ext .ts,.tsx"
   },
   "dependencies": {
     "@bemindlabs/unicore-shared-types": "workspace:*"
   },
   "devDependencies": {
     "@types/jest": "^29.5.0",
+    "@types/node": "^20.14.0",
     "@types/nodemailer": "^6.4.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.0",
     "jest": "^29.7.0",
     "ts-jest": "^29.2.0",
     "typescript": "^5.5.0"

@@ -1,6 +1,11 @@
 {
   "name": "@bemindlabs/unicore-ui",
   "version": "0.0.2",
+  "author": {
+    "name": "Bemind Technology Co., Ltd.",
+    "url": "https://bemind.tech"
+  },
+  "license": "BUSL-1.1",
   "private": true,
   "type": "module",
   "main": "./src/index.ts",
@@ -14,7 +19,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src/",
+    "lint": "eslint src/ --ext .ts,.tsx",
     "test": "jest --passWithNoTests",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
@@ -45,8 +50,12 @@
   },
   "devDependencies": {
     "@types/jest": "^29.5.0",
+    "@types/node": "^20.14.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
     "tailwindcss": "^3.4.0",
