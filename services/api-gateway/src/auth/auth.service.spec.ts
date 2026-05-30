@@ -123,6 +123,59 @@ describe('AuthService', () => {
         }),
       ).rejects.toThrow(ConflictException);
     });
+
+    it('signs the token with a tid claim (self-host → default tenant)', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
+      mockPrismaService.user.create.mockResolvedValue({
+        id: '1',
+        email: 'new@example.com',
+        name: 'New User',
+        role: 'VIEWER',
+        tenantId: null,
+      });
+      mockPrismaService.session.create.mockResolvedValue({});
+
+      await service.register({
+        email: 'new@example.com',
+        name: 'New User',
+        password: 'Password1',
+        confirmPassword: 'Password1',
+      });
+
+      const signedPayload = mockJwtService.sign.mock.calls[0][0];
+      // Self-host (default DEPLOYMENT_MODE) → the implicit default tenant id.
+      expect(signedPayload.tid).toBe('00000000-0000-0000-0000-000000000000');
+    });
+
+    it('uses the user tenantId in the tid claim under saas mode', async () => {
+      const prev = process.env.DEPLOYMENT_MODE;
+      process.env.DEPLOYMENT_MODE = 'saas';
+      try {
+        mockPrismaService.user.findUnique.mockResolvedValue(null);
+        (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
+        mockPrismaService.user.create.mockResolvedValue({
+          id: '1',
+          email: 'tenant@example.com',
+          name: 'Tenant User',
+          role: 'OWNER',
+          tenantId: 'tenant-abc',
+        });
+        mockPrismaService.session.create.mockResolvedValue({});
+
+        await service.register({
+          email: 'tenant@example.com',
+          name: 'Tenant User',
+          password: 'Password1',
+          confirmPassword: 'Password1',
+        });
+
+        const signedPayload = mockJwtService.sign.mock.calls[0][0];
+        expect(signedPayload.tid).toBe('tenant-abc');
+      } finally {
+        process.env.DEPLOYMENT_MODE = prev;
+      }
+    });
   });
 
   describe('refresh', () => {
