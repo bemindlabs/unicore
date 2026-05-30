@@ -31,8 +31,11 @@ import { ConversationsModule } from './conversations/conversations.module';
 import { ConversationsAnalyticsModule } from './conversations-analytics/conversations-analytics.module';
 import { ContactProfileModule } from './contact-profile/contact-profile.module';
 import { PluginsModule } from './plugins/plugins.module';
+import { EmailModule } from './email/email.module';
+import { TenancyModule } from './common/tenancy/tenancy.module';
+import { TenantContextMiddleware } from './common/tenancy/tenant-context.middleware';
 @Module({
-  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule, AdminModule, AuditModule, SettingsModule, TasksModule, WebhooksModule, ChatHistoryModule, NotificationsModule, GamificationModule, ChannelsModule, ConversationsAnalyticsModule, ConversationsModule, ContactProfileModule, ConversationIntelligenceModule, PluginsModule],
+  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule, AdminModule, AuditModule, SettingsModule, TasksModule, WebhooksModule, ChatHistoryModule, NotificationsModule, GamificationModule, ChannelsModule, ConversationsAnalyticsModule, ConversationsModule, ContactProfileModule, ConversationIntelligenceModule, PluginsModule, EmailModule, TenancyModule],
   controllers: [AppController],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
@@ -43,6 +46,7 @@ import { PluginsModule } from './plugins/plugins.module';
     RateLimitStore,
     RateLimitMiddleware,
     RequestValidationMiddleware,
+    TenantContextMiddleware,
   ],
 })
 export class AppModule implements NestModule {
@@ -50,7 +54,9 @@ export class AppModule implements NestModule {
     consumer
       // DomainRoutingMiddleware runs first — it attaches tenantId to req and
       // sets per-domain CORS headers before rate limiting or auth kicks in.
-      .apply(DomainRoutingMiddleware, RequestValidationMiddleware, RateLimitMiddleware)
+      // TenantContextMiddleware strips client-supplied x-tenant-id and sets the
+      // self-host default tenant before auth resolves the saas tenant.
+      .apply(DomainRoutingMiddleware, TenantContextMiddleware, RequestValidationMiddleware, RateLimitMiddleware)
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
 }
