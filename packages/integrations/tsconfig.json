@@ -8,6 +8,7 @@
     "sourceMap": true,
     "noEmit": false,
     "allowImportingTsExtensions": false,
+    "types": ["node", "jest"],
     "paths": {
       "@bemindlabs/unicore-shared-types": ["../shared-types/src"]
     }
