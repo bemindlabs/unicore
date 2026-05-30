@@ -13,6 +13,7 @@ import { useDemoMode } from '@/hooks/use-demo-mode';
 import { DemoBanner } from '@/components/demo/DemoBanner';
 import { DeployButton } from '@/components/demo/DeployButton';
 import { UpgradeBanner } from '@/components/license/upgrade-banner';
+import { TrialBanner } from '@/components/saas/trial-banner';
 const RetroDeskThemeProvider = ({ children }: { children: React.ReactNode }) => <>{children}</>;
 const isRetroDeskFamily = (_theme: string | null) => false;
 
@@ -78,6 +79,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <MobileNav open={mobileNavOpen} onOpenChange={setMobileNavOpen} />
         <div className="flex flex-1 flex-col overflow-hidden">
           <Header onMobileMenuToggle={() => setMobileNavOpen(true)} />
+          <TrialBanner />
           <UpgradeBanner />
           <main className="flex-1 overflow-y-auto">
             <div className="w-full p-4 lg:p-6">{children}</div>

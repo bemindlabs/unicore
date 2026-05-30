@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import {
   Button,
@@ -11,9 +12,11 @@ import {
   Label,
 } from '@bemindlabs/unicore-ui';
 import { useAuth } from '@/hooks/use-auth';
+import { useSaas } from '@/contexts/saas-context';
 
 export function LoginForm() {
   const { login } = useAuth();
+  const { isSaas } = useSaas();
   const t = useTranslations('auth');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -81,6 +84,15 @@ export function LoginForm() {
               {isSubmitting ? t('signingIn') : t('signIn')}
             </Button>
           </form>
+          {/* Self-serve signup only exists on the hosted SaaS (M4/E5). */}
+          {isSaas && (
+            <p className="mt-4 text-center text-sm text-muted-foreground">
+              New to UniCore?{' '}
+              <Link href="/signup" className="font-medium text-primary hover:underline">
+                Start your free trial
+              </Link>
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>

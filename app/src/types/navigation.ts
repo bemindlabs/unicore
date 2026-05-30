@@ -24,4 +24,10 @@ export interface NavItem {
 export interface NavSection {
   label: string;
   items: NavItem[];
+  /**
+   * When true, this section is the Bemind super-admin control plane (M4/E5):
+   * visible only to platform super-admins in SaaS mode, hidden entirely in
+   * self-host. Gated on the live `isSuperAdmin` signal, not a license tier.
+   */
+  superAdmin?: boolean;
 }
