@@ -8,17 +8,49 @@ generator client {
   output   = "../generated/prisma"
 }
 
+// ---------------------------------------------------------------------------
+// Tenancy (SaaS phase 4.1)
+// A Tenant (a.k.a. Organization) is the isolation boundary — one solopreneur's
+// business. In self-host mode a single implicit default tenant
+// (00000000-0000-0000-0000-000000000000) is used; in saas mode signup creates
+// one Tenant + OWNER User per business. See SAAS-ARCHITECTURE.md §1.
+// ---------------------------------------------------------------------------
+
+model Tenant {
+  id           String   @id @default(uuid())
+  /// Subdomain slug: {slug}.unicore.bemind.tech
+  slug         String   @unique
+  name         String
+  /// ACTIVE | SUSPENDED | PENDING | ARCHIVED
+  status       String   @default("ACTIVE")
+  /// STARTER | GROWTH | CUSTOM
+  plan         String   @default("STARTER")
+  customDomain String?  @unique
+  /// Links to unicore-license edition/flags
+  licenseKey   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  users        User[]
+
+  @@map("tenants")
+}
+
 model User {
   id            String         @id @default(uuid())
   email         String         @unique
   name          String
   password      String?
   role          Role           @default(VIEWER)
+  /// Owning tenant. Nullable for migration; backfilled to the default tenant.
+  tenantId      String?
+  tenant        Tenant?        @relation(fields: [tenantId], references: [id])
   sessions      Session[]
   notifications Notification[]
   oauthAccounts OAuthAccount[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+
+  @@index([tenantId])
 }
 
 model OAuthAccount {
