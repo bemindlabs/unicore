@@ -10,7 +10,7 @@ FROM base AS deps
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
 COPY packages/config/package.json ./packages/config/
 COPY services/ai-engine/package.json ./services/ai-engine/
-RUN pnpm install --frozen-lockfile --filter @unicore/ai-engine...
+RUN pnpm install --frozen-lockfile --filter @bemindlabs/unicore-ai-engine...
 
 FROM base AS build
 COPY packages/config ./packages/config
