@@ -7,9 +7,11 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { LicenseGuard } from '../license/guards/license.guard';
 import { ProFeatureRequired } from '../license/decorators/pro-feature.decorator';
+import { SuperAdminGuard } from '../common/guards/super-admin.guard';
 import * as os from 'os';
 
 @Roles('OWNER')
+@UseGuards(SuperAdminGuard)
 @Controller('api/v1/admin')
 export class AdminController {
   private readonly logger = new Logger(AdminController.name);
@@ -128,50 +130,46 @@ export class AdminController {
   }
 
   /**
-   * Builds the tenant record for the single-tenant instance from live database
-   * and license data. Reads the earliest OWNER user for the ownerEmail, derives
-   * the plan from the validated license edition, and reads the custom domain
-   * from environment variables.
+   * Maps a real `Tenant` row to the control-plane tenant DTO consumed by the
+   * platform-admin frontend. Enriches the row with the live member count and the
+   * earliest OWNER's email (both real queries). Per-tenant `storageUsageBytes`
+   * and `apiCallsThisMonth` have no usage-metering source yet, so they are
+   * reported as 0 — the DTO shape is preserved for the frontend, and these
+   * become live the moment a usage source lands (no shape change required).
    */
-  private async buildTenantRecord(userCount: number): Promise<Record<string, any>> {
-    const owner = await this.prisma.user.findFirst({
-      where: { role: 'OWNER' },
-      select: { email: true },
-      orderBy: { createdAt: 'asc' },
-    });
-
-    const licenseStatus = await this.licenseService.getLicenseStatus();
-    const editionToPlan: Record<string, string> = {
-      enterprise: 'ENTERPRISE',
-      pro: 'GROWTH',
-      community: 'STARTER',
-    };
-    const plan = editionToPlan[licenseStatus.edition] ?? 'STARTER';
-
-    // Derive display domain from APP_URL env var; fall back to 'localhost'
-    const appUrl = process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? '';
-    const customDomain =
-      appUrl.replace(/^https?:\/\//, '').replace(/\/$/, '') || 'localhost';
-
-    const tenantName =
-      process.env.TENANT_NAME ?? process.env.APP_NAME ?? 'UniCore Instance';
-    const tenantSlug =
-      process.env.TENANT_SLUG ?? customDomain.split('.')[0] ?? 'default';
+  private async mapTenantRecord(tenant: {
+    id: string;
+    slug: string;
+    name: string;
+    status: string;
+    plan: string;
+    customDomain: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }): Promise<Record<string, any>> {
+    const [memberCount, owner] = await Promise.all([
+      this.prisma.user.count({ where: { tenantId: tenant.id } }),
+      this.prisma.user.findFirst({
+        where: { tenantId: tenant.id, role: 'OWNER' },
+        select: { email: true },
+        orderBy: { createdAt: 'asc' },
+      }),
+    ]);
 
     return {
-      id: `tenant-${tenantSlug}`,
-      name: tenantName,
-      slug: tenantSlug,
-      displayName: tenantName,
-      customDomain,
-      plan,
-      status: 'ACTIVE' as const,
-      ownerEmail: owner?.email ?? 'admin@unicore.dev',
-      memberCount: userCount,
+      id: tenant.id,
+      name: tenant.name,
+      slug: tenant.slug,
+      displayName: tenant.name,
+      customDomain: tenant.customDomain ?? null,
+      plan: tenant.plan,
+      status: tenant.status,
+      ownerEmail: owner?.email ?? null,
+      memberCount,
       storageUsageBytes: 0,
       apiCallsThisMonth: 0,
-      createdAt: this.startedAt.toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: tenant.createdAt.toISOString(),
+      updatedAt: tenant.updatedAt.toISOString(),
     };
   }
 
@@ -382,27 +380,41 @@ export class AdminController {
 
   @Get('overview')
   async overview() {
-    const [userCount, sessionCount] = await Promise.all([
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    const [
+      userCount,
+      sessionCount,
+      newUsersThisWeek,
+      tenantCount,
+      activeTenantCount,
+      suspendedTenantCount,
+      trialingTenantCount,
+      newTenantsThisWeek,
+    ] = await Promise.all([
       this.prisma.user.count(),
       this.prisma.session.count(),
+      this.prisma.user.count({ where: { createdAt: { gte: oneWeekAgo } } }),
+      this.prisma.tenant.count(),
+      this.prisma.tenant.count({ where: { status: 'ACTIVE' } }),
+      this.prisma.tenant.count({ where: { status: 'SUSPENDED' } }),
+      this.prisma.tenant.count({ where: { subscriptionStatus: 'TRIALING' } }),
+      this.prisma.tenant.count({ where: { createdAt: { gte: oneWeekAgo } } }),
     ]);
-
-    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const newUsersThisWeek = await this.prisma.user.count({
-      where: { createdAt: { gte: oneWeekAgo } },
-    });
 
     const uptimeSeconds = Math.floor((Date.now() - this.startedAt.getTime()) / 1000);
 
     return {
-      tenantCount: 1,
-      activeTenantCount: 1,
+      tenantCount,
+      activeTenantCount,
+      suspendedTenantCount,
+      trialingTenantCount,
       totalUserCount: userCount,
       activeSessionCount: sessionCount,
       storageUsageBytes: 0,
       apiCallsToday: 0,
       apiCallsThisMonth: 0,
-      newTenantsThisWeek: 0,
+      newTenantsThisWeek,
       newUsersThisWeek,
       uptime: uptimeSeconds,
       generatedAt: new Date().toISOString(),
@@ -413,56 +425,98 @@ export class AdminController {
 
   @Get('tenants')
   async listTenants(@Query() query: any) {
-    const page = query.page ? parseInt(query.page) : 1;
-    const limit = query.limit ? parseInt(query.limit) : 20;
+    const page = Math.max(1, query.page ? parseInt(query.page, 10) : 1);
+    const limit = Math.min(100, Math.max(1, query.limit ? parseInt(query.limit, 10) : 20));
 
-    const userCount = await this.prisma.user.count();
-    const tenant = await this.buildTenantRecord(userCount);
-
-    const search = query.search?.toLowerCase();
-    const statusFilter = query.status;
-    const planFilter = query.plan;
-
-    let items = [tenant];
-
-    if (search && !tenant.name.toLowerCase().includes(search) && !tenant.slug.includes(search)) {
-      items = [];
-    }
-    if (statusFilter && tenant.status !== statusFilter) {
-      items = [];
-    }
-    if (planFilter && tenant.plan !== planFilter) {
-      items = [];
+    const where: Record<string, any> = {};
+    if (query.status) where.status = query.status;
+    if (query.plan) where.plan = query.plan;
+    if (query.search) {
+      const search = String(query.search);
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { slug: { contains: search, mode: 'insensitive' } },
+      ];
     }
 
-    return {
-      items,
-      total: items.length,
-      page,
-      limit,
-    };
+    const [rows, total] = await Promise.all([
+      this.prisma.tenant.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.tenant.count({ where }),
+    ]);
+
+    const items = await Promise.all(rows.map((t) => this.mapTenantRecord(t)));
+
+    return { items, total, page, limit };
+  }
+
+  @Get('tenants/:id')
+  async getTenant(@Param('id') id: string) {
+    const tenant = await this.prisma.tenant.findUnique({ where: { id } });
+    if (!tenant) {
+      throw new NotFoundException('Tenant not found');
+    }
+    return this.mapTenantRecord(tenant);
   }
 
   @Post('tenants/:id/suspend')
-  async suspendTenant(@Param('id') id: string, @Body() body: any) {
-    this.logger.warn(`Tenant suspend requested: ${id} — reason: ${body?.reason ?? 'none'}`);
-    const userCount = await this.prisma.user.count();
-    const tenant = await this.buildTenantRecord(userCount);
+  async suspendTenant(@Param('id') id: string, @Body() body: any, @CurrentUser() currentUser: any) {
+    const existing = await this.prisma.tenant.findUnique({ where: { id }, select: { id: true } });
+    if (!existing) {
+      throw new NotFoundException('Tenant not found');
+    }
+
+    const tenant = await this.prisma.tenant.update({
+      where: { id },
+      data: { status: 'SUSPENDED' },
+    });
+
+    this.logger.warn(`Tenant suspended: ${id} — reason: ${body?.reason ?? 'none'}`);
+    await this.auditService.log({
+      userId: currentUser?.id,
+      userEmail: currentUser?.email,
+      action: 'suspend',
+      resource: 'tenants',
+      resourceId: id,
+      detail: `Suspended tenant ${tenant.slug} — reason: ${body?.reason ?? 'Administrative action'}`,
+    });
+
+    const mapped = await this.mapTenantRecord(tenant);
     return {
-      ...tenant,
-      id,
-      status: 'SUSPENDED',
-      suspendedAt: new Date().toISOString(),
+      ...mapped,
+      status: tenant.status,
+      suspendedAt: tenant.updatedAt.toISOString(),
       suspendReason: body?.reason ?? 'Administrative action',
     };
   }
 
   @Post('tenants/:id/activate')
-  async activateTenant(@Param('id') id: string) {
-    this.logger.log(`Tenant activate requested: ${id}`);
-    const userCount = await this.prisma.user.count();
-    const tenant = await this.buildTenantRecord(userCount);
-    return { ...tenant, id, status: 'ACTIVE' };
+  async activateTenant(@Param('id') id: string, @CurrentUser() currentUser: any) {
+    const existing = await this.prisma.tenant.findUnique({ where: { id }, select: { id: true } });
+    if (!existing) {
+      throw new NotFoundException('Tenant not found');
+    }
+
+    const tenant = await this.prisma.tenant.update({
+      where: { id },
+      data: { status: 'ACTIVE' },
+    });
+
+    this.logger.log(`Tenant activated: ${id}`);
+    await this.auditService.log({
+      userId: currentUser?.id,
+      userEmail: currentUser?.email,
+      action: 'activate',
+      resource: 'tenants',
+      resourceId: id,
+      detail: `Activated tenant ${tenant.slug}`,
+    });
+
+    return this.mapTenantRecord(tenant);
   }
 
   // ─── Platform Settings ──────────────────────────────────────────────────
