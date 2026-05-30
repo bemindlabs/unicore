@@ -20,12 +20,13 @@ import { useAuth } from '@/hooks/use-auth';
  *    Read from the build-time `NEXT_PUBLIC_DEPLOYMENT_MODE` flag (defaults to
  *    `self-host`, mirroring the backend `DEPLOYMENT_MODE` default in `.env.example`).
  *  - `isSuperAdmin`    — whether the current user may operate the cross-tenant
- *    control plane. The backend `SuperAdminGuard` is the source of truth (it reads
- *    `User.isSuperAdmin` live from the DB and is never surfaced on the JWT/`/auth/me`),
- *    so we *probe* the guarded admin endpoint rather than trust a client claim:
- *    200 ⇒ super-admin, 403 ⇒ tenant owner. In self-host the guard passes through
- *    unconditionally, but the control-plane surfaces stay hidden anyway (there is
- *    only one tenant) — so super-admin is reported false in self-host.
+ *    control plane. The backend `SuperAdminGuard` reads `User.isSuperAdmin` live
+ *    from the DB and remains the authoritative gate on every control-plane
+ *    request; the dashboard only needs the flag to decide what UI to render, so
+ *    we read it from the `/auth/me` payload (FU-01) rather than probing the
+ *    guarded `/admin/overview` endpoint. In self-host the control-plane surfaces
+ *    stay hidden anyway (there is only one tenant) — so super-admin is reported
+ *    false in self-host.
  *  - `subscription`    — the trial / subscription view from
  *    `GET /api/v1/tenant/subscription`, consumed by the trial banner.
  *
@@ -68,19 +69,22 @@ const DEPLOYMENT_MODE = resolveMode();
 export const SaasContext = createContext<SaasContextValue | null>(null);
 
 export function SaasProvider({ children }: { children: ReactNode }) {
-  const { isAuthenticated } = useAuth();
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const { isAuthenticated, user } = useAuth();
   const [subscription, setSubscription] = useState<SubscriptionView | null>(null);
   const [loading, setLoading] = useState(true);
   const isMounted = useRef(true);
 
   const isSaas = DEPLOYMENT_MODE === 'saas';
 
+  // Super-admin is derived from the `/auth/me` payload (FU-01) — no guard probe.
+  // The backend SuperAdminGuard still enforces every control-plane request; this
+  // flag only drives which UI surfaces render. Self-host keeps it hidden anyway.
+  const isSuperAdmin = isSaas ? Boolean(user?.isSuperAdmin) : false;
+
   const refresh = useCallback(async () => {
     // Self-host: no control plane, no trial — keep everything quiet.
     if (!isSaas || !isAuthenticated) {
       if (isMounted.current) {
-        setIsSuperAdmin(false);
         setSubscription(null);
         setLoading(false);
       }
@@ -90,23 +94,12 @@ export function SaasProvider({ children }: { children: ReactNode }) {
     setLoading(true);
 
     // Trial / subscription view for the banner.
-    const subPromise = api
+    const sub = await api
       .get<SubscriptionView>('/api/v1/tenant/subscription')
       .catch(() => null);
 
-    // Super-admin probe: the control-plane overview is behind SuperAdminGuard.
-    // A resolved promise (200) means the user cleared the guard; a thrown 403
-    // means they are a tenant owner. We never trust a client-held flag.
-    const adminProbe = api
-      .get('/api/v1/admin/overview')
-      .then(() => true)
-      .catch(() => false);
-
-    const [sub, admin] = await Promise.all([subPromise, adminProbe]);
-
     if (isMounted.current) {
       setSubscription(sub);
-      setIsSuperAdmin(admin);
       setLoading(false);
     }
   }, [isSaas, isAuthenticated]);
