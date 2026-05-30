@@ -28,6 +28,13 @@ model Tenant {
   customDomain String?  @unique
   /// Links to unicore-license edition/flags
   licenseKey   String?
+  /// End of the 30-day free trial (saas mode). Null in self-host. (M3/E3)
+  trialEndsAt  DateTime?
+  /// Stripe-mirrored billing state: TRIALING | ACTIVE | PAST_DUE | CANCELED. (M3/E3)
+  subscriptionStatus String @default("TRIALING")
+  /// Stripe linkage, populated on conversion to a paid subscription. (M3/E4)
+  stripeCustomerId     String?
+  stripeSubscriptionId String? @unique
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   users        User[]

@@ -35,8 +35,10 @@ import { EmailModule } from './email/email.module';
 import { TenancyModule } from './common/tenancy/tenancy.module';
 import { TenantContextMiddleware } from './common/tenancy/tenant-context.middleware';
 import { TenantContextInterceptor } from './common/tenancy/tenant-context.interceptor';
+import { TenantModule } from './tenant/tenant.module';
+import { SuspendedTenantGuard } from './common/guards/suspended-tenant.guard';
 @Module({
-  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule, AdminModule, AuditModule, SettingsModule, TasksModule, WebhooksModule, ChatHistoryModule, NotificationsModule, GamificationModule, ChannelsModule, ConversationsAnalyticsModule, ConversationsModule, ContactProfileModule, ConversationIntelligenceModule, PluginsModule, EmailModule, TenancyModule],
+  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule, AdminModule, AuditModule, SettingsModule, TasksModule, WebhooksModule, ChatHistoryModule, NotificationsModule, GamificationModule, ChannelsModule, ConversationsAnalyticsModule, ConversationsModule, ContactProfileModule, ConversationIntelligenceModule, PluginsModule, EmailModule, TenancyModule, TenantModule],
   controllers: [AppController],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
@@ -47,6 +49,9 @@ import { TenantContextInterceptor } from './common/tenancy/tenant-context.interc
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
     { provide: APP_GUARD, useClass: DemoModeGuard },
+    // Enforces read-only for SUSPENDED tenants (saas mode); runs after the JWT
+    // guard so req.user.tenantId is resolved. Self-host is a pass-through.
+    { provide: APP_GUARD, useClass: SuspendedTenantGuard },
     RateLimitStore,
     RateLimitMiddleware,
     RequestValidationMiddleware,

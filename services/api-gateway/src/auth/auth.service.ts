@@ -16,7 +16,9 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { AuthResponseDto } from './dto/auth-response.dto';
-import { resolveTenantId } from '../common/tenancy/tenancy.config';
+import { resolveTenantId, isSaaS } from '../common/tenancy/tenancy.config';
+import { SignupDto } from './dto/signup.dto';
+import { TRIAL_PLAN, computeTrialEnd, PLANS } from '../common/tenancy/plans.config';
 
 const BCRYPT_ROUNDS = 12;
 const ACCESS_TOKEN_EXPIRY = '15m';
@@ -261,6 +263,83 @@ export class AuthService implements OnModuleDestroy {
     this.logger.log(`User registered: ${user.email}`);
 
     return this.createTokens(user);
+  }
+
+  /**
+   * Self-serve SaaS signup (M3/E3). Creates a Tenant (status ACTIVE,
+   * subscriptionStatus TRIALING, plan = full-Growth trial) + an OWNER User, sets
+   * the 30-day trial window, then logs the user in. NO Stripe call here — the
+   * card is collected later at conversion. Only valid in saas mode; self-host
+   * has no signup surface (a single implicit default tenant is used instead).
+   */
+  async signup(dto: SignupDto): Promise<AuthResponseDto> {
+    if (!isSaaS()) {
+      throw new ConflictException('Signup is only available in SaaS mode');
+    }
+
+    const existing = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+    if (existing) {
+      throw new ConflictException('Email already registered');
+    }
+
+    const businessName = (dto.businessName || dto.name).trim();
+    const slug = await this.generateUniqueSlug(businessName || dto.email.split('@')[0]);
+    const hashedPassword = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
+    const trialEndsAt = computeTrialEnd();
+
+    // Trial gives the full Growth feature set; the tenant.plan reflects that.
+    const tenant = await this.prisma.tenant.create({
+      data: {
+        slug,
+        name: businessName,
+        status: 'ACTIVE',
+        plan: PLANS[TRIAL_PLAN].key,
+        subscriptionStatus: 'TRIALING',
+        trialEndsAt,
+      },
+    });
+
+    const user = await this.prisma.user.create({
+      data: {
+        email: dto.email,
+        name: dto.name,
+        password: hashedPassword,
+        role: 'OWNER',
+        tenantId: tenant.id,
+      },
+      select: { id: true, email: true, name: true, role: true, tenantId: true },
+    });
+
+    this.logger.log(
+      `SaaS signup: tenant ${tenant.id} (${slug}) + OWNER ${user.email}, trial ends ${trialEndsAt.toISOString()}`,
+    );
+
+    return this.createTokens(user);
+  }
+
+  /** Build a URL-safe, unique tenant slug from a business name. */
+  private async generateUniqueSlug(base: string): Promise<string> {
+    const root =
+      base
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 40) || 'tenant';
+
+    let candidate = root;
+    let suffix = 0;
+    // Collision-resistant: append a short random suffix on conflict.
+    while (await this.prisma.tenant.findUnique({ where: { slug: candidate } })) {
+      suffix += 1;
+      candidate = `${root}-${randomBytes(2).toString('hex')}`;
+      if (suffix > 5) {
+        candidate = `${root}-${randomBytes(4).toString('hex')}`;
+        break;
+      }
+    }
+    return candidate;
   }
 
   async provisionAdmin(

@@ -129,6 +129,10 @@ exports.Prisma.TenantScalarFieldEnum = {
   plan: 'plan',
   customDomain: 'customDomain',
   licenseKey: 'licenseKey',
+  trialEndsAt: 'trialEndsAt',
+  subscriptionStatus: 'subscriptionStatus',
+  stripeCustomerId: 'stripeCustomerId',
+  stripeSubscriptionId: 'stripeSubscriptionId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
