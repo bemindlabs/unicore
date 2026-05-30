@@ -61,18 +61,12 @@ export class ProviderFactoryService implements OnModuleInit {
    * corresponding adapter (OpenAiProvider-compatible or custom ILlmProvider).
    */
   private static readonly PROVIDER_CATALOG: Omit<ProviderInfo, 'configured'>[] = [
+    // Only the three wired adapter classes ship today: OpenAiProvider,
+    // AnthropicProvider, OllamaProvider. Additional providers (DeepSeek, Groq,
+    // Gemini, Moonshot/Kimi, Mistral, xAI/Grok, OpenRouter, Together, Fireworks,
+    // Cohere) are on the roadmap — re-add an entry here once an adapter is wired.
     { id: 'openai',     name: 'OpenAI',             keyField: 'openaiKey',     getKeyUrl: 'https://platform.openai.com/api-keys',          models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'o3-mini', 'o4-mini'],                                                         defaultBaseUrl: 'https://api.openai.com/v1' },
     { id: 'anthropic',  name: 'Anthropic',           keyField: 'anthropicKey',  getKeyUrl: 'https://console.anthropic.com/settings/keys',   models: ['claude-sonnet-4-20250514', 'claude-opus-4-20250514', 'claude-haiku-4-5-20251001'],                                       defaultBaseUrl: 'https://api.anthropic.com' },
-    { id: 'deepseek',   name: 'DeepSeek',            keyField: 'deepseekKey',   getKeyUrl: 'https://platform.deepseek.com/api_keys',        models: ['deepseek-chat', 'deepseek-reasoner'],                                                                                  defaultBaseUrl: 'https://api.deepseek.com/v1' },
-    { id: 'groq',       name: 'Groq',                keyField: 'groqKey',       getKeyUrl: 'https://console.groq.com/keys',                 models: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'],    description: 'Ultra-fast inference',  defaultBaseUrl: 'https://api.groq.com/openai/v1' },
-    { id: 'gemini',     name: 'Google Gemini',       keyField: 'geminiKey',     getKeyUrl: 'https://aistudio.google.com/apikey',            models: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash'],                                                              defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai' },
-    { id: 'moonshot',   name: 'Moonshot AI / Kimi',  keyField: 'moonshotKey',   getKeyUrl: 'https://platform.moonshot.cn/console/api-keys',  models: ['kimi-k2', 'moonshot-v1-128k', 'moonshot-v1-32k'],                                                                     defaultBaseUrl: 'https://api.moonshot.cn/v1' },
-    { id: 'mistral',    name: 'Mistral AI',          keyField: 'mistralKey',    getKeyUrl: 'https://console.mistral.ai/api-keys/',           models: ['mistral-large-latest', 'mistral-small-latest', 'codestral-latest'],                                                    defaultBaseUrl: 'https://api.mistral.ai/v1' },
-    { id: 'xai',        name: 'xAI (Grok)',          keyField: 'xaiKey',        getKeyUrl: 'https://console.x.ai/',                         models: ['grok-3', 'grok-3-mini', 'grok-3-fast'],                                                                                defaultBaseUrl: 'https://api.x.ai/v1' },
-    { id: 'openrouter', name: 'OpenRouter',          keyField: 'openrouterKey', getKeyUrl: 'https://openrouter.ai/keys',                    models: ['openai/gpt-4o', 'anthropic/claude-sonnet-4-20250514', 'google/gemini-2.5-flash', 'meta-llama/llama-3.3-70b-instruct'], description: '200+ models, free tier', defaultBaseUrl: 'https://openrouter.ai/api/v1' },
-    { id: 'together',   name: 'Together AI',         keyField: 'togetherKey',   getKeyUrl: 'https://api.together.xyz/settings/api-keys',    models: ['meta-llama/Llama-3.3-70B-Instruct-Turbo', 'mistralai/Mixtral-8x7B-Instruct-v0.1'],                                     defaultBaseUrl: 'https://api.together.xyz/v1' },
-    { id: 'fireworks',  name: 'Fireworks AI',        keyField: 'fireworksKey',  getKeyUrl: 'https://fireworks.ai/api-keys',                 models: ['accounts/fireworks/models/llama-v3p1-70b-instruct'],                                                                   defaultBaseUrl: 'https://api.fireworks.ai/inference/v1' },
-    { id: 'cohere',     name: 'Cohere',              keyField: 'cohereKey',     getKeyUrl: 'https://dashboard.cohere.com/api-keys',         models: ['command-r-plus', 'command-r', 'command-light'],                                                                        defaultBaseUrl: 'https://api.cohere.com/v1' },
     { id: 'ollama',     name: 'Ollama (local)',      keyField: 'ollamaToken',   getKeyUrl: '',                                              models: ['llama3.2', 'llama3.1', 'mistral', 'codellama', 'phi3'],                      description: 'Free, runs locally',    defaultBaseUrl: 'http://localhost:11434', keyOptional: true },
   ];
   private primaryProviderId: string;
@@ -85,7 +79,7 @@ export class ProviderFactoryService implements OnModuleInit {
       'openai',
     );
     this.failoverProviderIds = (
-      this.config.get<string>('LLM_FAILOVER_PROVIDERS', 'anthropic,openrouter,deepseek,groq,gemini,moonshot,mistral,xai,together,fireworks,cohere,ollama')
+      this.config.get<string>('LLM_FAILOVER_PROVIDERS', 'anthropic,ollama')
     )
       .split(',')
       .map((s) => s.trim())
@@ -251,19 +245,20 @@ export class ProviderFactoryService implements OnModuleInit {
       );
     }
 
-    // OpenAI-compatible providers — all use OpenAiProvider with custom base URL
-    const compatibleProviders = [
-      { id: 'moonshot',   envKey: 'MOONSHOT_API_KEY',    dbKey: 'moonshotKey',    baseUrl: 'https://api.moonshot.cn/v1',                  defaultModel: 'kimi-k2' },
-      { id: 'openrouter', envKey: 'OPENROUTER_API_KEY',  dbKey: 'openrouterKey',  baseUrl: 'https://openrouter.ai/api/v1',                defaultModel: 'openai/gpt-4o' },
-      { id: 'deepseek',   envKey: 'DEEPSEEK_API_KEY',    dbKey: 'deepseekKey',    baseUrl: 'https://api.deepseek.com/v1',                 defaultModel: 'deepseek-chat' },
-      { id: 'groq',       envKey: 'GROQ_API_KEY',        dbKey: 'groqKey',        baseUrl: 'https://api.groq.com/openai/v1',              defaultModel: 'llama-3.3-70b-versatile' },
-      { id: 'gemini',     envKey: 'GEMINI_API_KEY',      dbKey: 'geminiKey',      baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', defaultModel: 'gemini-2.5-flash' },
-      { id: 'mistral',    envKey: 'MISTRAL_API_KEY',     dbKey: 'mistralKey',     baseUrl: 'https://api.mistral.ai/v1',                   defaultModel: 'mistral-large-latest' },
-      { id: 'xai',        envKey: 'XAI_API_KEY',         dbKey: 'xaiKey',         baseUrl: 'https://api.x.ai/v1',                         defaultModel: 'grok-3-mini' },
-      { id: 'together',   envKey: 'TOGETHER_API_KEY',    dbKey: 'togetherKey',    baseUrl: 'https://api.together.xyz/v1',                  defaultModel: 'meta-llama/Llama-3.3-70B-Instruct-Turbo' },
-      { id: 'fireworks',  envKey: 'FIREWORKS_API_KEY',   dbKey: 'fireworksKey',   baseUrl: 'https://api.fireworks.ai/inference/v1',        defaultModel: 'accounts/fireworks/models/llama-v3p1-70b-instruct' },
-      { id: 'cohere',     envKey: 'COHERE_API_KEY',      dbKey: 'cohereKey',      baseUrl: 'https://api.cohere.com/v1',                   defaultModel: 'command-r-plus' },
-    ] as const;
+    // OpenAI-compatible providers — all use OpenAiProvider with custom base URL.
+    // ROADMAP: only the three wired adapters (openai, anthropic, ollama) ship
+    // today, so this list is intentionally empty. To wire an additional provider
+    // (e.g. deepseek, groq, gemini, moonshot/kimi, mistral, xai/grok, openrouter,
+    // together, fireworks, cohere), add its entry back here *and* to
+    // PROVIDER_CATALOG above — no new adapter class is needed since they are all
+    // OpenAI-compatible.
+    const compatibleProviders: ReadonlyArray<{
+      id: string;
+      envKey: string;
+      dbKey: string;
+      baseUrl: string;
+      defaultModel: string;
+    }> = [];
 
     const db = dbKeys as Record<string, string>;
     for (const p of compatibleProviders) {
