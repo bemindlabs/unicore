@@ -21,6 +21,7 @@ import { GithubAuthGuard } from './guards/github-auth.guard';
 import { Public } from './decorators/public.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { RegisterDto } from './dto/register.dto';
+import { SignupDto } from './dto/signup.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -41,6 +42,26 @@ export class AuthController {
   @Post('register')
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
+  }
+
+  /**
+   * Self-serve SaaS signup (M3/E3): creates a Tenant + OWNER User, starts the
+   * 30-day free trial (no card), and logs the user in. Public, saas-mode only.
+   */
+  @Public()
+  @Post('signup')
+  @HttpCode(HttpStatus.CREATED)
+  async signup(@Body() dto: SignupDto, @Req() req: Request) {
+    const result = await this.authService.signup(dto);
+    await this.auditService.log({
+      userId: result.user.id,
+      userEmail: result.user.email,
+      action: 'create',
+      resource: 'tenants',
+      detail: `SaaS signup + 30-day trial started`,
+      ip: req.ip,
+    });
+    return result;
   }
 
   @Public()

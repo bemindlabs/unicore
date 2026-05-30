@@ -1,0 +1,95 @@
+import { ConflictException } from '@nestjs/common';
+import { AuthService } from './auth.service';
+
+/**
+ * Focused tests for the SaaS signup path (M3/E3): signup creates a Tenant +
+ * OWNER and starts the 30-day trial; it is rejected in self-host mode.
+ */
+describe('AuthService.signup', () => {
+  const original = process.env.DEPLOYMENT_MODE;
+  afterEach(() => {
+    process.env.DEPLOYMENT_MODE = original;
+    jest.clearAllMocks();
+  });
+
+  function build() {
+    const createdTenant = {
+      id: 'tenant-1',
+      slug: 'acme',
+      name: 'Acme',
+      plan: 'GROWTH',
+      subscriptionStatus: 'TRIALING',
+    };
+    const prisma = {
+      user: {
+        findUnique: jest.fn(async () => null),
+        create: jest.fn(async ({ data, select }: any) => ({
+          id: 'user-1',
+          email: data.email,
+          name: data.name,
+          role: data.role,
+          tenantId: data.tenantId,
+        })),
+      },
+      tenant: {
+        findUnique: jest.fn(async () => null), // slug not taken
+        create: jest.fn(async ({ data }: any) => ({ ...createdTenant, ...data })),
+      },
+      session: { create: jest.fn(async () => ({})) },
+    };
+    const jwtService = { sign: jest.fn(() => 'signed.jwt.token') };
+    const blacklist = {};
+    const service = new AuthService(prisma as any, jwtService as any, blacklist as any);
+    service.onModuleDestroy(); // stop the cleanup interval immediately
+    return { service, prisma, jwtService };
+  }
+
+  const dto = {
+    email: 'owner@acme.com',
+    name: 'Owner',
+    password: 'Password1',
+    businessName: 'Acme',
+  };
+
+  it('creates a TRIALING Growth tenant + OWNER and returns tokens in saas mode', async () => {
+    process.env.DEPLOYMENT_MODE = 'saas';
+    const { service, prisma } = build();
+    const result = await service.signup(dto as any);
+
+    expect(prisma.tenant.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          name: 'Acme',
+          status: 'ACTIVE',
+          plan: 'GROWTH',
+          subscriptionStatus: 'TRIALING',
+          trialEndsAt: expect.any(Date),
+        }),
+      }),
+    );
+    expect(prisma.user.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ role: 'OWNER', tenantId: 'tenant-1' }),
+      }),
+    );
+    // trialEndsAt is ~30 days out
+    const data = prisma.tenant.create.mock.calls[0][0].data;
+    const days = Math.round((data.trialEndsAt.getTime() - Date.now()) / 86_400_000);
+    expect(days).toBe(30);
+    expect(result.accessToken).toBe('signed.jwt.token');
+    expect(result.user.email).toBe('owner@acme.com');
+  });
+
+  it('rejects signup in self-host mode', async () => {
+    process.env.DEPLOYMENT_MODE = 'self-host';
+    const { service } = build();
+    await expect(service.signup(dto as any)).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('rejects a duplicate email', async () => {
+    process.env.DEPLOYMENT_MODE = 'saas';
+    const { service, prisma } = build();
+    prisma.user.findUnique.mockResolvedValueOnce({ id: 'existing' } as any);
+    await expect(service.signup(dto as any)).rejects.toBeInstanceOf(ConflictException);
+  });
+});

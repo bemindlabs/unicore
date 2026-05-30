@@ -3257,6 +3257,10 @@ export namespace Prisma {
     plan: string | null
     customDomain: string | null
     licenseKey: string | null
+    trialEndsAt: Date | null
+    subscriptionStatus: string | null
+    stripeCustomerId: string | null
+    stripeSubscriptionId: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -3269,6 +3273,10 @@ export namespace Prisma {
     plan: string | null
     customDomain: string | null
     licenseKey: string | null
+    trialEndsAt: Date | null
+    subscriptionStatus: string | null
+    stripeCustomerId: string | null
+    stripeSubscriptionId: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -3281,6 +3289,10 @@ export namespace Prisma {
     plan: number
     customDomain: number
     licenseKey: number
+    trialEndsAt: number
+    subscriptionStatus: number
+    stripeCustomerId: number
+    stripeSubscriptionId: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -3295,6 +3307,10 @@ export namespace Prisma {
     plan?: true
     customDomain?: true
     licenseKey?: true
+    trialEndsAt?: true
+    subscriptionStatus?: true
+    stripeCustomerId?: true
+    stripeSubscriptionId?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -3307,6 +3323,10 @@ export namespace Prisma {
     plan?: true
     customDomain?: true
     licenseKey?: true
+    trialEndsAt?: true
+    subscriptionStatus?: true
+    stripeCustomerId?: true
+    stripeSubscriptionId?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -3319,6 +3339,10 @@ export namespace Prisma {
     plan?: true
     customDomain?: true
     licenseKey?: true
+    trialEndsAt?: true
+    subscriptionStatus?: true
+    stripeCustomerId?: true
+    stripeSubscriptionId?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -3404,6 +3428,10 @@ export namespace Prisma {
     plan: string
     customDomain: string | null
     licenseKey: string | null
+    trialEndsAt: Date | null
+    subscriptionStatus: string
+    stripeCustomerId: string | null
+    stripeSubscriptionId: string | null
     createdAt: Date
     updatedAt: Date
     _count: TenantCountAggregateOutputType | null
@@ -3433,6 +3461,10 @@ export namespace Prisma {
     plan?: boolean
     customDomain?: boolean
     licenseKey?: boolean
+    trialEndsAt?: boolean
+    subscriptionStatus?: boolean
+    stripeCustomerId?: boolean
+    stripeSubscriptionId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     users?: boolean | Tenant$usersArgs<ExtArgs>
@@ -3447,6 +3479,10 @@ export namespace Prisma {
     plan?: boolean
     customDomain?: boolean
     licenseKey?: boolean
+    trialEndsAt?: boolean
+    subscriptionStatus?: boolean
+    stripeCustomerId?: boolean
+    stripeSubscriptionId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["tenant"]>
@@ -3459,6 +3495,10 @@ export namespace Prisma {
     plan?: boolean
     customDomain?: boolean
     licenseKey?: boolean
+    trialEndsAt?: boolean
+    subscriptionStatus?: boolean
+    stripeCustomerId?: boolean
+    stripeSubscriptionId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["tenant"]>
@@ -3471,11 +3511,15 @@ export namespace Prisma {
     plan?: boolean
     customDomain?: boolean
     licenseKey?: boolean
+    trialEndsAt?: boolean
+    subscriptionStatus?: boolean
+    stripeCustomerId?: boolean
+    stripeSubscriptionId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type TenantOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "slug" | "name" | "status" | "plan" | "customDomain" | "licenseKey" | "createdAt" | "updatedAt", ExtArgs["result"]["tenant"]>
+  export type TenantOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "slug" | "name" | "status" | "plan" | "customDomain" | "licenseKey" | "trialEndsAt" | "subscriptionStatus" | "stripeCustomerId" | "stripeSubscriptionId" | "createdAt" | "updatedAt", ExtArgs["result"]["tenant"]>
   export type TenantInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     users?: boolean | Tenant$usersArgs<ExtArgs>
     _count?: boolean | TenantCountOutputTypeDefaultArgs<ExtArgs>
@@ -3508,6 +3552,19 @@ export namespace Prisma {
        * Links to unicore-license edition/flags
        */
       licenseKey: string | null
+      /**
+       * End of the 30-day free trial (saas mode). Null in self-host. (M3/E3)
+       */
+      trialEndsAt: Date | null
+      /**
+       * Stripe-mirrored billing state: TRIALING | ACTIVE | PAST_DUE | CANCELED. (M3/E3)
+       */
+      subscriptionStatus: string
+      /**
+       * Stripe linkage, populated on conversion to a paid subscription. (M3/E4)
+       */
+      stripeCustomerId: string | null
+      stripeSubscriptionId: string | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["tenant"]>
@@ -3941,6 +3998,10 @@ export namespace Prisma {
     readonly plan: FieldRef<"Tenant", 'String'>
     readonly customDomain: FieldRef<"Tenant", 'String'>
     readonly licenseKey: FieldRef<"Tenant", 'String'>
+    readonly trialEndsAt: FieldRef<"Tenant", 'DateTime'>
+    readonly subscriptionStatus: FieldRef<"Tenant", 'String'>
+    readonly stripeCustomerId: FieldRef<"Tenant", 'String'>
+    readonly stripeSubscriptionId: FieldRef<"Tenant", 'String'>
     readonly createdAt: FieldRef<"Tenant", 'DateTime'>
     readonly updatedAt: FieldRef<"Tenant", 'DateTime'>
   }
@@ -30410,6 +30471,10 @@ export namespace Prisma {
     plan: 'plan',
     customDomain: 'customDomain',
     licenseKey: 'licenseKey',
+    trialEndsAt: 'trialEndsAt',
+    subscriptionStatus: 'subscriptionStatus',
+    stripeCustomerId: 'stripeCustomerId',
+    stripeSubscriptionId: 'stripeSubscriptionId',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -31021,6 +31086,10 @@ export namespace Prisma {
     plan?: StringFilter<"Tenant"> | string
     customDomain?: StringNullableFilter<"Tenant"> | string | null
     licenseKey?: StringNullableFilter<"Tenant"> | string | null
+    trialEndsAt?: DateTimeNullableFilter<"Tenant"> | Date | string | null
+    subscriptionStatus?: StringFilter<"Tenant"> | string
+    stripeCustomerId?: StringNullableFilter<"Tenant"> | string | null
+    stripeSubscriptionId?: StringNullableFilter<"Tenant"> | string | null
     createdAt?: DateTimeFilter<"Tenant"> | Date | string
     updatedAt?: DateTimeFilter<"Tenant"> | Date | string
     users?: UserListRelationFilter
@@ -31034,6 +31103,10 @@ export namespace Prisma {
     plan?: SortOrder
     customDomain?: SortOrderInput | SortOrder
     licenseKey?: SortOrderInput | SortOrder
+    trialEndsAt?: SortOrderInput | SortOrder
+    subscriptionStatus?: SortOrder
+    stripeCustomerId?: SortOrderInput | SortOrder
+    stripeSubscriptionId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     users?: UserOrderByRelationAggregateInput
@@ -31043,6 +31116,7 @@ export namespace Prisma {
     id?: string
     slug?: string
     customDomain?: string
+    stripeSubscriptionId?: string
     AND?: TenantWhereInput | TenantWhereInput[]
     OR?: TenantWhereInput[]
     NOT?: TenantWhereInput | TenantWhereInput[]
@@ -31050,10 +31124,13 @@ export namespace Prisma {
     status?: StringFilter<"Tenant"> | string
     plan?: StringFilter<"Tenant"> | string
     licenseKey?: StringNullableFilter<"Tenant"> | string | null
+    trialEndsAt?: DateTimeNullableFilter<"Tenant"> | Date | string | null
+    subscriptionStatus?: StringFilter<"Tenant"> | string
+    stripeCustomerId?: StringNullableFilter<"Tenant"> | string | null
     createdAt?: DateTimeFilter<"Tenant"> | Date | string
     updatedAt?: DateTimeFilter<"Tenant"> | Date | string
     users?: UserListRelationFilter
-  }, "id" | "slug" | "customDomain">
+  }, "id" | "slug" | "customDomain" | "stripeSubscriptionId">
 
   export type TenantOrderByWithAggregationInput = {
     id?: SortOrder
@@ -31063,6 +31140,10 @@ export namespace Prisma {
     plan?: SortOrder
     customDomain?: SortOrderInput | SortOrder
     licenseKey?: SortOrderInput | SortOrder
+    trialEndsAt?: SortOrderInput | SortOrder
+    subscriptionStatus?: SortOrder
+    stripeCustomerId?: SortOrderInput | SortOrder
+    stripeSubscriptionId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: TenantCountOrderByAggregateInput
@@ -31081,6 +31162,10 @@ export namespace Prisma {
     plan?: StringWithAggregatesFilter<"Tenant"> | string
     customDomain?: StringNullableWithAggregatesFilter<"Tenant"> | string | null
     licenseKey?: StringNullableWithAggregatesFilter<"Tenant"> | string | null
+    trialEndsAt?: DateTimeNullableWithAggregatesFilter<"Tenant"> | Date | string | null
+    subscriptionStatus?: StringWithAggregatesFilter<"Tenant"> | string
+    stripeCustomerId?: StringNullableWithAggregatesFilter<"Tenant"> | string | null
+    stripeSubscriptionId?: StringNullableWithAggregatesFilter<"Tenant"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Tenant"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Tenant"> | Date | string
   }
@@ -33085,6 +33170,10 @@ export namespace Prisma {
     plan?: string
     customDomain?: string | null
     licenseKey?: string | null
+    trialEndsAt?: Date | string | null
+    subscriptionStatus?: string
+    stripeCustomerId?: string | null
+    stripeSubscriptionId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     users?: UserCreateNestedManyWithoutTenantInput
@@ -33098,6 +33187,10 @@ export namespace Prisma {
     plan?: string
     customDomain?: string | null
     licenseKey?: string | null
+    trialEndsAt?: Date | string | null
+    subscriptionStatus?: string
+    stripeCustomerId?: string | null
+    stripeSubscriptionId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     users?: UserUncheckedCreateNestedManyWithoutTenantInput
@@ -33111,6 +33204,10 @@ export namespace Prisma {
     plan?: StringFieldUpdateOperationsInput | string
     customDomain?: NullableStringFieldUpdateOperationsInput | string | null
     licenseKey?: NullableStringFieldUpdateOperationsInput | string | null
+    trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    subscriptionStatus?: StringFieldUpdateOperationsInput | string
+    stripeCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    stripeSubscriptionId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     users?: UserUpdateManyWithoutTenantNestedInput
@@ -33124,6 +33221,10 @@ export namespace Prisma {
     plan?: StringFieldUpdateOperationsInput | string
     customDomain?: NullableStringFieldUpdateOperationsInput | string | null
     licenseKey?: NullableStringFieldUpdateOperationsInput | string | null
+    trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    subscriptionStatus?: StringFieldUpdateOperationsInput | string
+    stripeCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    stripeSubscriptionId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     users?: UserUncheckedUpdateManyWithoutTenantNestedInput
@@ -33137,6 +33238,10 @@ export namespace Prisma {
     plan?: string
     customDomain?: string | null
     licenseKey?: string | null
+    trialEndsAt?: Date | string | null
+    subscriptionStatus?: string
+    stripeCustomerId?: string | null
+    stripeSubscriptionId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -33149,6 +33254,10 @@ export namespace Prisma {
     plan?: StringFieldUpdateOperationsInput | string
     customDomain?: NullableStringFieldUpdateOperationsInput | string | null
     licenseKey?: NullableStringFieldUpdateOperationsInput | string | null
+    trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    subscriptionStatus?: StringFieldUpdateOperationsInput | string
+    stripeCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    stripeSubscriptionId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -33161,6 +33270,10 @@ export namespace Prisma {
     plan?: StringFieldUpdateOperationsInput | string
     customDomain?: NullableStringFieldUpdateOperationsInput | string | null
     licenseKey?: NullableStringFieldUpdateOperationsInput | string | null
+    trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    subscriptionStatus?: StringFieldUpdateOperationsInput | string
+    stripeCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    stripeSubscriptionId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -35524,6 +35637,17 @@ export namespace Prisma {
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
+  export type DateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
   export type DateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
@@ -35558,6 +35682,10 @@ export namespace Prisma {
     plan?: SortOrder
     customDomain?: SortOrder
     licenseKey?: SortOrder
+    trialEndsAt?: SortOrder
+    subscriptionStatus?: SortOrder
+    stripeCustomerId?: SortOrder
+    stripeSubscriptionId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -35570,6 +35698,10 @@ export namespace Prisma {
     plan?: SortOrder
     customDomain?: SortOrder
     licenseKey?: SortOrder
+    trialEndsAt?: SortOrder
+    subscriptionStatus?: SortOrder
+    stripeCustomerId?: SortOrder
+    stripeSubscriptionId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -35582,6 +35714,10 @@ export namespace Prisma {
     plan?: SortOrder
     customDomain?: SortOrder
     licenseKey?: SortOrder
+    trialEndsAt?: SortOrder
+    subscriptionStatus?: SortOrder
+    stripeCustomerId?: SortOrder
+    stripeSubscriptionId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -35620,6 +35756,20 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
     _max?: NestedStringNullableFilter<$PrismaModel>
+  }
+
+  export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
   export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
@@ -36000,17 +36150,6 @@ export namespace Prisma {
     not?: NestedIntFilter<$PrismaModel> | number
   }
 
-  export type DateTimeNullableFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
-  }
-
   export type TaskCountOrderByAggregateInput = {
     id?: SortOrder
     tenantId?: SortOrder
@@ -36094,20 +36233,6 @@ export namespace Prisma {
     _sum?: NestedIntFilter<$PrismaModel>
     _min?: NestedIntFilter<$PrismaModel>
     _max?: NestedIntFilter<$PrismaModel>
-  }
-
-  export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedDateTimeNullableFilter<$PrismaModel>
-    _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
   export type ChatHistoryCountOrderByAggregateInput = {
@@ -37081,6 +37206,10 @@ export namespace Prisma {
     set?: string | null
   }
 
+  export type NullableDateTimeFieldUpdateOperationsInput = {
+    set?: Date | string | null
+  }
+
   export type DateTimeFieldUpdateOperationsInput = {
     set?: Date | string
   }
@@ -37315,10 +37444,6 @@ export namespace Prisma {
     decrement?: number
     multiply?: number
     divide?: number
-  }
-
-  export type NullableDateTimeFieldUpdateOperationsInput = {
-    set?: Date | string | null
   }
 
   export type PluginVersionCreateNestedManyWithoutPluginInput = {
@@ -37733,6 +37858,17 @@ export namespace Prisma {
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
+  export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
   export type NestedDateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
@@ -37798,6 +37934,20 @@ export namespace Prisma {
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
   export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
@@ -37892,17 +38042,6 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
-  export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
-  }
-
   export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -37928,20 +38067,6 @@ export namespace Prisma {
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatFilter<$PrismaModel> | number
-  }
-
-  export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedDateTimeNullableFilter<$PrismaModel>
-    _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
   export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
@@ -38129,6 +38254,10 @@ export namespace Prisma {
     plan?: string
     customDomain?: string | null
     licenseKey?: string | null
+    trialEndsAt?: Date | string | null
+    subscriptionStatus?: string
+    stripeCustomerId?: string | null
+    stripeSubscriptionId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -38141,6 +38270,10 @@ export namespace Prisma {
     plan?: string
     customDomain?: string | null
     licenseKey?: string | null
+    trialEndsAt?: Date | string | null
+    subscriptionStatus?: string
+    stripeCustomerId?: string | null
+    stripeSubscriptionId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -38263,6 +38396,10 @@ export namespace Prisma {
     plan?: StringFieldUpdateOperationsInput | string
     customDomain?: NullableStringFieldUpdateOperationsInput | string | null
     licenseKey?: NullableStringFieldUpdateOperationsInput | string | null
+    trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    subscriptionStatus?: StringFieldUpdateOperationsInput | string
+    stripeCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    stripeSubscriptionId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -38275,6 +38412,10 @@ export namespace Prisma {
     plan?: StringFieldUpdateOperationsInput | string
     customDomain?: NullableStringFieldUpdateOperationsInput | string | null
     licenseKey?: NullableStringFieldUpdateOperationsInput | string | null
+    trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    subscriptionStatus?: StringFieldUpdateOperationsInput | string
+    stripeCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    stripeSubscriptionId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
