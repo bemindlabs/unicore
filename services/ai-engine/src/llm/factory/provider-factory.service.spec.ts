@@ -115,6 +115,25 @@ describe('ProviderFactoryService', () => {
     });
   });
 
+  describe('listProviders()', () => {
+    it('exposes only the three wired providers (openai, anthropic, ollama)', () => {
+      const factory = new ProviderFactoryService(
+        makeConfig({ LLM_FAILOVER_ENABLED: 'false' }),
+      );
+
+      const ids = factory.listProviders().map((p) => p.id);
+
+      expect(ids).toEqual(['openai', 'anthropic', 'ollama']);
+      // Roadmap providers must not be surfaced until their adapters are wired.
+      for (const roadmap of [
+        'deepseek', 'groq', 'gemini', 'moonshot', 'mistral',
+        'xai', 'openrouter', 'together', 'fireworks', 'cohere',
+      ]) {
+        expect(ids).not.toContain(roadmap);
+      }
+    });
+  });
+
   describe('checkAllHealth()', () => {
     it('calls healthCheck on all registered providers', async () => {
       const factory = new ProviderFactoryService(
