@@ -3347,6 +3347,11 @@ export namespace Prisma {
        * Display name — person full name or company trading name
        */
       name: string
+      /**
+       * Unique PER TENANT (SaaS phase 4.5, FU-03), not globally — two tenants may
+       * each have a contact with the same email. In self-host the tenantId is the
+       * constant default so (tenantId, email) behaves as a unique email.
+       */
       email: string | null
       phone: string | null
       company: string | null
@@ -5920,6 +5925,9 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       tenantId: string
+      /**
+       * Unique PER TENANT (FU-03), not globally — see Contact.email.
+       */
       sku: string
       name: string
       description: string | null
@@ -7167,7 +7175,7 @@ export namespace Prisma {
       tenantId: string
       name: string
       /**
-       * Short unique code used in stock-transfer references
+       * Short code used in stock-transfer references — unique PER TENANT (FU-03).
        */
       code: string
       address: string | null
@@ -11111,7 +11119,7 @@ export namespace Prisma {
       id: string
       tenantId: string
       /**
-       * Human-readable reference e.g. "ORD-2025-00042"
+       * Human-readable reference e.g. "ORD-2025-00042" — unique PER TENANT (FU-03).
        */
       orderNumber: string
       contactId: string | null
@@ -15157,7 +15165,7 @@ export namespace Prisma {
       id: string
       tenantId: string
       /**
-       * Human-readable reference e.g. "INV-2025-00017"
+       * Human-readable reference e.g. "INV-2025-00017" — unique PER TENANT (FU-03).
        */
       invoiceNumber: string
       contactId: string | null
@@ -25460,13 +25468,14 @@ export namespace Prisma {
 
   export type ContactWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    email?: string
+    tenantId_email?: ContactTenantIdEmailCompoundUniqueInput
     AND?: ContactWhereInput | ContactWhereInput[]
     OR?: ContactWhereInput[]
     NOT?: ContactWhereInput | ContactWhereInput[]
     tenantId?: UuidFilter<"Contact"> | string
     type?: EnumContactTypeFilter<"Contact"> | $Enums.ContactType
     name?: StringFilter<"Contact"> | string
+    email?: StringNullableFilter<"Contact"> | string | null
     phone?: StringNullableFilter<"Contact"> | string | null
     company?: StringNullableFilter<"Contact"> | string | null
     website?: StringNullableFilter<"Contact"> | string | null
@@ -25494,7 +25503,7 @@ export namespace Prisma {
     orders?: OrderListRelationFilter
     invoices?: InvoiceListRelationFilter
     expenses?: ExpenseListRelationFilter
-  }, "id" | "email">
+  }, "id" | "tenantId_email">
 
   export type ContactOrderByWithAggregationInput = {
     id?: SortOrder
@@ -25691,11 +25700,12 @@ export namespace Prisma {
 
   export type ProductWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    sku?: string
+    tenantId_sku?: ProductTenantIdSkuCompoundUniqueInput
     AND?: ProductWhereInput | ProductWhereInput[]
     OR?: ProductWhereInput[]
     NOT?: ProductWhereInput | ProductWhereInput[]
     tenantId?: UuidFilter<"Product"> | string
+    sku?: StringFilter<"Product"> | string
     name?: StringFilter<"Product"> | string
     description?: StringNullableFilter<"Product"> | string | null
     type?: StringFilter<"Product"> | string
@@ -25717,7 +25727,7 @@ export namespace Prisma {
     orderItems?: OrderItemListRelationFilter
     invoiceLines?: InvoiceLineListRelationFilter
     stockMovements?: StockMovementListRelationFilter
-  }, "id" | "sku">
+  }, "id" | "tenantId_sku">
 
   export type ProductOrderByWithAggregationInput = {
     id?: SortOrder
@@ -25808,12 +25818,13 @@ export namespace Prisma {
 
   export type WarehouseWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    code?: string
+    tenantId_code?: WarehouseTenantIdCodeCompoundUniqueInput
     AND?: WarehouseWhereInput | WarehouseWhereInput[]
     OR?: WarehouseWhereInput[]
     NOT?: WarehouseWhereInput | WarehouseWhereInput[]
     tenantId?: UuidFilter<"Warehouse"> | string
     name?: StringFilter<"Warehouse"> | string
+    code?: StringFilter<"Warehouse"> | string
     address?: StringNullableFilter<"Warehouse"> | string | null
     country?: StringNullableFilter<"Warehouse"> | string | null
     status?: EnumWarehouseStatusFilter<"Warehouse"> | $Enums.WarehouseStatus
@@ -25822,7 +25833,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Warehouse"> | Date | string
     inventoryItems?: InventoryItemListRelationFilter
     stockMovements?: StockMovementListRelationFilter
-  }, "id" | "code">
+  }, "id" | "tenantId_code">
 
   export type WarehouseOrderByWithAggregationInput = {
     id?: SortOrder
@@ -26142,11 +26153,12 @@ export namespace Prisma {
 
   export type OrderWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    orderNumber?: string
+    tenantId_orderNumber?: OrderTenantIdOrderNumberCompoundUniqueInput
     AND?: OrderWhereInput | OrderWhereInput[]
     OR?: OrderWhereInput[]
     NOT?: OrderWhereInput | OrderWhereInput[]
     tenantId?: UuidFilter<"Order"> | string
+    orderNumber?: StringFilter<"Order"> | string
     contactId?: UuidNullableFilter<"Order"> | string | null
     status?: EnumOrderStatusFilter<"Order"> | $Enums.OrderStatus
     fulfillmentStatus?: EnumFulfillmentStatusFilter<"Order"> | $Enums.FulfillmentStatus
@@ -26181,7 +26193,7 @@ export namespace Prisma {
     items?: OrderItemListRelationFilter
     invoices?: InvoiceListRelationFilter
     fulfillments?: FulfillmentListRelationFilter
-  }, "id" | "orderNumber">
+  }, "id" | "tenantId_orderNumber">
 
   export type OrderOrderByWithAggregationInput = {
     id?: SortOrder
@@ -26565,11 +26577,12 @@ export namespace Prisma {
 
   export type InvoiceWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    invoiceNumber?: string
+    tenantId_invoiceNumber?: InvoiceTenantIdInvoiceNumberCompoundUniqueInput
     AND?: InvoiceWhereInput | InvoiceWhereInput[]
     OR?: InvoiceWhereInput[]
     NOT?: InvoiceWhereInput | InvoiceWhereInput[]
     tenantId?: UuidFilter<"Invoice"> | string
+    invoiceNumber?: StringFilter<"Invoice"> | string
     contactId?: UuidNullableFilter<"Invoice"> | string | null
     orderId?: UuidNullableFilter<"Invoice"> | string | null
     status?: EnumInvoiceStatusFilter<"Invoice"> | $Enums.InvoiceStatus
@@ -26605,7 +26618,7 @@ export namespace Prisma {
     recurringInstances?: InvoiceListRelationFilter
     lines?: InvoiceLineListRelationFilter
     payments?: PaymentListRelationFilter
-  }, "id" | "invoiceNumber">
+  }, "id" | "tenantId_invoiceNumber">
 
   export type InvoiceOrderByWithAggregationInput = {
     id?: SortOrder
@@ -29861,6 +29874,11 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
+  export type ContactTenantIdEmailCompoundUniqueInput = {
+    tenantId: string
+    email: string
+  }
+
   export type ContactCountOrderByAggregateInput = {
     id?: SortOrder
     tenantId?: SortOrder
@@ -30220,6 +30238,11 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
+  export type ProductTenantIdSkuCompoundUniqueInput = {
+    tenantId: string
+    sku: string
+  }
+
   export type ProductCountOrderByAggregateInput = {
     id?: SortOrder
     tenantId?: SortOrder
@@ -30326,6 +30349,11 @@ export namespace Prisma {
     in?: $Enums.WarehouseStatus[] | ListEnumWarehouseStatusFieldRefInput<$PrismaModel>
     notIn?: $Enums.WarehouseStatus[] | ListEnumWarehouseStatusFieldRefInput<$PrismaModel>
     not?: NestedEnumWarehouseStatusFilter<$PrismaModel> | $Enums.WarehouseStatus
+  }
+
+  export type WarehouseTenantIdCodeCompoundUniqueInput = {
+    tenantId: string
+    code: string
   }
 
   export type WarehouseCountOrderByAggregateInput = {
@@ -30582,6 +30610,11 @@ export namespace Prisma {
 
   export type FulfillmentOrderByRelationAggregateInput = {
     _count?: SortOrder
+  }
+
+  export type OrderTenantIdOrderNumberCompoundUniqueInput = {
+    tenantId: string
+    orderNumber: string
   }
 
   export type OrderCountOrderByAggregateInput = {
@@ -30891,6 +30924,11 @@ export namespace Prisma {
 
   export type PaymentOrderByRelationAggregateInput = {
     _count?: SortOrder
+  }
+
+  export type InvoiceTenantIdInvoiceNumberCompoundUniqueInput = {
+    tenantId: string
+    invoiceNumber: string
   }
 
   export type InvoiceCountOrderByAggregateInput = {

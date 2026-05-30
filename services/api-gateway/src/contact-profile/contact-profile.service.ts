@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAgentNoteDto, UpdateAgentNoteDto, UpsertContactChannelDto } from './dto/agent-note.dto';
 import { MergeContactsDto } from './dto/merge-contacts.dto';
+import { getTenantId } from '../common/tenancy/tenant-store';
 
 const ERP_BASE = process.env.ERP_URL ?? 'http://erp:4100';
 const INTERNAL_HEADER = { 'X-Internal-Service': 'api-gateway', 'Content-Type': 'application/json' };
@@ -128,9 +129,19 @@ export class ContactProfileService {
 
   async upsertChannel(contactId: string, dto: UpsertContactChannelDto) {
     const channelEnum = dto.channel as import('../generated/prisma').ConversationChannel;
+    // Per-tenant uniqueness (FU-03): a channel identity is unique per tenant, so
+    // the upsert key is (tenantId, channel, externalId).
+    const tenantId = getTenantId();
     return this.prisma.contactChannel.upsert({
-      where: { channel_externalId: { channel: channelEnum, externalId: dto.channelUserId } },
+      where: {
+        tenantId_channel_externalId: {
+          tenantId,
+          channel: channelEnum,
+          externalId: dto.channelUserId,
+        },
+      },
       create: {
+        tenantId,
         channel: channelEnum,
         externalId: dto.channelUserId,
         erpContactId: contactId,

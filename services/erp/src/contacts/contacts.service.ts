@@ -19,7 +19,9 @@ export class ContactsService {
 
   async create(dto: CreateContactDto): Promise<ContactRecord> {
     if (dto.email) {
-      const existing = await this.prisma.contact.findUnique({ where: { email: dto.email } });
+      // Per-tenant uniqueness (FU-03): email is unique per tenant, not globally.
+      // findFirst respects the request's RLS tenant scope.
+      const existing = await this.prisma.contact.findFirst({ where: { email: dto.email } });
       if (existing) throw new ConflictException(`A contact with email ${dto.email} already exists`);
     }
     const tenantId = getTenantId();
