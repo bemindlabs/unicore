@@ -23,7 +23,7 @@ describe('AuthService.signup', () => {
     const prisma = {
       user: {
         findUnique: jest.fn(async () => null),
-        create: jest.fn(async ({ data, select }: any) => ({
+        create: jest.fn(async ({ data }: any) => ({
           id: 'user-1',
           email: data.email,
           name: data.name,
