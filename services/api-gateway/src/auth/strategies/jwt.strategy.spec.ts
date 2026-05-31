@@ -10,8 +10,22 @@ describe('JwtStrategy.validate (tenant context)', () => {
     process.env.JWT_SECRET = 'test-jwt-strategy-secret-at-least-32-chars-long';
   });
 
+  // The strategy now loads the bare user (no memberships relation — that table is
+  // RLS-forced and invisible pre-context), then reads the membership for the
+  // RESOLVED tenant under that tenant's context via prisma.membership.findUnique.
+  // The mock derives that lookup from the test fixture's `memberships` array.
   function build(user: any) {
-    const prisma = { user: { findUnique: jest.fn(async () => user) } };
+    const { memberships = [], ...bareUser } = user;
+    const prisma = {
+      user: { findUnique: jest.fn(async () => bareUser) },
+      membership: {
+        findUnique: jest.fn(async ({ where }: any) => {
+          const tid = where.userId_tenantId.tenantId;
+          const m = memberships.find((x: any) => x.tenantId === tid);
+          return m ? { tenantId: m.tenantId, role: m.role, status: m.status ?? 'ACTIVE' } : null;
+        }),
+      },
+    };
     const blacklist = { isBlacklisted: jest.fn(async () => false) };
     const strategy = new JwtStrategy(prisma as any, blacklist as any);
     return { strategy };

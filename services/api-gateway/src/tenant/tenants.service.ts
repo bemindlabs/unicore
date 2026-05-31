@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuthService } from '../auth/auth.service';
 import { AuthResponseDto } from '../auth/dto/auth-response.dto';
 import { TRIAL_PLAN, computeTrialEnd, PLANS } from '../common/tenancy/plans.config';
+import { runWithTenant } from '../common/tenancy/tenant-store';
 
 /** One row of the current user's business list (GET /tenants). */
 export interface MembershipView {
@@ -114,9 +115,14 @@ export class TenantsService {
     user: { id: string; email: string; name: string; role: string },
     targetTenantId: string,
   ): Promise<AuthResponseDto> {
-    const membership = await this.prisma.membership.findUnique({
-      where: { userId_tenantId: { userId: user.id, tenantId: targetTenantId } },
-    });
+    // memberships is RLS-FORCED (GAPS #5): the target membership is only visible
+    // under the TARGET tenant's context, not the caller's current one. Pin it so
+    // a legitimate switch into another business isn't hidden by the policy.
+    const membership = await runWithTenant(targetTenantId, () =>
+      this.prisma.membership.findUnique({
+        where: { userId_tenantId: { userId: user.id, tenantId: targetTenantId } },
+      }),
+    );
 
     if (!membership) {
       this.logger.warn(
