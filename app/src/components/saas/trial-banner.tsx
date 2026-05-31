@@ -14,8 +14,8 @@ import { useSaas } from '@/contexts/saas-context';
  *  - a trial countdown with days-remaining and an "Upgrade" CTA.
  *
  * The CTA initiates the SaaS checkout on the platform (`/api/checkout/saas`),
- * falling back to the public pricing/upgrade flow. Hidden entirely in self-host
- * mode and for non-trialing, non-suspended (already-converted) tenants.
+ * falling back to the public pricing/upgrade flow. Hidden for non-trialing,
+ * non-suspended (already-converted) tenants.
  */
 
 const PLATFORM_URL = process.env.NEXT_PUBLIC_PLATFORM_URL ?? 'https://unicore.bemind.tech';
@@ -42,11 +42,10 @@ function startSaasCheckout(plan: string) {
 }
 
 export function TrialBanner() {
-  const { isSaas, subscription, loading } = useSaas();
+  const { subscription, loading } = useSaas();
   const [dismissed, setDismissed] = useState(false);
 
-  // Self-host (open-core) never shows the trial banner.
-  if (!isSaas || loading || !subscription) return null;
+  if (loading || !subscription) return null;
 
   const { isTrialing, suspended, trialDaysRemaining, plan } = subscription;
 

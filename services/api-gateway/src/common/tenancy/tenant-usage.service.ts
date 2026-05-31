@@ -9,11 +9,12 @@ import { MinimalRedisClient } from '../../domains/redis-client';
  * (the `apiCallsThisMonth` quota in the admin tenant DTO). The key is given a
  * TTL just past the end of the month so counters self-expire.
  *
- * Redis is the source of truth in saas; when Redis is unavailable the service
- * degrades to an in-memory map (mirrors DomainCacheService) so a Redis outage
- * never hard-fails the API — it just loses cross-instance accuracy.
+ * Redis is the source of truth; when Redis is unavailable the service degrades
+ * to an in-memory map (mirrors DomainCacheService) so a Redis outage never
+ * hard-fails the API — it just loses cross-instance accuracy.
  *
- * Self-host never calls this (the guard short-circuits before it runs).
+ * The demo/bootstrap tenant is exempt (the rate-limit guard short-circuits
+ * before it runs).
  */
 @Injectable()
 export class TenantUsageService implements OnModuleInit, OnModuleDestroy {

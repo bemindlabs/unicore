@@ -4,7 +4,6 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PrismaService } from '../../prisma/prisma.service';
 import { TokenBlacklistService } from '../token-blacklist.service';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
-import { resolveTenantId } from '../../common/tenancy/tenancy.config';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -37,12 +36,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('User not found');
     }
 
-    // Resolve the request's tenant context (SaaS phase 4.2):
-    //  - self-host : always the default tenant constant.
-    //  - saas      : the `tid` claim, falling back to the stored user.tenantId,
-    //                then the default constant. Attached to req.user so proxy
-    //                controllers can forward it via @CurrentUser('tenantId').
-    const tenantId = resolveTenantId(payload.tid ?? user.tenantId);
+    // Resolve the request's tenant context. UniCore is always multi-tenant SaaS,
+    // so every authenticated request MUST carry a tenant: the `tid` claim, falling
+    // back to the stored user.tenantId. A user with no resolvable tenant is an auth
+    // error — never a silent default. Attached to req.user so proxy controllers can
+    // forward it via @CurrentUser('tenantId').
+    const tenantId = payload.tid ?? user.tenantId;
+    if (!tenantId) {
+      throw new UnauthorizedException('No tenant associated with this account');
+    }
 
     return { ...user, tenantId };
   }

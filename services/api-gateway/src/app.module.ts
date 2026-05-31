@@ -50,11 +50,11 @@ import { TenantUsageModule } from './common/tenancy/tenant-usage.module';
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
     { provide: APP_GUARD, useClass: DemoModeGuard },
-    // Enforces read-only for SUSPENDED tenants (saas mode); runs after the JWT
-    // guard so req.user.tenantId is resolved. Self-host is a pass-through.
+    // Enforces read-only for SUSPENDED tenants; runs after the JWT guard so
+    // req.user.tenantId is resolved.
     { provide: APP_GUARD, useClass: SuspendedTenantGuard },
     // Per-tenant noisy-neighbor protection (FU-04): burst rate limit + monthly
-    // usage cap, keyed by the resolved tenant. No-op in self-host mode.
+    // usage cap, keyed by the resolved tenant.
     { provide: APP_GUARD, useClass: TenantRateLimitGuard },
     RateLimitStore,
     RateLimitMiddleware,
@@ -67,8 +67,8 @@ export class AppModule implements NestModule {
     consumer
       // DomainRoutingMiddleware runs first — it attaches tenantId to req and
       // sets per-domain CORS headers before rate limiting or auth kicks in.
-      // TenantContextMiddleware strips client-supplied x-tenant-id and sets the
-      // self-host default tenant before auth resolves the saas tenant.
+      // TenantContextMiddleware strips client-supplied x-tenant-id before auth
+      // resolves the SaaS tenant from the JWT.
       .apply(DomainRoutingMiddleware, TenantContextMiddleware, RequestValidationMiddleware, RateLimitMiddleware)
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }

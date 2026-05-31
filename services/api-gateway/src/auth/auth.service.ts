@@ -16,7 +16,7 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { AuthResponseDto } from './dto/auth-response.dto';
-import { resolveTenantId, isSaaS } from '../common/tenancy/tenancy.config';
+import { DEMO_TENANT_ID } from '../common/tenancy/tenancy.config';
 import { SignupDto } from './dto/signup.dto';
 import { TRIAL_PLAN, computeTrialEnd, PLANS } from '../common/tenancy/plans.config';
 
@@ -251,11 +251,15 @@ export class AuthService implements OnModuleDestroy {
 
     const hashedPassword = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
 
+    // Admin/bootstrap registration is for local/demo provisioning, so it lands in
+    // the demo tenant. Real multi-tenant onboarding goes through self-serve signup,
+    // which creates a dedicated tenant.
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
         name: dto.name,
         password: hashedPassword,
+        tenantId: DEMO_TENANT_ID,
       },
       select: { id: true, email: true, name: true, role: true, tenantId: true },
     });
@@ -269,14 +273,9 @@ export class AuthService implements OnModuleDestroy {
    * Self-serve SaaS signup (M3/E3). Creates a Tenant (status ACTIVE,
    * subscriptionStatus TRIALING, plan = full-Growth trial) + an OWNER User, sets
    * the 30-day trial window, then logs the user in. NO Stripe call here — the
-   * card is collected later at conversion. Only valid in saas mode; self-host
-   * has no signup surface (a single implicit default tenant is used instead).
+   * card is collected later at conversion.
    */
   async signup(dto: SignupDto): Promise<AuthResponseDto> {
-    if (!isSaaS()) {
-      throw new ConflictException('Signup is only available in SaaS mode');
-    }
-
     const existing = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -585,9 +584,10 @@ export class AuthService implements OnModuleDestroy {
     tenantId?: string | null;
   }): Promise<AuthResponseDto> {
     const jti = randomBytes(16).toString('hex');
-    // Resolve the tenant claim: in self-host this is always the default tenant;
-    // in saas it is the user's tenantId (falling back to the default constant).
-    const tid = resolveTenantId(user.tenantId);
+    // Multi-tenant SaaS: the JWT always carries the user's tenant. Legacy/bootstrap
+    // users with no tenant fall back to the local/demo tenant (the seed backfills
+    // them there); real onboarding always assigns a dedicated tenant.
+    const tid = user.tenantId ?? DEMO_TENANT_ID;
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,

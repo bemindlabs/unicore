@@ -9,11 +9,11 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 import { RateLimitStore } from '../middleware/rate-limit.store';
 import { TenantUsageService } from '../tenancy/tenant-usage.service';
-import { isSaaS, DEFAULT_TENANT_ID } from '../tenancy/tenancy.config';
+import { DEMO_TENANT_ID } from '../tenancy/tenancy.config';
 import { rateLimitForPlan, monthlyApiCapForPlan } from '../tenancy/plans.config';
 
 /**
- * Per-tenant noisy-neighbor protection (FU-04), saas mode only.
+ * Per-tenant noisy-neighbor protection (FU-04).
  *
  * Two layers, both keyed by the resolved tenant id (from the JWT `tid` claim,
  * attached to `req.user.tenantId` by jwt.strategy):
@@ -25,9 +25,8 @@ import { rateLimitForPlan, monthlyApiCapForPlan } from '../tenancy/plans.config'
  *     ({@link TenantUsageService}) and rejects with 429 once the plan's
  *     `monthlyApiCapForPlan` is exceeded.
  *
- * SELF-HOST IS A NO-OP: `isSaaS()` is false, so the guard returns true before
- * any counting — the single tenant is never throttled. The default tenant and
- * internal service calls (`x-internal-service`) are also exempt in saas.
+ * The local/demo bootstrap tenant and internal service calls (`x-internal-service`)
+ * are exempt from metering.
  *
  * Runs as a global guard after JwtAuthGuard so the resolved tenant is present.
  * Read-only/health/auth paths are not exempted from rate limiting (a flood of
@@ -52,9 +51,6 @@ export class TenantRateLimitGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // Self-host: never throttle the single tenant.
-    if (!isSaaS()) return true;
-
     const req = context.switchToHttp().getRequest();
 
     // Internal service-to-service calls carry their own trust header.
@@ -62,8 +58,8 @@ export class TenantRateLimitGuard implements CanActivate {
 
     const user = req.user as { tenantId?: string } | undefined;
     const tenantId = user?.tenantId;
-    // No resolved tenant or the default tenant → nothing to meter.
-    if (!tenantId || tenantId === DEFAULT_TENANT_ID) return true;
+    // No resolved tenant or the local/demo tenant → nothing to meter.
+    if (!tenantId || tenantId === DEMO_TENANT_ID) return true;
 
     const plan = await this.resolvePlan(tenantId);
 

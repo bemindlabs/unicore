@@ -5,7 +5,7 @@
     "name": "Bemind Technology Co., Ltd.",
     "url": "https://bemind.tech"
   },
-  "license": "BUSL-1.1",
+  "license": "UNLICENSED",
   "private": true,
   "description": "Base branding system \u2014 colors, fonts, dark/light mode theming for UniCore community edition",
   "main": "dist/index.js",

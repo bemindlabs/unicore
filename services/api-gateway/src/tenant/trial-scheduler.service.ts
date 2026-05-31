@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
-import { isSaaS } from '../common/tenancy/tenancy.config';
 import {
   trialReminderEmailHtml,
   trialReminderSubject,
@@ -21,7 +20,7 @@ const DAILY_MS = 24 * 60 * 60 * 1000;
 const RETENTION_DAYS = 30;
 
 /**
- * Lean trial scheduler (M3/E3) — saas-mode only.
+ * Lean trial scheduler (M3/E3).
  *
  * Runs a daily idempotent sweep that:
  *  (a) emails T-7 / T-3 / T-1 / T-0 reminders to trialing tenants, and
@@ -29,9 +28,8 @@ const RETENTION_DAYS = 30;
  *      status SUSPENDED (read-only, enforced by SuspendedTenantGuard) and
  *      sends the expiry notice.
  *
- * Implemented with a plain interval timer (no extra dependency). Self-host is a
- * no-op: the scheduler never arms. Each step is guarded so re-runs on the same
- * day do not double-send or re-suspend.
+ * Implemented with a plain interval timer (no extra dependency). Each step is
+ * guarded so re-runs on the same day do not double-send or re-suspend.
  */
 @Injectable()
 export class TrialSchedulerService implements OnModuleInit, OnModuleDestroy {
@@ -45,15 +43,11 @@ export class TrialSchedulerService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit(): void {
-    if (!isSaaS()) {
-      this.logger.log('Trial scheduler disabled (self-host mode)');
-      return;
-    }
     // Run once shortly after boot, then daily. Detached so it never blocks init.
     this.timer = setInterval(() => {
       void this.runDailySweep();
     }, DAILY_MS);
-    this.logger.log('Trial scheduler armed (saas mode, daily sweep)');
+    this.logger.log('Trial scheduler armed (daily sweep)');
   }
 
   onModuleDestroy(): void {
@@ -69,8 +63,6 @@ export class TrialSchedulerService implements OnModuleInit, OnModuleDestroy {
    * external cron (e.g. a container CronJob hitting an internal trigger).
    */
   async runDailySweep(now: Date = new Date()): Promise<{ reminded: number; suspended: number }> {
-    if (!isSaaS()) return { reminded: 0, suspended: 0 };
-
     let reminded = 0;
     let suspended = 0;
 
