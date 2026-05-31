@@ -32,7 +32,7 @@ export function useLicense(options: UseLicenseOptions = {}) {
 
     pollRef.current = setInterval(async () => {
       await refresh();
-      if (status.edition === 'pro' || status.edition === 'enterprise') {
+      if (status.edition === 'pro') {
         setIsPolling(false);
         setUpgradeDetected(true);
         toast({ title: 'Pro activated!', description: 'All features are now unlocked.' });
@@ -61,7 +61,7 @@ export function useLicense(options: UseLicenseOptions = {}) {
   }, [pollOnUpgrade, searchParams, refresh, router, status.edition]);
 
   const tier = status.edition;
-  const isPro = tier === 'pro' || tier === 'enterprise';
+  const isPro = tier === 'pro';
   const isFeatureEnabled = useCallback((flag: string) => isPro || status.features.includes(flag), [isPro, status.features]);
 
   return {

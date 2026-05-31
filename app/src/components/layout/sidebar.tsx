@@ -35,7 +35,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
   const [upgradeModal, setUpgradeModal] = useState<{
     open: boolean;
-    tier: 'pro' | 'enterprise';
+    tier: 'pro';
     featureName?: string;
   }>({ open: false, tier: 'pro' });
 

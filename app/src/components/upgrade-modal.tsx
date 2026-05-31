@@ -23,8 +23,8 @@ const ANNUAL_SAVINGS = Math.round((1 - ANNUAL_PRICE / (MONTHLY_PRICE * 12)) * 10
 interface UpgradeModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** The tier required: 'pro' | 'enterprise' */
-  requiredTier?: 'pro' | 'enterprise';
+  /** The tier required: 'pro' */
+  requiredTier?: 'pro';
   /** Human-readable feature name that triggered the modal */
   featureName?: string;
 }
@@ -32,7 +32,6 @@ interface UpgradeModalProps {
 export function UpgradeModal({
   open,
   onOpenChange,
-  requiredTier = 'pro',
   featureName,
 }: UpgradeModalProps) {
   const { edition } = useLicense();
@@ -40,13 +39,7 @@ export function UpgradeModal({
   const [isAnnual, setIsAnnual] = useState(true);
   const [isUpgrading, setIsUpgrading] = useState(false);
 
-  const isEnterprise = requiredTier === 'enterprise';
-
   const handleUpgrade = useCallback(async () => {
-    if (isEnterprise) {
-      window.open('mailto:sales@bemind.tech?subject=Enterprise%20Inquiry', '_blank');
-      return;
-    }
     setIsUpgrading(true);
     try {
       const res = await api.post<{ url: string; sessionId: string }>('/api/v1/license/upgrade', {
@@ -63,12 +56,12 @@ export function UpgradeModal({
       });
       setIsUpgrading(false);
     }
-  }, [isAnnual, user?.email, isEnterprise]);
+  }, [isAnnual, user?.email]);
 
-  const title = isEnterprise ? 'Upgrade to Enterprise' : 'Upgrade to Pro';
+  const title = 'Upgrade to Pro';
   const description = featureName
-    ? `${featureName} requires the ${isEnterprise ? 'Enterprise' : 'Pro'} plan.`
-    : `This feature requires the ${isEnterprise ? 'Enterprise' : 'Pro'} plan.`;
+    ? `${featureName} requires the Pro plan.`
+    : 'This feature requires the Pro plan.';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -92,37 +85,27 @@ export function UpgradeModal({
             </p>
           </div>
 
-          {!isEnterprise && (
-            <>
-              <div className="flex items-center gap-3">
-                <span className={`text-sm font-medium ${!isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>
-                  Monthly
-                </span>
-                <Switch checked={isAnnual} onCheckedChange={setIsAnnual} />
-                <span className={`text-sm font-medium ${isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>
-                  Annual
-                </span>
-                {isAnnual && (
-                  <Badge variant="secondary" className="text-xs">
-                    Save {ANNUAL_SAVINGS}%
-                  </Badge>
-                )}
-              </div>
+          <div className="flex items-center gap-3">
+            <span className={`text-sm font-medium ${!isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>
+              Monthly
+            </span>
+            <Switch checked={isAnnual} onCheckedChange={setIsAnnual} />
+            <span className={`text-sm font-medium ${isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>
+              Annual
+            </span>
+            {isAnnual && (
+              <Badge variant="secondary" className="text-xs">
+                Save {ANNUAL_SAVINGS}%
+              </Badge>
+            )}
+          </div>
 
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-bold">
-                  ${isAnnual ? ANNUAL_PRICE : MONTHLY_PRICE}
-                </span>
-                <span className="text-muted-foreground">/{isAnnual ? 'year' : 'month'}</span>
-              </div>
-            </>
-          )}
-
-          {isEnterprise && (
-            <p className="text-sm text-muted-foreground max-w-xs">
-              Contact our sales team for Enterprise pricing and custom deployment options.
-            </p>
-          )}
+          <div className="flex items-baseline gap-1">
+            <span className="text-3xl font-bold">
+              ${isAnnual ? ANNUAL_PRICE : MONTHLY_PRICE}
+            </span>
+            <span className="text-muted-foreground">/{isAnnual ? 'year' : 'month'}</span>
+          </div>
 
           <div className="flex gap-3 w-full">
             <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
@@ -141,7 +124,7 @@ export function UpgradeModal({
               ) : (
                 <>
                   <Crown className="h-4 w-4" />
-                  {isEnterprise ? 'Contact Sales' : 'Upgrade Now'}
+                  Upgrade Now
                 </>
               )}
             </Button>

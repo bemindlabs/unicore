@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Building2, CheckCircle2, Crown, ShieldCheck, Zap } from 'lucide-react';
+import { CheckCircle2, Crown, ShieldCheck, Zap } from 'lucide-react';
 import {
   Badge,
   Button,
@@ -17,12 +17,10 @@ function FeatureRow({
   label,
   community,
   pro,
-  enterprise,
 }: {
   label: string;
   community: boolean | string;
   pro: boolean | string;
-  enterprise: boolean | string;
 }) {
   const renderValue = (v: boolean | string) => {
     if (typeof v === 'string') return <span className="text-xs font-medium">{v}</span>;
@@ -33,11 +31,10 @@ function FeatureRow({
     );
   };
   return (
-    <div className="grid grid-cols-4 items-center gap-2 py-1.5 text-sm border-b last:border-0">
+    <div className="grid grid-cols-3 items-center gap-2 py-1.5 text-sm border-b last:border-0">
       <span className="text-muted-foreground text-xs">{label}</span>
       <span className="flex justify-center">{renderValue(community)}</span>
       <span className="flex justify-center">{renderValue(pro)}</span>
-      <span className="flex justify-center">{renderValue(enterprise)}</span>
     </div>
   );
 }
@@ -53,26 +50,20 @@ const BADGE_CONFIG = {
     icon: Crown,
     className: 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-900/40 dark:text-zinc-300 dark:hover:bg-zinc-900/60 cursor-pointer',
   },
-  enterprise: {
-    label: 'Enterprise',
-    icon: Building2,
-    className: 'bg-violet-100 text-violet-700 hover:bg-violet-200 dark:bg-violet-900/40 dark:text-violet-300 dark:hover:bg-violet-900/60 cursor-pointer',
-  },
 } as const;
 
-const FEATURES: [string, boolean | string, boolean | string, boolean | string][] = [
-  ['Max Agents', '2', '50', 'Unlimited'],
-  ['Custom Agent Builder', false, true, true],
-  ['Advanced Workflows', false, true, true],
-  ['All Channels', false, true, true],
-  ['Unlimited RAG', false, true, true],
-  ['Full RBAC', false, true, true],
-  ['SSO', false, true, true],
-  ['White Label', false, false, true],
-  ['Audit Logs', true, true, true],
-  ['Multi-tenancy', false, false, true],
-  ['HA Cluster', false, false, true],
-  ['Priority Support', false, true, true],
+const FEATURES: [string, boolean | string, boolean | string][] = [
+  ['Max Agents', '2', '50'],
+  ['Custom Agent Builder', false, true],
+  ['Advanced Workflows', false, true],
+  ['All Channels', false, true],
+  ['Unlimited RAG', false, true],
+  ['Full RBAC', false, true],
+  ['SSO', false, true],
+  ['White Label', false, true],
+  ['Audit Logs', true, true],
+  ['Multi-tenancy', false, true],
+  ['Priority Support', false, true],
 ];
 
 export function LicenseBadge() {
@@ -107,19 +98,17 @@ export function LicenseBadge() {
           </DialogHeader>
 
           <div className="mt-2">
-            <div className="grid grid-cols-4 gap-2 border-b pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
+            <div className="grid grid-cols-3 gap-2 border-b pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
               <span>Feature</span>
               <span className="text-center">Community</span>
               <span className="text-center">Pro</span>
-              <span className="text-center">Enterprise</span>
             </div>
-            {FEATURES.map(([label, community, pro, enterprise]) => (
+            {FEATURES.map(([label, community, pro]) => (
               <FeatureRow
                 key={label}
                 label={label}
                 community={community}
                 pro={pro}
-                enterprise={enterprise}
               />
             ))}
           </div>

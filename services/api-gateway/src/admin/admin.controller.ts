@@ -64,8 +64,6 @@ export class AdminController {
       customDomains,
       advancedAnalytics,
       prioritySupport,
-      dlcChat,
-      geekMode,
     ] = await Promise.all([
       this.licenseService.hasFeature('sso'),
       this.licenseService.hasFeature('whiteLabelBranding'),
@@ -74,8 +72,6 @@ export class AdminController {
       this.licenseService.hasFeature('allChannels'),
       this.licenseService.hasFeature('auditLogs'),
       this.licenseService.hasFeature('prioritySupport'),
-      this.licenseService.hasFeature('aiDlc'),
-      this.licenseService.hasFeature('geekCli'),
     ]);
 
     const featureToggles: Record<string, boolean> = {
@@ -86,8 +82,6 @@ export class AdminController {
       customDomains,
       advancedAnalytics,
       prioritySupport,
-      dlcChat,
-      geekMode,
     };
 
     // Quotas and plan config: prefer persisted DB values, then env vars, then
