@@ -3,72 +3,43 @@ import { ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ExecutionContext } from '@nestjs/common';
 import { LicenseGuard } from './license.guard';
-import { LicenseService } from '../license.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import { PRO_FEATURE_KEY } from '../decorators/pro-feature.decorator';
-import type { LicenseStatus } from '../interfaces/license.interface';
+import { DEMO_TENANT_ID } from '../../common/tenancy/tenancy.config';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-// exported to suppress noUnusedLocals — available for future test cases
-export function buildProStatus(): LicenseStatus {
-  const now = new Date();
-  return {
-    valid: true,
-    edition: 'pro',
-    key: 'UC-PRO-KEY',
-    features: ['fullRbac', 'sso', 'auditLogs', 'allAgents'],
-    expiresAt: null,
-    validatedAt: now,
-    nextRevalidationAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
-  };
-}
-
-function buildCommunityStatus(): LicenseStatus {
-  const now = new Date();
-  return {
-    valid: true,
-    edition: 'community',
-    key: null,
-    features: [],
-    expiresAt: null,
-    validatedAt: now,
-    nextRevalidationAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
-  };
-}
-
-function mockExecutionContext(featureMetadata?: string): ExecutionContext {
+function mockExecutionContext(
+  request: Record<string, unknown> = {},
+): ExecutionContext {
   return {
     getHandler: jest.fn().mockReturnValue({}),
     getClass: jest.fn().mockReturnValue({}),
     switchToHttp: jest.fn().mockReturnValue({
-      getRequest: jest.fn().mockReturnValue({}),
+      getRequest: jest.fn().mockReturnValue(request),
     }),
-    _featureMetadata: featureMetadata, // used by the reflector mock below
   } as unknown as ExecutionContext;
 }
 
 // ---------------------------------------------------------------------------
-// Tests
+// Tests — GAPS #3: gating is PER-TENANT (tenant.plan + trial), not global.
 // ---------------------------------------------------------------------------
 
-describe('LicenseGuard', () => {
+describe('LicenseGuard (per-tenant plan gating)', () => {
   let guard: LicenseGuard;
   let reflector: Reflector;
-  let licenseService: jest.Mocked<Pick<LicenseService, 'hasFeature' | 'getLicenseStatus'>>;
+  let prisma: { tenant: { findUnique: jest.Mock } };
 
   beforeEach(async () => {
-    licenseService = {
-      hasFeature: jest.fn(),
-      getLicenseStatus: jest.fn(),
-    };
+    prisma = { tenant: { findUnique: jest.fn() } };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         LicenseGuard,
         Reflector,
-        { provide: LicenseService, useValue: licenseService },
+        { provide: PrismaService, useValue: prisma },
       ],
     }).compile();
 
@@ -76,48 +47,111 @@ describe('LicenseGuard', () => {
     reflector = module.get<Reflector>(Reflector);
   });
 
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
+  afterEach(() => jest.restoreAllMocks());
 
   it('allows request when no ProFeatureRequired metadata is set', async () => {
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(undefined);
-    const ctx = mockExecutionContext();
 
-    const result = await guard.canActivate(ctx);
+    const result = await guard.canActivate(mockExecutionContext());
 
     expect(result).toBe(true);
-    expect(licenseService.hasFeature).not.toHaveBeenCalled();
+    expect(prisma.tenant.findUnique).not.toHaveBeenCalled();
   });
 
-  it('allows request when feature is included in active license', async () => {
+  it('DENIES a Growth-only feature to a STARTER tenant', async () => {
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue('fullRbac');
-    licenseService.hasFeature.mockResolvedValue(true);
-    const ctx = mockExecutionContext('fullRbac');
-
-    const result = await guard.canActivate(ctx);
-
-    expect(result).toBe(true);
-    expect(licenseService.hasFeature).toHaveBeenCalledWith('fullRbac');
-  });
-
-  it('throws ForbiddenException when feature is not in license', async () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue('whiteLabelBranding');
-    licenseService.hasFeature.mockResolvedValue(false);
-    licenseService.getLicenseStatus.mockResolvedValue(buildCommunityStatus());
-    const ctx = mockExecutionContext('whiteLabelBranding');
+    prisma.tenant.findUnique.mockResolvedValue({
+      plan: 'STARTER',
+      subscriptionStatus: 'ACTIVE',
+    });
+    const ctx = mockExecutionContext({ user: { tenantId: 't-starter' } });
 
     await expect(guard.canActivate(ctx)).rejects.toThrow(ForbiddenException);
-    await expect(guard.canActivate(ctx)).rejects.toThrow(/Pro or Enterprise/);
+    await expect(guard.canActivate(ctx)).rejects.toThrow(/Growth/);
   });
 
-  it('includes the current tier in the ForbiddenException message', async () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue('sso');
-    licenseService.hasFeature.mockResolvedValue(false);
-    licenseService.getLicenseStatus.mockResolvedValue(buildCommunityStatus());
-    const ctx = mockExecutionContext('sso');
+  it('ALLOWS a Growth-only feature to a GROWTH tenant', async () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue('fullRbac');
+    prisma.tenant.findUnique.mockResolvedValue({
+      plan: 'GROWTH',
+      subscriptionStatus: 'ACTIVE',
+    });
+    const ctx = mockExecutionContext({ user: { tenantId: 't-growth' } });
 
-    await expect(guard.canActivate(ctx)).rejects.toThrow(/community/);
+    await expect(guard.canActivate(ctx)).resolves.toBe(true);
+  });
+
+  it('ALLOWS a Growth-only feature to a TRIALING STARTER tenant (full Growth during trial)', async () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue('sso');
+    prisma.tenant.findUnique.mockResolvedValue({
+      plan: 'STARTER',
+      subscriptionStatus: 'TRIALING',
+    });
+    const ctx = mockExecutionContext({ user: { tenantId: 't-trial' } });
+
+    await expect(guard.canActivate(ctx)).resolves.toBe(true);
+  });
+
+  it('allows a community-tier feature (auditLogs) to a STARTER tenant', async () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue('auditLogs');
+    prisma.tenant.findUnique.mockResolvedValue({
+      plan: 'STARTER',
+      subscriptionStatus: 'ACTIVE',
+    });
+    const ctx = mockExecutionContext({ user: { tenantId: 't-starter' } });
+
+    await expect(guard.canActivate(ctx)).resolves.toBe(true);
+  });
+
+  it('does NOT gate on the process-global edition — two tenants on one process differ', async () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue('whiteLabelBranding');
+
+    prisma.tenant.findUnique.mockResolvedValueOnce({
+      plan: 'STARTER',
+      subscriptionStatus: 'ACTIVE',
+    });
+    await expect(
+      guard.canActivate(mockExecutionContext({ user: { tenantId: 'a' } })),
+    ).rejects.toThrow(ForbiddenException);
+
+    prisma.tenant.findUnique.mockResolvedValueOnce({
+      plan: 'GROWTH',
+      subscriptionStatus: 'ACTIVE',
+    });
+    await expect(
+      guard.canActivate(mockExecutionContext({ user: { tenantId: 'b' } })),
+    ).resolves.toBe(true);
+  });
+
+  it('exempts super-admins (Bemind ops) without a DB lookup', async () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue('fullRbac');
+    const ctx = mockExecutionContext({ user: { isSuperAdmin: true } });
+
+    await expect(guard.canActivate(ctx)).resolves.toBe(true);
+    expect(prisma.tenant.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('exempts internal service-to-service calls', async () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue('fullRbac');
+    const ctx = mockExecutionContext({ headers: { 'x-internal-service': 'erp' } });
+
+    await expect(guard.canActivate(ctx)).resolves.toBe(true);
+    expect(prisma.tenant.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('exempts the local/demo bootstrap tenant', async () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue('fullRbac');
+    const ctx = mockExecutionContext({ user: { tenantId: DEMO_TENANT_ID } });
+
+    await expect(guard.canActivate(ctx)).resolves.toBe(true);
+    expect(prisma.tenant.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('denies a feature-gated route with no resolvable tenant', async () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue('fullRbac');
+    const ctx = mockExecutionContext({ user: {} });
+
+    await expect(guard.canActivate(ctx)).rejects.toThrow(ForbiddenException);
   });
 
   it('checks the correct PRO_FEATURE_KEY metadata key', async () => {
@@ -125,26 +159,8 @@ describe('LicenseGuard', () => {
       .spyOn(reflector, 'getAllAndOverride')
       .mockReturnValue(undefined);
 
-    const ctx = mockExecutionContext();
-    await guard.canActivate(ctx);
+    await guard.canActivate(mockExecutionContext());
 
-    expect(spy).toHaveBeenCalledWith(
-      PRO_FEATURE_KEY,
-      expect.any(Array),
-    );
-  });
-
-  it('allows all pro features when license is pro tier', async () => {
-    const proFeatures = ['allAgents', 'fullRbac', 'sso', 'auditLogs'] as const;
-
-    for (const feature of proFeatures) {
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(feature);
-      licenseService.hasFeature.mockResolvedValue(true);
-
-      const ctx = mockExecutionContext(feature);
-      const result = await guard.canActivate(ctx);
-
-      expect(result).toBe(true);
-    }
+    expect(spy).toHaveBeenCalledWith(PRO_FEATURE_KEY, expect.any(Array));
   });
 });

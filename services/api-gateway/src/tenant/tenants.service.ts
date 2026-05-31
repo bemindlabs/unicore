@@ -1,9 +1,20 @@
-import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
+import {
+  ForbiddenException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthService } from '../auth/auth.service';
 import { AuthResponseDto } from '../auth/dto/auth-response.dto';
-import { TRIAL_PLAN, computeTrialEnd, PLANS } from '../common/tenancy/plans.config';
+import {
+  TRIAL_PLAN,
+  computeTrialEnd,
+  PLANS,
+  maxConcurrentTrials,
+} from '../common/tenancy/plans.config';
 import { runWithTenant } from '../common/tenancy/tenant-store';
 
 /** One row of the current user's business list (GET /tenants). */
@@ -68,6 +79,14 @@ export class TenantsService {
     userId: string,
     name: string,
   ): Promise<MembershipView> {
+    // FU-06 anti-abuse: a fresh business starts a new 30-day TRIALING tenant.
+    // Without a cap, one user could spin up unlimited free perpetual trials by
+    // creating business after business. Enforce a ceiling on CONCURRENT trialing
+    // businesses; once at the cap, the user must already have an ACTIVE (paid)
+    // subscription on some business before opening another trial. Paid users are
+    // never blocked.
+    await this.enforceTrialCap(userId);
+
     const businessName = name.trim();
     const slug = await this.generateUniqueSlug(businessName);
     const trialEndsAt = computeTrialEnd();
@@ -158,6 +177,55 @@ export class TenantsService {
       role: membership.role,
       activeTenantId: targetTenantId,
     });
+  }
+
+  /**
+   * Enforce the concurrent-trial cap (FU-06). Counts the user's businesses that
+   * are still on a free trial (subscriptionStatus = TRIALING). When at/over the
+   * cap, opening another trial is rejected with HTTP 402 — UNLESS the user has
+   * at least one ACTIVE (paid) subscription, in which case they are a paying
+   * customer and may add businesses freely.
+   *
+   * Counts across ALL the user's memberships (the abuse vector is one human
+   * opening many businesses), and reads memberships under each tenant's RLS
+   * context (the memberships table is RLS-forced — GAPS #5).
+   */
+  private async enforceTrialCap(userId: string): Promise<void> {
+    const cap = maxConcurrentTrials();
+
+    const memberships = await this.prisma.membership.findMany({
+      where: { userId },
+      include: { tenant: { select: { subscriptionStatus: true } } },
+    });
+
+    const hasPaidSubscription = memberships.some(
+      (m) => m.tenant.subscriptionStatus === 'ACTIVE',
+    );
+    // Paid customers are never capped.
+    if (hasPaidSubscription) return;
+
+    const trialingCount = memberships.filter(
+      (m) => m.tenant.subscriptionStatus === 'TRIALING',
+    ).length;
+
+    if (trialingCount >= cap) {
+      this.logger.warn(
+        `Trial cap reached: user ${userId} has ${trialingCount} trialing business(es) (cap ${cap}) and no active subscription`,
+      );
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.PAYMENT_REQUIRED,
+          error: 'Payment Required',
+          message:
+            `You already have ${trialingCount} business${trialingCount === 1 ? '' : 'es'} on a free trial ` +
+            `(limit ${cap}). Upgrade an existing business to a paid plan to create more.`,
+          scope: 'trial-cap',
+          trialingCount,
+          limit: cap,
+        },
+        HttpStatus.PAYMENT_REQUIRED,
+      );
+    }
   }
 
   /** Build a URL-safe, unique tenant slug from a business name. */

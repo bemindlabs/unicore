@@ -18,6 +18,15 @@ import { trialDaysRemaining } from '../common/tenancy/plans.config';
 const DAILY_MS = 24 * 60 * 60 * 1000;
 /** Suspended-data retention window quoted in the expiry email. */
 const RETENTION_DAYS = 30;
+/**
+ * Short delay before the boot sweep. Lets the app finish wiring (DB pool, email
+ * transport) before the first sweep, and — combined with the sweep's
+ * idempotency — keeps multi-replica double-runs harmless.
+ */
+const BOOT_SWEEP_DELAY_MS = parseInt(
+  process.env.TRIAL_SWEEP_BOOT_DELAY_MS ?? '10000',
+  10,
+);
 
 /**
  * Lean trial scheduler (M3/E3).
@@ -35,6 +44,7 @@ const RETENTION_DAYS = 30;
 export class TrialSchedulerService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(TrialSchedulerService.name);
   private timer: ReturnType<typeof setInterval> | null = null;
+  private bootTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -43,14 +53,33 @@ export class TrialSchedulerService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit(): void {
-    // Run once shortly after boot, then daily. Detached so it never blocks init.
+    // GAPS #9: the daily interval alone meant the first sweep was up to 24h
+    // away (and never fired at all if the process restarted daily) — so trial
+    // reminders and expiry→SUSPEND could silently never happen. Run one sweep
+    // shortly after boot, THEN daily. The sweep is idempotent (it only reminds
+    // on milestone days and only suspends not-already-suspended tenants), so a
+    // boot run across multiple replicas is safe. Both timers are detached so
+    // they never block module init.
+    this.bootTimer = setTimeout(() => {
+      void this.runDailySweep().catch((err) =>
+        this.logger.error(`Boot trial sweep failed: ${(err as Error).message}`),
+      );
+    }, BOOT_SWEEP_DELAY_MS);
+    // Don't keep the event loop alive solely for the boot sweep (e.g. in tests).
+    this.bootTimer.unref?.();
+
     this.timer = setInterval(() => {
-      void this.runDailySweep();
+      void this.runDailySweep().catch((err) =>
+        this.logger.error(`Daily trial sweep failed: ${(err as Error).message}`),
+      );
     }, DAILY_MS);
-    this.logger.log('Trial scheduler armed (daily sweep)');
+    this.logger.log(
+      `Trial scheduler armed (boot sweep in ${BOOT_SWEEP_DELAY_MS}ms, then daily)`,
+    );
   }
 
   onModuleDestroy(): void {
+    if (this.bootTimer) clearTimeout(this.bootTimer);
     if (this.timer) clearInterval(this.timer);
   }
 
