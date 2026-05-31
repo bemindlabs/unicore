@@ -24,7 +24,6 @@ import { TasksModule } from './tasks/tasks.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { ChatHistoryModule } from './chat-history/chat-history.module';
 import { NotificationsModule } from './notifications/notifications.module';
-import { GamificationModule } from './gamification/gamification.module';
 import { ChannelsModule } from './channels/channels.module';
 import { ConversationIntelligenceModule } from './conversation-intelligence/conversation-intelligence.module';
 import { ConversationsModule } from './conversations/conversations.module';
@@ -40,7 +39,7 @@ import { SuspendedTenantGuard } from './common/guards/suspended-tenant.guard';
 import { TenantRateLimitGuard } from './common/guards/tenant-rate-limit.guard';
 import { TenantUsageModule } from './common/tenancy/tenant-usage.module';
 @Module({
-  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule, AdminModule, AuditModule, SettingsModule, TasksModule, WebhooksModule, ChatHistoryModule, NotificationsModule, GamificationModule, ChannelsModule, ConversationsAnalyticsModule, ConversationsModule, ContactProfileModule, ConversationIntelligenceModule, PluginsModule, EmailModule, TenancyModule, TenantUsageModule, TenantModule],
+  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule, AdminModule, AuditModule, SettingsModule, TasksModule, WebhooksModule, ChatHistoryModule, NotificationsModule, ChannelsModule, ConversationsAnalyticsModule, ConversationsModule, ContactProfileModule, ConversationIntelligenceModule, PluginsModule, EmailModule, TenancyModule, TenantUsageModule, TenantModule],
   controllers: [AppController],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
