@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { getTenantId, runWithTenant } from '../common/tenancy/tenant-store';
 
 export type ChannelType = 'telegram' | 'line' | 'facebook' | 'instagram' | 'whatsapp' | 'slack' | 'discord' | string;
 
@@ -40,14 +41,18 @@ export class ChannelsService {
    * @param conversationId  The channel-specific chat/room/conversation ID
    * @param text  Message text
    * @param recipientId  Optional — used by some channels instead of conversationId
+   * @param tenantId  GAPS #1: the CALLING tenant. Outbound credentials are read
+   *   from THIS tenant's channel config — never a shared/default tenant's token.
+   *   Defaults to the request-scoped tenant (getTenantId()).
    */
   async send(
     channelType: ChannelType,
     conversationId: string,
     text: string,
     recipientId?: string,
+    tenantId: string = getTenantId(),
   ): Promise<SendResult> {
-    const settings = await this.loadSettings();
+    const settings = await this.loadSettings(tenantId);
 
     switch (channelType) {
       case 'telegram':
@@ -68,10 +73,10 @@ export class ChannelsService {
   }
 
   /**
-   * Returns the configured status for each known channel.
+   * Returns the configured status for each known channel (for the CALLING tenant).
    */
-  async getStatus(): Promise<ChannelStatus[]> {
-    const settings = await this.loadSettings();
+  async getStatus(tenantId: string = getTenantId()): Promise<ChannelStatus[]> {
+    const settings = await this.loadSettings(tenantId);
     const channels = settings['channels'] as Record<string, unknown> | undefined ?? {};
 
     const knownChannels: Array<{ type: ChannelType; label: string; key: string }> = [
@@ -94,12 +99,16 @@ export class ChannelsService {
   // ─── Private helpers ───────────────────────────────────────────────────────
 
   /**
-   * Load the global Settings row (id = "default") from the database.
+   * Load the CALLING tenant's channel Settings row (key = "default") from the DB
+   * (GAPS #1). Scoped by (tenantId, key) and RLS-pinned via runWithTenant so one
+   * tenant's outbound never reads another tenant's bot tokens.
    * Returns the parsed JSON data object (or empty object on failure).
    */
-  private async loadSettings(): Promise<Record<string, unknown>> {
+  private async loadSettings(tenantId: string): Promise<Record<string, unknown>> {
     try {
-      const row = await this.prisma.settings.findUnique({ where: { id: 'default' } });
+      const row = await runWithTenant(tenantId, () =>
+        this.prisma.settings.findUnique({ where: { tenantId_key: { tenantId, key: 'default' } } }),
+      );
       if (!row) return {};
       return row.data as Record<string, unknown>;
     } catch (err) {
