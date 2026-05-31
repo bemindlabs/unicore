@@ -23,9 +23,51 @@ export class TenantSeedService implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     try {
       await this.ensureDemoTenant();
+      await this.backfillMemberships();
     } catch (err) {
       this.logger.warn(
         `Demo-tenant seed skipped: ${(err as Error).message} (run "npx prisma db push" first)`,
+      );
+    }
+  }
+
+  /**
+   * Idempotent membership backfill (Phase 5 / W1a). Every existing user gets a
+   * Membership to their current tenant (role = user.role || OWNER) and has
+   * activeTenantId set to that tenant. Safe to run on every boot: the unique
+   * (userId, tenantId) constraint + skipDuplicates make re-runs no-ops.
+   */
+  async backfillMemberships(): Promise<void> {
+    const users = await this.prisma.user.findMany({
+      where: { tenantId: { not: null } },
+      select: { id: true, role: true, tenantId: true, activeTenantId: true },
+    });
+
+    if (users.length === 0) return;
+
+    const created = await this.prisma.membership.createMany({
+      data: users.map((u) => ({
+        userId: u.id,
+        tenantId: u.tenantId as string,
+        role: u.role,
+      })),
+      skipDuplicates: true,
+    });
+
+    // Set activeTenantId for users that don't have one yet (default to home tenant).
+    const missingActive = users.filter((u) => !u.activeTenantId);
+    let activated = 0;
+    for (const u of missingActive) {
+      await this.prisma.user.update({
+        where: { id: u.id },
+        data: { activeTenantId: u.tenantId },
+      });
+      activated += 1;
+    }
+
+    if (created.count > 0 || activated > 0) {
+      this.logger.log(
+        `Membership backfill: created ${created.count} membership(s), set ${activated} activeTenantId(s).`,
       );
     }
   }

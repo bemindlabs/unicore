@@ -28,6 +28,7 @@ model Tenant {
   customDomain String?  @unique
   /// Links to unicore-license edition/flags
   licenseKey   String?
+  memberships  Membership[]
   /// End of the 30-day free trial (saas mode). Null in self-host. (M3/E3)
   trialEndsAt  DateTime?
   /// Stripe-mirrored billing state: TRIALING | ACTIVE | PAST_DUE | CANCELED. (M3/E3)
@@ -56,8 +57,16 @@ model User {
   /// SAAS-ARCHITECTURE.md §6.
   isSuperAdmin  Boolean        @default(false)
   /// Owning tenant. Nullable for migration; backfilled to the default tenant.
+  /// Phase 5: kept as a fallback / "home" tenant. The REQUEST tenant context now
+  /// resolves from activeTenantId (see below) so one user can operate multiple
+  /// solopreneur businesses (tenants) via Membership.
   tenantId      String?
   tenant        Tenant?        @relation(fields: [tenantId], references: [id])
+  /// Phase 5: currently-selected tenant. The request tenant context (JWT `tid`)
+  /// resolves from this; falls back to tenantId when null. Set on signup and by
+  /// POST /tenants/switch.
+  activeTenantId String?
+  memberships   Membership[]
   sessions      Session[]
   notifications Notification[]
   oauthAccounts OAuthAccount[]
@@ -65,6 +74,30 @@ model User {
   updatedAt     DateTime       @updatedAt
 
   @@index([tenantId])
+}
+
+// ---------------------------------------------------------------------------
+// Multi-business memberships (Phase 5 / W1a)
+// One user can own/operate MULTIPLE solopreneur businesses (tenants). Each
+// (user, tenant) pair is a Membership carrying the user's role in THAT tenant.
+// The active tenant for a request resolves from User.activeTenantId, and the
+// tenant-context layer verifies a Membership exists for it (defense-in-depth).
+// ---------------------------------------------------------------------------
+
+model Membership {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  /// The user's role WITHIN this tenant.
+  role      Role     @default(OWNER)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, tenantId])
+  @@index([userId])
+  @@index([tenantId])
+  @@map("memberships")
 }
 
 model OAuthAccount {

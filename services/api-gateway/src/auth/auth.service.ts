@@ -124,6 +124,7 @@ export class AuthService implements OnModuleDestroy {
       name: user.name,
       role: user.role,
       tenantId: user.tenantId,
+      activeTenantId: user.activeTenantId,
     };
   }
 
@@ -300,6 +301,8 @@ export class AuthService implements OnModuleDestroy {
       },
     });
 
+    // Signup creates the user + first tenant + OWNER Membership and selects that
+    // tenant as the active one (Phase 5 / W1a).
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
@@ -307,8 +310,19 @@ export class AuthService implements OnModuleDestroy {
         password: hashedPassword,
         role: 'OWNER',
         tenantId: tenant.id,
+        activeTenantId: tenant.id,
+        memberships: {
+          create: { tenantId: tenant.id, role: 'OWNER' },
+        },
       },
-      select: { id: true, email: true, name: true, role: true, tenantId: true },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        tenantId: true,
+        activeTenantId: true,
+      },
     });
 
     this.logger.log(
@@ -379,8 +393,26 @@ export class AuthService implements OnModuleDestroy {
     name: string;
     role: string;
     tenantId?: string | null;
+    activeTenantId?: string | null;
   }): Promise<AuthResponseDto> {
     this.logger.log(`User logged in: ${user.email}`);
+    return this.createTokens(user);
+  }
+
+  /**
+   * Re-issue an access/refresh token pair for a user, carrying a (possibly new)
+   * active tenant in the JWT `tid` claim (Phase 5 / W1a — tenant switch). Public
+   * wrapper around the private token factory so the tenants module can re-issue
+   * after a membership-checked switch without touching the login flow.
+   */
+  async issueTokensForUser(user: {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    tenantId?: string | null;
+    activeTenantId?: string | null;
+  }): Promise<AuthResponseDto> {
     return this.createTokens(user);
   }
 
@@ -389,7 +421,14 @@ export class AuthService implements OnModuleDestroy {
       where: { refreshToken },
       include: {
         user: {
-          select: { id: true, email: true, name: true, role: true, tenantId: true },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            role: true,
+            tenantId: true,
+            activeTenantId: true,
+          },
         },
       },
     });
@@ -582,12 +621,13 @@ export class AuthService implements OnModuleDestroy {
     name: string;
     role: string;
     tenantId?: string | null;
+    activeTenantId?: string | null;
   }): Promise<AuthResponseDto> {
     const jti = randomBytes(16).toString('hex');
-    // Multi-tenant SaaS: the JWT always carries the user's tenant. Legacy/bootstrap
-    // users with no tenant fall back to the local/demo tenant (the seed backfills
-    // them there); real onboarding always assigns a dedicated tenant.
-    const tid = user.tenantId ?? DEMO_TENANT_ID;
+    // Multi-tenant SaaS (Phase 5): the JWT `tid` carries the user's ACTIVE tenant
+    // (the currently-selected business). Falls back to the home tenantId, then to
+    // the local/demo bootstrap tenant for legacy/bootstrap users with no tenant.
+    const tid = user.activeTenantId ?? user.tenantId ?? DEMO_TENANT_ID;
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,

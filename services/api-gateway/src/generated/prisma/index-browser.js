@@ -145,8 +145,17 @@ exports.Prisma.UserScalarFieldEnum = {
   role: 'role',
   isSuperAdmin: 'isSuperAdmin',
   tenantId: 'tenantId',
+  activeTenantId: 'activeTenantId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
+};
+
+exports.Prisma.MembershipScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  tenantId: 'tenantId',
+  role: 'role',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.OAuthAccountScalarFieldEnum = {
@@ -540,6 +549,7 @@ exports.MessageType = exports.$Enums.MessageType = {
 exports.Prisma.ModelName = {
   Tenant: 'Tenant',
   User: 'User',
+  Membership: 'Membership',
   OAuthAccount: 'OAuthAccount',
   Session: 'Session',
   CustomDomain: 'CustomDomain',
