@@ -93,7 +93,7 @@ describe('AuthService password reset + email verification', () => {
       const res = await service.resetPassword('raw-token', 'NewPass1');
       expect(res.message).toMatch(/reset/i);
       // Password is stored as a real bcrypt hash (not the plaintext).
-      const updateArg = prisma.user.update.mock.calls[0][0];
+      const updateArg = (prisma.user.update as unknown as jest.Mock).mock.calls[0][0];
       expect(updateArg.where).toEqual({ id: 'u1' });
       expect(typeof updateArg.data.password).toBe('string');
       expect(updateArg.data.password).not.toBe('NewPass1');
