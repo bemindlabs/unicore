@@ -5,10 +5,11 @@ import {
   Query,
   Body,
   Logger,
+  UseGuards,
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { SuperAdminGuard } from '../common/guards/super-admin.guard';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as net from 'net';
@@ -94,7 +95,12 @@ async function safeDockerRestart(container: string): Promise<string> {
   return stdout.trim() || safeContainer;
 }
 
-@Roles('OWNER')
+// GAPS #2: these endpoints run `docker restart` / `docker logs` /
+// `docker exec kafka` against the SHARED cluster — they are Bemind platform-ops
+// actions, never a tenant OWNER's. `@Roles('OWNER')` alone let any tenant OWNER
+// reach them; the control-plane boundary is SuperAdminGuard (User.isSuperAdmin),
+// the same guard AdminController uses.
+@UseGuards(SuperAdminGuard)
 @Controller('api/v1/admin/system')
 export class SystemCommandsController {
   private readonly logger = new Logger(SystemCommandsController.name);

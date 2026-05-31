@@ -55,13 +55,20 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('No tenant associated with this account');
     }
 
-    // Defense-in-depth (Phase 5 / W1a): the resolved tenant must be one the user
-    // actually belongs to. If the user has any memberships, the active tid MUST be
-    // among them — a forged/stale `tid` for another business is rejected. Legacy
-    // users with no memberships fall through (the seed backfills them), so this
-    // never locks out bootstrap/demo accounts.
+    // GAPS #7: the resolved tenant MUST be one the user actually belongs to.
+    // The previous `memberships.length > 0 && …` form left a hole: a user with
+    // ZERO memberships skipped the check entirely and could forge any `tid`.
+    // Now membership is ALWAYS required — the only exemption is a platform
+    // super-admin (Bemind ops), who legitimately operates across every tenant
+    // (this also keeps the secret-gated bootstrap admin, provisioned with
+    // isSuperAdmin:true, working). Every legitimate signup/oauth/register path
+    // creates a Membership (Phase 5 / Stage A), so no normal user is locked out;
+    // a membership-less non-super-admin is rejected with 403.
     const { memberships, ...rest } = user;
-    if (memberships.length > 0 && !memberships.some((m) => m.tenantId === tenantId)) {
+    if (
+      !rest.isSuperAdmin &&
+      !memberships.some((m) => m.tenantId === tenantId)
+    ) {
       throw new ForbiddenException('Not a member of the active business');
     }
 

@@ -74,7 +74,8 @@ describe('JwtStrategy.validate (tenant context)', () => {
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
-  it('falls through for legacy users with no memberships (fallback)', async () => {
+  it('GAPS #7: rejects a zero-membership non-super-admin (no more fallback bypass)', async () => {
+    // Previously a membership-less user fell through and could forge any tid.
     const { strategy } = build({
       id: 'u1',
       email: 'o@x.com',
@@ -86,8 +87,28 @@ describe('JwtStrategy.validate (tenant context)', () => {
       memberships: [],
     });
 
-    const result = await strategy.validate({ sub: 'u1', email: 'o@x.com', role: 'OWNER', tid: 't1' } as any);
-    expect(result.tenantId).toBe('t1');
+    await expect(
+      strategy.validate({ sub: 'u1', email: 'o@x.com', role: 'OWNER', tid: 't1' } as any),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('GAPS #7: allows a super-admin (Bemind ops) with zero memberships for any tid', async () => {
+    // The bootstrap admin (provisionAdmin, isSuperAdmin:true) and Bemind ops
+    // legitimately operate across tenants without a per-tenant membership.
+    const { strategy } = build({
+      id: 'sa',
+      email: 'ops@bemind.tech',
+      name: 'Ops',
+      role: 'OWNER',
+      tenantId: 't1',
+      activeTenantId: null,
+      isSuperAdmin: true,
+      memberships: [],
+    });
+
+    const result = await strategy.validate({ sub: 'sa', email: 'ops@bemind.tech', role: 'OWNER', tid: 'any-tenant' } as any);
+    expect(result.tenantId).toBe('any-tenant');
+    expect(result.isSuperAdmin).toBe(true);
   });
 
   it('rejects when no tenant resolves at all', async () => {
