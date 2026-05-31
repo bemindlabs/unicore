@@ -258,7 +258,14 @@ export class AuthController {
   @UseGuards(GoogleAuthGuard)
   @Get('google/callback')
   async googleCallback(@Req() req: Request, @Res() res: Response) {
-    const user = req.user as { id: string; email: string; name: string; role: string };
+    const user = req.user as {
+      id: string;
+      email: string;
+      name: string;
+      role: string;
+      tenantId?: string | null;
+      activeTenantId?: string | null;
+    };
     const tokens = await this.authService.login(user);
     await this.auditService.log({
       userId: user.id,
@@ -291,7 +298,14 @@ export class AuthController {
   @UseGuards(GithubAuthGuard)
   @Get('github/callback')
   async githubCallback(@Req() req: Request, @Res() res: Response) {
-    const user = req.user as { id: string; email: string; name: string; role: string };
+    const user = req.user as {
+      id: string;
+      email: string;
+      name: string;
+      role: string;
+      tenantId?: string | null;
+      activeTenantId?: string | null;
+    };
     const tokens = await this.authService.login(user);
     await this.auditService.log({
       userId: user.id,

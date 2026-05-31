@@ -142,7 +142,14 @@ export class AuthService implements OnModuleDestroy {
       accessToken: string;
       refreshToken: string | null;
     },
-  ): Promise<{ id: string; email: string; name: string; role: string; tenantId?: string | null }> {
+  ): Promise<{
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    tenantId?: string | null;
+    activeTenantId?: string | null;
+  }> {
     // 1. Check if this OAuth account is already linked
     const existing = await this.prisma.oAuthAccount.findUnique({
       where: {
@@ -152,7 +159,16 @@ export class AuthService implements OnModuleDestroy {
         },
       },
       include: {
-        user: { select: { id: true, email: true, name: true, role: true, tenantId: true } },
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            role: true,
+            tenantId: true,
+            activeTenantId: true,
+          },
+        },
       },
     });
 
@@ -169,14 +185,26 @@ export class AuthService implements OnModuleDestroy {
         },
       });
       this.logger.log(`OAuth login (${provider}): ${existing.user.email}`);
-      return existing.user;
+      // Idempotent backfill: a legacy OAuth user with no membership gets one (and
+      // a sensible activeTenantId) without creating a duplicate tenant.
+      const { tenantId, activeTenantId } = await this.ensureMembershipForExistingUser(
+        existing.user.id,
+      );
+      return { ...existing.user, tenantId, activeTenantId };
     }
 
     // 2. If we have an email, check if a user with that email exists
     if (profile.email) {
       const userByEmail = await this.prisma.user.findUnique({
         where: { email: profile.email },
-        select: { id: true, email: true, name: true, role: true, tenantId: true },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          tenantId: true,
+          activeTenantId: true,
+        },
       });
 
       if (userByEmail) {
@@ -185,17 +213,24 @@ export class AuthService implements OnModuleDestroy {
         this.logger.log(
           `OAuth account linked (${provider}): ${userByEmail.email}`,
         );
-        return userByEmail;
+        // Ensure the existing user has a membership + active tenant (idempotent).
+        const { tenantId, activeTenantId } = await this.ensureMembershipForExistingUser(
+          userByEmail.id,
+        );
+        return { ...userByEmail, tenantId, activeTenantId };
       }
     }
 
-    // 3. Create a new user + OAuth account (no password)
+    // 3. Create a new user + OAuth account (no password). Like signup, a brand-new
+    // OAuth user also gets their OWN Tenant + OWNER Membership + activeTenantId via
+    // the shared onboarding primitive (Phase 5) — no more zero-membership users.
     const email = profile.email || `${provider}-${profile.providerAccountId}@oauth.local`;
-    const user = await this.prisma.user.create({
-      data: {
-        email,
-        name: profile.name,
-        password: null,
+    const { user } = await this.createUserOwnedTenant({
+      email,
+      name: profile.name,
+      password: null,
+      logContext: `New OAuth user (${provider})`,
+      extraUserData: {
         oauthAccounts: {
           create: {
             provider,
@@ -208,10 +243,8 @@ export class AuthService implements OnModuleDestroy {
           },
         },
       },
-      select: { id: true, email: true, name: true, role: true, tenantId: true },
     });
 
-    this.logger.log(`New OAuth user registered (${provider}): ${user.email}`);
     return user;
   }
 
@@ -252,20 +285,17 @@ export class AuthService implements OnModuleDestroy {
 
     const hashedPassword = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
 
-    // Admin/bootstrap registration is for local/demo provisioning, so it lands in
-    // the demo tenant. Real multi-tenant onboarding goes through self-serve signup,
-    // which creates a dedicated tenant.
-    const user = await this.prisma.user.create({
-      data: {
-        email: dto.email,
-        name: dto.name,
-        password: hashedPassword,
-        tenantId: DEMO_TENANT_ID,
-      },
-      select: { id: true, email: true, name: true, role: true, tenantId: true },
+    // Public registration creates a real multi-tenant onboarding shape, mirroring
+    // self-serve signup: the user's OWN Tenant + OWNER Membership + activeTenantId
+    // via the shared onboarding primitive (Phase 5). No more zero-membership users
+    // landing in the demo tenant. (Bootstrap/admin provisioning uses
+    // provisionAdmin, which is a separate, secret-gated path.)
+    const { user } = await this.createUserOwnedTenant({
+      email: dto.email,
+      name: dto.name,
+      password: hashedPassword,
+      logContext: 'User registered',
     });
-
-    this.logger.log(`User registered: ${user.email}`);
 
     return this.createTokens(user);
   }
@@ -284,16 +314,58 @@ export class AuthService implements OnModuleDestroy {
       throw new ConflictException('Email already registered');
     }
 
-    const businessName = (dto.businessName || dto.name).trim();
-    const slug = await this.generateUniqueSlug(businessName || dto.email.split('@')[0]);
     const hashedPassword = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
+
+    // Signup creates the user + first tenant + OWNER Membership and selects that
+    // tenant as the active one (Phase 5 / W1a). The tenant+OWNER+membership work
+    // is shared with the OAuth-new-user and /auth/register paths so all three
+    // produce an identical onboarding shape.
+    const { user } = await this.createUserOwnedTenant({
+      email: dto.email,
+      name: dto.name,
+      password: hashedPassword,
+      businessName: dto.businessName,
+      logContext: 'SaaS signup',
+    });
+
+    return this.createTokens(user);
+  }
+
+  /**
+   * Shared onboarding primitive (Phase 5): create a brand-new user's OWN Tenant
+   * (ACTIVE, TRIALING, full-Growth trial defaults), an OWNER Membership, and set
+   * the user's home + active tenant to it. Reused by signup, OAuth new-user, and
+   * /auth/register so the three paths never drift. The caller decides whether the
+   * user has a password (null for OAuth) and may supply the OAuth account create.
+   */
+  private async createUserOwnedTenant(params: {
+    email: string;
+    name: string;
+    password: string | null;
+    businessName?: string | null;
+    /** Extra nested writes merged into the user.create data (e.g. oauthAccounts). */
+    extraUserData?: Record<string, unknown>;
+    logContext: string;
+  }): Promise<{
+    user: {
+      id: string;
+      email: string;
+      name: string;
+      role: string;
+      tenantId: string | null;
+      activeTenantId: string | null;
+    };
+    tenant: { id: string; slug: string };
+  }> {
+    const businessName = (params.businessName || params.name).trim();
+    const slug = await this.generateUniqueSlug(businessName || params.email.split('@')[0]);
     const trialEndsAt = computeTrialEnd();
 
     // Trial gives the full Growth feature set; the tenant.plan reflects that.
     const tenant = await this.prisma.tenant.create({
       data: {
         slug,
-        name: businessName,
+        name: businessName || params.email.split('@')[0],
         status: 'ACTIVE',
         plan: PLANS[TRIAL_PLAN].key,
         subscriptionStatus: 'TRIALING',
@@ -301,19 +373,18 @@ export class AuthService implements OnModuleDestroy {
       },
     });
 
-    // Signup creates the user + first tenant + OWNER Membership and selects that
-    // tenant as the active one (Phase 5 / W1a).
     const user = await this.prisma.user.create({
       data: {
-        email: dto.email,
-        name: dto.name,
-        password: hashedPassword,
+        email: params.email,
+        name: params.name,
+        password: params.password,
         role: 'OWNER',
         tenantId: tenant.id,
         activeTenantId: tenant.id,
         memberships: {
           create: { tenantId: tenant.id, role: 'OWNER' },
         },
+        ...(params.extraUserData ?? {}),
       },
       select: {
         id: true,
@@ -326,10 +397,99 @@ export class AuthService implements OnModuleDestroy {
     });
 
     this.logger.log(
-      `SaaS signup: tenant ${tenant.id} (${slug}) + OWNER ${user.email}, trial ends ${trialEndsAt.toISOString()}`,
+      `${params.logContext}: tenant ${tenant.id} (${slug}) + OWNER ${user.email}, trial ends ${trialEndsAt.toISOString()}`,
     );
 
-    return this.createTokens(user);
+    return { user, tenant };
+  }
+
+  /**
+   * Idempotent membership backfill for an EXISTING user (Phase 5): ensure the
+   * user belongs to at least one tenant and has a sensible activeTenantId, WITHOUT
+   * creating a second tenant. Used by the cross-domain token-exchange where the
+   * user typically already exists. Returns the (possibly updated) tenant ids.
+   *
+   *  - If the user already has memberships, only fix activeTenantId if unset.
+   *  - Else if the user has a home tenantId, create the missing OWNER Membership
+   *    to that tenant and select it as active.
+   *  - Else (no tenant at all) provision a fresh owned tenant via the shared
+   *    primitive — but on the existing user, never a duplicate user.
+   */
+  private async ensureMembershipForExistingUser(userId: string): Promise<{
+    tenantId: string | null;
+    activeTenantId: string | null;
+  }> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        tenantId: true,
+        activeTenantId: true,
+        memberships: { select: { tenantId: true } },
+      },
+    });
+    if (!user) {
+      return { tenantId: null, activeTenantId: null };
+    }
+
+    // Already a member of something: just make sure an active tenant is selected.
+    if (user.memberships.length > 0) {
+      const active =
+        user.activeTenantId && user.memberships.some((m) => m.tenantId === user.activeTenantId)
+          ? user.activeTenantId
+          : (user.memberships[0].tenantId ?? null);
+      if (active && active !== user.activeTenantId) {
+        await this.prisma.user.update({
+          where: { id: user.id },
+          data: { activeTenantId: active, tenantId: user.tenantId ?? active },
+        });
+      }
+      return { tenantId: user.tenantId ?? active, activeTenantId: active };
+    }
+
+    // No memberships but a home tenant exists: backfill the OWNER membership there.
+    if (user.tenantId) {
+      await this.prisma.membership.upsert({
+        where: { userId_tenantId: { userId: user.id, tenantId: user.tenantId } },
+        create: { userId: user.id, tenantId: user.tenantId, role: 'OWNER' },
+        update: {},
+      });
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { activeTenantId: user.tenantId },
+      });
+      this.logger.log(
+        `Backfilled OWNER membership for ${user.email} → tenant ${user.tenantId}`,
+      );
+      return { tenantId: user.tenantId, activeTenantId: user.tenantId };
+    }
+
+    // No tenant at all: provision a fresh owned tenant for this existing user.
+    const businessName = user.name || user.email.split('@')[0];
+    const slug = await this.generateUniqueSlug(businessName);
+    const tenant = await this.prisma.tenant.create({
+      data: {
+        slug,
+        name: businessName,
+        status: 'ACTIVE',
+        plan: PLANS[TRIAL_PLAN].key,
+        subscriptionStatus: 'TRIALING',
+        trialEndsAt: computeTrialEnd(),
+      },
+    });
+    await this.prisma.membership.create({
+      data: { userId: user.id, tenantId: tenant.id, role: 'OWNER' },
+    });
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { tenantId: tenant.id, activeTenantId: tenant.id, role: 'OWNER' },
+    });
+    this.logger.log(
+      `Provisioned owned tenant ${tenant.id} (${slug}) + OWNER membership for existing user ${user.email}`,
+    );
+    return { tenantId: tenant.id, activeTenantId: tenant.id };
   }
 
   /** Build a URL-safe, unique tenant slug from a business name. */
@@ -590,23 +750,47 @@ export class AuthService implements OnModuleDestroy {
     // 2. Find or create user in API Gateway database
     let user = await this.prisma.user.findUnique({
       where: { email },
-      select: { id: true, email: true, name: true, role: true, tenantId: true },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        tenantId: true,
+        activeTenantId: true,
+      },
     });
 
+    let authUser: {
+      id: string;
+      email: string;
+      name: string;
+      role: string;
+      tenantId?: string | null;
+      activeTenantId?: string | null;
+    };
+
     if (!user) {
-      user = await this.prisma.user.create({
-        data: {
-          email,
-          name: customerName,
-          password: null, // Platform-linked account, no local password
-        },
-        select: { id: true, email: true, name: true, role: true, tenantId: true },
+      // Brand-new platform-linked user: provision their OWN Tenant + OWNER
+      // Membership + activeTenantId via the shared onboarding primitive, exactly
+      // like signup/register/oauth (Phase 5). No password (platform-linked).
+      const created = await this.createUserOwnedTenant({
+        email,
+        name: customerName,
+        password: null,
+        logContext: 'Platform-linked user via token exchange',
       });
-      this.logger.log(`Platform-linked user created via token exchange: ${email}`);
+      authUser = created.user;
+    } else {
+      // Existing user: ENSURE a Membership + sensible activeTenantId idempotently.
+      // Never creates a second tenant for a user who already has one.
+      const { tenantId, activeTenantId } = await this.ensureMembershipForExistingUser(
+        user.id,
+      );
+      authUser = { ...user, tenantId, activeTenantId };
     }
 
     // 3. Generate API Gateway tokens
-    const tokens = await this.createTokens(user);
+    const tokens = await this.createTokens(authUser);
 
     this.logger.log(
       `Token exchange successful: ${email}${targetApp ? ` → ${targetApp}` : ''}`,
