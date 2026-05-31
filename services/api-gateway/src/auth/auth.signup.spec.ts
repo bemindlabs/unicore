@@ -34,6 +34,9 @@ describe('AuthService.signup', () => {
         findUnique: jest.fn(async () => null), // slug not taken
         create: jest.fn(async ({ data }: any) => ({ ...createdTenant, ...data })),
       },
+      // OWNER Membership is now inserted separately (in the new tenant's RLS
+      // context), no longer nested under user.create.
+      membership: { create: jest.fn(async () => ({ id: 'm1' })) },
       session: { create: jest.fn(async () => ({})) },
       verificationToken: { create: jest.fn(async () => ({})) },
     };
@@ -77,6 +80,14 @@ describe('AuthService.signup', () => {
         data: expect.objectContaining({ role: 'OWNER', tenantId: 'tenant-1' }),
       }),
     );
+    // The OWNER Membership is inserted SEPARATELY in the new tenant's context
+    // (RLS WITH CHECK), with tenantId == the created tenant — not nested under
+    // user.create (which would run under the demo/no-context tenant and 42501).
+    expect((prisma as any).membership.create).toHaveBeenCalledWith({
+      data: { userId: 'user-1', tenantId: 'tenant-1', role: 'OWNER' },
+    });
+    const userCreateData = prisma.user.create.mock.calls[0][0].data;
+    expect(userCreateData.memberships).toBeUndefined();
     // trialEndsAt is ~30 days out
     const data = prisma.tenant.create.mock.calls[0][0].data;
     const days = Math.round((data.trialEndsAt.getTime() - Date.now()) / 86_400_000);

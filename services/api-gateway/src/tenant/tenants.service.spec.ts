@@ -17,6 +17,7 @@ describe('TenantsService', () => {
       membership: {
         findMany: jest.fn(async () => []),
         findUnique: jest.fn(async () => null),
+        create: jest.fn(async () => ({ id: 'm1' })),
       },
       tenant: {
         findUnique: jest.fn(async () => null), // slug free
@@ -66,10 +67,15 @@ describe('TenantsService', () => {
           status: 'ACTIVE',
           subscriptionStatus: 'TRIALING',
           plan: 'GROWTH',
-          memberships: { create: { userId: 'u1', role: 'OWNER' } },
         }),
       }),
     );
+    // The OWNER Membership is now inserted SEPARATELY (in the new tenant's RLS
+    // context), not as a nested write under tenant.create — so the WITH CHECK
+    // (tenantId = app.tenant_id) on the RLS-forced memberships table passes.
+    expect(prisma.membership.create).toHaveBeenCalledWith({
+      data: { userId: 'u1', tenantId: 'new-tenant', role: 'OWNER' },
+    });
     expect(result).toEqual(
       expect.objectContaining({ tenantId: 'new-tenant', role: 'OWNER', name: 'Side Hustle' }),
     );

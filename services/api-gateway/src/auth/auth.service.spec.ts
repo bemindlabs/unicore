@@ -174,10 +174,17 @@ describe('AuthService', () => {
             role: 'OWNER',
             tenantId: 'tenant-reg',
             activeTenantId: 'tenant-reg',
-            memberships: { create: { tenantId: 'tenant-reg', role: 'OWNER' } },
           }),
         }),
       );
+      // The OWNER Membership is now inserted SEPARATELY in the new tenant's RLS
+      // context (SET LOCAL app.tenant_id = tenant-reg), not nested under
+      // user.create — so the memberships WITH CHECK passes under NOSUPERUSER.
+      const regUserData = mockPrismaService.user.create.mock.calls[0][0].data;
+      expect(regUserData.memberships).toBeUndefined();
+      expect(mockPrismaService.membership.create).toHaveBeenCalledWith({
+        data: { userId: '1', tenantId: 'tenant-reg', role: 'OWNER' },
+      });
       // tid claim carries the freshly-created owned tenant.
       const signedPayload = mockJwtService.sign.mock.calls[0][0];
       expect(signedPayload.tid).toBe('tenant-reg');
@@ -224,10 +231,13 @@ describe('AuthService', () => {
       expect(mockPrismaService.tenant.create).toHaveBeenCalled();
       const userCreateData = mockPrismaService.user.create.mock.calls[0][0].data;
       expect(userCreateData.role).toBe('OWNER');
-      expect(userCreateData.memberships).toEqual({
-        create: { tenantId: 'tenant-oauth', role: 'OWNER' },
+      // The OWNER Membership is inserted SEPARATELY in the new tenant's RLS
+      // context — no longer nested under user.create.
+      expect(userCreateData.memberships).toBeUndefined();
+      expect(mockPrismaService.membership.create).toHaveBeenCalledWith({
+        data: { userId: 'u-oauth', tenantId: 'tenant-oauth', role: 'OWNER' },
       });
-      // OAuth account is still nested-created alongside the membership.
+      // OAuth account is still nested-created on the user.
       expect(userCreateData.oauthAccounts.create.provider).toBe('google');
       expect(result.activeTenantId).toBe('tenant-oauth');
     });
@@ -302,8 +312,10 @@ describe('AuthService', () => {
 
       expect(mockPrismaService.user.create).toHaveBeenCalledTimes(1);
       const userCreateData = mockPrismaService.user.create.mock.calls[0][0].data;
-      expect(userCreateData.memberships).toEqual({
-        create: { tenantId: 'tenant-new', role: 'OWNER' },
+      // Membership inserted separately in the new tenant's RLS context.
+      expect(userCreateData.memberships).toBeUndefined();
+      expect(mockPrismaService.membership.create).toHaveBeenCalledWith({
+        data: { userId: 'u-new', tenantId: 'tenant-new', role: 'OWNER' },
       });
       const signedPayload = mockJwtService.sign.mock.calls[0][0];
       expect(signedPayload.tid).toBe('tenant-new');
