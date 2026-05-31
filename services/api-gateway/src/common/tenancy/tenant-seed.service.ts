@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { DEMO_TENANT_ID } from './tenancy.config';
+import { runWithTenant } from './tenant-store';
 
 /**
  * Seeds a local/demo bootstrap tenant for development and demos, and backfills
@@ -45,14 +46,34 @@ export class TenantSeedService implements OnModuleInit {
 
     if (users.length === 0) return;
 
-    const created = await this.prisma.membership.createMany({
-      data: users.map((u) => ({
-        userId: u.id,
-        tenantId: u.tenantId as string,
-        role: u.role,
-      })),
-      skipDuplicates: true,
-    });
+    // memberships is FORCE RLS with WITH CHECK (tenantId = app.tenant_id).
+    // A single cross-tenant createMany cannot share one app.tenant_id, so we
+    // group users by their home tenant and insert each group inside that
+    // tenant's context (runWithTenant) — every row's tenantId then equals the
+    // pinned app.tenant_id and passes the WITH CHECK.
+    const byTenant = new Map<string, typeof users>();
+    for (const u of users) {
+      const tid = u.tenantId as string;
+      const group = byTenant.get(tid);
+      if (group) group.push(u);
+      else byTenant.set(tid, [u]);
+    }
+
+    let createdCount = 0;
+    for (const [tenantId, group] of byTenant) {
+      const created = await runWithTenant(tenantId, () =>
+        this.prisma.membership.createMany({
+          data: group.map((u) => ({
+            userId: u.id,
+            tenantId,
+            role: u.role,
+          })),
+          skipDuplicates: true,
+        }),
+      );
+      createdCount += created.count;
+    }
+    const created = { count: createdCount };
 
     // Set activeTenantId for users that don't have one yet (default to home tenant).
     const missingActive = users.filter((u) => !u.activeTenantId);

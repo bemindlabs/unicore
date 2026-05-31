@@ -24,6 +24,7 @@ import { AuthResponseDto } from './dto/auth-response.dto';
 import { DEMO_TENANT_ID } from '../common/tenancy/tenancy.config';
 import { SignupDto } from './dto/signup.dto';
 import { TRIAL_PLAN, computeTrialEnd, PLANS } from '../common/tenancy/plans.config';
+import { runWithTenant } from '../common/tenancy/tenant-store';
 
 const BCRYPT_ROUNDS = 12;
 const ACCESS_TOKEN_EXPIRY = '15m';
@@ -406,6 +407,12 @@ export class AuthService implements OnModuleDestroy {
       },
     });
 
+    // User/Tenant are NOT RLS-scoped, so user.create runs without a tenant
+    // context. The OWNER Membership, however, is FORCE RLS with a
+    // WITH CHECK (tenantId = current_setting('app.tenant_id')); it MUST be
+    // inserted in the NEW tenant's context, so we create it separately inside
+    // runWithTenant(tenant.id) rather than as a nested write under the demo
+    // (no-context) tenant — otherwise Postgres rejects it (42501).
     const user = await this.prisma.user.create({
       data: {
         email: params.email,
@@ -414,9 +421,6 @@ export class AuthService implements OnModuleDestroy {
         role: 'OWNER',
         tenantId: tenant.id,
         activeTenantId: tenant.id,
-        memberships: {
-          create: { tenantId: tenant.id, role: 'OWNER' },
-        },
         ...(params.extraUserData ?? {}),
       },
       select: {
@@ -428,6 +432,12 @@ export class AuthService implements OnModuleDestroy {
         activeTenantId: true,
       },
     });
+
+    await runWithTenant(tenant.id, () =>
+      this.prisma.membership.create({
+        data: { userId: user.id, tenantId: tenant.id, role: 'OWNER' },
+      }),
+    );
 
     this.logger.log(
       `${params.logContext}: tenant ${tenant.id} (${slug}) + OWNER ${user.email}, trial ends ${trialEndsAt.toISOString()}`,
@@ -662,11 +672,17 @@ export class AuthService implements OnModuleDestroy {
 
     // No memberships but a home tenant exists: backfill the OWNER membership there.
     if (user.tenantId) {
-      await this.prisma.membership.upsert({
-        where: { userId_tenantId: { userId: user.id, tenantId: user.tenantId } },
-        create: { userId: user.id, tenantId: user.tenantId, role: 'OWNER' },
-        update: {},
-      });
+      // memberships is FORCE RLS with WITH CHECK (tenantId = app.tenant_id):
+      // the upsert (read for conflict + insert) must run in the membership's own
+      // tenant context, not the caller's. (user.tenantId is non-null here.)
+      const homeTenantId = user.tenantId;
+      await runWithTenant(homeTenantId, () =>
+        this.prisma.membership.upsert({
+          where: { userId_tenantId: { userId: user.id, tenantId: homeTenantId } },
+          create: { userId: user.id, tenantId: homeTenantId, role: 'OWNER' },
+          update: {},
+        }),
+      );
       await this.prisma.user.update({
         where: { id: user.id },
         data: { activeTenantId: user.tenantId },
@@ -690,9 +706,12 @@ export class AuthService implements OnModuleDestroy {
         trialEndsAt: computeTrialEnd(),
       },
     });
-    await this.prisma.membership.create({
-      data: { userId: user.id, tenantId: tenant.id, role: 'OWNER' },
-    });
+    // Membership insert must run in the NEW tenant's context (RLS WITH CHECK).
+    await runWithTenant(tenant.id, () =>
+      this.prisma.membership.create({
+        data: { userId: user.id, tenantId: tenant.id, role: 'OWNER' },
+      }),
+    );
     await this.prisma.user.update({
       where: { id: user.id },
       data: { tenantId: tenant.id, activeTenantId: tenant.id, role: 'OWNER' },

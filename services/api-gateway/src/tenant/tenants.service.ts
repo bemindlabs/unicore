@@ -99,11 +99,19 @@ export class TenantsService {
         plan: PLANS[TRIAL_PLAN].key,
         subscriptionStatus: 'TRIALING',
         trialEndsAt,
-        memberships: {
-          create: { userId, role: 'OWNER' },
-        },
       },
     });
+
+    // memberships is FORCE RLS with WITH CHECK (tenantId = app.tenant_id). The
+    // request's active tenant differs from this brand-new business, so the
+    // OWNER Membership insert must run in the NEW tenant's context — not as a
+    // nested write under tenant.create (which the extension scopes to the
+    // request's active tenant and Postgres would reject, 42501).
+    await runWithTenant(tenant.id, () =>
+      this.prisma.membership.create({
+        data: { userId, tenantId: tenant.id, role: 'OWNER' },
+      }),
+    );
 
     this.logger.log(
       `User ${userId} created business ${tenant.id} (${slug}) as OWNER`,
