@@ -144,6 +144,7 @@ exports.Prisma.UserScalarFieldEnum = {
   password: 'password',
   role: 'role',
   isSuperAdmin: 'isSuperAdmin',
+  emailVerified: 'emailVerified',
   tenantId: 'tenantId',
   activeTenantId: 'activeTenantId',
   createdAt: 'createdAt',
@@ -179,6 +180,16 @@ exports.Prisma.SessionScalarFieldEnum = {
   token: 'token',
   refreshToken: 'refreshToken',
   expiresAt: 'expiresAt',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.VerificationTokenScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  tokenHash: 'tokenHash',
+  type: 'type',
+  expiresAt: 'expiresAt',
+  consumedAt: 'consumedAt',
   createdAt: 'createdAt'
 };
 
@@ -554,6 +565,7 @@ exports.Prisma.ModelName = {
   Membership: 'Membership',
   OAuthAccount: 'OAuthAccount',
   Session: 'Session',
+  VerificationToken: 'VerificationToken',
   CustomDomain: 'CustomDomain',
   AuditLog: 'AuditLog',
   Settings: 'Settings',

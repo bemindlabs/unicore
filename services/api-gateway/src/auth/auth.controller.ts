@@ -27,6 +27,9 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { TokenExchangeDto } from './dto/token-exchange.dto';
 import { LoginDto } from './dto/login.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
 import { AuditService } from '../audit/audit.service';
 import { LicenseService } from '../license/license.service';
 
@@ -98,6 +101,55 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   refresh(@Body() dto: RefreshTokenDto) {
     return this.authService.refresh(dto.refreshToken);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Password reset + email verification (GAPS #8). Tenant-agnostic identity
+  // endpoints — all Public. forgot-password ALWAYS returns 200 (no enumeration).
+  // ---------------------------------------------------------------------------
+
+  @Public()
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  async forgotPassword(@Body() dto: ForgotPasswordDto, @Req() req: Request) {
+    const result = await this.authService.forgotPassword(dto.email);
+    // Non-enumerating audit: record the request, never whether the user existed.
+    await this.auditService.log({
+      userEmail: dto.email,
+      action: 'password-reset-request',
+      resource: 'auth',
+      detail: 'Password reset requested',
+      ip: req.ip,
+    });
+    return result;
+  }
+
+  @Public()
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(@Body() dto: ResetPasswordDto, @Req() req: Request) {
+    const result = await this.authService.resetPassword(dto.token, dto.newPassword);
+    await this.auditService.log({
+      action: 'password-reset',
+      resource: 'auth',
+      detail: 'Password reset via token; sessions revoked',
+      ip: req.ip,
+    });
+    return result;
+  }
+
+  @Public()
+  @Post('verify-email')
+  @HttpCode(HttpStatus.OK)
+  async verifyEmail(@Body() dto: VerifyEmailDto, @Req() req: Request) {
+    const result = await this.authService.verifyEmail(dto.token);
+    await this.auditService.log({
+      action: 'email-verify',
+      resource: 'auth',
+      detail: 'Email verified via token',
+      ip: req.ip,
+    });
+    return result;
   }
 
   @Public()

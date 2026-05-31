@@ -8,9 +8,14 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { jwtVerify } from 'jose';
 import * as bcrypt from 'bcryptjs';
-import { randomBytes } from 'crypto';
+import { randomBytes, createHash } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { TokenBlacklistService } from './token-blacklist.service';
+import { EmailService } from '../email/email.service';
+import {
+  verifyEmailHtml,
+  resetPasswordEmailHtml,
+} from '../email/templates/auth-emails';
 import { RegisterDto } from './dto/register.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -26,22 +31,45 @@ const REFRESH_TOKEN_EXPIRY_DAYS = 7;
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_WINDOW_MS = 15 * 60 * 1000;
 
+/** Token types for the VerificationToken table. */
+const TOKEN_TYPE = {
+  PASSWORD_RESET: 'PASSWORD_RESET',
+  EMAIL_VERIFY: 'EMAIL_VERIFY',
+} as const;
+
+/** Password-reset token lifetime. */
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1h
+/** Email-verification token lifetime. */
+const VERIFY_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24h
+
+/** forgot-password per-email rate limit (anti-abuse, anti-enumeration timing). */
+const FORGOT_MAX_PER_WINDOW = 3;
+const FORGOT_WINDOW_MS = 15 * 60 * 1000;
+
 interface LoginAttemptRecord {
   attempts: number;
   firstAttemptAt: number;
   lockedUntil: number | null;
 }
 
+interface RateRecord {
+  count: number;
+  windowStart: number;
+}
+
 @Injectable()
 export class AuthService implements OnModuleDestroy {
   private readonly logger = new Logger(AuthService.name);
   private readonly loginAttempts = new Map<string, LoginAttemptRecord>();
+  /** Per-email forgot-password rate-limit buckets (in-memory, like loginAttempts). */
+  private readonly forgotAttempts = new Map<string, RateRecord>();
   private readonly cleanupTimer: ReturnType<typeof setInterval>;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly tokenBlacklist: TokenBlacklistService,
+    private readonly email: EmailService,
   ) {
     this.cleanupTimer = setInterval(() => this.purgeExpiredAttempts(), 10 * 60 * 1000);
   }
@@ -58,6 +86,11 @@ export class AuthService implements OnModuleDestroy {
         (record.lockedUntil !== null && now > record.lockedUntil)
       ) {
         this.loginAttempts.delete(email);
+      }
+    }
+    for (const [email, record] of this.forgotAttempts) {
+      if (now - record.windowStart > FORGOT_WINDOW_MS) {
+        this.forgotAttempts.delete(email);
       }
     }
   }
@@ -400,7 +433,185 @@ export class AuthService implements OnModuleDestroy {
       `${params.logContext}: tenant ${tenant.id} (${slug}) + OWNER ${user.email}, trial ends ${trialEndsAt.toISOString()}`,
     );
 
+    // GAPS #8: send an email-verification link for password-based signups
+    // (register/signup). OAuth/platform-linked users (no password) are
+    // considered email-verified by their provider, so skip.
+    if (params.password) {
+      await this.sendVerificationEmail(user.id, user.email, user.name);
+    }
+
     return { user, tenant };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Email verification + password reset (GAPS #8)
+  // Tokens are single-use, time-limited, and stored HASHED (sha256). The raw
+  // token only ever travels in the emailed link. Identity-level / tenant-agnostic.
+  // ---------------------------------------------------------------------------
+
+  private hashToken(raw: string): string {
+    return createHash('sha256').update(raw).digest('hex');
+  }
+
+  /** Mint a raw token + persist its hash with a type + expiry. Returns the raw. */
+  private async createVerificationToken(
+    userId: string,
+    type: string,
+    ttlMs: number,
+  ): Promise<string> {
+    const raw = randomBytes(32).toString('hex');
+    await this.prisma.verificationToken.create({
+      data: {
+        userId,
+        tokenHash: this.hashToken(raw),
+        type,
+        expiresAt: new Date(Date.now() + ttlMs),
+      },
+    });
+    return raw;
+  }
+
+  /** Create + email an email-verification link. Best-effort (logged no-op without Resend). */
+  async sendVerificationEmail(userId: string, email: string, name: string): Promise<void> {
+    const raw = await this.createVerificationToken(
+      userId,
+      TOKEN_TYPE.EMAIL_VERIFY,
+      VERIFY_TOKEN_TTL_MS,
+    );
+    const base = process.env.DASHBOARD_URL || 'http://localhost:3000';
+    const verifyUrl = `${base}/auth/verify-email?token=${raw}`;
+    await this.email.send({
+      to: email,
+      subject: 'Verify your UniCore email',
+      html: verifyEmailHtml({ name, verifyUrl }),
+    });
+    this.logger.log(`Email-verification link issued for ${email}`);
+  }
+
+  private isForgotRateLimited(email: string): boolean {
+    const now = Date.now();
+    const rec = this.forgotAttempts.get(email);
+    if (!rec || now - rec.windowStart > FORGOT_WINDOW_MS) {
+      this.forgotAttempts.set(email, { count: 1, windowStart: now });
+      return false;
+    }
+    rec.count += 1;
+    return rec.count > FORGOT_MAX_PER_WINDOW;
+  }
+
+  /**
+   * GAPS #8 — forgot-password. ALWAYS resolves the same way (no user
+   * enumeration): if the email maps to a password account, mint a reset token
+   * and email it; otherwise do nothing. Rate-limited per email.
+   */
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const genericOk = {
+      message: 'If an account exists for that email, a reset link has been sent.',
+    };
+
+    if (this.isForgotRateLimited(email)) {
+      this.logger.warn(`forgot-password rate-limited: ${email}`);
+      return genericOk;
+    }
+
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    // Only password accounts can reset a password; OAuth-only accounts have none.
+    if (!user || !user.password) {
+      return genericOk;
+    }
+
+    const raw = await this.createVerificationToken(
+      user.id,
+      TOKEN_TYPE.PASSWORD_RESET,
+      RESET_TOKEN_TTL_MS,
+    );
+    const base = process.env.DASHBOARD_URL || 'http://localhost:3000';
+    const resetUrl = `${base}/auth/reset-password?token=${raw}`;
+    await this.email.send({
+      to: user.email,
+      subject: 'Reset your UniCore password',
+      html: resetPasswordEmailHtml({
+        name: user.name,
+        resetUrl,
+        expiresMinutes: Math.round(RESET_TOKEN_TTL_MS / 60000),
+      }),
+    });
+    this.logger.log(`Password-reset link issued for ${user.email}`);
+    return genericOk;
+  }
+
+  /**
+   * Look up a still-valid (unconsumed, unexpired) token of a given type by its
+   * raw value. Returns the token row or null.
+   */
+  private async findValidToken(raw: string, type: string) {
+    const token = await this.prisma.verificationToken.findUnique({
+      where: { tokenHash: this.hashToken(raw) },
+    });
+    if (!token || token.type !== type) return null;
+    if (token.consumedAt) return null;
+    if (token.expiresAt < new Date()) return null;
+    return token;
+  }
+
+  /**
+   * GAPS #8 — reset-password. Validates the single-use token, sets the new
+   * password, marks the token consumed, and revokes ALL of the user's sessions
+   * (force re-login everywhere).
+   */
+  async resetPassword(raw: string, newPassword: string): Promise<{ message: string }> {
+    const token = await this.findValidToken(raw, TOKEN_TYPE.PASSWORD_RESET);
+    if (!token) {
+      throw new UnauthorizedException('Invalid or expired reset token');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: token.userId },
+        data: { password: hashedPassword },
+      }),
+      // Single-use: consume this token AND any other outstanding reset tokens.
+      this.prisma.verificationToken.updateMany({
+        where: {
+          userId: token.userId,
+          type: TOKEN_TYPE.PASSWORD_RESET,
+          consumedAt: null,
+        },
+        data: { consumedAt: new Date() },
+      }),
+      // Revoke every session so a leaked/compromised token can't keep access.
+      this.prisma.session.deleteMany({ where: { userId: token.userId } }),
+    ]);
+
+    this.logger.log(`Password reset for user ${token.userId}; sessions revoked`);
+    return { message: 'Password has been reset. Please log in again.' };
+  }
+
+  /**
+   * GAPS #8 — verify-email. Validates the single-use token and stamps
+   * User.emailVerified. Idempotent-ish: a consumed/expired token is rejected.
+   */
+  async verifyEmail(raw: string): Promise<{ message: string }> {
+    const token = await this.findValidToken(raw, TOKEN_TYPE.EMAIL_VERIFY);
+    if (!token) {
+      throw new UnauthorizedException('Invalid or expired verification token');
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: token.userId },
+        data: { emailVerified: new Date() },
+      }),
+      this.prisma.verificationToken.update({
+        where: { id: token.id },
+        data: { consumedAt: new Date() },
+      }),
+    ]);
+
+    this.logger.log(`Email verified for user ${token.userId}`);
+    return { message: 'Email verified.' };
   }
 
   /**

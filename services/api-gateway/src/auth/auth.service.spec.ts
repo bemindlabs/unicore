@@ -5,12 +5,17 @@ import * as bcrypt from 'bcryptjs';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TokenBlacklistService } from './token-blacklist.service';
+import { EmailService } from '../email/email.service';
 
 jest.mock('bcryptjs');
 
 const mockTokenBlacklistService = {
   blacklist: jest.fn().mockResolvedValue(undefined),
   isBlacklisted: jest.fn().mockResolvedValue(false),
+};
+
+const mockEmailService = {
+  send: jest.fn().mockResolvedValue(true),
 };
 
 const mockPrismaService = {
@@ -38,6 +43,13 @@ const mockPrismaService = {
     create: jest.fn(),
     update: jest.fn(),
   },
+  verificationToken: {
+    create: jest.fn().mockResolvedValue({}),
+    findUnique: jest.fn(),
+    update: jest.fn(),
+    updateMany: jest.fn(),
+  },
+  $transaction: jest.fn(),
 };
 
 const mockJwtService = {
@@ -54,6 +66,7 @@ describe('AuthService', () => {
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: JwtService, useValue: mockJwtService },
         { provide: TokenBlacklistService, useValue: mockTokenBlacklistService },
+        { provide: EmailService, useValue: mockEmailService },
       ],
     }).compile();
 
