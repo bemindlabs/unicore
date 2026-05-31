@@ -11,6 +11,8 @@ export interface MembershipView {
   name: string;
   plan: string;
   role: string;
+  /** The user's membership status in this tenant (ACTIVE | SUSPENDED). */
+  status: string;
   /** True for the user's currently-active tenant. */
   isActive: boolean;
 }
@@ -51,6 +53,7 @@ export class TenantsService {
       name: m.tenant.name,
       plan: m.tenant.plan,
       role: m.role,
+      status: m.status,
       isActive: m.tenantId === activeTenantId,
     }));
   }
@@ -97,6 +100,7 @@ export class TenantsService {
       name: tenant.name,
       plan: tenant.plan,
       role: 'OWNER',
+      status: 'ACTIVE',
       isActive: tenant.id === activeTenantId,
     };
   }
@@ -119,6 +123,15 @@ export class TenantsService {
         `Tenant switch denied: user ${user.id} has no membership for tenant ${targetTenantId}`,
       );
       throw new ForbiddenException('You are not a member of that business');
+    }
+
+    // A suspended membership is locked out of THIS business (its other
+    // businesses are unaffected). Refuse to switch into it.
+    if (membership.status === 'SUSPENDED') {
+      this.logger.warn(
+        `Tenant switch denied: user ${user.id} membership for tenant ${targetTenantId} is SUSPENDED`,
+      );
+      throw new ForbiddenException('Your access to that business has been suspended');
     }
 
     await this.prisma.user.update({

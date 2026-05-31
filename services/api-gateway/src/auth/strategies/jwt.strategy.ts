@@ -37,7 +37,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         tenantId: true,
         activeTenantId: true,
         isSuperAdmin: true,
-        memberships: { select: { tenantId: true, role: true } },
+        memberships: { select: { tenantId: true, role: true, status: true } },
       },
     });
 
@@ -68,6 +68,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // Surface the user's role WITHIN the active tenant when a membership exists,
     // so per-tenant role checks reflect the business they are operating.
     const activeMembership = memberships.find((m) => m.tenantId === tenantId);
+
+    // Enforce persisted per-tenant suspension (Phase 5): a SUSPENDED membership
+    // can't operate this tenant even with a stale/replayed token. Scoped to the
+    // active tenant only — the user's other businesses are unaffected.
+    if (activeMembership?.status === 'SUSPENDED') {
+      throw new ForbiddenException('Your access to the active business has been suspended');
+    }
+
     const role = activeMembership?.role ?? rest.role;
 
     return { ...rest, role, tenantId };

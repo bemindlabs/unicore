@@ -92,6 +92,11 @@ model Membership {
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   /// The user's role WITHIN this tenant.
   role      Role     @default(OWNER)
+  /// The user's membership status in THIS tenant (Phase 5). ACTIVE | SUSPENDED.
+  /// A SUSPENDED membership is locked out of this tenant only (switching in is
+  /// rejected and a stale token resolving to it is rejected at auth) — the
+  /// user's access to their OTHER businesses is unaffected.
+  status    String   @default("ACTIVE")
   createdAt DateTime @default(now())
 
   @@unique([userId, tenantId])

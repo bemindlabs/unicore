@@ -5861,6 +5861,7 @@ export namespace Prisma {
     userId: string | null
     tenantId: string | null
     role: $Enums.Role | null
+    status: string | null
     createdAt: Date | null
   }
 
@@ -5869,6 +5870,7 @@ export namespace Prisma {
     userId: string | null
     tenantId: string | null
     role: $Enums.Role | null
+    status: string | null
     createdAt: Date | null
   }
 
@@ -5877,6 +5879,7 @@ export namespace Prisma {
     userId: number
     tenantId: number
     role: number
+    status: number
     createdAt: number
     _all: number
   }
@@ -5887,6 +5890,7 @@ export namespace Prisma {
     userId?: true
     tenantId?: true
     role?: true
+    status?: true
     createdAt?: true
   }
 
@@ -5895,6 +5899,7 @@ export namespace Prisma {
     userId?: true
     tenantId?: true
     role?: true
+    status?: true
     createdAt?: true
   }
 
@@ -5903,6 +5908,7 @@ export namespace Prisma {
     userId?: true
     tenantId?: true
     role?: true
+    status?: true
     createdAt?: true
     _all?: true
   }
@@ -5984,6 +5990,7 @@ export namespace Prisma {
     userId: string
     tenantId: string
     role: $Enums.Role
+    status: string
     createdAt: Date
     _count: MembershipCountAggregateOutputType | null
     _min: MembershipMinAggregateOutputType | null
@@ -6009,6 +6016,7 @@ export namespace Prisma {
     userId?: boolean
     tenantId?: boolean
     role?: boolean
+    status?: boolean
     createdAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     tenant?: boolean | TenantDefaultArgs<ExtArgs>
@@ -6019,6 +6027,7 @@ export namespace Prisma {
     userId?: boolean
     tenantId?: boolean
     role?: boolean
+    status?: boolean
     createdAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     tenant?: boolean | TenantDefaultArgs<ExtArgs>
@@ -6029,6 +6038,7 @@ export namespace Prisma {
     userId?: boolean
     tenantId?: boolean
     role?: boolean
+    status?: boolean
     createdAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     tenant?: boolean | TenantDefaultArgs<ExtArgs>
@@ -6039,10 +6049,11 @@ export namespace Prisma {
     userId?: boolean
     tenantId?: boolean
     role?: boolean
+    status?: boolean
     createdAt?: boolean
   }
 
-  export type MembershipOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "tenantId" | "role" | "createdAt", ExtArgs["result"]["membership"]>
+  export type MembershipOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "tenantId" | "role" | "status" | "createdAt", ExtArgs["result"]["membership"]>
   export type MembershipInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     tenant?: boolean | TenantDefaultArgs<ExtArgs>
@@ -6070,6 +6081,13 @@ export namespace Prisma {
        * The user's role WITHIN this tenant.
        */
       role: $Enums.Role
+      /**
+       * The user's membership status in THIS tenant (Phase 5). ACTIVE | SUSPENDED.
+       * A SUSPENDED membership is locked out of this tenant only (switching in is
+       * rejected and a stale token resolving to it is rejected at auth) — the
+       * user's access to their OTHER businesses is unaffected.
+       */
+      status: string
       createdAt: Date
     }, ExtArgs["result"]["membership"]>
     composites: {}
@@ -6500,6 +6518,7 @@ export namespace Prisma {
     readonly userId: FieldRef<"Membership", 'String'>
     readonly tenantId: FieldRef<"Membership", 'String'>
     readonly role: FieldRef<"Membership", 'Role'>
+    readonly status: FieldRef<"Membership", 'String'>
     readonly createdAt: FieldRef<"Membership", 'DateTime'>
   }
     
@@ -31779,6 +31798,7 @@ export namespace Prisma {
     userId: 'userId',
     tenantId: 'tenantId',
     role: 'role',
+    status: 'status',
     createdAt: 'createdAt'
   };
 
@@ -32562,6 +32582,7 @@ export namespace Prisma {
     userId?: StringFilter<"Membership"> | string
     tenantId?: StringFilter<"Membership"> | string
     role?: EnumRoleFilter<"Membership"> | $Enums.Role
+    status?: StringFilter<"Membership"> | string
     createdAt?: DateTimeFilter<"Membership"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
@@ -32572,6 +32593,7 @@ export namespace Prisma {
     userId?: SortOrder
     tenantId?: SortOrder
     role?: SortOrder
+    status?: SortOrder
     createdAt?: SortOrder
     user?: UserOrderByWithRelationInput
     tenant?: TenantOrderByWithRelationInput
@@ -32586,6 +32608,7 @@ export namespace Prisma {
     userId?: StringFilter<"Membership"> | string
     tenantId?: StringFilter<"Membership"> | string
     role?: EnumRoleFilter<"Membership"> | $Enums.Role
+    status?: StringFilter<"Membership"> | string
     createdAt?: DateTimeFilter<"Membership"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
@@ -32596,6 +32619,7 @@ export namespace Prisma {
     userId?: SortOrder
     tenantId?: SortOrder
     role?: SortOrder
+    status?: SortOrder
     createdAt?: SortOrder
     _count?: MembershipCountOrderByAggregateInput
     _max?: MembershipMaxOrderByAggregateInput
@@ -32610,6 +32634,7 @@ export namespace Prisma {
     userId?: StringWithAggregatesFilter<"Membership"> | string
     tenantId?: StringWithAggregatesFilter<"Membership"> | string
     role?: EnumRoleWithAggregatesFilter<"Membership"> | $Enums.Role
+    status?: StringWithAggregatesFilter<"Membership"> | string
     createdAt?: DateTimeWithAggregatesFilter<"Membership"> | Date | string
   }
 
@@ -34755,6 +34780,7 @@ export namespace Prisma {
   export type MembershipCreateInput = {
     id?: string
     role?: $Enums.Role
+    status?: string
     createdAt?: Date | string
     user: UserCreateNestedOneWithoutMembershipsInput
     tenant: TenantCreateNestedOneWithoutMembershipsInput
@@ -34765,12 +34791,14 @@ export namespace Prisma {
     userId: string
     tenantId: string
     role?: $Enums.Role
+    status?: string
     createdAt?: Date | string
   }
 
   export type MembershipUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutMembershipsNestedInput
     tenant?: TenantUpdateOneRequiredWithoutMembershipsNestedInput
@@ -34781,6 +34809,7 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     tenantId?: StringFieldUpdateOperationsInput | string
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -34789,12 +34818,14 @@ export namespace Prisma {
     userId: string
     tenantId: string
     role?: $Enums.Role
+    status?: string
     createdAt?: Date | string
   }
 
   export type MembershipUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -34803,6 +34834,7 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     tenantId?: StringFieldUpdateOperationsInput | string
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -37360,6 +37392,7 @@ export namespace Prisma {
     userId?: SortOrder
     tenantId?: SortOrder
     role?: SortOrder
+    status?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -37368,6 +37401,7 @@ export namespace Prisma {
     userId?: SortOrder
     tenantId?: SortOrder
     role?: SortOrder
+    status?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -37376,6 +37410,7 @@ export namespace Prisma {
     userId?: SortOrder
     tenantId?: SortOrder
     role?: SortOrder
+    status?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -39786,6 +39821,7 @@ export namespace Prisma {
   export type MembershipCreateWithoutTenantInput = {
     id?: string
     role?: $Enums.Role
+    status?: string
     createdAt?: Date | string
     user: UserCreateNestedOneWithoutMembershipsInput
   }
@@ -39794,6 +39830,7 @@ export namespace Prisma {
     id?: string
     userId: string
     role?: $Enums.Role
+    status?: string
     createdAt?: Date | string
   }
 
@@ -39873,6 +39910,7 @@ export namespace Prisma {
     userId?: StringFilter<"Membership"> | string
     tenantId?: StringFilter<"Membership"> | string
     role?: EnumRoleFilter<"Membership"> | $Enums.Role
+    status?: StringFilter<"Membership"> | string
     createdAt?: DateTimeFilter<"Membership"> | Date | string
   }
 
@@ -39950,6 +39988,7 @@ export namespace Prisma {
   export type MembershipCreateWithoutUserInput = {
     id?: string
     role?: $Enums.Role
+    status?: string
     createdAt?: Date | string
     tenant: TenantCreateNestedOneWithoutMembershipsInput
   }
@@ -39958,6 +39997,7 @@ export namespace Prisma {
     id?: string
     tenantId: string
     role?: $Enums.Role
+    status?: string
     createdAt?: Date | string
   }
 
@@ -41707,6 +41747,7 @@ export namespace Prisma {
     id?: string
     userId: string
     role?: $Enums.Role
+    status?: string
     createdAt?: Date | string
   }
 
@@ -41725,6 +41766,7 @@ export namespace Prisma {
   export type MembershipUpdateWithoutTenantInput = {
     id?: StringFieldUpdateOperationsInput | string
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutMembershipsNestedInput
   }
@@ -41733,6 +41775,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -41740,6 +41783,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -41791,6 +41835,7 @@ export namespace Prisma {
     id?: string
     tenantId: string
     role?: $Enums.Role
+    status?: string
     createdAt?: Date | string
   }
 
@@ -41829,6 +41874,7 @@ export namespace Prisma {
   export type MembershipUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tenant?: TenantUpdateOneRequiredWithoutMembershipsNestedInput
   }
@@ -41837,6 +41883,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     tenantId?: StringFieldUpdateOperationsInput | string
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -41844,6 +41891,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     tenantId?: StringFieldUpdateOperationsInput | string
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
