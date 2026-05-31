@@ -39,10 +39,32 @@ export class ProviderUnavailableError extends Error {
   }
 }
 
+interface TenantProviders {
+  registry: Map<string, ILlmProvider>;
+  primaryProviderId: string;
+  expiresAt: number;
+}
+
 @Injectable()
 export class ProviderFactoryService implements OnModuleInit {
   private readonly logger = new Logger(ProviderFactoryService.name);
+
+  /**
+   * Default registry — built from environment variables only (no tenant). Used
+   * as a last resort when a request carries no tenantId, and kept for backward
+   * compatibility with existing call sites/tests. It NEVER loads another
+   * tenant's DB keys (GAPS #2: no global startup prefetch of a tenant's keys).
+   */
   private readonly registry = new Map<string, ILlmProvider>();
+
+  /**
+   * GAPS #2 (residual fix): per-tenant provider registries. AI keys are read
+   * from the gateway settings endpoint scoped to the CALLING tenant (forwarding
+   * its `x-tenant-id`), and cached briefly per tenant — instead of a single
+   * global startup load that only ever saw the DEMO tenant's keys.
+   */
+  private readonly tenantRegistries = new Map<string, TenantProviders>();
+  private readonly TENANT_CACHE_TTL_MS = 60_000;
 
   /**
    * PROVIDER_CATALOG is the compile-time registry of all supported LLM provider
@@ -89,11 +111,40 @@ export class ProviderFactoryService implements OnModuleInit {
   }
 
   async onModuleInit(): Promise<void> {
-    await this.initProviders();
+    // Build the env-only default registry. We do NOT prefetch any tenant's DB
+    // keys here (GAPS #2) — per-tenant keys are resolved per request below.
+    this.primaryProviderId = await this.initProviders(this.registry, undefined);
     this.logger.log(
-      `Provider factory initialised. Primary: ${this.primaryProviderId}. ` +
+      `Provider factory initialised (env defaults). Primary: ${this.primaryProviderId}. ` +
         `Failover: [${this.failoverProviderIds.join(', ')}]. Failover enabled: ${this.failoverEnabled}`,
     );
+  }
+
+  /**
+   * Resolve the provider registry for a given tenant, building (and caching) it
+   * by fetching that tenant's keys from the gateway. Falls back to the env-only
+   * default registry when no tenantId is supplied.
+   */
+  private async getRegistryFor(
+    tenantId?: string,
+  ): Promise<{ registry: Map<string, ILlmProvider>; primaryProviderId: string }> {
+    if (!tenantId) {
+      return { registry: this.registry, primaryProviderId: this.primaryProviderId };
+    }
+
+    const cached = this.tenantRegistries.get(tenantId);
+    if (cached && cached.expiresAt > Date.now() && cached.registry.size > 0) {
+      return { registry: cached.registry, primaryProviderId: cached.primaryProviderId };
+    }
+
+    const registry = new Map<string, ILlmProvider>();
+    const primaryProviderId = await this.initProviders(registry, tenantId);
+    this.tenantRegistries.set(tenantId, {
+      registry,
+      primaryProviderId,
+      expiresAt: Date.now() + this.TENANT_CACHE_TTL_MS,
+    });
+    return { registry, primaryProviderId };
   }
 
   /**
@@ -156,30 +207,45 @@ export class ProviderFactoryService implements OnModuleInit {
 
   /**
    * Reload providers — called on startup and when keys change via settings UI.
+   * Rebuilds the env-only default registry and drops all per-tenant caches so
+   * the next request re-fetches fresh, tenant-scoped keys.
    */
   async reloadProviders(): Promise<string[]> {
     this.registry.clear();
-    await this.initProviders();
+    this.tenantRegistries.clear();
+    this.primaryProviderId = await this.initProviders(this.registry, undefined);
     const registered = [...this.registry.keys()];
-    this.logger.log(`Providers reloaded: [${registered.join(', ')}]`);
+    this.logger.log(`Providers reloaded (env defaults; tenant caches cleared): [${registered.join(', ')}]`);
     return registered;
   }
 
-  private async initProviders(): Promise<void> {
-    // 1. Try loading keys from API Gateway settings (saved via dashboard)
+  /**
+   * Build the set of providers into `registry`, returning the resolved primary
+   * provider id. When `tenantId` is given, the gateway keys endpoint is called
+   * with `x-tenant-id` so only that tenant's keys are loaded (GAPS #2). With no
+   * tenantId, only env vars / local providers are used (no DB-key prefetch).
+   */
+  private async initProviders(
+    registry: Map<string, ILlmProvider>,
+    tenantId?: string,
+  ): Promise<string> {
+    // 1. Try loading keys from API Gateway settings (saved via dashboard),
+    //    scoped to the calling tenant when one is known.
     let dbKeys: { openaiKey?: string; anthropicKey?: string; defaultProvider?: string; defaultModel?: string } = {};
     const gatewayUrl = this.config.get<string>('API_GATEWAY_URL', 'http://unicore-api-gateway:4000');
-    try {
-      const res = await fetch(`${gatewayUrl}/api/v1/settings/ai-config/keys`, {
-        headers: { 'X-Internal-Service': 'ai-engine' },
-        signal: AbortSignal.timeout(3000),
-      });
-      if (res.ok) {
-        dbKeys = (await res.json()) as typeof dbKeys;
-        this.logger.log('Loaded API keys from settings database');
+    if (tenantId) {
+      try {
+        const res = await fetch(`${gatewayUrl}/api/v1/settings/ai-config/keys`, {
+          headers: { 'X-Internal-Service': 'ai-engine', 'x-tenant-id': tenantId },
+          signal: AbortSignal.timeout(3000),
+        });
+        if (res.ok) {
+          dbKeys = (await res.json()) as typeof dbKeys;
+          this.logger.debug(`Loaded API keys for tenant ${tenantId} from settings database`);
+        }
+      } catch {
+        this.logger.debug(`Could not fetch keys for tenant ${tenantId} — using env vars`);
       }
-    } catch {
-      this.logger.debug('Could not fetch keys from API Gateway — using env vars');
     }
 
     // 2. DB keys from dashboard settings
@@ -219,7 +285,7 @@ export class ProviderFactoryService implements OnModuleInit {
         }
       }
 
-      this.registry.set(
+      registry.set(
         'openai',
         new OpenAiProvider(
           openAiKey,
@@ -233,7 +299,7 @@ export class ProviderFactoryService implements OnModuleInit {
 
     const anthropicKey = dbKeys.anthropicKey;
     if (anthropicKey) {
-      this.registry.set(
+      registry.set(
         'anthropic',
         new AnthropicProvider(
           anthropicKey,
@@ -266,7 +332,7 @@ export class ProviderFactoryService implements OnModuleInit {
       if (key) {
         const model = db[`${p.id}Model`] || this.config.get<string>(`${p.envKey.replace('_API_KEY', '_DEFAULT_MODEL')}`, p.defaultModel);
         const customBaseUrl = db[`${p.id}BaseUrl`] || p.baseUrl;
-        this.registry.set(
+        registry.set(
           p.id,
           new OpenAiProvider(key, model, 'text-embedding-3-small', customBaseUrl, 'api-key', p.id),
         );
@@ -277,22 +343,21 @@ export class ProviderFactoryService implements OnModuleInit {
     // 1. LLM_PRIMARY_PROVIDER env var takes highest precedence (operator override)
     // 2. "defaultProvider" from the Settings table (set via the dashboard)
     // 3. Hardcoded default: 'openai'
-    // Reset to env-configured value first so that clearing the DB setting
-    // reverts to the env default rather than sticking to a previous DB value.
+    let primaryProviderId: string;
     const envPrimary = this.config.get<string>('LLM_PRIMARY_PROVIDER');
     if (envPrimary) {
-      this.primaryProviderId = envPrimary;
+      primaryProviderId = envPrimary;
     } else if (dbKeys.defaultProvider) {
-      this.primaryProviderId = dbKeys.defaultProvider;
+      primaryProviderId = dbKeys.defaultProvider;
     } else {
-      this.primaryProviderId = 'openai';
+      primaryProviderId = 'openai';
     }
 
     // Ollama is always registered — it's local and requires no key
     const ollamaUrl = db['ollamaBaseUrl'] || this.config.get<string>('OLLAMA_BASE_URL', 'http://localhost:11434');
     const ollamaModel = db['ollamaModel'] || this.config.get<string>('OLLAMA_DEFAULT_MODEL', 'llama3.2');
     const ollamaToken = db['ollamaToken'] || this.config.get<string>('OLLAMA_AUTH_TOKEN', '');
-    this.registry.set(
+    registry.set(
       'ollama',
       new OllamaProvider(
         ollamaUrl,
@@ -301,6 +366,8 @@ export class ProviderFactoryService implements OnModuleInit {
         ollamaToken || undefined,
       ),
     );
+
+    return primaryProviderId;
   }
 
   /**
@@ -321,36 +388,56 @@ export class ProviderFactoryService implements OnModuleInit {
     return [...this.registry.values()];
   }
 
+  /** Look up a provider in a specific registry (throws if not registered). */
+  private getProviderFrom(
+    registry: Map<string, ILlmProvider>,
+    providerId: string,
+  ): ILlmProvider {
+    const provider = registry.get(providerId);
+    if (!provider) {
+      throw new Error(`LLM provider "${providerId}" is not registered.`);
+    }
+    return provider;
+  }
+
   /**
-   * Ordered provider chain: primary first, then failovers (if enabled).
+   * Ordered provider chain: primary first, then failovers (if enabled), drawn
+   * from the supplied (tenant-scoped) registry.
    */
-  private getProviderChain(skipEmbedUnsupported = false): ILlmProvider[] {
+  private getProviderChain(
+    registry: Map<string, ILlmProvider>,
+    primaryProviderId: string,
+    skipEmbedUnsupported = false,
+  ): ILlmProvider[] {
     const ids = this.failoverEnabled
-      ? [this.primaryProviderId, ...this.failoverProviderIds]
-      : [this.primaryProviderId];
+      ? [primaryProviderId, ...this.failoverProviderIds]
+      : [primaryProviderId];
 
     return ids
-      .filter((id) => this.registry.has(id))
-      .map((id) => this.registry.get(id)!)
+      .filter((id) => registry.has(id))
+      .map((id) => registry.get(id)!)
       .filter((p) => !skipEmbedUnsupported || p.providerId !== 'anthropic');
   }
 
   /**
-   * Complete with automatic failover across the provider chain.
+   * Complete with automatic failover across the provider chain, using the
+   * calling tenant's provider registry (GAPS #2).
    */
   async completeWithFailover(
     messages: LlmMessage[],
     options?: LlmCompletionOptions,
     preferredProvider?: string,
+    tenantId?: string,
   ): Promise<LlmCompletionResult> {
+    const { registry, primaryProviderId } = await this.getRegistryFor(tenantId);
     const chain = preferredProvider
       ? [
-          this.getProvider(preferredProvider),
-          ...this.getProviderChain().filter(
+          this.getProviderFrom(registry, preferredProvider),
+          ...this.getProviderChain(registry, primaryProviderId).filter(
             (p) => p.providerId !== preferredProvider,
           ),
         ]
-      : this.getProviderChain();
+      : this.getProviderChain(registry, primaryProviderId);
 
     const attempted: string[] = [];
     const errors: string[] = [];
@@ -384,10 +471,12 @@ export class ProviderFactoryService implements OnModuleInit {
     messages: LlmMessage[],
     options?: LlmCompletionOptions,
     preferredProvider?: string,
+    tenantId?: string,
   ): AsyncGenerator<LlmStreamChunk> {
+    const { registry, primaryProviderId } = await this.getRegistryFor(tenantId);
     const primary = preferredProvider
-      ? this.getProvider(preferredProvider)
-      : this.getProvider(this.primaryProviderId);
+      ? this.getProviderFrom(registry, preferredProvider)
+      : this.getProviderFrom(registry, primaryProviderId);
 
     try {
       yield* primary.stream(messages, options);
@@ -408,7 +497,7 @@ export class ProviderFactoryService implements OnModuleInit {
     const errors: string[] = [];
 
     for (const id of fallbackProviders) {
-      const provider = this.registry.get(id);
+      const provider = registry.get(id);
       if (!provider) continue;
 
       attempted.push(id);
@@ -447,15 +536,17 @@ export class ProviderFactoryService implements OnModuleInit {
     text: string,
     options?: LlmEmbeddingOptions,
     preferredProvider?: string,
+    tenantId?: string,
   ): Promise<LlmEmbeddingResult> {
+    const { registry, primaryProviderId } = await this.getRegistryFor(tenantId);
     const chain = preferredProvider
       ? [
-          this.getProvider(preferredProvider),
-          ...this.getProviderChain(true).filter(
+          this.getProviderFrom(registry, preferredProvider),
+          ...this.getProviderChain(registry, primaryProviderId, true).filter(
             (p) => p.providerId !== preferredProvider,
           ),
         ]
-      : this.getProviderChain(true);
+      : this.getProviderChain(registry, primaryProviderId, true);
 
     const attempted: string[] = [];
     const errors: string[] = [];
