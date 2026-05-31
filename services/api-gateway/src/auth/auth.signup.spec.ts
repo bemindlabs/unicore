@@ -35,12 +35,19 @@ describe('AuthService.signup', () => {
         create: jest.fn(async ({ data }: any) => ({ ...createdTenant, ...data })),
       },
       session: { create: jest.fn(async () => ({})) },
+      verificationToken: { create: jest.fn(async () => ({})) },
     };
     const jwtService = { sign: jest.fn(() => 'signed.jwt.token') };
     const blacklist = {};
-    const service = new AuthService(prisma as any, jwtService as any, blacklist as any);
+    const email = { send: jest.fn(async () => true) };
+    const service = new AuthService(
+      prisma as any,
+      jwtService as any,
+      blacklist as any,
+      email as any,
+    );
     service.onModuleDestroy(); // stop the cleanup interval immediately
-    return { service, prisma, jwtService };
+    return { service, prisma, jwtService, email };
   }
 
   const dto = {
