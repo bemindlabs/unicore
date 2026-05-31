@@ -54,6 +54,26 @@ describe('JwtStrategy.validate (tenant context)', () => {
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
+  it('rejects when the resolved active membership is SUSPENDED, even with a valid token (403)', async () => {
+    const { strategy } = build({
+      id: 'u1',
+      email: 'o@x.com',
+      name: 'O',
+      role: 'OWNER',
+      tenantId: 't1',
+      activeTenantId: 't2',
+      isSuperAdmin: false,
+      memberships: [
+        { tenantId: 't1', role: 'OWNER', status: 'ACTIVE' },
+        { tenantId: 't2', role: 'OPERATOR', status: 'SUSPENDED' },
+      ],
+    });
+
+    await expect(
+      strategy.validate({ sub: 'u1', email: 'o@x.com', role: 'OWNER', tid: 't2' } as any),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
   it('falls through for legacy users with no memberships (fallback)', async () => {
     const { strategy } = build({
       id: 'u1',

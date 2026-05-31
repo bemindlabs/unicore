@@ -43,14 +43,15 @@ describe('TenantsService', () => {
     const { service, prisma } = build();
     prisma.user.findUnique.mockResolvedValueOnce({ activeTenantId: 't2', tenantId: 't1' } as any);
     prisma.membership.findMany.mockResolvedValueOnce([
-      { tenantId: 't1', role: 'OWNER', tenant: { id: 't1', name: 'Biz One', plan: 'GROWTH' } },
-      { tenantId: 't2', role: 'OPERATOR', tenant: { id: 't2', name: 'Biz Two', plan: 'STARTER' } },
+      { tenantId: 't1', role: 'OWNER', status: 'SUSPENDED', tenant: { id: 't1', name: 'Biz One', plan: 'GROWTH' } },
+      { tenantId: 't2', role: 'OPERATOR', status: 'ACTIVE', tenant: { id: 't2', name: 'Biz Two', plan: 'STARTER' } },
     ] as any);
 
     const list = await service.listForUser('u1');
+    // Still lists a suspended business, but surfaces status so the UI can flag it.
     expect(list).toEqual([
-      { tenantId: 't1', name: 'Biz One', plan: 'GROWTH', role: 'OWNER', isActive: false },
-      { tenantId: 't2', name: 'Biz Two', plan: 'STARTER', role: 'OPERATOR', isActive: true },
+      { tenantId: 't1', name: 'Biz One', plan: 'GROWTH', role: 'OWNER', status: 'SUSPENDED', isActive: false },
+      { tenantId: 't2', name: 'Biz Two', plan: 'STARTER', role: 'OPERATOR', status: 'ACTIVE', isActive: true },
     ]);
   });
 
@@ -95,6 +96,22 @@ describe('TenantsService', () => {
       expect.objectContaining({ id: 'u1', role: 'OPERATOR', activeTenantId: 't2' }),
     );
     expect(tokens.accessToken).toBe('new.jwt');
+  });
+
+  it('rejects a switch to a tenant where the membership is SUSPENDED (403)', async () => {
+    const { service, prisma, authService } = build();
+    prisma.membership.findUnique.mockResolvedValueOnce({
+      userId: 'u1',
+      tenantId: 't2',
+      role: 'OPERATOR',
+      status: 'SUSPENDED',
+    } as any);
+
+    await expect(
+      service.switchForUser({ id: 'u1', email: 'o@x.com', name: 'O', role: 'OWNER' }, 't2'),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(prisma.user.update).not.toHaveBeenCalled();
+    expect(authService.issueTokensForUser).not.toHaveBeenCalled();
   });
 
   it('rejects a switch to a tenant the user is NOT a member of (403)', async () => {

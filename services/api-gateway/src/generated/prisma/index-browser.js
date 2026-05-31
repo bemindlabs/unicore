@@ -155,6 +155,7 @@ exports.Prisma.MembershipScalarFieldEnum = {
   userId: 'userId',
   tenantId: 'tenantId',
   role: 'role',
+  status: 'status',
   createdAt: 'createdAt'
 };
 

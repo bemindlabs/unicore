@@ -47,6 +47,7 @@ describe('AdminController', () => {
       findUnique: jest.fn(),
       count: jest.fn(),
       delete: jest.fn(),
+      update: jest.fn(),
     },
     auditLog: {
       findMany: jest.fn().mockResolvedValue([]),
@@ -581,6 +582,11 @@ describe('AdminController', () => {
       const result = await controller.suspendTenantUser('t-1', 'u2', { reason: 'spam' }, currentUser);
 
       expect(result).toMatchObject({ tenantId: 't-1', userId: 'u2', status: 'SUSPENDED', sessionsRevoked: 1, suspendReason: 'spam' });
+      // Persists the suspended membership status (not just session revocation).
+      expect(mockPrismaService.membership.update).toHaveBeenCalledWith({
+        where: { userId_tenantId: { userId: 'u2', tenantId: 't-1' } },
+        data: { status: 'SUSPENDED' },
+      });
       expect(mockTokenBlacklist.blacklist).toHaveBeenCalledWith('jti-x', expect.any(Number));
       expect(mockPrismaService.session.deleteMany).toHaveBeenCalledWith({ where: { userId: 'u2' } });
       expect(mockAuditService.log).toHaveBeenCalledWith(
@@ -609,6 +615,11 @@ describe('AdminController', () => {
       const result = await controller.activateTenantUser('t-1', 'u2', currentUser);
 
       expect(result).toMatchObject({ tenantId: 't-1', userId: 'u2', status: 'ACTIVE' });
+      // Clears the persisted suspended status back to ACTIVE.
+      expect(mockPrismaService.membership.update).toHaveBeenCalledWith({
+        where: { userId_tenantId: { userId: 'u2', tenantId: 't-1' } },
+        data: { status: 'ACTIVE' },
+      });
       expect(mockAuditService.log).toHaveBeenCalledWith(
         expect.objectContaining({ action: 'activate', resource: 'users', resourceId: 'u2' }),
       );

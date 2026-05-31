@@ -694,9 +694,11 @@ export class AdminController {
 
   /**
    * CONTROL: suspend a specific user within a tenant. Bemind ops never touch a
-   * fellow super-admin this way. Suspension revokes every active session
-   * (blacklisting the JWT jti so the access token can't be replayed) which
-   * locks the user out until ops re-activates and they log back in.
+   * fellow super-admin this way. Suspension PERSISTS the membership status
+   * (Membership.status = SUSPENDED) so re-login can't restore access, and ALSO
+   * revokes every active session (blacklisting the JWT jti so the access token
+   * can't be replayed). Suspension scopes to THIS tenant only — the user's
+   * other businesses are unaffected. Enforced at switch + jwt.strategy.
    */
   @Post('tenants/:id/users/:userId/suspend')
   async suspendTenantUser(
@@ -709,6 +711,13 @@ export class AdminController {
     if (membership.user.isSuperAdmin) {
       throw new BadRequestException('Cannot suspend a platform super-admin');
     }
+
+    // Persist the suspended state so it survives re-login (session revocation
+    // alone is not enough — a fresh token would otherwise restore access).
+    await this.prisma.membership.update({
+      where: { userId_tenantId: { userId, tenantId } },
+      data: { status: 'SUSPENDED' },
+    });
 
     const invalidated = await this.revokeUserSessions(userId);
 
@@ -733,10 +742,9 @@ export class AdminController {
   }
 
   /**
-   * CONTROL: re-activate a previously-suspended user within a tenant. There is
-   * no per-user suspended flag to clear (suspension is enforced by session
-   * revocation), so this simply audit-logs the reinstatement; the user regains
-   * access by logging in again.
+   * CONTROL: re-activate a previously-suspended user within a tenant. Clears the
+   * persisted Membership.status back to ACTIVE; the user regains access to this
+   * tenant by logging in again (or switching into it).
    */
   @Post('tenants/:id/users/:userId/activate')
   async activateTenantUser(
@@ -745,6 +753,11 @@ export class AdminController {
     @CurrentUser() currentUser: any,
   ) {
     const { tenant, membership } = await this.getTenantMember(tenantId, userId);
+
+    await this.prisma.membership.update({
+      where: { userId_tenantId: { userId, tenantId } },
+      data: { status: 'ACTIVE' },
+    });
 
     this.logger.log(`User reactivated in tenant ${tenant.slug}: ${membership.user.email}`);
     await this.auditService.log({
