@@ -10,7 +10,7 @@ interface ProGateProps {
   /** Human-readable feature name for the upgrade prompt */
   featureName?: string;
   /** Target tier required */
-  targetTier?: 'Pro' | 'Enterprise';
+  targetTier?: 'Pro';
   /** Custom description for the upgrade prompt */
   description?: string;
   /** Content rendered when the feature is enabled */

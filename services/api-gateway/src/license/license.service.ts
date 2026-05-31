@@ -35,21 +35,11 @@ const EDITION_FEATURES: Record<LicenseEdition, ProFeature[]> = {
     'advancedWorkflows',
     'allChannels',
     'unlimitedRag',
-    'sso',
-    'auditLogs',
-    'prioritySupport',
-  ],
-  enterprise: [
-    'allAgents',
-    'customAgentBuilder',
-    'fullRbac',
-    'advancedWorkflows',
-    'allChannels',
-    'unlimitedRag',
     'whiteLabelBranding',
     'sso',
     'auditLogs',
     'prioritySupport',
+    'multiTenancy',
   ],
 };
 
@@ -69,7 +59,7 @@ const REDIS_LICENSE_KEY = 'unicore:license:active_key';
 
 /** Map env-var edition names to license editions. */
 const EDITION_MAP: Record<string, LicenseEdition> = {
-  full: 'enterprise',
+  full: 'pro',
   pro: 'pro',
   community: 'community',
 };
@@ -279,12 +269,10 @@ export class LicenseService implements OnModuleInit {
    * Edition limits:
    *   - Community: 2 agents
    *   - Pro: 50 agents
-   *   - Enterprise: 999 agents
    */
   async checkAgentLimit(currentCount: number): Promise<void> {
     const status = await this.getLicenseStatus();
-    const maxAgents =
-      status.edition === 'enterprise' ? 999 : status.edition === 'pro' ? 50 : 2;
+    const maxAgents = status.edition === 'pro' ? 50 : 2;
     if (currentCount >= maxAgents) {
       throw new ForbiddenException(
         `Agent limit reached (${maxAgents}). Upgrade to Pro for more agents.`,
@@ -315,80 +303,6 @@ export class LicenseService implements OnModuleInit {
     }
 
     return this.getLicenseStatus();
-  }
-
-  /**
-   * Activates an add-on feature flag (geekCli or aiDlc) on the license server
-   * and clears local caches so the new feature is picked up immediately.
-   *
-   * Flow:
-   *   1. Look up the license ID by key via the license server admin API.
-   *   2. PATCH the license to enable the feature flag.
-   *   3. Clear Redis + in-memory caches.
-   */
-  async activateAddon(addonType: 'geek' | 'dlc'): Promise<void> {
-    const key = this.getKey();
-    if (!key) {
-      throw new Error('No license key configured — cannot activate add-on');
-    }
-
-    const featureFlag = addonType === 'geek' ? 'geekCli' : 'aiDlc';
-
-    const baseUrl = this.configService.get(
-      'LICENSE_SERVER_URL',
-      'http://unicore-license-api:4600',
-    );
-    const adminSecret = this.configService.get<string>('LICENSE_ADMIN_SECRET');
-
-    if (!adminSecret) {
-      throw new Error('LICENSE_ADMIN_SECRET not configured — cannot call license server admin API');
-    }
-
-    // 1. Find the license by key — list from admin API and match
-    const listRes = await fetch(`${baseUrl}/api/v1/licenses?page=1&pageSize=100`, {
-      headers: {
-        Authorization: `Bearer ${adminSecret}`,
-        'Content-Type': 'application/json',
-      },
-      signal: AbortSignal.timeout(10_000),
-    });
-
-    if (!listRes.ok) {
-      throw new Error(`License server list returned HTTP ${listRes.status}`);
-    }
-
-    const listData = (await listRes.json()) as {
-      items: Array<{ id: string; key: string }>;
-    };
-
-    const license = listData.items.find((l) => l.key === key);
-    if (!license) {
-      throw new Error('Active license key not found on license server');
-    }
-
-    // 2. PATCH the license to enable the add-on feature
-    const patchRes = await fetch(`${baseUrl}/api/v1/licenses/${license.id}`, {
-      method: 'PATCH',
-      headers: {
-        Authorization: `Bearer ${adminSecret}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        features: { [featureFlag]: true },
-      }),
-      signal: AbortSignal.timeout(10_000),
-    });
-
-    if (!patchRes.ok) {
-      throw new Error(`License server PATCH returned HTTP ${patchRes.status}`);
-    }
-
-    this.logger.log(`Add-on "${addonType}" (${featureFlag}) activated on license ${license.id}`);
-
-    // 3. Clear caches so the updated features are picked up immediately
-    this.localCache = null;
-    this.localCacheSetAt = 0;
-    await this.clearRedisCache();
   }
 
   /**
@@ -562,7 +476,7 @@ export class LicenseService implements OnModuleInit {
     }
 
     const responseEdition = response.edition ?? response.tier;
-    const edition: LicenseEdition = (['pro', 'enterprise'] as LicenseEdition[]).includes(
+    const edition: LicenseEdition = (['pro'] as LicenseEdition[]).includes(
       responseEdition as LicenseEdition,
     )
       ? (responseEdition as LicenseEdition)

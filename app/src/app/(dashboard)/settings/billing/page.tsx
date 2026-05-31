@@ -7,7 +7,6 @@ import {
   FileText,
   Loader2,
   Receipt,
-  Wallet,
 } from 'lucide-react';
 import {
   Badge,
@@ -17,7 +16,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  Separator,
   toast,
 } from '@bemindlabs/unicore-ui';
 import { api } from '@/lib/api';
@@ -133,7 +131,7 @@ export default function BillingSettingsPage() {
                 <CardDescription>Your active subscription details</CardDescription>
               </div>
               <Badge variant={isPro ? 'default' : 'secondary'} className="text-sm">
-                {edition === 'pro' ? 'Pro' : edition === 'enterprise' ? 'Enterprise' : 'Community'}
+                {edition === 'pro' ? 'Pro' : 'Community'}
               </Badge>
             </div>
           </CardHeader>
@@ -207,14 +205,6 @@ export default function BillingSettingsPage() {
                       <p className="text-sm text-muted-foreground">Credit / Debit Card</p>
                     </div>
                   </>
-                ) : billing.paymentMethod.type === 'crypto' ? (
-                  <>
-                    <Wallet className="h-8 w-8 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium font-mono text-sm">{billing.paymentMethod.walletAddress}</p>
-                      <p className="text-sm text-muted-foreground">Web3 Wallet (ETH/USDC)</p>
-                    </div>
-                  </>
                 ) : (
                   <>
                     <CreditCard className="h-8 w-8 text-muted-foreground" />
@@ -241,24 +231,6 @@ export default function BillingSettingsPage() {
                 </div>
               </div>
             )}
-
-            {/* Web3 Wallet Section (x402) */}
-            <Separator />
-            <div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Wallet className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Web3 Wallet</p>
-                    <p className="text-xs text-muted-foreground">Pay with ETH or USDC on Ethereum / Base</p>
-                  </div>
-                </div>
-                <Badge variant="outline" className="text-xs">Coming Soon</Badge>
-              </div>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Connect a Web3 wallet to pay for your subscription with cryptocurrency and bind your license to your wallet address.
-              </p>
-            </div>
           </CardContent>
         </Card>
 

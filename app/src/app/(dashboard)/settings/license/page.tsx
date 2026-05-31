@@ -7,7 +7,6 @@ import { DemoGuard } from '@/components/demo/DemoGuard';
 import {
   AlertTriangle,
   ArrowDownCircle,
-  Building2,
   CheckCircle2,
   Crown,
   KeyRound,
@@ -83,23 +82,6 @@ const PRO_TIER = {
   },
 };
 
-const ENTERPRISE_TIER = {
-  maxAgents: 999,
-  maxRoles: 999,
-  features: {
-    allAgents: true,
-    customAgentBuilder: true,
-    fullRbac: true,
-    advancedWorkflows: true,
-    allChannels: true,
-    unlimitedRag: true,
-    whiteLabelBranding: true,
-    sso: true,
-    auditLogs: true,
-    prioritySupport: true,
-  },
-};
-
 const STATUS_CONFIG: Record<
   LicenseStatus,
   { label: string; variant: 'default' | 'secondary' | 'outline'; icon: React.ComponentType<{ className?: string }> }
@@ -121,12 +103,10 @@ function FeatureRow({
   label,
   community,
   pro,
-  enterprise,
 }: {
   label: string;
   community: boolean | number | string;
   pro: boolean | number | string;
-  enterprise: boolean | number | string;
 }) {
   const renderValue = (v: boolean | number | string) => {
     if (typeof v === 'string') return <span className="font-medium text-xs">{v}</span>;
@@ -139,11 +119,10 @@ function FeatureRow({
   };
 
   return (
-    <div className="grid grid-cols-4 items-center gap-4 py-2 text-sm">
+    <div className="grid grid-cols-3 items-center gap-4 py-2 text-sm">
       <span className="text-muted-foreground">{label}</span>
       <span className="flex justify-center">{renderValue(community)}</span>
       <span className="flex justify-center">{renderValue(pro)}</span>
-      <span className="flex justify-center">{renderValue(enterprise)}</span>
     </div>
   );
 }
@@ -227,7 +206,6 @@ export default function SettingsLicensePage() {
         // Map API response to LicenseInfo format
         const edition = raw.edition ?? raw.tier ?? 'community';
         const isPro = edition === 'pro';
-        const isEnt = edition === 'enterprise';
         const featureObj: Record<string, boolean> = {};
 
         if (Array.isArray(raw.features)) {
@@ -241,16 +219,16 @@ export default function SettingsLicensePage() {
         } else {
           // Default community features
           for (const k of ['allAgents', 'customAgentBuilder', 'fullRbac', 'advancedWorkflows', 'allChannels', 'unlimitedRag', 'whiteLabelBranding', 'sso', 'auditLogs', 'prioritySupport']) {
-            featureObj[k] = isPro || isEnt;
+            featureObj[k] = isPro;
           }
         }
 
         const mapped: LicenseInfo = {
-          key: raw.key ?? (isEnt ? 'ENT-XXXX-XXXX-XXXX' : isPro ? 'PRO-XXXX-XXXX-XXXX' : 'COMM-XXXX-XXXX-XXXX'),
+          key: raw.key ?? (isPro ? 'PRO-XXXX-XXXX-XXXX' : 'COMM-XXXX-XXXX-XXXX'),
           edition: edition as LicenseInfo['edition'],
           status: (raw.status ?? (raw.valid !== false ? 'active' : 'invalid')) as LicenseStatus,
-          maxAgents: raw.maxAgents ?? (isEnt ? 999 : isPro ? 50 : 2),
-          maxRoles: raw.maxRoles ?? (isEnt ? 999 : isPro ? 20 : 3),
+          maxAgents: raw.maxAgents ?? (isPro ? 50 : 2),
+          maxRoles: raw.maxRoles ?? (isPro ? 20 : 3),
           expiresAt: raw.expiresAt ?? '2099-12-31T23:59:59Z',
           features: featureObj as unknown as LicenseInfo['features'],
         };
@@ -357,7 +335,6 @@ export default function SettingsLicensePage() {
 
   const statusCfg = STATUS_CONFIG[license.status];
   const StatusIcon = statusCfg.icon;
-  const isEnterprise = license.edition === 'enterprise';
 
   const daysUntilExpiry = (() => {
     const expiry = new Date(license.expiresAt);
@@ -423,9 +400,7 @@ export default function SettingsLicensePage() {
         <CardContent className="space-y-6">
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2 rounded-lg bg-primary/10 px-4 py-2">
-              {isEnterprise ? (
-                <Building2 className="h-5 w-5 text-violet-500" />
-              ) : license.edition === 'pro' ? (
+              {license.edition === 'pro' ? (
                 <Crown className="h-5 w-5 text-amber-500" />
               ) : (
                 <ShieldCheck className="h-5 w-5 text-primary" />
@@ -446,7 +421,7 @@ export default function SettingsLicensePage() {
             <div>
               <p className="text-xs text-muted-foreground">Custom Agent Slots</p>
               <p className="text-sm font-medium">
-                {isEnterprise ? 'Unlimited' : `${license.maxAgents} (+ 8 built-in)`}
+                {`${license.maxAgents} (+ 8 built-in)`}
               </p>
             </div>
             <div>
@@ -501,20 +476,20 @@ export default function SettingsLicensePage() {
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>Team Members</span>
                   <span>
-                    {usersUsed} / {isEnterprise ? '∞' : license.maxRoles}
+                    {usersUsed} / {license.maxRoles}
                   </span>
                 </div>
-                <Progress value={isEnterprise ? 0 : (usersUsed / license.maxRoles) * 100} className="h-2" />
+                <Progress value={(usersUsed / license.maxRoles) * 100} className="h-2" />
               </div>
               <div className="space-y-1">
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>Active Agents</span>
                   <span>
-                    {agentsUsed} / {isEnterprise ? '∞' : license.maxAgents}
+                    {agentsUsed} / {license.maxAgents}
                   </span>
                 </div>
                 <Progress
-                  value={isEnterprise ? 0 : (agentsUsed / license.maxAgents) * 100}
+                  value={(agentsUsed / license.maxAgents) * 100}
                   className="h-2"
                 />
               </div>
@@ -532,29 +507,25 @@ export default function SettingsLicensePage() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-4 gap-4 border-b pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <div className="grid grid-cols-3 gap-4 border-b pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             <span>Feature</span>
             <span className="text-center">Community</span>
             <span className="text-center">Pro</span>
-            <span className="text-center">Enterprise</span>
           </div>
           {(
             [
-              ['Max Agents', COMMUNITY_TIER.maxAgents, PRO_TIER.maxAgents, 'Unlimited'],
-              ['Max Roles', COMMUNITY_TIER.maxRoles, PRO_TIER.maxRoles, 'Unlimited'],
-              ['All Agents', COMMUNITY_TIER.features.allAgents, PRO_TIER.features.allAgents, ENTERPRISE_TIER.features.allAgents],
-              ['Advanced Workflows', COMMUNITY_TIER.features.advancedWorkflows, PRO_TIER.features.advancedWorkflows, ENTERPRISE_TIER.features.advancedWorkflows],
-              ['White Label', COMMUNITY_TIER.features.whiteLabelBranding, PRO_TIER.features.whiteLabelBranding, ENTERPRISE_TIER.features.whiteLabelBranding],
-              ['Audit Logs', COMMUNITY_TIER.features.auditLogs, PRO_TIER.features.auditLogs, ENTERPRISE_TIER.features.auditLogs],
-              ['SSO', COMMUNITY_TIER.features.sso, PRO_TIER.features.sso, ENTERPRISE_TIER.features.sso],
-              ['Priority Support', COMMUNITY_TIER.features.prioritySupport, PRO_TIER.features.prioritySupport, ENTERPRISE_TIER.features.prioritySupport],
-              ['Multi-tenancy', false, false, true],
-              ['HA Cluster', false, false, true],
-              ['Compliance Controls', false, false, true],
-              ['Dedicated Account Mgr', false, false, true],
-            ] as [string, boolean | number | string, boolean | number | string, boolean | number | string][]
-          ).map(([label, community, pro, enterprise]) => (
-            <FeatureRow key={label} label={label} community={community} pro={pro} enterprise={enterprise} />
+              ['Max Agents', COMMUNITY_TIER.maxAgents, PRO_TIER.maxAgents],
+              ['Max Roles', COMMUNITY_TIER.maxRoles, PRO_TIER.maxRoles],
+              ['All Agents', COMMUNITY_TIER.features.allAgents, PRO_TIER.features.allAgents],
+              ['Advanced Workflows', COMMUNITY_TIER.features.advancedWorkflows, PRO_TIER.features.advancedWorkflows],
+              ['White Label', COMMUNITY_TIER.features.whiteLabelBranding, PRO_TIER.features.whiteLabelBranding],
+              ['Audit Logs', COMMUNITY_TIER.features.auditLogs, PRO_TIER.features.auditLogs],
+              ['SSO', COMMUNITY_TIER.features.sso, PRO_TIER.features.sso],
+              ['Priority Support', COMMUNITY_TIER.features.prioritySupport, PRO_TIER.features.prioritySupport],
+              ['Multi-tenancy', false, true],
+            ] as [string, boolean | number | string, boolean | number | string][]
+          ).map(([label, community, pro]) => (
+            <FeatureRow key={label} label={label} community={community} pro={pro} />
           ))}
         </CardContent>
       </Card>
@@ -658,32 +629,6 @@ export default function SettingsLicensePage() {
                 </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Enterprise upsell card for Community and Pro users */}
-      {!isEnterprise && (
-        <Card className="border-violet-200 dark:border-violet-900/50">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Building2 className="h-5 w-5 text-violet-500" />
-              <CardTitle>Need Enterprise?</CardTitle>
-            </div>
-            <CardDescription>
-              Multi-tenancy, HA clustering, compliance controls, SCIM SSO, and a dedicated account manager.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <a
-              href="https://unicore.bemind.tech/get-started"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg border border-violet-300 bg-violet-50 px-4 py-2.5 text-sm font-semibold text-violet-700 transition hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-900/20 dark:text-violet-300 dark:hover:bg-violet-900/40"
-            >
-              <Building2 className="h-4 w-4" />
-              Contact Sales
-            </a>
           </CardContent>
         </Card>
       )}

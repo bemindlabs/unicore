@@ -11,7 +11,6 @@ import type { NavItem } from '@/types/navigation';
 describe('isNavItemLocked', () => {
   const communityLicense = { isPro: false, edition: 'community', hasFeature: () => false };
   const proLicense = { isPro: true, edition: 'pro', hasFeature: () => true };
-  const enterpriseLicense = { isPro: true, edition: 'enterprise', hasFeature: () => true };
 
   it('returns false for items with no license requirement', () => {
     const item: NavItem = { label: 'Dashboard', icon: {} as any, href: '/', roles: ['*'] };
@@ -53,28 +52,6 @@ describe('isNavItemLocked', () => {
     // Community user with explicit customAgentBuilder add-on
     const hasFeatureWithAddon = (f: string) => f === 'customAgentBuilder';
     expect(isNavItemLocked(item, false, 'community', hasFeatureWithAddon)).toBe(false);
-  });
-
-  it('returns true for enterprise items on pro edition', () => {
-    const item: NavItem = {
-      label: 'Multi-Tenancy',
-      icon: {} as any,
-      href: '/platform-admin/tenants',
-      roles: [UserRole.Owner],
-      license: { tier: 'enterprise' },
-    };
-    expect(isNavItemLocked(item, true, 'pro', () => true)).toBe(true);
-  });
-
-  it('returns false for enterprise items on enterprise edition', () => {
-    const item: NavItem = {
-      label: 'Multi-Tenancy',
-      icon: {} as any,
-      href: '/platform-admin/tenants',
-      roles: [UserRole.Owner],
-      license: { tier: 'enterprise' },
-    };
-    expect(isNavItemLocked(item, true, 'enterprise', () => true)).toBe(false);
   });
 
   it('returns true for pro tier items without feature flag when not pro', () => {

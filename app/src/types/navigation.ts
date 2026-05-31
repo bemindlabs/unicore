@@ -3,7 +3,7 @@ import type { UserRole } from '@bemindlabs/unicore-shared-types';
 
 export interface NavItemLicense {
   /** Required license tier to access this item */
-  tier: 'pro' | 'enterprise';
+  tier: 'pro';
   /** Optional specific feature flag that must be enabled */
   feature?: string;
   /** Human-readable upgrade prompt, defaults to tier name */

@@ -235,11 +235,10 @@ export function filterSectionsByRole(role: UserRole): NavSection[] {
 export function isNavItemLocked(
   item: NavItem,
   isPro: boolean,
-  edition: string,
+  _edition: string,
   hasFeature: (f: string) => boolean,
 ): boolean {
   if (!item.license) return false;
-  if (item.license.tier === 'enterprise') return edition !== 'enterprise';
   if (item.license.tier === 'pro') {
     if (item.license.feature) return !hasFeature(item.license.feature);
     return !isPro;
