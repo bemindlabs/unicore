@@ -38,8 +38,10 @@ import { TenantModule } from './tenant/tenant.module';
 import { SuspendedTenantGuard } from './common/guards/suspended-tenant.guard';
 import { TenantRateLimitGuard } from './common/guards/tenant-rate-limit.guard';
 import { TenantUsageModule } from './common/tenancy/tenant-usage.module';
+import { ObservabilityModule } from './common/observability/observability.module';
+import { RequestContextMiddleware } from './common/observability/request-context.middleware';
 @Module({
-  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule, AdminModule, AuditModule, SettingsModule, TasksModule, WebhooksModule, ChatHistoryModule, NotificationsModule, ChannelsModule, ConversationsAnalyticsModule, ConversationsModule, ContactProfileModule, ConversationIntelligenceModule, PluginsModule, EmailModule, TenancyModule, TenantUsageModule, TenantModule],
+  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule, AdminModule, AuditModule, SettingsModule, TasksModule, WebhooksModule, ChatHistoryModule, NotificationsModule, ChannelsModule, ConversationsAnalyticsModule, ConversationsModule, ContactProfileModule, ConversationIntelligenceModule, PluginsModule, EmailModule, TenancyModule, TenantUsageModule, TenantModule, ObservabilityModule],
   controllers: [AppController],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
@@ -60,16 +62,20 @@ import { TenantUsageModule } from './common/tenancy/tenant-usage.module';
     RateLimitMiddleware,
     RequestValidationMiddleware,
     TenantContextMiddleware,
+    RequestContextMiddleware,
   ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
     consumer
-      // DomainRoutingMiddleware runs first — it attaches tenantId to req and
-      // sets per-domain CORS headers before rate limiting or auth kicks in.
+      // RequestContextMiddleware runs FIRST — it mints/propagates the
+      // X-Request-Id correlation id and opens the request-context ALS scope so
+      // every later middleware, guard, interceptor and log line is correlated.
+      // DomainRoutingMiddleware then attaches tenantId to req and sets
+      // per-domain CORS headers before rate limiting or auth kicks in.
       // TenantContextMiddleware strips client-supplied x-tenant-id before auth
       // resolves the SaaS tenant from the JWT.
-      .apply(DomainRoutingMiddleware, TenantContextMiddleware, RequestValidationMiddleware, RateLimitMiddleware)
+      .apply(RequestContextMiddleware, DomainRoutingMiddleware, TenantContextMiddleware, RequestValidationMiddleware, RateLimitMiddleware)
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
 }

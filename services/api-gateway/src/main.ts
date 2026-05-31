@@ -4,8 +4,13 @@ import helmet from 'helmet';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import { AppModule } from './app.module';
+import { StructuredLogger } from './common/observability/structured-logger.service';
+import { initSentry } from './common/observability/sentry';
 
 async function bootstrap() {
+  // Error tracking — guarded by SENTRY_DSN (no-op when unset, safe in dev).
+  initSentry();
+
   const logger = new Logger('Bootstrap');
 
   const port = process.env.PORT || 4000;
@@ -23,7 +28,11 @@ async function bootstrap() {
     throw new Error('JWT_SECRET contains default placeholder — set a real secret');
   }
 
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+
+  // Structured JSON logging in prod, pretty in dev (GAPS #15). Installed before
+  // anything logs so every Logger call site is upgraded.
+  app.useLogger(app.get(StructuredLogger));
 
   // Mount Scalar docs before helmet to avoid CSP blocking the UI
   const swaggerConfig = new DocumentBuilder()
