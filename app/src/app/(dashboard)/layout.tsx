@@ -9,8 +9,7 @@ import { MobileNav } from '@/components/layout/mobile-nav';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { useAuth } from '@/hooks/use-auth';
 import { useDemoMode } from '@/hooks/use-demo-mode';
-import { DemoBanner } from '@/components/demo/DemoBanner';
-import { DeployButton } from '@/components/demo/DeployButton';
+import { DemoBanner, DeployButton } from '@/components/demo';
 import { UpgradeBanner } from '@/components/license/upgrade-banner';
 import { TrialBanner } from '@/components/saas/trial-banner';
 

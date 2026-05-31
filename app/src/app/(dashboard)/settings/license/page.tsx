@@ -3,7 +3,7 @@
 import { useCallback, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useDemoMode } from '@/hooks/use-demo-mode';
-import { DemoGuard } from '@/components/demo/DemoGuard';
+import { DemoGuard } from '@/components/demo';
 import {
   AlertTriangle,
   ArrowDownCircle,

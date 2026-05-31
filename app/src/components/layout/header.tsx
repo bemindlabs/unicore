@@ -19,6 +19,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/hooks/use-auth';
 import { useNotifications } from '@/hooks/use-notifications';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
+import { WorkspaceSwitcher } from '@/components/layout/workspace-switcher';
 import { NotificationPanel } from '@/components/layout/notification-panel';
 import { LicenseBadge } from '@/components/license/license-badge';
 import { TerminalModal } from '@/components/terminal/terminal-modal';
@@ -91,6 +92,8 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
       <Button variant="ghost" size="icon" className="lg:hidden shrink-0" onClick={onMobileMenuToggle} aria-label="Toggle mobile menu">
         <Menu className="h-5 w-5" />
       </Button>
+
+      <WorkspaceSwitcher />
 
       <div className="hidden sm:block">
         <Breadcrumb />
