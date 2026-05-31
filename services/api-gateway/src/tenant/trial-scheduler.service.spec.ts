@@ -70,6 +70,31 @@ describe('TrialSchedulerService daily sweep', () => {
     expect(email.send).toHaveBeenCalled();
   });
 
+  // GAPS #9: the scheduler must actually fire — a boot sweep runs shortly after
+  // onModuleInit so reminders + expiry→SUSPEND happen without waiting up to 24h.
+  it('runs a sweep shortly after boot (onModuleInit)', async () => {
+    jest.useFakeTimers();
+    process.env.TRIAL_SWEEP_BOOT_DELAY_MS = '10000';
+    try {
+      const { scheduler } = build([]);
+      const sweep = jest
+        .spyOn(scheduler, 'runDailySweep')
+        .mockResolvedValue({ reminded: 0, suspended: 0 });
+
+      scheduler.onModuleInit();
+      expect(sweep).not.toHaveBeenCalled(); // not synchronous
+
+      jest.advanceTimersByTime(10000);
+      await Promise.resolve(); // flush the queued microtask
+      expect(sweep).toHaveBeenCalledTimes(1);
+
+      scheduler.onModuleDestroy();
+    } finally {
+      jest.useRealTimers();
+      delete process.env.TRIAL_SWEEP_BOOT_DELAY_MS;
+    }
+  });
+
   it('is idempotent — a second run does not re-suspend already-suspended tenants', async () => {
     const now = new Date('2026-01-10T00:00:00Z');
     const { scheduler, prisma } = build([

@@ -13,10 +13,36 @@
  *  - STARTER maps to community license flags, GROWTH maps to pro license flags.
  */
 
+import type { ProFeature } from '../../license/interfaces/license.interface';
+
 export type PlanKey = 'STARTER' | 'GROWTH';
 
 /** License edition each plan maps to (reuse of the existing license system). */
 export type LicenseEditionForPlan = 'community' | 'pro';
+
+/**
+ * Per-edition feature flags (reuse of the license feature-flag chain). STARTER
+ * maps to the community flag set, GROWTH (and an in-trial tenant) to the full
+ * pro set. This is the SINGLE per-tenant plan → feature-flags map the
+ * LicenseGuard consults so gating is driven by `tenant.plan`, NOT the
+ * process-global UNICORE_EDITION.
+ */
+export const EDITION_FEATURE_FLAGS: Record<LicenseEditionForPlan, ProFeature[]> = {
+  community: ['auditLogs'],
+  pro: [
+    'allAgents',
+    'customAgentBuilder',
+    'fullRbac',
+    'advancedWorkflows',
+    'allChannels',
+    'unlimitedRag',
+    'whiteLabelBranding',
+    'sso',
+    'auditLogs',
+    'prioritySupport',
+    'multiTenancy',
+  ],
+};
 
 export interface PlanDefinition {
   /** Tenant.plan value. */
@@ -111,6 +137,40 @@ export function getPlan(key: string | null | undefined): PlanDefinition {
   const normalized = (key || '').toUpperCase();
   if (normalized === 'GROWTH') return PLANS.GROWTH;
   return PLANS.STARTER;
+}
+
+/**
+ * Resolve the effective feature flags for a tenant from its OWN plan and trial
+ * state — the per-tenant entitlement source the LicenseGuard checks.
+ *
+ *  - A TRIALING tenant gets the FULL Growth (pro) feature set for the whole
+ *    trial (fixed product decision — full Growth during the 30-day trial).
+ *  - Otherwise the flags come from the plan's license edition (STARTER →
+ *    community flags, GROWTH → pro flags).
+ *
+ * This deliberately ignores the process-global UNICORE_EDITION so one tenant on
+ * STARTER can be denied a Growth-only feature while a GROWTH/trial tenant on the
+ * same process is allowed.
+ */
+export function featureFlagsForTenant(tenant: {
+  plan?: string | null;
+  subscriptionStatus?: string | null;
+}): ProFeature[] {
+  const isTrialing = (tenant.subscriptionStatus || '').toUpperCase() === 'TRIALING';
+  const edition: LicenseEditionForPlan = isTrialing
+    ? PLANS[TRIAL_PLAN].edition
+    : getPlan(tenant.plan).edition;
+  return EDITION_FEATURE_FLAGS[edition];
+}
+
+/**
+ * Max concurrent TRIALING businesses a single user may own (FU-06 anti-abuse).
+ * Default 1; configurable via MAX_CONCURRENT_TRIALS. Read live so it can be
+ * tuned via env without a rebuild and overridden per test.
+ */
+export function maxConcurrentTrials(): number {
+  const parsed = parseInt(process.env.MAX_CONCURRENT_TRIALS ?? '', 10);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 1;
 }
 
 /** Compute the trial end date from a start instant. */

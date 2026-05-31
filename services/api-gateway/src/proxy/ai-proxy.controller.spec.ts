@@ -4,6 +4,7 @@ import { EventEmitter } from 'events';
 import { AiProxyController } from './ai-proxy.controller';
 import { ProxyService } from './proxy.service';
 import { LicenseService } from '../license/license.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 const mockProxyService = {
   forward: jest.fn(),
@@ -12,6 +13,16 @@ const mockProxyService = {
 const mockLicenseService = {
   hasFeature: jest.fn().mockResolvedValue(true),
   getLicenseStatus: jest.fn().mockResolvedValue({ tier: 'pro' }),
+};
+
+// LicenseGuard (per-tenant gating, GAPS #3) resolves the tenant's plan via
+// Prisma; a GROWTH tenant unlocks the auditLogs feature this controller gates.
+const mockPrismaService = {
+  tenant: {
+    findUnique: jest
+      .fn()
+      .mockResolvedValue({ plan: 'GROWTH', subscriptionStatus: 'ACTIVE' }),
+  },
 };
 
 function makeReq(originalUrl = '/api/proxy/ai/llm/complete', body: any = null) {
@@ -41,6 +52,7 @@ describe('AiProxyController', () => {
       providers: [
         { provide: ProxyService, useValue: mockProxyService },
         { provide: LicenseService, useValue: mockLicenseService },
+        { provide: PrismaService, useValue: mockPrismaService },
       ],
     }).compile();
 
