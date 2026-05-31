@@ -4,6 +4,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PrismaService } from '../../prisma/prisma.service';
 import { TokenBlacklistService } from '../token-blacklist.service';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
+import { runWithTenant } from '../../common/tenancy/tenant-store';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -37,7 +38,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         tenantId: true,
         activeTenantId: true,
         isSuperAdmin: true,
-        memberships: { select: { tenantId: true, role: true, status: true } },
       },
     });
 
@@ -55,6 +55,20 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('No tenant associated with this account');
     }
 
+    // GAPS #5 + #7: the `memberships` table is RLS-FORCED (apply-rls.sql). Auth
+    // runs BEFORE any tenant context is established, so loading memberships off
+    // the bare user query would run under the DEMO context and the policy would
+    // hide EVERY row — locking out every legitimate non-super-admin once the app
+    // connects as the required NOSUPERUSER role. We therefore read the user's
+    // membership for the RESOLVED tenant under that tenant's RLS context, so the
+    // row is visible exactly when (and only when) it belongs to this user+tenant.
+    const activeMembership = await runWithTenant(tenantId, () =>
+      this.prisma.membership.findUnique({
+        where: { userId_tenantId: { userId: user.id, tenantId } },
+        select: { tenantId: true, role: true, status: true },
+      }),
+    );
+
     // GAPS #7: the resolved tenant MUST be one the user actually belongs to.
     // The previous `memberships.length > 0 && …` form left a hole: a user with
     // ZERO memberships skipped the check entirely and could forge any `tid`.
@@ -64,17 +78,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // isSuperAdmin:true, working). Every legitimate signup/oauth/register path
     // creates a Membership (Phase 5 / Stage A), so no normal user is locked out;
     // a membership-less non-super-admin is rejected with 403.
-    const { memberships, ...rest } = user;
-    if (
-      !rest.isSuperAdmin &&
-      !memberships.some((m) => m.tenantId === tenantId)
-    ) {
+    if (!user.isSuperAdmin && !activeMembership) {
       throw new ForbiddenException('Not a member of the active business');
     }
-
-    // Surface the user's role WITHIN the active tenant when a membership exists,
-    // so per-tenant role checks reflect the business they are operating.
-    const activeMembership = memberships.find((m) => m.tenantId === tenantId);
 
     // Enforce persisted per-tenant suspension (Phase 5): a SUSPENDED membership
     // can't operate this tenant even with a stale/replayed token. Scoped to the
@@ -83,8 +89,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new ForbiddenException('Your access to the active business has been suspended');
     }
 
-    const role = activeMembership?.role ?? rest.role;
+    const role = activeMembership?.role ?? user.role;
 
-    return { ...rest, role, tenantId };
+    return { ...user, role, tenantId };
   }
 }
