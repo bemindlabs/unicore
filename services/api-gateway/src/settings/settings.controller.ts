@@ -19,6 +19,8 @@ import { encrypt, decrypt, maskKey } from './crypto.util';
 import { BrandingConfigDto } from './dto/branding-config.dto';
 import { WizardStatusDto } from './dto/wizard-status.dto';
 import { sanitizeCss } from './utils/css-sanitizer';
+import { getTenantId, isValidTenantId, runWithTenant } from '../common/tenancy/tenant-store';
+import { DEMO_TENANT_ID } from '../common/tenancy/tenancy.config';
 
 const ALLOWED_MIME_TYPES: Record<string, string[]> = {
   'image/svg+xml': ['.svg'],
@@ -82,20 +84,49 @@ export class SettingsController {
   ) {}
 
   /**
-   * Returns the Settings table key for branding.
-   * In enterprise multi-tenant mode the key is `branding:{tenantId}`.
-   * In community/pro (no tenant context) it falls back to the global `branding` key.
+   * Resolve the REQUEST's tenant id (GAPS #1). The trusted tenant is seeded into
+   * the request-scoped AsyncLocalStorage store by TenantContextInterceptor (after
+   * JWT auth resolves `req.user.tenantId`). The tenant-context provider, when the
+   * enterprise tenancy module is active, takes precedence. Falls back to the DEMO
+   * bootstrap tenant for unauthenticated/bootstrap paths (e.g. wizard-status).
+   *
+   * Every Settings read/write is scoped by this value so one tenant can NEVER
+   * read or overwrite another tenant's secrets (AI keys, channel bot tokens).
    */
-  private getBrandingKey(): string {
-    const tenant = this.tenantCtx?.get();
-    return tenant?.tenantId ? `branding:${tenant.tenantId}` : 'branding';
+  private tenantId(): string {
+    const fromCtx = this.tenantCtx?.get()?.tenantId;
+    if (isValidTenantId(fromCtx)) return fromCtx;
+    return getTenantId();
+  }
+
+  /**
+   * Read a tenant-scoped settings row by semantic key. Runs under
+   * `runWithTenant` so the explicit tenant also pins the RLS `app.tenant_id`,
+   * keeping the WHERE clause and the row-level policy in lock-step (important on
+   * @Public() paths where the request store may carry the DEMO fallback).
+   */
+  private async read(tenantId: string, key: string) {
+    return runWithTenant(tenantId, () =>
+      this.prisma.settings.findUnique({ where: { tenantId_key: { tenantId, key } } }),
+    );
+  }
+
+  /** Upsert a tenant-scoped settings row by semantic key (RLS-pinned, see read). */
+  private async write(tenantId: string, key: string, data: any) {
+    return runWithTenant(tenantId, () =>
+      this.prisma.settings.upsert({
+        where: { tenantId_key: { tenantId, key } },
+        create: { tenantId, key, data },
+        update: { data },
+      }),
+    );
   }
 
   /** Public: wizard completion status (no auth required) */
   @Public()
   @Get('wizard-status')
   async getWizardStatus() {
-    const settings = await this.prisma.settings.findUnique({ where: { id: 'wizard-status' } });
+    const settings = await this.read(this.tenantId(), 'wizard-status');
     return settings?.data ?? { completed: false };
   }
 
@@ -104,11 +135,7 @@ export class SettingsController {
   @Put('wizard-status')
   async setWizardStatus(@Body() body: WizardStatusDto) {
     const data = JSON.parse(JSON.stringify(body));
-    const settings = await this.prisma.settings.upsert({
-      where: { id: 'wizard-status' },
-      create: { id: 'wizard-status', data },
-      update: { data },
-    });
+    const settings = await this.write(this.tenantId(), 'wizard-status', data);
     return settings.data;
   }
 
@@ -117,31 +144,19 @@ export class SettingsController {
   // to prevent NestJS from matching the parameterized route first.
 
   /**
-   * GET branding config — tenant-scoped in enterprise, global otherwise.
-   *
-   * Resolution order (enterprise):
-   *   1. branding:{tenantId}  — tenant-specific override
-   *   2. branding             — global fallback
-   *
-   * Resolution order (community / pro):
-   *   1. branding             — global config only
+   * GET branding config — scoped to the request's tenant (GAPS #1). Each tenant
+   * has its own `branding` row; no cross-tenant fallback.
    */
   @Get('branding')
   @ProFeatureRequired('whiteLabelBranding')
   @UseGuards(LicenseGuard)
   async getBranding() {
-    const tenantKey = this.getBrandingKey();
-    if (tenantKey !== 'branding') {
-      const tenantSettings = await this.prisma.settings.findUnique({ where: { id: tenantKey } });
-      if (tenantSettings) return tenantSettings.data;
-    }
-    const settings = await this.prisma.settings.findUnique({ where: { id: 'branding' } });
+    const settings = await this.read(this.tenantId(), 'branding');
     return settings?.data ?? {};
   }
 
   /**
-   * PUT branding config — saves to `branding:{tenantId}` in enterprise,
-   * or to the global `branding` key in community/pro.
+   * PUT branding config — saves the request tenant's own `branding` row.
    */
   @Put('branding')
   @ProFeatureRequired('whiteLabelBranding')
@@ -155,12 +170,7 @@ export class SettingsController {
       }
       dto.customCss = sanitized;
     }
-    const key = this.getBrandingKey();
-    const settings = await this.prisma.settings.upsert({
-      where: { id: key },
-      create: { id: key, data: dto as any },
-      update: { data: dto as any },
-    });
+    const settings = await this.write(this.tenantId(), 'branding', dto as any);
     return settings.data;
   }
 
@@ -241,7 +251,7 @@ export class SettingsController {
   @ProFeatureRequired('allChannels')
   @UseGuards(LicenseGuard)
   async getDomains() {
-    const settings = await this.prisma.settings.findUnique({ where: { id: 'domains' } });
+    const settings = await this.read(this.tenantId(), 'domains');
     return settings?.data ?? {};
   }
 
@@ -249,11 +259,7 @@ export class SettingsController {
   @ProFeatureRequired('allChannels')
   @UseGuards(LicenseGuard)
   async putDomains(@Body() body: any) {
-    const settings = await this.prisma.settings.upsert({
-      where: { id: 'domains' },
-      create: { id: 'domains', data: body },
-      update: { data: body },
-    });
+    const settings = await this.write(this.tenantId(), 'domains', body);
     return settings.data;
   }
 
@@ -263,11 +269,7 @@ export class SettingsController {
   @ProFeatureRequired('allChannels')
   @UseGuards(LicenseGuard)
   async putLine(@Body() body: any) {
-    const settings = await this.prisma.settings.upsert({
-      where: { id: 'line' },
-      create: { id: 'line', data: body },
-      update: { data: body },
-    });
+    const settings = await this.write(this.tenantId(), 'line', body);
     return settings.data;
   }
 
@@ -277,11 +279,7 @@ export class SettingsController {
   @ProFeatureRequired('allChannels')
   @UseGuards(LicenseGuard)
   async putTelegram(@Body() body: any) {
-    const settings = await this.prisma.settings.upsert({
-      where: { id: 'telegram' },
-      create: { id: 'telegram', data: body },
-      update: { data: body },
-    });
+    const settings = await this.write(this.tenantId(), 'telegram', body);
     return settings.data;
   }
 
@@ -310,7 +308,7 @@ export class SettingsController {
 
   @Get('ai-config')
   async getAiConfig() {
-    const settings = await this.prisma.settings.findUnique({ where: { id: 'ai-config' } });
+    const settings = await this.read(this.tenantId(), 'ai-config');
     const data = (settings?.data ?? {}) as Record<string, any>;
     const result: Record<string, any> = {
       defaultProvider: data.defaultProvider ?? 'openai',
@@ -329,8 +327,9 @@ export class SettingsController {
   @Roles('OWNER')
   @Put('ai-config')
   async putAiConfig(@Body() body: Record<string, string>) {
+    const tenantId = this.tenantId();
     // Read existing config
-    const existing = await this.prisma.settings.findUnique({ where: { id: 'ai-config' } });
+    const existing = await this.read(tenantId, 'ai-config');
     const current = (existing?.data ?? {}) as Record<string, any>;
 
     const data: Record<string, any> = {};
@@ -358,11 +357,7 @@ export class SettingsController {
       }
     }
 
-    await this.prisma.settings.upsert({
-      where: { id: 'ai-config' },
-      create: { id: 'ai-config', data },
-      update: { data },
-    });
+    await this.write(tenantId, 'ai-config', data);
 
     // Build masked response
     const result: Record<string, any> = {
@@ -383,11 +378,19 @@ export class SettingsController {
 
   @Public()
   @Get('ai-config/keys')
-  async getAiConfigKeys(@Headers('x-internal-service') internalService: string) {
+  async getAiConfigKeys(
+    @Headers('x-internal-service') internalService: string,
+    @Headers('x-tenant-id') tenantHeader?: string,
+  ) {
     if (!internalService || !SettingsController.ALLOWED_INTERNAL_SERVICES.includes(internalService)) {
       return { defaultProvider: 'openai', defaultModel: '' };
     }
-    const settings = await this.prisma.settings.findUnique({ where: { id: 'ai-config' } });
+    // GAPS #1: scope decrypted-key reads to the FORWARDED tenant. The proxy layer
+    // injects the trusted x-tenant-id (stripping any client value); a call with no
+    // tenant (e.g. an ai-engine startup prefetch) falls back to the DEMO tenant
+    // and therefore CANNOT read another tenant's keys.
+    const tenantId = isValidTenantId(tenantHeader) ? tenantHeader : DEMO_TENANT_ID;
+    const settings = await this.read(tenantId, 'ai-config');
     const data = (settings?.data ?? {}) as Record<string, any>;
     const result: Record<string, any> = {
       defaultProvider: data.defaultProvider ?? 'openai',
@@ -406,18 +409,14 @@ export class SettingsController {
   @Roles('OWNER')
   @Get(':key')
   async get(@Param('key') key: string) {
-    const settings = await this.prisma.settings.findUnique({ where: { id: key } });
+    const settings = await this.read(this.tenantId(), key);
     return settings?.data ?? {};
   }
 
   @Roles('OWNER')
   @Put('erp-modules')
   async putErpModules(@Body() body: any) {
-    const settings = await this.prisma.settings.upsert({
-      where: { id: 'erp-modules' },
-      create: { id: 'erp-modules', data: body },
-      update: { data: body },
-    });
+    const settings = await this.write(this.tenantId(), 'erp-modules', body);
     return settings.data;
   }
 
@@ -426,11 +425,7 @@ export class SettingsController {
   @UseGuards(LicenseGuard)
   @Put(':key')
   async put(@Param('key') key: string, @Body() body: any) {
-    const settings = await this.prisma.settings.upsert({
-      where: { id: key },
-      create: { id: key, data: body },
-      update: { data: body },
-    });
+    const settings = await this.write(this.tenantId(), key, body);
     return settings.data;
   }
 }

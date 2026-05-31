@@ -11272,18 +11272,21 @@ export namespace Prisma {
   export type SettingsMinAggregateOutputType = {
     id: string | null
     tenantId: string | null
+    key: string | null
     updatedAt: Date | null
   }
 
   export type SettingsMaxAggregateOutputType = {
     id: string | null
     tenantId: string | null
+    key: string | null
     updatedAt: Date | null
   }
 
   export type SettingsCountAggregateOutputType = {
     id: number
     tenantId: number
+    key: number
     data: number
     updatedAt: number
     _all: number
@@ -11293,18 +11296,21 @@ export namespace Prisma {
   export type SettingsMinAggregateInputType = {
     id?: true
     tenantId?: true
+    key?: true
     updatedAt?: true
   }
 
   export type SettingsMaxAggregateInputType = {
     id?: true
     tenantId?: true
+    key?: true
     updatedAt?: true
   }
 
   export type SettingsCountAggregateInputType = {
     id?: true
     tenantId?: true
+    key?: true
     data?: true
     updatedAt?: true
     _all?: true
@@ -11385,6 +11391,7 @@ export namespace Prisma {
   export type SettingsGroupByOutputType = {
     id: string
     tenantId: string
+    key: string
     data: JsonValue
     updatedAt: Date
     _count: SettingsCountAggregateOutputType | null
@@ -11409,6 +11416,7 @@ export namespace Prisma {
   export type SettingsSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     tenantId?: boolean
+    key?: boolean
     data?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["settings"]>
@@ -11416,6 +11424,7 @@ export namespace Prisma {
   export type SettingsSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     tenantId?: boolean
+    key?: boolean
     data?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["settings"]>
@@ -11423,6 +11432,7 @@ export namespace Prisma {
   export type SettingsSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     tenantId?: boolean
+    key?: boolean
     data?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["settings"]>
@@ -11430,22 +11440,36 @@ export namespace Prisma {
   export type SettingsSelectScalar = {
     id?: boolean
     tenantId?: boolean
+    key?: boolean
     data?: boolean
     updatedAt?: boolean
   }
 
-  export type SettingsOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "data" | "updatedAt", ExtArgs["result"]["settings"]>
+  export type SettingsOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "key" | "data" | "updatedAt", ExtArgs["result"]["settings"]>
 
   export type $SettingsPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Settings"
     objects: {}
     scalars: $Extensions.GetPayloadResult<{
       /**
-       * Per-tenant settings row. In self-host the single "default" row carries the
-       * default tenant; in saas each tenant gets its own row keyed by id == tenantId.
+       * Per-tenant settings row (GAPS #1). Each tenant gets its OWN row per semantic
+       * `key` — secrets (AI keys, channel bot tokens) MUST NOT leak across tenants.
+       * 
+       * `id` remains the opaque uuid PK. The real lookup key is the composite
+       * (`tenantId`, `key`): `key` carries the former constant ids
+       * ('ai-config' | 'default' | 'branding' | 'domains' | 'line' | 'telegram' |
+       * 'wizard-status' | 'erp-modules' | …). All reads/writes resolve by
+       * `tenantId_key`, never by a global constant id.
        */
       id: string
+      /**
+       * Owning tenant. RLS-enforced (scripts/apply-rls.sql).
+       */
       tenantId: string
+      /**
+       * Semantic settings key within the tenant (the former constant `id`).
+       */
+      key: string
       data: Prisma.JsonValue
       updatedAt: Date
     }, ExtArgs["result"]["settings"]>
@@ -11873,6 +11897,7 @@ export namespace Prisma {
   interface SettingsFieldRefs {
     readonly id: FieldRef<"Settings", 'String'>
     readonly tenantId: FieldRef<"Settings", 'String'>
+    readonly key: FieldRef<"Settings", 'String'>
     readonly data: FieldRef<"Settings", 'Json'>
     readonly updatedAt: FieldRef<"Settings", 'DateTime'>
   }
@@ -31868,6 +31893,7 @@ export namespace Prisma {
   export const SettingsScalarFieldEnum: {
     id: 'id',
     tenantId: 'tenantId',
+    key: 'key',
     data: 'data',
     updatedAt: 'updatedAt'
   };
@@ -32939,6 +32965,7 @@ export namespace Prisma {
     NOT?: SettingsWhereInput | SettingsWhereInput[]
     id?: StringFilter<"Settings"> | string
     tenantId?: UuidFilter<"Settings"> | string
+    key?: StringFilter<"Settings"> | string
     data?: JsonFilter<"Settings">
     updatedAt?: DateTimeFilter<"Settings"> | Date | string
   }
@@ -32946,23 +32973,27 @@ export namespace Prisma {
   export type SettingsOrderByWithRelationInput = {
     id?: SortOrder
     tenantId?: SortOrder
+    key?: SortOrder
     data?: SortOrder
     updatedAt?: SortOrder
   }
 
   export type SettingsWhereUniqueInput = Prisma.AtLeast<{
     id?: string
+    tenantId_key?: SettingsTenantIdKeyCompoundUniqueInput
     AND?: SettingsWhereInput | SettingsWhereInput[]
     OR?: SettingsWhereInput[]
     NOT?: SettingsWhereInput | SettingsWhereInput[]
     tenantId?: UuidFilter<"Settings"> | string
+    key?: StringFilter<"Settings"> | string
     data?: JsonFilter<"Settings">
     updatedAt?: DateTimeFilter<"Settings"> | Date | string
-  }, "id">
+  }, "id" | "tenantId_key">
 
   export type SettingsOrderByWithAggregationInput = {
     id?: SortOrder
     tenantId?: SortOrder
+    key?: SortOrder
     data?: SortOrder
     updatedAt?: SortOrder
     _count?: SettingsCountOrderByAggregateInput
@@ -32976,6 +33007,7 @@ export namespace Prisma {
     NOT?: SettingsScalarWhereWithAggregatesInput | SettingsScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"Settings"> | string
     tenantId?: UuidWithAggregatesFilter<"Settings"> | string
+    key?: StringWithAggregatesFilter<"Settings"> | string
     data?: JsonWithAggregatesFilter<"Settings">
     updatedAt?: DateTimeWithAggregatesFilter<"Settings"> | Date | string
   }
@@ -35175,6 +35207,7 @@ export namespace Prisma {
   export type SettingsCreateInput = {
     id?: string
     tenantId?: string
+    key?: string
     data?: JsonNullValueInput | InputJsonValue
     updatedAt?: Date | string
   }
@@ -35182,6 +35215,7 @@ export namespace Prisma {
   export type SettingsUncheckedCreateInput = {
     id?: string
     tenantId?: string
+    key?: string
     data?: JsonNullValueInput | InputJsonValue
     updatedAt?: Date | string
   }
@@ -35189,6 +35223,7 @@ export namespace Prisma {
   export type SettingsUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     tenantId?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
     data?: JsonNullValueInput | InputJsonValue
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -35196,6 +35231,7 @@ export namespace Prisma {
   export type SettingsUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     tenantId?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
     data?: JsonNullValueInput | InputJsonValue
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -35203,6 +35239,7 @@ export namespace Prisma {
   export type SettingsCreateManyInput = {
     id?: string
     tenantId?: string
+    key?: string
     data?: JsonNullValueInput | InputJsonValue
     updatedAt?: Date | string
   }
@@ -35210,6 +35247,7 @@ export namespace Prisma {
   export type SettingsUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     tenantId?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
     data?: JsonNullValueInput | InputJsonValue
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -35217,6 +35255,7 @@ export namespace Prisma {
   export type SettingsUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     tenantId?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
     data?: JsonNullValueInput | InputJsonValue
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -37619,9 +37658,15 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
+  export type SettingsTenantIdKeyCompoundUniqueInput = {
+    tenantId: string
+    key: string
+  }
+
   export type SettingsCountOrderByAggregateInput = {
     id?: SortOrder
     tenantId?: SortOrder
+    key?: SortOrder
     data?: SortOrder
     updatedAt?: SortOrder
   }
@@ -37629,12 +37674,14 @@ export namespace Prisma {
   export type SettingsMaxOrderByAggregateInput = {
     id?: SortOrder
     tenantId?: SortOrder
+    key?: SortOrder
     updatedAt?: SortOrder
   }
 
   export type SettingsMinOrderByAggregateInput = {
     id?: SortOrder
     tenantId?: SortOrder
+    key?: SortOrder
     updatedAt?: SortOrder
   }
   export type JsonWithAggregatesFilter<$PrismaModel = never> =

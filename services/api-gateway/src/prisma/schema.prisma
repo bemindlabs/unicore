@@ -196,13 +196,23 @@ model AuditLog {
 // ---------------------------------------------------------------------------
 
 model Settings {
-  /// Per-tenant settings row. In self-host the single "default" row carries the
-  /// default tenant; in saas each tenant gets its own row keyed by id == tenantId.
-  id        String   @id @default("default")
+  /// Per-tenant settings row (GAPS #1). Each tenant gets its OWN row per semantic
+  /// `key` — secrets (AI keys, channel bot tokens) MUST NOT leak across tenants.
+  ///
+  /// `id` remains the opaque uuid PK. The real lookup key is the composite
+  /// (`tenantId`, `key`): `key` carries the former constant ids
+  /// ('ai-config' | 'default' | 'branding' | 'domains' | 'line' | 'telegram' |
+  /// 'wizard-status' | 'erp-modules' | …). All reads/writes resolve by
+  /// `tenantId_key`, never by a global constant id.
+  id        String   @id @default(uuid())
+  /// Owning tenant. RLS-enforced (scripts/apply-rls.sql).
   tenantId  String   @default("00000000-0000-0000-0000-000000000000") @db.Uuid
+  /// Semantic settings key within the tenant (the former constant `id`).
+  key       String   @default("default")
   data      Json     @default("{}")
   updatedAt DateTime @updatedAt
 
+  @@unique([tenantId, key])
   @@index([tenantId])
 }
 
