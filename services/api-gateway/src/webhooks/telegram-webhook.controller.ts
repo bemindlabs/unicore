@@ -5,6 +5,8 @@ import {
   Param,
   Headers,
   HttpCode,
+  HttpException,
+  HttpStatus,
   Logger,
   ForbiddenException,
   UseGuards,
@@ -55,23 +57,31 @@ export class TelegramWebhookController {
   ) {}
 
   /**
-   * Receives Telegram Update objects sent by Telegram servers.
+   * Legacy path-less Telegram webhook.
    *
-   * GAPS #1: a Telegram Update carries NO bot identifier, so multi-tenant
-   * disambiguation relies on a per-tenant webhook path — register each tenant's
-   * bot webhook as `/webhooks/telegram/<botId>`. The `:botId` is matched against
-   * the tenant's stored bot token to resolve the owning tenant. The legacy
-   * path-less route (`/webhooks/telegram`) cannot disambiguate and falls back to
-   * the DEMO tenant (see residual gap note in the PR/report).
+   * GAPS #1 (residual fix): a Telegram Update carries NO bot identifier, so a
+   * path-less webhook cannot be attributed to a tenant. Previously this fell back
+   * to the DEMO tenant — a silent cross-tenant leak. We now REJECT it with
+   * 410 Gone and instruct the caller to register the per-bot webhook URL
+   * `/webhooks/telegram/<botId>` (where `<botId>` is the integer prefix of the
+   * bot token), which is unambiguously resolvable. We never silently use DEMO.
    */
   @Public()
   @Post()
   @HttpCode(200)
   handleUpdate(
     @Body() update: TelegramUpdate,
-    @Headers('x-telegram-bot-api-secret-token') secretToken?: string,
-  ): Promise<{ ok: true }> {
-    return this.process(update, undefined, secretToken);
+    @Headers('x-telegram-bot-api-secret-token') _secretToken?: string,
+  ): never {
+    this.logger.warn(
+      `Rejected path-less Telegram webhook (update_id=${update?.update_id ?? 'n/a'}): ` +
+        'cannot resolve owning tenant. Register the per-bot URL /webhooks/telegram/<botId>.',
+    );
+    throw new HttpException(
+      'Path-less Telegram webhook is not supported: it cannot be attributed to a tenant. ' +
+        'Register your bot webhook as /webhooks/telegram/<botId> (the integer prefix of the bot token).',
+      HttpStatus.GONE,
+    );
   }
 
   /** Per-bot webhook path — enables tenant resolution by bot id. */
@@ -88,7 +98,7 @@ export class TelegramWebhookController {
 
   private async process(
     update: TelegramUpdate,
-    botId: string | undefined,
+    botId: string,
     secretToken?: string,
   ): Promise<{ ok: true }> {
     // Validate webhook secret if configured (set via dashboard Settings → Channels)
@@ -101,9 +111,18 @@ export class TelegramWebhookController {
     }
 
     // GAPS #1: resolve the owning tenant from the per-bot webhook path's botId.
-    const resolvedTenantId =
-      (await this.tenantResolver.resolveTelegram(botId)) ??
-      this.tenantResolver.fallbackTenantId;
+    // If no tenant claims this bot id we REJECT rather than silently using DEMO.
+    const resolvedTenantId = await this.tenantResolver.resolveTelegram(botId);
+    if (!resolvedTenantId) {
+      this.logger.warn(
+        `No tenant owns Telegram botId=${botId} (update_id=${update.update_id}); rejecting.`,
+      );
+      throw new HttpException(
+        `No tenant is configured for Telegram bot "${botId}". ` +
+          'Configure the bot token under Settings → Channels for the owning tenant.',
+        HttpStatus.NOT_FOUND,
+      );
+    }
 
     // Extract message details
     const message = update.message;

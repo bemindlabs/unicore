@@ -38,6 +38,7 @@ export class LlmService {
       messages,
       options,
       context?.preferredProvider,
+      context?.tenantId,
     );
 
     this.tokenTracking.track({
@@ -66,6 +67,7 @@ export class LlmService {
       messages,
       options,
       context?.preferredProvider,
+      context?.tenantId,
     );
 
     for await (const chunk of gen) {
@@ -97,6 +99,7 @@ export class LlmService {
       text,
       options,
       context?.preferredProvider,
+      context?.tenantId,
     );
 
     this.tokenTracking.track({
