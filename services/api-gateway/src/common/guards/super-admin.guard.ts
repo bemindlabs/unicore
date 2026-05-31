@@ -4,7 +4,6 @@ import {
   ExecutionContext,
   ForbiddenException,
 } from '@nestjs/common';
-import { isSaaS } from '../tenancy/tenancy.config';
 
 /**
  * Super-admin boundary for the SaaS control plane (M4/E5).
@@ -17,12 +16,9 @@ import { isSaaS } from '../tenancy/tenancy.config';
  * (OWNER/OPERATOR/…). The flag is read live from the DB on every request by the
  * JWT strategy, so it can never go stale in an issued token.
  *
- * Mode behavior (mirrors {@link SuspendedTenantGuard}):
- *  - **self-host** (default, open-core): unconditional pass-through. There is no
- *    cross-tenant control plane to protect — the single OWNER administers their
- *    own instance exactly as before. Self-host is never locked out.
- *  - **saas**: only users with `isSuperAdmin === true` may proceed; a tenant
- *    OWNER (or any other role) is rejected with 403.
+ * UniCore is always multi-tenant SaaS, so the boundary is always enforced: only
+ * users with `isSuperAdmin === true` may proceed; a tenant OWNER (or any other
+ * role) is rejected with 403.
  *
  * Apply with `@UseGuards(SuperAdminGuard)`; controller-bound guards run after the
  * global `JwtAuthGuard`, so `req.user` is already resolved.
@@ -30,10 +26,6 @@ import { isSaaS } from '../tenancy/tenancy.config';
 @Injectable()
 export class SuperAdminGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
-    // Self-host has no cross-tenant control plane — the single OWNER administers
-    // their own instance. Never lock self-host out.
-    if (!isSaaS()) return true;
-
     const req = context.switchToHttp().getRequest();
 
     // Internal service-to-service calls carry their own trust header.

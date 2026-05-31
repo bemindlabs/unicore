@@ -6,13 +6,12 @@ import { useSaas } from '@/contexts/saas-context';
 /**
  * Bemind super-admin control plane gate (M4/E5).
  *
- * Access is governed by the live `isSuperAdmin` signal, which is derived by
- * probing the backend `SuperAdminGuard` (see SaasContext) — the authoritative
- * source. A tenant OWNER who is not a platform super-admin is blocked; in
- * self-host (single-tenant, open-core) the whole control plane stays hidden.
+ * Access is governed by the live `isSuperAdmin` signal (see SaasContext); the
+ * backend `SuperAdminGuard` is the authoritative source. A tenant OWNER who is
+ * not a platform super-admin is blocked.
  */
 export default function PlatformAdminLayout({ children }: { children: ReactNode }) {
-  const { isSaas, isSuperAdmin, loading } = useSaas();
+  const { isSuperAdmin, loading } = useSaas();
 
   if (loading) {
     return (
@@ -22,8 +21,8 @@ export default function PlatformAdminLayout({ children }: { children: ReactNode 
     );
   }
 
-  // Self-host has no cross-tenant control plane; super-admins only in SaaS.
-  if (!isSaas || !isSuperAdmin) {
+  // Control plane is restricted to platform super-admins.
+  if (!isSuperAdmin) {
     return (
       <div className="flex items-center justify-center py-24">
         <p className="text-muted-foreground">

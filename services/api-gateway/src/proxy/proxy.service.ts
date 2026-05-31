@@ -74,7 +74,7 @@ export class ProxyService {
 
       // SaaS phase 4.3: same fail-closed treatment for the tenant context.
       // Always strip any client-supplied x-tenant-id, then re-inject only the
-      // trusted value resolved from the JWT (`tid`) / self-host default.
+      // trusted value resolved from the JWT (`tid`).
       delete forwardHeaders['x-tenant-id'];
 
       if (

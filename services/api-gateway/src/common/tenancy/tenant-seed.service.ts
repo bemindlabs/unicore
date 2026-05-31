@@ -1,15 +1,15 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { DEFAULT_TENANT_ID } from './tenancy.config';
+import { DEMO_TENANT_ID } from './tenancy.config';
 
 /**
- * Ensures the implicit default tenant exists and backfills existing users to it
- * (SaaS phase 4.1). Idempotent and safe to run on every boot in BOTH deployment
- * modes:
+ * Seeds a local/demo bootstrap tenant for development and demos, and backfills
+ * any tenant-less users into it (SaaS phase 4.1). Idempotent and safe to run on
+ * every boot.
  *
- *  - self-host : the default tenant is the only tenant; all users belong to it.
- *  - saas      : the default tenant is the backfill target for pre-tenancy rows;
- *                new tenants are created by signup, not here.
+ * This is demo/bootstrap data only — UniCore is multi-tenant SaaS, and real
+ * tenants are created by self-serve signup, not here. The demo tenant gives a
+ * fresh local install something to log into.
  *
  * Runs on module init. Failures are logged but never crash the gateway — on a
  * fresh deploy the table may not exist until `prisma db push` has run.
@@ -22,23 +22,23 @@ export class TenantSeedService implements OnModuleInit {
 
   async onModuleInit(): Promise<void> {
     try {
-      await this.ensureDefaultTenant();
+      await this.ensureDemoTenant();
     } catch (err) {
       this.logger.warn(
-        `Default-tenant seed skipped: ${(err as Error).message} (run "npx prisma db push" first)`,
+        `Demo-tenant seed skipped: ${(err as Error).message} (run "npx prisma db push" first)`,
       );
     }
   }
 
-  /** Create the default tenant if missing and backfill users with no tenant. */
-  async ensureDefaultTenant(): Promise<void> {
+  /** Create the demo tenant if missing and backfill users with no tenant. */
+  async ensureDemoTenant(): Promise<void> {
     await this.prisma.tenant.upsert({
-      where: { id: DEFAULT_TENANT_ID },
+      where: { id: DEMO_TENANT_ID },
       update: {},
       create: {
-        id: DEFAULT_TENANT_ID,
-        slug: 'default',
-        name: 'Default',
+        id: DEMO_TENANT_ID,
+        slug: 'demo',
+        name: 'Demo',
         status: 'ACTIVE',
         plan: 'STARTER',
       },
@@ -46,12 +46,12 @@ export class TenantSeedService implements OnModuleInit {
 
     const backfilled = await this.prisma.user.updateMany({
       where: { tenantId: null },
-      data: { tenantId: DEFAULT_TENANT_ID },
+      data: { tenantId: DEMO_TENANT_ID },
     });
 
     if (backfilled.count > 0) {
       this.logger.log(
-        `Backfilled ${backfilled.count} user(s) to the default tenant.`,
+        `Backfilled ${backfilled.count} user(s) to the demo tenant.`,
       );
     }
   }

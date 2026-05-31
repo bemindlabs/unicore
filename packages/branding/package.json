@@ -5,7 +5,7 @@
     "name": "Bemind Technology Co., Ltd.",
     "url": "https://bemind.tech"
   },
-  "license": "BUSL-1.1",
+  "license": "UNLICENSED",
   "private": true,
   "description": "White-label branding customization for UniCore Pro \u2014 config, CSS generator, Tailwind integration, React context",
   "main": "dist/index.js",

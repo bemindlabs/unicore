@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TenantSeedService } from './tenant-seed.service';
 import { PrismaService } from '../../prisma/prisma.service';
-import { DEFAULT_TENANT_ID } from './tenancy.config';
+import { DEMO_TENANT_ID } from './tenancy.config';
 
 const mockPrisma = {
   tenant: { upsert: jest.fn() },
@@ -22,21 +22,21 @@ describe('TenantSeedService', () => {
     jest.clearAllMocks();
   });
 
-  it('upserts the default tenant and backfills users with no tenant', async () => {
-    mockPrisma.tenant.upsert.mockResolvedValue({ id: DEFAULT_TENANT_ID });
+  it('upserts the demo tenant and backfills users with no tenant', async () => {
+    mockPrisma.tenant.upsert.mockResolvedValue({ id: DEMO_TENANT_ID });
     mockPrisma.user.updateMany.mockResolvedValue({ count: 3 });
 
-    await service.ensureDefaultTenant();
+    await service.ensureDemoTenant();
 
     expect(mockPrisma.tenant.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: DEFAULT_TENANT_ID },
-        create: expect.objectContaining({ id: DEFAULT_TENANT_ID, slug: 'default' }),
+        where: { id: DEMO_TENANT_ID },
+        create: expect.objectContaining({ id: DEMO_TENANT_ID, slug: 'demo' }),
       }),
     );
     expect(mockPrisma.user.updateMany).toHaveBeenCalledWith({
       where: { tenantId: null },
-      data: { tenantId: DEFAULT_TENANT_ID },
+      data: { tenantId: DEMO_TENANT_ID },
     });
   });
 

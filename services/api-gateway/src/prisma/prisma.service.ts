@@ -15,8 +15,8 @@ const scoped = new AsyncLocalStorage<true>();
  * with `SET LOCAL app.tenant_id`, so the Postgres RLS policies
  * (`scripts/apply-rls.sql`) restrict reads/writes to the current request's
  * tenant. The tenant id comes from the request-scoped store seeded by
- * TenantContextInterceptor. Self-host is a no-op pass-through (always the
- * default tenant).
+ * TenantContextInterceptor; bootstrap/unauthenticated paths fall back to the
+ * local/demo tenant.
  *
  * NOTE: the database role used by DATABASE_URL must be NOSUPERUSER /
  * NOBYPASSRLS, otherwise Postgres bypasses every policy. See

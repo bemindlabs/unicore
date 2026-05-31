@@ -3,12 +3,11 @@ import { AuthService } from './auth.service';
 
 /**
  * Focused tests for the SaaS signup path (M3/E3): signup creates a Tenant +
- * OWNER and starts the 30-day trial; it is rejected in self-host mode.
+ * OWNER and starts the 30-day trial. UniCore is always multi-tenant SaaS, so
+ * signup is always available.
  */
 describe('AuthService.signup', () => {
-  const original = process.env.DEPLOYMENT_MODE;
   afterEach(() => {
-    process.env.DEPLOYMENT_MODE = original;
     jest.clearAllMocks();
   });
 
@@ -51,8 +50,7 @@ describe('AuthService.signup', () => {
     businessName: 'Acme',
   };
 
-  it('creates a TRIALING Growth tenant + OWNER and returns tokens in saas mode', async () => {
-    process.env.DEPLOYMENT_MODE = 'saas';
+  it('creates a TRIALING Growth tenant + OWNER and returns tokens', async () => {
     const { service, prisma } = build();
     const result = await service.signup(dto as any);
 
@@ -80,14 +78,7 @@ describe('AuthService.signup', () => {
     expect(result.user.email).toBe('owner@acme.com');
   });
 
-  it('rejects signup in self-host mode', async () => {
-    process.env.DEPLOYMENT_MODE = 'self-host';
-    const { service } = build();
-    await expect(service.signup(dto as any)).rejects.toBeInstanceOf(ConflictException);
-  });
-
   it('rejects a duplicate email', async () => {
-    process.env.DEPLOYMENT_MODE = 'saas';
     const { service, prisma } = build();
     prisma.user.findUnique.mockResolvedValueOnce({ id: 'existing' } as any);
     await expect(service.signup(dto as any)).rejects.toBeInstanceOf(ConflictException);

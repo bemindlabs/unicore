@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { isSaaS, DEFAULT_TENANT_ID } from '../tenancy/tenancy.config';
+import { DEMO_TENANT_ID } from '../tenancy/tenancy.config';
 
 /**
  * Read-only safe methods — always allowed even when a tenant is suspended.
@@ -35,13 +35,12 @@ interface CacheEntry {
 const CACHE_TTL_MS = 15_000;
 
 /**
- * Enforces read-only access for SUSPENDED tenants (M3/E3), saas mode only.
+ * Enforces read-only access for SUSPENDED tenants (M3/E3).
  *
  * When a tenant's trial expires the scheduler flips it to status SUSPENDED.
  * This guard then rejects mutating requests (POST/PATCH/PUT/DELETE) with 403
- * while still permitting reads and the recovery/billing paths. Self-host is an
- * unconditional pass-through (no suspension concept). Reuses the existing
- * admin suspend semantics (tenant.status === 'SUSPENDED').
+ * while still permitting reads and the recovery/billing paths. Reuses the
+ * existing admin suspend semantics (tenant.status === 'SUSPENDED').
  */
 @Injectable()
 export class SuspendedTenantGuard implements CanActivate {
@@ -50,8 +49,6 @@ export class SuspendedTenantGuard implements CanActivate {
   constructor(private readonly prisma: PrismaService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    if (!isSaaS()) return true;
-
     const req = context.switchToHttp().getRequest();
     const method = (req.method || '').toUpperCase();
 
@@ -65,8 +62,8 @@ export class SuspendedTenantGuard implements CanActivate {
 
     const user = req.user as { tenantId?: string } | undefined;
     const tenantId = user?.tenantId;
-    // No resolved tenant or the default tenant → nothing to suspend.
-    if (!tenantId || tenantId === DEFAULT_TENANT_ID) return true;
+    // The local/demo bootstrap tenant is never suspended.
+    if (!tenantId || tenantId === DEMO_TENANT_ID) return true;
 
     if (await this.isSuspended(tenantId)) {
       throw new ForbiddenException(

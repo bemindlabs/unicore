@@ -2,9 +2,7 @@ import { TrialSchedulerService } from './trial-scheduler.service';
 import { TenantSubscriptionService } from './tenant-subscription.service';
 
 describe('TrialSchedulerService daily sweep', () => {
-  const original = process.env.DEPLOYMENT_MODE;
   afterEach(() => {
-    process.env.DEPLOYMENT_MODE = original;
     jest.clearAllMocks();
   });
 
@@ -51,18 +49,7 @@ describe('TrialSchedulerService daily sweep', () => {
     return { scheduler, prisma, email, updated };
   }
 
-  it('is a no-op in self-host mode', async () => {
-    process.env.DEPLOYMENT_MODE = 'self-host';
-    const { scheduler, email } = build([
-      { id: 't1', slug: 's', name: 'N', subscriptionStatus: 'TRIALING', status: 'ACTIVE', trialEndsAt: new Date('2020-01-01') },
-    ]);
-    const res = await scheduler.runDailySweep(new Date('2026-01-10T00:00:00Z'));
-    expect(res).toEqual({ reminded: 0, suspended: 0 });
-    expect(email.send).not.toHaveBeenCalled();
-  });
-
   it('emails reminders for milestone tenants and suspends expired ones', async () => {
-    process.env.DEPLOYMENT_MODE = 'saas';
     const now = new Date('2026-01-10T00:00:00Z');
     const { scheduler, email, prisma } = build([
       // T-7 reminder
@@ -84,7 +71,6 @@ describe('TrialSchedulerService daily sweep', () => {
   });
 
   it('is idempotent — a second run does not re-suspend already-suspended tenants', async () => {
-    process.env.DEPLOYMENT_MODE = 'saas';
     const now = new Date('2026-01-10T00:00:00Z');
     const { scheduler, prisma } = build([
       { id: 'exp', slug: 'exp', name: 'Exp', subscriptionStatus: 'TRIALING', status: 'ACTIVE', trialEndsAt: new Date('2026-01-05T00:00:00Z') },
