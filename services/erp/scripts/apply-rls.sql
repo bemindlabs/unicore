@@ -34,8 +34,42 @@
 --
 -- Then point the ERP service's DATABASE_URL at unicore_app, NOT the bootstrap
 -- superuser used for `prisma db push` / this script.
+--
+-- GAPS #4: the role provisioning below is now real idempotent DDL (was a
+-- comment). PrismaService verifies the live role is NOSUPERUSER/NOBYPASSRLS on
+-- startup and refuses to boot in production otherwise. The ERP scoped[] array
+-- already covers all 15 tenant-bearing tables; the v_* views inherit isolation
+-- from their (scoped) base tables, so they need no own policy.
 -- =============================================================================
 
+-- ── Provision the application role (NOSUPERUSER / NOBYPASSRLS) ───────────────
+-- Idempotent. Provide the password via: psql -v ... or set unicore.app_password.
+DO $$
+DECLARE
+  app_pw text := COALESCE(
+    current_setting('unicore.app_password', true),
+    'CHANGE_ME_unicore_app'
+  );
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'unicore_app') THEN
+    EXECUTE format(
+      'CREATE ROLE unicore_app LOGIN PASSWORD %L NOSUPERUSER NOBYPASSRLS INHERIT;',
+      app_pw
+    );
+  ELSE
+    EXECUTE 'ALTER ROLE unicore_app NOSUPERUSER NOBYPASSRLS;';
+  END IF;
+END $$;
+
+GRANT USAGE ON SCHEMA public TO unicore_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO unicore_app;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO unicore_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO unicore_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT USAGE, SELECT ON SEQUENCES TO unicore_app;
+
+-- ── Tenant-isolation policies ────────────────────────────────────────────────
 DO $$
 DECLARE
   t text;

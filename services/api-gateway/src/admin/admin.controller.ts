@@ -3,7 +3,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { TokenBlacklistService } from '../auth/token-blacklist.service';
 import { LicenseService } from '../license/license.service';
-import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { LicenseGuard } from '../license/guards/license.guard';
 import { ProFeatureRequired } from '../license/decorators/pro-feature.decorator';
@@ -11,7 +10,11 @@ import { SuperAdminGuard } from '../common/guards/super-admin.guard';
 import { TenantUsageService } from '../common/tenancy/tenant-usage.service';
 import * as os from 'os';
 
-@Roles('OWNER')
+// GAPS #2/L1: SuperAdminGuard (User.isSuperAdmin) is the control-plane boundary.
+// The former `@Roles('OWNER')` shadowed it — the global RolesGuard requires
+// user.role === 'OWNER', so a Bemind super-admin whose role in their active
+// tenant is not OWNER would be wrongly rejected. SuperAdminGuard is strictly
+// stronger, so the role check is dropped as redundant.
 @UseGuards(SuperAdminGuard)
 @Controller('api/v1/admin')
 export class AdminController {
