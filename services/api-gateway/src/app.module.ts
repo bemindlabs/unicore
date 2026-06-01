@@ -38,10 +38,11 @@ import { TenantModule } from './tenant/tenant.module';
 import { SuspendedTenantGuard } from './common/guards/suspended-tenant.guard';
 import { TenantRateLimitGuard } from './common/guards/tenant-rate-limit.guard';
 import { TenantUsageModule } from './common/tenancy/tenant-usage.module';
+import { RedisCounterModule } from './common/redis/redis-counter.module';
 import { ObservabilityModule } from './common/observability/observability.module';
 import { RequestContextMiddleware } from './common/observability/request-context.middleware';
 @Module({
-  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule, AdminModule, AuditModule, SettingsModule, TasksModule, WebhooksModule, ChatHistoryModule, NotificationsModule, ChannelsModule, ConversationsAnalyticsModule, ConversationsModule, ContactProfileModule, ConversationIntelligenceModule, PluginsModule, EmailModule, TenancyModule, TenantUsageModule, TenantModule, ObservabilityModule],
+  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule, AdminModule, AuditModule, SettingsModule, TasksModule, WebhooksModule, ChatHistoryModule, NotificationsModule, ChannelsModule, ConversationsAnalyticsModule, ConversationsModule, ContactProfileModule, ConversationIntelligenceModule, PluginsModule, EmailModule, TenancyModule, TenantUsageModule, RedisCounterModule, TenantModule, ObservabilityModule],
   controllers: [AppController],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },

@@ -3,6 +3,7 @@ import {
   ConflictException,
   UnauthorizedException,
   Logger,
+  Optional,
   OnModuleDestroy,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -25,6 +26,7 @@ import { DEMO_TENANT_ID } from '../common/tenancy/tenancy.config';
 import { SignupDto } from './dto/signup.dto';
 import { TRIAL_PLAN, computeTrialEnd, PLANS } from '../common/tenancy/plans.config';
 import { runWithTenant } from '../common/tenancy/tenant-store';
+import { RedisCounterService } from '../common/redis/redis-counter.service';
 
 const BCRYPT_ROUNDS = 12;
 const ACCESS_TOKEN_EXPIRY = '15m';
@@ -47,85 +49,78 @@ const VERIFY_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 const FORGOT_MAX_PER_WINDOW = 3;
 const FORGOT_WINDOW_MS = 15 * 60 * 1000;
 
-interface LoginAttemptRecord {
-  attempts: number;
-  firstAttemptAt: number;
-  lockedUntil: number | null;
-}
-
-interface RateRecord {
-  count: number;
-  windowStart: number;
-}
-
 @Injectable()
 export class AuthService implements OnModuleDestroy {
   private readonly logger = new Logger(AuthService.name);
-  private readonly loginAttempts = new Map<string, LoginAttemptRecord>();
-  /** Per-email forgot-password rate-limit buckets (in-memory, like loginAttempts). */
-  private readonly forgotAttempts = new Map<string, RateRecord>();
-  private readonly cleanupTimer: ReturnType<typeof setInterval>;
+
+  /** True when this service created its own counter (no DI-provided one). */
+  private readonly ownsCounter: boolean;
+
+  /**
+   * Brute-force lockout + forgot-password rate-limit state (debt #6). Backed by
+   * Redis (per-email / per-IP keys with TTL) so it holds across replicas and
+   * survives a deploy, with an in-memory fallback when Redis is down. When the
+   * DI container does not supply one (unit tests), we use a local instance that
+   * stays in its in-memory fallback mode (onModuleInit is never called), which
+   * reproduces the previous process-local behavior exactly.
+   */
+  private readonly counter: RedisCounterService;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly tokenBlacklist: TokenBlacklistService,
     private readonly email: EmailService,
+    @Optional() counter?: RedisCounterService,
   ) {
-    this.cleanupTimer = setInterval(() => this.purgeExpiredAttempts(), 10 * 60 * 1000);
+    this.ownsCounter = !counter;
+    this.counter = counter ?? new RedisCounterService();
   }
 
-  onModuleDestroy() {
-    clearInterval(this.cleanupTimer);
-  }
-
-  private purgeExpiredAttempts(): void {
-    const now = Date.now();
-    for (const [email, record] of this.loginAttempts) {
-      if (
-        now - record.firstAttemptAt > LOCKOUT_WINDOW_MS ||
-        (record.lockedUntil !== null && now > record.lockedUntil)
-      ) {
-        this.loginAttempts.delete(email);
-      }
-    }
-    for (const [email, record] of this.forgotAttempts) {
-      if (now - record.windowStart > FORGOT_WINDOW_MS) {
-        this.forgotAttempts.delete(email);
-      }
+  async onModuleDestroy(): Promise<void> {
+    // Only tear down a counter we created ourselves; a DI-provided one is owned
+    // (and destroyed) by the Nest container.
+    if (this.ownsCounter) {
+      await this.counter.onModuleDestroy();
     }
   }
 
-  private isLockedOut(email: string): boolean {
-    const record = this.loginAttempts.get(email);
-    if (!record) return false;
-    if (record.lockedUntil !== null && Date.now() > record.lockedUntil) {
-      this.loginAttempts.delete(email);
-      return false;
-    }
-    if (record.lockedUntil === null && Date.now() - record.firstAttemptAt > LOCKOUT_WINDOW_MS) {
-      this.loginAttempts.delete(email);
-      return false;
-    }
-    return record.lockedUntil !== null;
+  /** Redis key for the rolling failed-login counter (per email). */
+  private failKey(email: string): string {
+    return `login-fail:${email.toLowerCase()}`;
   }
 
-  private recordFailedAttempt(email: string): void {
-    const now = Date.now();
-    const record = this.loginAttempts.get(email);
-    if (!record || now - record.firstAttemptAt > LOCKOUT_WINDOW_MS) {
-      this.loginAttempts.set(email, { attempts: 1, firstAttemptAt: now, lockedUntil: null });
-      return;
+  /** Redis key for the lockout marker (per email). */
+  private lockKey(email: string): string {
+    return `login-lock:${email.toLowerCase()}`;
+  }
+
+  /** Redis key for the forgot-password rate-limit bucket (per email). */
+  private forgotKey(email: string): string {
+    return `forgot:${email.toLowerCase()}`;
+  }
+
+  private async isLockedOut(email: string): Promise<boolean> {
+    return this.counter.hasFlag(this.lockKey(email));
+  }
+
+  private async recordFailedAttempt(email: string): Promise<void> {
+    // Rolling window: the fail counter has a TTL == the lockout window, so it
+    // self-expires (no manual purge). Once it crosses the threshold we set a
+    // lockout marker with the same TTL.
+    const attempts = await this.counter.increment(this.failKey(email), LOCKOUT_WINDOW_MS);
+    if (attempts >= MAX_LOGIN_ATTEMPTS) {
+      await this.counter.setFlag(this.lockKey(email), LOCKOUT_WINDOW_MS);
+      this.logger.warn(`Account locked after ${attempts} failed attempts: ${email}`);
     }
-    record.attempts += 1;
-    if (record.attempts >= MAX_LOGIN_ATTEMPTS) {
-      record.lockedUntil = now + LOCKOUT_WINDOW_MS;
-      this.logger.warn(`Account locked after ${record.attempts} failed attempts: ${email}`);
-    }
+  }
+
+  private async clearFailedAttempts(email: string): Promise<void> {
+    await this.counter.del(this.failKey(email), this.lockKey(email));
   }
 
   async validateUser(email: string, password: string) {
-    if (this.isLockedOut(email)) {
+    if (await this.isLockedOut(email)) {
       this.logger.warn(`Login attempt on locked account: ${email}`);
       return null;
     }
@@ -133,7 +128,7 @@ export class AuthService implements OnModuleDestroy {
     const user = await this.prisma.user.findUnique({ where: { email } });
 
     if (!user) {
-      this.recordFailedAttempt(email);
+      await this.recordFailedAttempt(email);
       this.logger.warn(`Login failed (unknown email): ${email}`);
       return null;
     }
@@ -146,12 +141,12 @@ export class AuthService implements OnModuleDestroy {
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      this.recordFailedAttempt(email);
+      await this.recordFailedAttempt(email);
       this.logger.warn(`Login failed (bad password): ${email}`);
       return null;
     }
 
-    this.loginAttempts.delete(email);
+    await this.clearFailedAttempts(email);
     return {
       id: user.id,
       email: user.email,
@@ -498,15 +493,11 @@ export class AuthService implements OnModuleDestroy {
     this.logger.log(`Email-verification link issued for ${email}`);
   }
 
-  private isForgotRateLimited(email: string): boolean {
-    const now = Date.now();
-    const rec = this.forgotAttempts.get(email);
-    if (!rec || now - rec.windowStart > FORGOT_WINDOW_MS) {
-      this.forgotAttempts.set(email, { count: 1, windowStart: now });
-      return false;
-    }
-    rec.count += 1;
-    return rec.count > FORGOT_MAX_PER_WINDOW;
+  private async isForgotRateLimited(email: string): Promise<boolean> {
+    // Per-email fixed window with a TTL == the window, so Redis self-expires
+    // the bucket (no manual sweep). Returns true once the cap is exceeded.
+    const count = await this.counter.increment(this.forgotKey(email), FORGOT_WINDOW_MS);
+    return count > FORGOT_MAX_PER_WINDOW;
   }
 
   /**
@@ -519,7 +510,7 @@ export class AuthService implements OnModuleDestroy {
       message: 'If an account exists for that email, a reset link has been sent.',
     };
 
-    if (this.isForgotRateLimited(email)) {
+    if (await this.isForgotRateLimited(email)) {
       this.logger.warn(`forgot-password rate-limited: ${email}`);
       return genericOk;
     }

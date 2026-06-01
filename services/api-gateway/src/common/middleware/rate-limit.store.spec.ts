@@ -1,4 +1,5 @@
 import { RateLimitStore } from './rate-limit.store';
+import { RedisCounterService } from '../redis/redis-counter.service';
 
 describe('RateLimitStore', () => {
   let store: RateLimitStore;
@@ -80,6 +81,61 @@ describe('RateLimitStore', () => {
       store.increment('k1', 60_000);
       store.increment('k2', 60_000);
       expect(store.size).toBe(2);
+    });
+  });
+
+  // Debt #6 — Redis-backed counters so limits hold across replicas. The public
+  // increment() API stays synchronous; the store reconciles its local window
+  // up to the shared Redis total in the background.
+  describe('Redis-backed reconciliation', () => {
+    function connectedCounter(sharedStart: number) {
+      const shared = { n: sharedStart };
+      const counter = {
+        get usingRedis() {
+          return true;
+        },
+        increment: jest.fn(async () => {
+          shared.n += 1;
+          return shared.n;
+        }),
+      } as unknown as RedisCounterService;
+      return { counter, shared };
+    }
+
+    it('keeps a synchronous increment() contract', () => {
+      const { counter } = connectedCounter(0);
+      const s = new RateLimitStore(counter);
+      const result = s.increment('ip:1.2.3.4', 60_000);
+      expect(result.count).toBe(1); // returns immediately, no await
+    });
+
+    it('reconciles the local count UP to the shared Redis total', async () => {
+      // Another replica has already counted 9 hits for this key.
+      const { counter } = connectedCounter(9);
+      const s = new RateLimitStore(counter);
+
+      const first = s.increment('tenant-rl:t1', 60_000);
+      expect(first.count).toBe(1); // local view before reconciliation
+
+      // Let the fire-and-forget Redis mirror resolve.
+      await new Promise((r) => setImmediate(r));
+
+      // Next call sees the reconciled cross-replica total (10 + this hit).
+      const second = s.increment('tenant-rl:t1', 60_000);
+      expect(second.count).toBeGreaterThanOrEqual(10);
+      expect(counter.increment).toHaveBeenCalled();
+    });
+
+    it('does not call Redis when the counter is in fallback mode', () => {
+      const counter = {
+        get usingRedis() {
+          return false;
+        },
+        increment: jest.fn(),
+      } as unknown as RedisCounterService;
+      const s = new RateLimitStore(counter);
+      s.increment('ip:9.9.9.9', 60_000);
+      expect(counter.increment).not.toHaveBeenCalled();
     });
   });
 });
