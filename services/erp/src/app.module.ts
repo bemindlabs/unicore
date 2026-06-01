@@ -1,5 +1,6 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { TenantContextMiddleware } from './common/tenancy/tenant-context.middleware';
 import { HealthModule } from './health/health.module';
 import { KafkaModule } from './kafka/kafka.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -37,4 +38,15 @@ import { ErpEventInterceptor } from './kafka/erp-event.interceptor';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  /**
+   * Capture the trusted `x-tenant-id` header (forwarded by the api-gateway)
+   * into the request-scoped tenant context for every route, so PrismaService
+   * can pin `app.tenant_id` per transaction (SaaS phase 4.5).
+   */
+  configure(consumer: MiddlewareConsumer): void {
+    consumer
+      .apply(TenantContextMiddleware)
+      .forRoutes({ path: '*', method: RequestMethod.ALL });
+  }
+}

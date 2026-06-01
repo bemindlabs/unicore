@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { resolveTheme, isRetroDeskFamily } from '@/lib/theme/theme-registry';
+import { resolveTheme } from '@/lib/theme/theme-registry';
 
 type Theme = 'light' | 'dark';
 
@@ -10,7 +10,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 /** Derive the effective ThemeOption ID from legacy localStorage keys (backward compat). */
 function legacyThemeId(): string {
   const character = localStorage.getItem('character-theme');
-  if (character) return character; // e.g. 'retrodesk'
+  if (character) return character;
   const stored = localStorage.getItem('theme') as Theme | null;
   if (stored) return stored; // 'light' | 'dark'
   return 'default';
@@ -25,10 +25,7 @@ export function useTheme() {
     // Restore the selected theme, with backward compat for pre-UNC-113 localStorage keys
     const savedId = localStorage.getItem('selected-theme') ?? legacyThemeId();
     const { characterTheme: ct, colorScheme } = resolveTheme(savedId);
-
-    // Check for a saved character skin (e.g. "retrodesk-pepe")
-    const savedSkin = localStorage.getItem('character-skin');
-    const effectiveCt = (savedSkin && isRetroDeskFamily(savedSkin) && isRetroDeskFamily(ct)) ? savedSkin : ct;
+    const effectiveCt = ct;
 
     const effectiveDark =
       colorScheme === 'system'
@@ -126,7 +123,7 @@ export function useTheme() {
       }).catch(() => {/* silent — localStorage is the source of truth */});
     }
 
-    // Reload to fully apply theme (RetroDesk ↔ Default use different layouts)
+    // Reload to fully apply the theme
     window.location.reload();
   }, []);
 

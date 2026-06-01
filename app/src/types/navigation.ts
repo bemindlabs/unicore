@@ -3,7 +3,7 @@ import type { UserRole } from '@bemindlabs/unicore-shared-types';
 
 export interface NavItemLicense {
   /** Required license tier to access this item */
-  tier: 'pro' | 'enterprise';
+  tier: 'pro';
   /** Optional specific feature flag that must be enabled */
   feature?: string;
   /** Human-readable upgrade prompt, defaults to tier name */
@@ -24,4 +24,10 @@ export interface NavItem {
 export interface NavSection {
   label: string;
   items: NavItem[];
+  /**
+   * When true, this section is the Bemind super-admin control plane (M4/E5):
+   * visible only to platform super-admins. Gated on the live `isSuperAdmin`
+   * signal, not a license tier.
+   */
+  superAdmin?: boolean;
 }

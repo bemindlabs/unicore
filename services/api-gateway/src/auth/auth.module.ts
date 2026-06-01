@@ -12,6 +12,7 @@ import { RolesGuard } from './guards/roles.guard';
 import { TokenBlacklistService } from './token-blacklist.service';
 import { AuditModule } from '../audit/audit.module';
 import { LicenseModule } from '../license/license.module';
+import { EmailModule } from '../email/email.module';
 
 // Only register OAuth strategies when credentials are configured
 const oauthProviders: Provider[] = [];
@@ -31,6 +32,7 @@ if (process.env.GITHUB_CLIENT_ID) {
     }),
     AuditModule,
     LicenseModule,
+    EmailModule,
   ],
   controllers: [AuthController],
   providers: [

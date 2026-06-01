@@ -2,8 +2,11 @@ import {
   Controller,
   Post,
   Body,
+  Param,
   Headers,
   HttpCode,
+  HttpException,
+  HttpStatus,
   Logger,
   ForbiddenException,
   UseGuards,
@@ -12,6 +15,7 @@ import { ConfigService } from '@nestjs/config';
 import { Public } from '../auth/decorators/public.decorator';
 import { LicenseGuard } from '../license/guards/license.guard';
 import { ProFeatureRequired } from '../license/decorators/pro-feature.decorator';
+import { WebhookTenantResolver } from './webhook-tenant-resolver.service';
 
 /**
  * Minimal Telegram Update shape — only the fields we inspect.
@@ -47,20 +51,56 @@ interface TelegramUpdate {
 export class TelegramWebhookController {
   private readonly logger = new Logger(TelegramWebhookController.name);
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly tenantResolver: WebhookTenantResolver,
+  ) {}
 
   /**
-   * Receives Telegram Update objects sent by Telegram servers.
-   * Validates the secret token header if a webhook secret is configured.
-   * Currently logs the message; OpenClaw forwarding is a future step.
+   * Legacy path-less Telegram webhook.
+   *
+   * GAPS #1 (residual fix): a Telegram Update carries NO bot identifier, so a
+   * path-less webhook cannot be attributed to a tenant. Previously this fell back
+   * to the DEMO tenant — a silent cross-tenant leak. We now REJECT it with
+   * 410 Gone and instruct the caller to register the per-bot webhook URL
+   * `/webhooks/telegram/<botId>` (where `<botId>` is the integer prefix of the
+   * bot token), which is unambiguously resolvable. We never silently use DEMO.
    */
   @Public()
   @Post()
   @HttpCode(200)
   handleUpdate(
     @Body() update: TelegramUpdate,
+    @Headers('x-telegram-bot-api-secret-token') _secretToken?: string,
+  ): never {
+    this.logger.warn(
+      `Rejected path-less Telegram webhook (update_id=${update?.update_id ?? 'n/a'}): ` +
+        'cannot resolve owning tenant. Register the per-bot URL /webhooks/telegram/<botId>.',
+    );
+    throw new HttpException(
+      'Path-less Telegram webhook is not supported: it cannot be attributed to a tenant. ' +
+        'Register your bot webhook as /webhooks/telegram/<botId> (the integer prefix of the bot token).',
+      HttpStatus.GONE,
+    );
+  }
+
+  /** Per-bot webhook path — enables tenant resolution by bot id. */
+  @Public()
+  @Post(':botId')
+  @HttpCode(200)
+  handleUpdateForBot(
+    @Param('botId') botId: string,
+    @Body() update: TelegramUpdate,
     @Headers('x-telegram-bot-api-secret-token') secretToken?: string,
-  ): { ok: true } {
+  ): Promise<{ ok: true }> {
+    return this.process(update, botId, secretToken);
+  }
+
+  private async process(
+    update: TelegramUpdate,
+    botId: string,
+    secretToken?: string,
+  ): Promise<{ ok: true }> {
     // Validate webhook secret if configured (set via dashboard Settings → Channels)
     const expectedSecret = this.config.get<string>('TELEGRAM_WEBHOOK_SECRET');
     if (expectedSecret && secretToken !== expectedSecret) {
@@ -68,6 +108,20 @@ export class TelegramWebhookController {
         `Telegram webhook received with invalid secret token (update_id=${update.update_id})`,
       );
       throw new ForbiddenException('Invalid webhook secret token');
+    }
+
+    // GAPS #1: resolve the owning tenant from the per-bot webhook path's botId.
+    // If no tenant claims this bot id we REJECT rather than silently using DEMO.
+    const resolvedTenantId = await this.tenantResolver.resolveTelegram(botId);
+    if (!resolvedTenantId) {
+      this.logger.warn(
+        `No tenant owns Telegram botId=${botId} (update_id=${update.update_id}); rejecting.`,
+      );
+      throw new HttpException(
+        `No tenant is configured for Telegram bot "${botId}". ` +
+          'Configure the bot token under Settings → Channels for the owning tenant.',
+        HttpStatus.NOT_FOUND,
+      );
     }
 
     // Extract message details
@@ -103,6 +157,7 @@ export class TelegramWebhookController {
 
       const payload = {
         channel: 'telegram',
+        tenantId: resolvedTenantId,
         senderId,
         senderName,
         text,
@@ -111,7 +166,10 @@ export class TelegramWebhookController {
 
       fetch(openclawUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-tenant-id': resolvedTenantId,
+        },
         body: JSON.stringify(payload),
       }).catch((err: unknown) => {
         this.logger.error(

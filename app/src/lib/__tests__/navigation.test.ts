@@ -11,7 +11,6 @@ import type { NavItem } from '@/types/navigation';
 describe('isNavItemLocked', () => {
   const communityLicense = { isPro: false, edition: 'community', hasFeature: () => false };
   const proLicense = { isPro: true, edition: 'pro', hasFeature: () => true };
-  const enterpriseLicense = { isPro: true, edition: 'enterprise', hasFeature: () => true };
 
   it('returns false for items with no license requirement', () => {
     const item: NavItem = { label: 'Dashboard', icon: {} as any, href: '/', roles: ['*'] };
@@ -44,37 +43,15 @@ describe('isNavItemLocked', () => {
 
   it('returns false for pro items when specific feature is explicitly enabled', () => {
     const item: NavItem = {
-      label: 'Geek CLI',
+      label: 'Custom Agent Builder',
       icon: {} as any,
-      href: '/geek',
+      href: '/agents/builder',
       roles: [UserRole.Owner],
-      license: { tier: 'pro', feature: 'featGeekCli' },
+      license: { tier: 'pro', feature: 'customAgentBuilder' },
     };
-    // Community user with explicit featGeekCli add-on
-    const hasFeatureWithAddon = (f: string) => f === 'featGeekCli';
+    // Community user with explicit customAgentBuilder add-on
+    const hasFeatureWithAddon = (f: string) => f === 'customAgentBuilder';
     expect(isNavItemLocked(item, false, 'community', hasFeatureWithAddon)).toBe(false);
-  });
-
-  it('returns true for enterprise items on pro edition', () => {
-    const item: NavItem = {
-      label: 'Multi-Tenancy',
-      icon: {} as any,
-      href: '/platform-admin/tenants',
-      roles: [UserRole.Owner],
-      license: { tier: 'enterprise' },
-    };
-    expect(isNavItemLocked(item, true, 'pro', () => true)).toBe(true);
-  });
-
-  it('returns false for enterprise items on enterprise edition', () => {
-    const item: NavItem = {
-      label: 'Multi-Tenancy',
-      icon: {} as any,
-      href: '/platform-admin/tenants',
-      roles: [UserRole.Owner],
-      license: { tier: 'enterprise' },
-    };
-    expect(isNavItemLocked(item, true, 'enterprise', () => true)).toBe(false);
   });
 
   it('returns true for pro tier items without feature flag when not pro', () => {
@@ -113,12 +90,22 @@ describe('menuSections', () => {
     }
   });
 
-  it('marks Enterprise section items with license tier enterprise', () => {
-    const enterpriseSection = menuSections.find((s) => s.label === 'Enterprise');
-    expect(enterpriseSection).toBeDefined();
-    for (const item of enterpriseSection!.items) {
-      expect(item.license?.tier).toBe('enterprise');
+  it('exposes the Bemind Admin super-admin control plane (M4/E5)', () => {
+    // The old "Enterprise" license-gated section was relabeled to "Bemind Admin"
+    // and is now gated on the live super-admin signal, not a dead license tier.
+    expect(menuSections.find((s) => s.label === 'Enterprise')).toBeUndefined();
+    const adminSection = menuSections.find((s) => s.label === 'Bemind Admin');
+    expect(adminSection).toBeDefined();
+    expect(adminSection!.superAdmin).toBe(true);
+    // Control-plane items carry no enterprise license tier.
+    for (const item of adminSection!.items) {
+      expect(item.license).toBeUndefined();
     }
+    const labels = adminSection!.items.map((i) => i.label);
+    expect(labels).toContain('Tenants');
+    // Dropped enterprise-edition concerns.
+    expect(labels).not.toContain('Compliance');
+    expect(labels).not.toContain('HA Cluster');
   });
 
 });

@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { getTenantId } from '../common/tenancy/tenant-context';
 import { EventPublisherService } from '../kafka/event-publisher.service';
 import { ERP_TOPICS } from '../events/event-types';
 import { paginate } from '../common/dto/pagination.dto';
@@ -35,7 +36,8 @@ export class InvoicesService {
   async findAll(query: QueryInvoicesDto) {
     const { page = 1, limit = 20, search, contactId, orderId, status } = query;
     const skip = (page - 1) * limit;
-    const where: Record<string, unknown> = {};
+    // Belt-and-braces tenant filter (SaaS phase 4.5); RLS is the primary guard.
+    const where: Record<string, unknown> = { tenantId: getTenantId() };
     if (contactId) where.contactId = contactId;
     if (orderId) where.orderId = orderId;
     if (status) where.status = status as InvoiceStatus;
@@ -61,8 +63,10 @@ export class InvoicesService {
     const discount = dto.discount ?? 0;
     const total = subtotal + taxAmount - discount;
 
+    const tenantId = getTenantId();
     const invoice = await this.prisma.invoice.create({
       data: {
+        tenantId,
         invoiceNumber: await this.generateInvoiceNumber(),
         contactId: dto.contactId,
         orderId: dto.orderId,
@@ -76,7 +80,9 @@ export class InvoicesService {
         notes: dto.notes,
         createdById: '00000000-0000-0000-0000-000000000000',
         lines: {
+          // Child InvoiceLines inherit the request tenant for saas WITH CHECK.
           create: dto.lineItems.map(item => ({
+            tenantId,
             description: item.description,
             quantity: item.quantity,
             unitPrice: item.unitPrice,

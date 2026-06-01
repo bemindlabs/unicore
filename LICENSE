@@ -1,11 +1,25 @@
-Business Source License 1.1
+PROPRIETARY SOFTWARE LICENSE
 
-Licensor: BeMind Technology
-Licensed Work: UniCore
+UniCore
+Copyright (c) 2026 Bemind Technology Co., Ltd. All rights reserved.
 
-The Licensed Work is provided under the terms of the Business Source License 1.1.
+This software and its source code are the confidential and proprietary
+property of Bemind Technology Co., Ltd. ("Bemind"). UniCore is offered solely
+as a hosted, multi-tenant Software-as-a-Service operated by Bemind. It is NOT
+open source and is NOT available for self-hosting or redistribution.
 
-Community Edition: Free for personal and small-team use.
-Pro Edition: Requires a valid license key for advanced features.
+No license, right, or permission is granted to any person or entity to use,
+copy, modify, merge, publish, distribute, sublicense, sell, reverse engineer,
+or create derivative works of this software, in whole or in part, except under
+a separate written agreement executed with Bemind.
 
-Contact: license@unicore.dev
+Access to the hosted service is governed exclusively by the applicable Bemind
+Terms of Service and subscription agreement.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL
+BEMIND BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM,
+OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR ITS USE.
+
+Contact: legal@bemind.tech

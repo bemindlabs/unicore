@@ -10,16 +10,16 @@ interface Props {
 }
 
 const FEATURES = [
-  { label: 'AI Agents', community: '2 agents', pro: '50 agents', enterprise: 'Unlimited' },
-  { label: 'Messaging Channels', community: false, pro: true, enterprise: true },
-  { label: 'Single Sign-On (SSO)', community: false, pro: true, enterprise: true },
-  { label: 'Role-Based Access (RBAC)', community: '3 roles', pro: '20 roles', enterprise: 'Unlimited' },
-  { label: 'Custom Domains', community: false, pro: true, enterprise: true },
-  { label: 'White-Label Branding', community: false, pro: true, enterprise: true },
-  { label: 'Advanced Workflows', community: false, pro: true, enterprise: true },
-  { label: 'Audit Logs', community: false, pro: true, enterprise: true },
-  { label: 'Multi-Tenancy', community: false, pro: false, enterprise: true },
-  { label: 'SLA Support', community: 'Community', pro: 'Priority Email', enterprise: 'Dedicated CSM' },
+  { label: 'AI Agents', community: '2 agents', pro: '50 agents' },
+  { label: 'Messaging Channels', community: false, pro: true },
+  { label: 'Single Sign-On (SSO)', community: false, pro: true },
+  { label: 'Role-Based Access (RBAC)', community: '3 roles', pro: '20 roles' },
+  { label: 'Custom Domains', community: false, pro: true },
+  { label: 'White-Label Branding', community: false, pro: true },
+  { label: 'Advanced Workflows', community: false, pro: true },
+  { label: 'Audit Logs', community: false, pro: true },
+  { label: 'Multi-Tenancy', community: false, pro: true },
+  { label: 'SLA Support', community: 'Community', pro: 'Priority Email' },
 ] as const;
 
 type CellValue = boolean | string;
@@ -71,12 +71,9 @@ export function FeatureComparisonModal({ open, onOpenChange }: Props) {
             <thead>
               <tr>
                 <th className="w-1/2 pb-3 text-left font-medium text-muted-foreground">Feature</th>
-                <th className="w-[16.67%] pb-3 text-center font-semibold">Community</th>
-                <th className="w-[16.67%] pb-3 text-center font-semibold text-zinc-600 dark:text-zinc-400">
+                <th className="w-1/4 pb-3 text-center font-semibold">Community</th>
+                <th className="w-1/4 pb-3 text-center font-semibold text-zinc-600 dark:text-zinc-400">
                   Pro
-                </th>
-                <th className="w-[16.67%] pb-3 text-center font-semibold text-purple-600 dark:text-purple-400">
-                  Enterprise
                 </th>
               </tr>
             </thead>
@@ -89,9 +86,6 @@ export function FeatureComparisonModal({ open, onOpenChange }: Props) {
                   </td>
                   <td className="py-2.5 text-center">
                     <Cell value={f.pro} />
-                  </td>
-                  <td className="py-2.5 text-center">
-                    <Cell value={f.enterprise} />
                   </td>
                 </tr>
               ))}

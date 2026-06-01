@@ -1,6 +1,11 @@
 {
   "name": "@bemindlabs/unicore-api-gateway",
   "version": "0.0.2",
+  "author": {
+    "name": "Bemind Technology Co., Ltd.",
+    "url": "https://bemind.tech"
+  },
+  "license": "UNLICENSED",
   "private": true,
   "scripts": {
     "build": "nest build",
@@ -31,6 +36,7 @@
     "@nestjs/websockets": "^10.4.22",
     "@prisma/client": "^6.0.0",
     "@scalar/nestjs-api-reference": "^1.1.4",
+    "@sentry/node": "^8.55.2",
     "bcryptjs": "^3.0.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
@@ -43,7 +49,9 @@
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
+    "prom-client": "^15.1.3",
     "reflect-metadata": "^0.2.0",
+    "resend": "^6.9.4",
     "rxjs": "^7.8.0",
     "socket.io": "^4.8.1",
     "ws": "^8.19.0"
@@ -66,6 +74,9 @@
     "@types/passport-local": "^1.0.0",
     "@types/supertest": "^6.0.0",
     "@types/ws": "^8.5.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.0",
     "jest": "^29.7.0",
     "prisma": "^6.0.0",
     "source-map-support": "^0.5.21",

@@ -11,7 +11,7 @@ COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
 COPY packages/config/package.json ./packages/config/
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY services/erp/package.json ./services/erp/
-RUN pnpm install --frozen-lockfile --filter @unicore/erp...
+RUN pnpm install --frozen-lockfile --filter @bemindlabs/unicore-erp...
 
 FROM base AS build
 COPY packages/config ./packages/config

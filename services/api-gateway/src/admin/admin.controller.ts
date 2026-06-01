@@ -3,13 +3,19 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { TokenBlacklistService } from '../auth/token-blacklist.service';
 import { LicenseService } from '../license/license.service';
-import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { LicenseGuard } from '../license/guards/license.guard';
 import { ProFeatureRequired } from '../license/decorators/pro-feature.decorator';
+import { SuperAdminGuard } from '../common/guards/super-admin.guard';
+import { TenantUsageService } from '../common/tenancy/tenant-usage.service';
 import * as os from 'os';
 
-@Roles('OWNER')
+// GAPS #2/L1: SuperAdminGuard (User.isSuperAdmin) is the control-plane boundary.
+// The former `@Roles('OWNER')` shadowed it — the global RolesGuard requires
+// user.role === 'OWNER', so a Bemind super-admin whose role in their active
+// tenant is not OWNER would be wrongly rejected. SuperAdminGuard is strictly
+// stronger, so the role check is dropped as redundant.
+@UseGuards(SuperAdminGuard)
 @Controller('api/v1/admin')
 export class AdminController {
   private readonly logger = new Logger(AdminController.name);
@@ -20,6 +26,7 @@ export class AdminController {
     private readonly auditService: AuditService,
     private readonly tokenBlacklist: TokenBlacklistService,
     private readonly licenseService: LicenseService,
+    private readonly tenantUsage: TenantUsageService,
   ) {}
 
   /**
@@ -60,8 +67,6 @@ export class AdminController {
       customDomains,
       advancedAnalytics,
       prioritySupport,
-      dlcChat,
-      geekMode,
     ] = await Promise.all([
       this.licenseService.hasFeature('sso'),
       this.licenseService.hasFeature('whiteLabelBranding'),
@@ -70,8 +75,6 @@ export class AdminController {
       this.licenseService.hasFeature('allChannels'),
       this.licenseService.hasFeature('auditLogs'),
       this.licenseService.hasFeature('prioritySupport'),
-      this.licenseService.hasFeature('aiDlc'),
-      this.licenseService.hasFeature('geekCli'),
     ]);
 
     const featureToggles: Record<string, boolean> = {
@@ -82,8 +85,6 @@ export class AdminController {
       customDomains,
       advancedAnalytics,
       prioritySupport,
-      dlcChat,
-      geekMode,
     };
 
     // Quotas and plan config: prefer persisted DB values, then env vars, then
@@ -128,51 +129,84 @@ export class AdminController {
   }
 
   /**
-   * Builds the tenant record for the single-tenant instance from live database
-   * and license data. Reads the earliest OWNER user for the ownerEmail, derives
-   * the plan from the validated license edition, and reads the custom domain
-   * from environment variables.
+   * Maps a real `Tenant` row to the control-plane tenant DTO consumed by the
+   * platform-admin frontend. Enriches the row with the live member count and the
+   * earliest OWNER's email (both real queries). Per-tenant `storageUsageBytes`
+   * is reported as 0. `apiCallsThisMonth` is the LIVE per-tenant monthly usage
+   * counter (FU-04), read from TenantUsageService (Redis-backed, the same
+   * counter TenantRateLimitGuard enforces the plan cap against). The DTO shape
+   * is preserved for the frontend.
    */
-  private async buildTenantRecord(userCount: number): Promise<Record<string, any>> {
-    const owner = await this.prisma.user.findFirst({
-      where: { role: 'OWNER' },
-      select: { email: true },
-      orderBy: { createdAt: 'asc' },
-    });
-
-    const licenseStatus = await this.licenseService.getLicenseStatus();
-    const editionToPlan: Record<string, string> = {
-      enterprise: 'ENTERPRISE',
-      pro: 'GROWTH',
-      community: 'STARTER',
-    };
-    const plan = editionToPlan[licenseStatus.edition] ?? 'STARTER';
-
-    // Derive display domain from APP_URL env var; fall back to 'localhost'
-    const appUrl = process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? '';
-    const customDomain =
-      appUrl.replace(/^https?:\/\//, '').replace(/\/$/, '') || 'localhost';
-
-    const tenantName =
-      process.env.TENANT_NAME ?? process.env.APP_NAME ?? 'UniCore Instance';
-    const tenantSlug =
-      process.env.TENANT_SLUG ?? customDomain.split('.')[0] ?? 'default';
+  private async mapTenantRecord(tenant: {
+    id: string;
+    slug: string;
+    name: string;
+    status: string;
+    plan: string;
+    customDomain: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }): Promise<Record<string, any>> {
+    const [memberCount, owner, apiCallsThisMonth] = await Promise.all([
+      this.prisma.user.count({ where: { tenantId: tenant.id } }),
+      this.prisma.user.findFirst({
+        where: { tenantId: tenant.id, role: 'OWNER' },
+        select: { email: true },
+        orderBy: { createdAt: 'asc' },
+      }),
+      this.tenantUsage.current(tenant.id),
+    ]);
 
     return {
-      id: `tenant-${tenantSlug}`,
-      name: tenantName,
-      slug: tenantSlug,
-      displayName: tenantName,
-      customDomain,
-      plan,
-      status: 'ACTIVE' as const,
-      ownerEmail: owner?.email ?? 'admin@unicore.dev',
-      memberCount: userCount,
+      id: tenant.id,
+      name: tenant.name,
+      slug: tenant.slug,
+      displayName: tenant.name,
+      customDomain: tenant.customDomain ?? null,
+      plan: tenant.plan,
+      status: tenant.status,
+      ownerEmail: owner?.email ?? null,
+      memberCount,
       storageUsageBytes: 0,
-      apiCallsThisMonth: 0,
-      createdAt: this.startedAt.toISOString(),
-      updatedAt: new Date().toISOString(),
+      apiCallsThisMonth,
+      createdAt: tenant.createdAt.toISOString(),
+      updatedAt: tenant.updatedAt.toISOString(),
     };
+  }
+
+  /**
+   * Revokes every active session for a user: blacklists each session's JWT jti
+   * (so the access token can't be replayed before it expires) and deletes the
+   * Session rows so a re-login is forced. Reused by the role-change path and by
+   * the control-plane per-tenant user suspend. Returns the number of sessions
+   * that were invalidated. Best-effort: a malformed token never aborts the loop.
+   */
+  private async revokeUserSessions(userId: string): Promise<number> {
+    const sessions = await this.prisma.session.findMany({
+      where: { userId },
+      select: { id: true, token: true },
+    });
+
+    for (const session of sessions) {
+      try {
+        const tokenParts = session.token.split('.');
+        if (tokenParts.length === 3) {
+          const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64url').toString());
+          if (payload.jti) {
+            const now = Math.floor(Date.now() / 1000);
+            const ttl = payload.exp ? payload.exp - now : 900;
+            if (ttl > 0) {
+              await this.tokenBlacklist.blacklist(payload.jti, ttl);
+            }
+          }
+        }
+      } catch {
+        // Token may be malformed; continue to delete the session anyway
+      }
+    }
+
+    await this.prisma.session.deleteMany({ where: { userId } });
+    return sessions.length;
   }
 
   @Get('users')
@@ -216,34 +250,9 @@ export class AdminController {
     });
 
     // Invalidate all active sessions for this user so their JWT (with old role) cannot be reused
-    const sessions = await this.prisma.session.findMany({
-      where: { userId },
-      select: { id: true, token: true },
-    });
+    const invalidated = await this.revokeUserSessions(userId);
 
-    for (const session of sessions) {
-      try {
-        // Decode the access token to extract jti for blacklisting
-        const tokenParts = session.token.split('.');
-        if (tokenParts.length === 3) {
-          const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64url').toString());
-          if (payload.jti) {
-            const now = Math.floor(Date.now() / 1000);
-            const ttl = payload.exp ? payload.exp - now : 900;
-            if (ttl > 0) {
-              await this.tokenBlacklist.blacklist(payload.jti, ttl);
-            }
-          }
-        }
-      } catch {
-        // Token may be malformed; continue to delete the session anyway
-      }
-    }
-
-    // Delete all sessions to force re-login
-    await this.prisma.session.deleteMany({ where: { userId } });
-
-    this.logger.log(`Role updated for user ${user.email}: ${newRole} — ${sessions.length} session(s) invalidated`);
+    this.logger.log(`Role updated for user ${user.email}: ${newRole} — ${invalidated} session(s) invalidated`);
 
     return user;
   }
@@ -382,27 +391,41 @@ export class AdminController {
 
   @Get('overview')
   async overview() {
-    const [userCount, sessionCount] = await Promise.all([
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    const [
+      userCount,
+      sessionCount,
+      newUsersThisWeek,
+      tenantCount,
+      activeTenantCount,
+      suspendedTenantCount,
+      trialingTenantCount,
+      newTenantsThisWeek,
+    ] = await Promise.all([
       this.prisma.user.count(),
       this.prisma.session.count(),
+      this.prisma.user.count({ where: { createdAt: { gte: oneWeekAgo } } }),
+      this.prisma.tenant.count(),
+      this.prisma.tenant.count({ where: { status: 'ACTIVE' } }),
+      this.prisma.tenant.count({ where: { status: 'SUSPENDED' } }),
+      this.prisma.tenant.count({ where: { subscriptionStatus: 'TRIALING' } }),
+      this.prisma.tenant.count({ where: { createdAt: { gte: oneWeekAgo } } }),
     ]);
-
-    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const newUsersThisWeek = await this.prisma.user.count({
-      where: { createdAt: { gte: oneWeekAgo } },
-    });
 
     const uptimeSeconds = Math.floor((Date.now() - this.startedAt.getTime()) / 1000);
 
     return {
-      tenantCount: 1,
-      activeTenantCount: 1,
+      tenantCount,
+      activeTenantCount,
+      suspendedTenantCount,
+      trialingTenantCount,
       totalUserCount: userCount,
       activeSessionCount: sessionCount,
       storageUsageBytes: 0,
       apiCallsToday: 0,
       apiCallsThisMonth: 0,
-      newTenantsThisWeek: 0,
+      newTenantsThisWeek,
       newUsersThisWeek,
       uptime: uptimeSeconds,
       generatedAt: new Date().toISOString(),
@@ -413,56 +436,390 @@ export class AdminController {
 
   @Get('tenants')
   async listTenants(@Query() query: any) {
-    const page = query.page ? parseInt(query.page) : 1;
-    const limit = query.limit ? parseInt(query.limit) : 20;
+    const page = Math.max(1, query.page ? parseInt(query.page, 10) : 1);
+    const limit = Math.min(100, Math.max(1, query.limit ? parseInt(query.limit, 10) : 20));
 
-    const userCount = await this.prisma.user.count();
-    const tenant = await this.buildTenantRecord(userCount);
-
-    const search = query.search?.toLowerCase();
-    const statusFilter = query.status;
-    const planFilter = query.plan;
-
-    let items = [tenant];
-
-    if (search && !tenant.name.toLowerCase().includes(search) && !tenant.slug.includes(search)) {
-      items = [];
-    }
-    if (statusFilter && tenant.status !== statusFilter) {
-      items = [];
-    }
-    if (planFilter && tenant.plan !== planFilter) {
-      items = [];
+    const where: Record<string, any> = {};
+    if (query.status) where.status = query.status;
+    if (query.plan) where.plan = query.plan;
+    if (query.search) {
+      const search = String(query.search);
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { slug: { contains: search, mode: 'insensitive' } },
+      ];
     }
 
-    return {
-      items,
-      total: items.length,
-      page,
-      limit,
-    };
+    const [rows, total] = await Promise.all([
+      this.prisma.tenant.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.tenant.count({ where }),
+    ]);
+
+    const items = await Promise.all(rows.map((t) => this.mapTenantRecord(t)));
+
+    return { items, total, page, limit };
+  }
+
+  @Get('tenants/:id')
+  async getTenant(@Param('id') id: string) {
+    const tenant = await this.prisma.tenant.findUnique({ where: { id } });
+    if (!tenant) {
+      throw new NotFoundException('Tenant not found');
+    }
+    return this.mapTenantRecord(tenant);
   }
 
   @Post('tenants/:id/suspend')
-  async suspendTenant(@Param('id') id: string, @Body() body: any) {
-    this.logger.warn(`Tenant suspend requested: ${id} — reason: ${body?.reason ?? 'none'}`);
-    const userCount = await this.prisma.user.count();
-    const tenant = await this.buildTenantRecord(userCount);
+  async suspendTenant(@Param('id') id: string, @Body() body: any, @CurrentUser() currentUser: any) {
+    const existing = await this.prisma.tenant.findUnique({ where: { id }, select: { id: true } });
+    if (!existing) {
+      throw new NotFoundException('Tenant not found');
+    }
+
+    const tenant = await this.prisma.tenant.update({
+      where: { id },
+      data: { status: 'SUSPENDED' },
+    });
+
+    this.logger.warn(`Tenant suspended: ${id} — reason: ${body?.reason ?? 'none'}`);
+    await this.auditService.log({
+      userId: currentUser?.id,
+      userEmail: currentUser?.email,
+      action: 'suspend',
+      resource: 'tenants',
+      resourceId: id,
+      detail: `Suspended tenant ${tenant.slug} — reason: ${body?.reason ?? 'Administrative action'}`,
+    });
+
+    const mapped = await this.mapTenantRecord(tenant);
     return {
-      ...tenant,
-      id,
-      status: 'SUSPENDED',
-      suspendedAt: new Date().toISOString(),
+      ...mapped,
+      status: tenant.status,
+      suspendedAt: tenant.updatedAt.toISOString(),
       suspendReason: body?.reason ?? 'Administrative action',
     };
   }
 
   @Post('tenants/:id/activate')
-  async activateTenant(@Param('id') id: string) {
-    this.logger.log(`Tenant activate requested: ${id}`);
-    const userCount = await this.prisma.user.count();
-    const tenant = await this.buildTenantRecord(userCount);
-    return { ...tenant, id, status: 'ACTIVE' };
+  async activateTenant(@Param('id') id: string, @CurrentUser() currentUser: any) {
+    const existing = await this.prisma.tenant.findUnique({ where: { id }, select: { id: true } });
+    if (!existing) {
+      throw new NotFoundException('Tenant not found');
+    }
+
+    const tenant = await this.prisma.tenant.update({
+      where: { id },
+      data: { status: 'ACTIVE' },
+    });
+
+    this.logger.log(`Tenant activated: ${id}`);
+    await this.auditService.log({
+      userId: currentUser?.id,
+      userEmail: currentUser?.email,
+      action: 'activate',
+      resource: 'tenants',
+      resourceId: id,
+      detail: `Activated tenant ${tenant.slug}`,
+    });
+
+    return this.mapTenantRecord(tenant);
+  }
+
+  // ─── Per-tenant monitor + user controls (Phase 5 / W1b) ─────────────────
+  // Bemind ops (SuperAdminGuard) monitor and control individual solopreneur
+  // tenants: drill into one tenant's users/memberships, usage, subscription
+  // and recent activity (MONITOR); change a tenant's plan and suspend / remove
+  // a specific user within a tenant (CONTROL). All entitlement/usage numbers
+  // are reused from the existing TenantUsageService — no duplicated logic.
+
+  /** Allowed tenant plans (kept in sync with the platform-settings defaults). */
+  private static readonly PLANS = ['STARTER', 'GROWTH', 'ENTERPRISE', 'CUSTOM'];
+
+  /**
+   * Returns the per-tenant users list with each user's role in THIS tenant
+   * (from Membership when present, falling back to the user's global role for
+   * legacy rows that pre-date memberships). Used by the monitor detail view and
+   * exposed directly so the platform-admin UI can page a single tenant's users.
+   */
+  @Get('tenants/:id/users')
+  async listTenantUsers(@Param('id') tenantId: string) {
+    const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId }, select: { id: true } });
+    if (!tenant) {
+      throw new NotFoundException('Tenant not found');
+    }
+
+    // Memberships are the source of truth for "who belongs to this tenant".
+    const memberships = await this.prisma.membership.findMany({
+      where: { tenantId },
+      select: {
+        role: true,
+        createdAt: true,
+        user: { select: { id: true, email: true, name: true, role: true, isSuperAdmin: true, createdAt: true } },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const items = memberships.map((m) => ({
+      id: m.user.id,
+      email: m.user.email,
+      name: m.user.name,
+      // Role WITHIN this tenant (Membership.role), not the global User.role.
+      role: m.role,
+      isSuperAdmin: m.user.isSuperAdmin,
+      memberSince: m.createdAt.toISOString(),
+      userCreatedAt: m.user.createdAt.toISOString(),
+    }));
+
+    return { tenantId, items, total: items.length };
+  }
+
+  /**
+   * Full per-tenant monitor view for the control plane: the tenant DTO enriched
+   * with subscription/trial status, live usage (apiCallsThisMonth + storage),
+   * the tenant's users/memberships, and recent activity from the AuditLog
+   * (scoped to this tenant). One Bemind-ops endpoint to see everything about a
+   * solopreneur business.
+   */
+  @Get('tenants/:id/detail')
+  async tenantDetail(@Param('id') id: string) {
+    const tenant = await this.prisma.tenant.findUnique({ where: { id } });
+    if (!tenant) {
+      throw new NotFoundException('Tenant not found');
+    }
+
+    const [mapped, users, recentActivity, apiCallsThisMonth] = await Promise.all([
+      this.mapTenantRecord(tenant),
+      this.listTenantUsers(id),
+      // Recent activity for this tenant from the shared AuditLog (best-effort —
+      // an unavailable table must not break the monitor view).
+      this.prisma.auditLog
+        .findMany({
+          where: { tenantId: id },
+          orderBy: { timestamp: 'desc' },
+          take: 20,
+          select: {
+            id: true,
+            timestamp: true,
+            userId: true,
+            userEmail: true,
+            action: true,
+            resource: true,
+            resourceId: true,
+            detail: true,
+            success: true,
+          },
+        })
+        .catch(() => [] as any[]),
+      this.tenantUsage.current(tenant.id),
+    ]);
+
+    return {
+      ...mapped,
+      subscription: {
+        status: tenant.subscriptionStatus,
+        plan: tenant.plan,
+        trialEndsAt: tenant.trialEndsAt ? tenant.trialEndsAt.toISOString() : null,
+        stripeCustomerId: tenant.stripeCustomerId ?? null,
+        stripeSubscriptionId: tenant.stripeSubscriptionId ?? null,
+      },
+      usage: {
+        apiCallsThisMonth,
+        storageUsageBytes: mapped.storageUsageBytes,
+      },
+      users: users.items,
+      memberCount: users.total,
+      recentActivity: recentActivity.map((a: any) => ({
+        ...a,
+        timestamp: a.timestamp instanceof Date ? a.timestamp.toISOString() : a.timestamp,
+      })),
+    };
+  }
+
+  /**
+   * CONTROL: change a tenant's plan. Validates against the allowed plan set,
+   * persists Tenant.plan, and audit-logs the change. Entitlement effects flow
+   * from the plan field — this endpoint does not duplicate that mapping.
+   */
+  @Patch('tenants/:id/plan')
+  async updateTenantPlan(@Param('id') id: string, @Body() body: any, @CurrentUser() currentUser: any) {
+    const newPlan = String(body?.plan ?? '').toUpperCase();
+    if (!AdminController.PLANS.includes(newPlan)) {
+      throw new BadRequestException(`Invalid plan. Must be one of: ${AdminController.PLANS.join(', ')}`);
+    }
+
+    const existing = await this.prisma.tenant.findUnique({ where: { id }, select: { id: true, plan: true } });
+    if (!existing) {
+      throw new NotFoundException('Tenant not found');
+    }
+
+    const tenant = await this.prisma.tenant.update({
+      where: { id },
+      data: { plan: newPlan },
+    });
+
+    this.logger.log(`Tenant plan changed: ${id} — ${existing.plan} → ${newPlan}`);
+    await this.auditService.log({
+      userId: currentUser?.id,
+      userEmail: currentUser?.email,
+      action: 'update',
+      resource: 'tenants',
+      resourceId: id,
+      detail: `Changed plan ${existing.plan} → ${newPlan} for tenant ${tenant.slug}`,
+    });
+
+    return this.mapTenantRecord(tenant);
+  }
+
+  /**
+   * Resolves a (tenant, user) pair to the user and their membership, or throws
+   * NotFound. Guards every per-tenant user control so a Bemind op can only act
+   * on a user who actually belongs to the target tenant.
+   */
+  private async getTenantMember(tenantId: string, userId: string) {
+    const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId }, select: { id: true, slug: true } });
+    if (!tenant) {
+      throw new NotFoundException('Tenant not found');
+    }
+    const membership = await this.prisma.membership.findUnique({
+      where: { userId_tenantId: { userId, tenantId } },
+      select: { id: true, role: true, user: { select: { id: true, email: true, isSuperAdmin: true } } },
+    });
+    if (!membership) {
+      throw new NotFoundException('User is not a member of this tenant');
+    }
+    return { tenant, membership };
+  }
+
+  /**
+   * CONTROL: suspend a specific user within a tenant. Bemind ops never touch a
+   * fellow super-admin this way. Suspension PERSISTS the membership status
+   * (Membership.status = SUSPENDED) so re-login can't restore access, and ALSO
+   * revokes every active session (blacklisting the JWT jti so the access token
+   * can't be replayed). Suspension scopes to THIS tenant only — the user's
+   * other businesses are unaffected. Enforced at switch + jwt.strategy.
+   */
+  @Post('tenants/:id/users/:userId/suspend')
+  async suspendTenantUser(
+    @Param('id') tenantId: string,
+    @Param('userId') userId: string,
+    @Body() body: any,
+    @CurrentUser() currentUser: any,
+  ) {
+    const { tenant, membership } = await this.getTenantMember(tenantId, userId);
+    if (membership.user.isSuperAdmin) {
+      throw new BadRequestException('Cannot suspend a platform super-admin');
+    }
+
+    // Persist the suspended state so it survives re-login (session revocation
+    // alone is not enough — a fresh token would otherwise restore access).
+    await this.prisma.membership.update({
+      where: { userId_tenantId: { userId, tenantId } },
+      data: { status: 'SUSPENDED' },
+    });
+
+    const invalidated = await this.revokeUserSessions(userId);
+
+    this.logger.warn(`User suspended in tenant ${tenant.slug}: ${membership.user.email} — ${invalidated} session(s) revoked`);
+    await this.auditService.log({
+      userId: currentUser?.id,
+      userEmail: currentUser?.email,
+      action: 'suspend',
+      resource: 'users',
+      resourceId: userId,
+      detail: `Suspended user ${membership.user.email} in tenant ${tenant.slug} — reason: ${body?.reason ?? 'Administrative action'}`,
+    });
+
+    return {
+      tenantId,
+      userId,
+      email: membership.user.email,
+      status: 'SUSPENDED',
+      sessionsRevoked: invalidated,
+      suspendReason: body?.reason ?? 'Administrative action',
+    };
+  }
+
+  /**
+   * CONTROL: re-activate a previously-suspended user within a tenant. Clears the
+   * persisted Membership.status back to ACTIVE; the user regains access to this
+   * tenant by logging in again (or switching into it).
+   */
+  @Post('tenants/:id/users/:userId/activate')
+  async activateTenantUser(
+    @Param('id') tenantId: string,
+    @Param('userId') userId: string,
+    @CurrentUser() currentUser: any,
+  ) {
+    const { tenant, membership } = await this.getTenantMember(tenantId, userId);
+
+    await this.prisma.membership.update({
+      where: { userId_tenantId: { userId, tenantId } },
+      data: { status: 'ACTIVE' },
+    });
+
+    this.logger.log(`User reactivated in tenant ${tenant.slug}: ${membership.user.email}`);
+    await this.auditService.log({
+      userId: currentUser?.id,
+      userEmail: currentUser?.email,
+      action: 'activate',
+      resource: 'users',
+      resourceId: userId,
+      detail: `Reactivated user ${membership.user.email} in tenant ${tenant.slug}`,
+    });
+
+    return { tenantId, userId, email: membership.user.email, status: 'ACTIVE' };
+  }
+
+  /**
+   * CONTROL: remove a user from a tenant by deleting their Membership (their
+   * access to OTHER tenants is untouched). Refuses to remove the tenant's last
+   * OWNER membership so a solopreneur business can't be orphaned, and revokes
+   * the removed user's sessions. The User row itself is not deleted.
+   */
+  @Delete('tenants/:id/users/:userId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeTenantUser(
+    @Param('id') tenantId: string,
+    @Param('userId') userId: string,
+    @CurrentUser() currentUser: any,
+  ) {
+    const { tenant, membership } = await this.getTenantMember(tenantId, userId);
+
+    // Don't orphan a business: refuse to remove the last OWNER membership.
+    if (membership.role === 'OWNER') {
+      const ownerCount = await this.prisma.membership.count({ where: { tenantId, role: 'OWNER' } });
+      if (ownerCount <= 1) {
+        throw new BadRequestException('Cannot remove the last owner of a tenant');
+      }
+    }
+
+    await this.prisma.membership.delete({
+      where: { userId_tenantId: { userId, tenantId } },
+    });
+
+    // If the removed tenant was the user's active context, clear it so the next
+    // request re-resolves a tenant they still belong to.
+    await this.prisma.user.updateMany({
+      where: { id: userId, activeTenantId: tenantId },
+      data: { activeTenantId: null },
+    });
+
+    await this.revokeUserSessions(userId);
+
+    this.logger.warn(`User ${membership.user.email} removed from tenant ${tenant.slug} by ${currentUser?.email}`);
+    await this.auditService.log({
+      userId: currentUser?.id,
+      userEmail: currentUser?.email,
+      action: 'delete',
+      resource: 'memberships',
+      resourceId: membership.id,
+      detail: `Removed user ${membership.user.email} from tenant ${tenant.slug}`,
+    });
   }
 
   // ─── Platform Settings ──────────────────────────────────────────────────

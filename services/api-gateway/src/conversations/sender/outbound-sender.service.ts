@@ -73,7 +73,14 @@ export class OutboundSenderService {
     });
 
     // ── 2. Deliver via channel adapter ──────────────────────────────────────
-    const sendResult = await this.channels.send(channelType, dto.conversationId, dto.text, dto.recipientId);
+    // GAPS #1: deliver using the CONVERSATION's tenant's channel credentials.
+    const sendResult = await this.channels.send(
+      channelType,
+      dto.conversationId,
+      dto.text,
+      dto.recipientId,
+      (conversation as { tenantId?: string }).tenantId,
+    );
 
     // ── 3. Update message with delivery result ───────────────────────────────
     const now = new Date();

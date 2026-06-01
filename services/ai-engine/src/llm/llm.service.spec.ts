@@ -62,6 +62,7 @@ describe('LlmService', () => {
         messages,
         undefined,
         undefined,
+        undefined,
       );
       expect(mockTokenTracking.track).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -81,6 +82,7 @@ describe('LlmService', () => {
         messages,
         {},
         'anthropic',
+        undefined,
       );
     });
 
@@ -90,6 +92,18 @@ describe('LlmService', () => {
 
       expect(mockTokenTracking.track).toHaveBeenCalledWith(
         expect.objectContaining({ tenantId: 't1', agentId: 'a1' }),
+      );
+    });
+
+    it('forwards the calling tenantId to the factory for per-tenant key resolution', async () => {
+      const messages = [{ role: 'user' as const, content: 'Hi' }];
+      await service.complete(messages, {}, { tenantId: 'tenant-xyz' });
+
+      expect(mockFactory.completeWithFailover).toHaveBeenCalledWith(
+        messages,
+        {},
+        undefined,
+        'tenant-xyz',
       );
     });
 
@@ -164,6 +178,7 @@ describe('LlmService', () => {
 
       expect(mockFactory.embedWithFailover).toHaveBeenCalledWith(
         'hello world',
+        undefined,
         undefined,
         undefined,
       );

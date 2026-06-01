@@ -3,19 +3,30 @@ import {
   ConflictException,
   UnauthorizedException,
   Logger,
+  Optional,
   OnModuleDestroy,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { jwtVerify } from 'jose';
 import * as bcrypt from 'bcryptjs';
-import { randomBytes } from 'crypto';
+import { randomBytes, createHash } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { TokenBlacklistService } from './token-blacklist.service';
+import { EmailService } from '../email/email.service';
+import {
+  verifyEmailHtml,
+  resetPasswordEmailHtml,
+} from '../email/templates/auth-emails';
 import { RegisterDto } from './dto/register.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { AuthResponseDto } from './dto/auth-response.dto';
+import { DEMO_TENANT_ID } from '../common/tenancy/tenancy.config';
+import { SignupDto } from './dto/signup.dto';
+import { TRIAL_PLAN, computeTrialEnd, PLANS } from '../common/tenancy/plans.config';
+import { runWithTenant } from '../common/tenancy/tenant-store';
+import { RedisCounterService } from '../common/redis/redis-counter.service';
 
 const BCRYPT_ROUNDS = 12;
 const ACCESS_TOKEN_EXPIRY = '15m';
@@ -23,72 +34,93 @@ const REFRESH_TOKEN_EXPIRY_DAYS = 7;
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_WINDOW_MS = 15 * 60 * 1000;
 
-interface LoginAttemptRecord {
-  attempts: number;
-  firstAttemptAt: number;
-  lockedUntil: number | null;
-}
+/** Token types for the VerificationToken table. */
+const TOKEN_TYPE = {
+  PASSWORD_RESET: 'PASSWORD_RESET',
+  EMAIL_VERIFY: 'EMAIL_VERIFY',
+} as const;
+
+/** Password-reset token lifetime. */
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1h
+/** Email-verification token lifetime. */
+const VERIFY_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24h
+
+/** forgot-password per-email rate limit (anti-abuse, anti-enumeration timing). */
+const FORGOT_MAX_PER_WINDOW = 3;
+const FORGOT_WINDOW_MS = 15 * 60 * 1000;
 
 @Injectable()
 export class AuthService implements OnModuleDestroy {
   private readonly logger = new Logger(AuthService.name);
-  private readonly loginAttempts = new Map<string, LoginAttemptRecord>();
-  private readonly cleanupTimer: ReturnType<typeof setInterval>;
+
+  /** True when this service created its own counter (no DI-provided one). */
+  private readonly ownsCounter: boolean;
+
+  /**
+   * Brute-force lockout + forgot-password rate-limit state (debt #6). Backed by
+   * Redis (per-email / per-IP keys with TTL) so it holds across replicas and
+   * survives a deploy, with an in-memory fallback when Redis is down. When the
+   * DI container does not supply one (unit tests), we use a local instance that
+   * stays in its in-memory fallback mode (onModuleInit is never called), which
+   * reproduces the previous process-local behavior exactly.
+   */
+  private readonly counter: RedisCounterService;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly tokenBlacklist: TokenBlacklistService,
+    private readonly email: EmailService,
+    @Optional() counter?: RedisCounterService,
   ) {
-    this.cleanupTimer = setInterval(() => this.purgeExpiredAttempts(), 10 * 60 * 1000);
+    this.ownsCounter = !counter;
+    this.counter = counter ?? new RedisCounterService();
   }
 
-  onModuleDestroy() {
-    clearInterval(this.cleanupTimer);
-  }
-
-  private purgeExpiredAttempts(): void {
-    const now = Date.now();
-    for (const [email, record] of this.loginAttempts) {
-      if (
-        now - record.firstAttemptAt > LOCKOUT_WINDOW_MS ||
-        (record.lockedUntil !== null && now > record.lockedUntil)
-      ) {
-        this.loginAttempts.delete(email);
-      }
+  async onModuleDestroy(): Promise<void> {
+    // Only tear down a counter we created ourselves; a DI-provided one is owned
+    // (and destroyed) by the Nest container.
+    if (this.ownsCounter) {
+      await this.counter.onModuleDestroy();
     }
   }
 
-  private isLockedOut(email: string): boolean {
-    const record = this.loginAttempts.get(email);
-    if (!record) return false;
-    if (record.lockedUntil !== null && Date.now() > record.lockedUntil) {
-      this.loginAttempts.delete(email);
-      return false;
-    }
-    if (record.lockedUntil === null && Date.now() - record.firstAttemptAt > LOCKOUT_WINDOW_MS) {
-      this.loginAttempts.delete(email);
-      return false;
-    }
-    return record.lockedUntil !== null;
+  /** Redis key for the rolling failed-login counter (per email). */
+  private failKey(email: string): string {
+    return `login-fail:${email.toLowerCase()}`;
   }
 
-  private recordFailedAttempt(email: string): void {
-    const now = Date.now();
-    const record = this.loginAttempts.get(email);
-    if (!record || now - record.firstAttemptAt > LOCKOUT_WINDOW_MS) {
-      this.loginAttempts.set(email, { attempts: 1, firstAttemptAt: now, lockedUntil: null });
-      return;
+  /** Redis key for the lockout marker (per email). */
+  private lockKey(email: string): string {
+    return `login-lock:${email.toLowerCase()}`;
+  }
+
+  /** Redis key for the forgot-password rate-limit bucket (per email). */
+  private forgotKey(email: string): string {
+    return `forgot:${email.toLowerCase()}`;
+  }
+
+  private async isLockedOut(email: string): Promise<boolean> {
+    return this.counter.hasFlag(this.lockKey(email));
+  }
+
+  private async recordFailedAttempt(email: string): Promise<void> {
+    // Rolling window: the fail counter has a TTL == the lockout window, so it
+    // self-expires (no manual purge). Once it crosses the threshold we set a
+    // lockout marker with the same TTL.
+    const attempts = await this.counter.increment(this.failKey(email), LOCKOUT_WINDOW_MS);
+    if (attempts >= MAX_LOGIN_ATTEMPTS) {
+      await this.counter.setFlag(this.lockKey(email), LOCKOUT_WINDOW_MS);
+      this.logger.warn(`Account locked after ${attempts} failed attempts: ${email}`);
     }
-    record.attempts += 1;
-    if (record.attempts >= MAX_LOGIN_ATTEMPTS) {
-      record.lockedUntil = now + LOCKOUT_WINDOW_MS;
-      this.logger.warn(`Account locked after ${record.attempts} failed attempts: ${email}`);
-    }
+  }
+
+  private async clearFailedAttempts(email: string): Promise<void> {
+    await this.counter.del(this.failKey(email), this.lockKey(email));
   }
 
   async validateUser(email: string, password: string) {
-    if (this.isLockedOut(email)) {
+    if (await this.isLockedOut(email)) {
       this.logger.warn(`Login attempt on locked account: ${email}`);
       return null;
     }
@@ -96,7 +128,7 @@ export class AuthService implements OnModuleDestroy {
     const user = await this.prisma.user.findUnique({ where: { email } });
 
     if (!user) {
-      this.recordFailedAttempt(email);
+      await this.recordFailedAttempt(email);
       this.logger.warn(`Login failed (unknown email): ${email}`);
       return null;
     }
@@ -109,13 +141,20 @@ export class AuthService implements OnModuleDestroy {
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      this.recordFailedAttempt(email);
+      await this.recordFailedAttempt(email);
       this.logger.warn(`Login failed (bad password): ${email}`);
       return null;
     }
 
-    this.loginAttempts.delete(email);
-    return { id: user.id, email: user.email, name: user.name, role: user.role };
+    await this.clearFailedAttempts(email);
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      tenantId: user.tenantId,
+      activeTenantId: user.activeTenantId,
+    };
   }
 
   // ---------------------------------------------------------------------------
@@ -132,7 +171,14 @@ export class AuthService implements OnModuleDestroy {
       accessToken: string;
       refreshToken: string | null;
     },
-  ): Promise<{ id: string; email: string; name: string; role: string }> {
+  ): Promise<{
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    tenantId?: string | null;
+    activeTenantId?: string | null;
+  }> {
     // 1. Check if this OAuth account is already linked
     const existing = await this.prisma.oAuthAccount.findUnique({
       where: {
@@ -142,7 +188,16 @@ export class AuthService implements OnModuleDestroy {
         },
       },
       include: {
-        user: { select: { id: true, email: true, name: true, role: true } },
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            role: true,
+            tenantId: true,
+            activeTenantId: true,
+          },
+        },
       },
     });
 
@@ -159,14 +214,26 @@ export class AuthService implements OnModuleDestroy {
         },
       });
       this.logger.log(`OAuth login (${provider}): ${existing.user.email}`);
-      return existing.user;
+      // Idempotent backfill: a legacy OAuth user with no membership gets one (and
+      // a sensible activeTenantId) without creating a duplicate tenant.
+      const { tenantId, activeTenantId } = await this.ensureMembershipForExistingUser(
+        existing.user.id,
+      );
+      return { ...existing.user, tenantId, activeTenantId };
     }
 
     // 2. If we have an email, check if a user with that email exists
     if (profile.email) {
       const userByEmail = await this.prisma.user.findUnique({
         where: { email: profile.email },
-        select: { id: true, email: true, name: true, role: true },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          tenantId: true,
+          activeTenantId: true,
+        },
       });
 
       if (userByEmail) {
@@ -175,17 +242,24 @@ export class AuthService implements OnModuleDestroy {
         this.logger.log(
           `OAuth account linked (${provider}): ${userByEmail.email}`,
         );
-        return userByEmail;
+        // Ensure the existing user has a membership + active tenant (idempotent).
+        const { tenantId, activeTenantId } = await this.ensureMembershipForExistingUser(
+          userByEmail.id,
+        );
+        return { ...userByEmail, tenantId, activeTenantId };
       }
     }
 
-    // 3. Create a new user + OAuth account (no password)
+    // 3. Create a new user + OAuth account (no password). Like signup, a brand-new
+    // OAuth user also gets their OWN Tenant + OWNER Membership + activeTenantId via
+    // the shared onboarding primitive (Phase 5) — no more zero-membership users.
     const email = profile.email || `${provider}-${profile.providerAccountId}@oauth.local`;
-    const user = await this.prisma.user.create({
-      data: {
-        email,
-        name: profile.name,
-        password: null,
+    const { user } = await this.createUserOwnedTenant({
+      email,
+      name: profile.name,
+      password: null,
+      logContext: `New OAuth user (${provider})`,
+      extraUserData: {
         oauthAccounts: {
           create: {
             provider,
@@ -198,10 +272,8 @@ export class AuthService implements OnModuleDestroy {
           },
         },
       },
-      select: { id: true, email: true, name: true, role: true },
     });
 
-    this.logger.log(`New OAuth user registered (${provider}): ${user.email}`);
     return user;
   }
 
@@ -242,18 +314,426 @@ export class AuthService implements OnModuleDestroy {
 
     const hashedPassword = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
 
-    const user = await this.prisma.user.create({
-      data: {
-        email: dto.email,
-        name: dto.name,
-        password: hashedPassword,
-      },
-      select: { id: true, email: true, name: true, role: true },
+    // Public registration creates a real multi-tenant onboarding shape, mirroring
+    // self-serve signup: the user's OWN Tenant + OWNER Membership + activeTenantId
+    // via the shared onboarding primitive (Phase 5). No more zero-membership users
+    // landing in the demo tenant. (Bootstrap/admin provisioning uses
+    // provisionAdmin, which is a separate, secret-gated path.)
+    const { user } = await this.createUserOwnedTenant({
+      email: dto.email,
+      name: dto.name,
+      password: hashedPassword,
+      logContext: 'User registered',
     });
 
-    this.logger.log(`User registered: ${user.email}`);
+    return this.createTokens(user);
+  }
+
+  /**
+   * Self-serve SaaS signup (M3/E3). Creates a Tenant (status ACTIVE,
+   * subscriptionStatus TRIALING, plan = full-Growth trial) + an OWNER User, sets
+   * the 30-day trial window, then logs the user in. NO Stripe call here — the
+   * card is collected later at conversion.
+   */
+  async signup(dto: SignupDto): Promise<AuthResponseDto> {
+    const existing = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+    if (existing) {
+      throw new ConflictException('Email already registered');
+    }
+
+    const hashedPassword = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
+
+    // Signup creates the user + first tenant + OWNER Membership and selects that
+    // tenant as the active one (Phase 5 / W1a). The tenant+OWNER+membership work
+    // is shared with the OAuth-new-user and /auth/register paths so all three
+    // produce an identical onboarding shape.
+    const { user } = await this.createUserOwnedTenant({
+      email: dto.email,
+      name: dto.name,
+      password: hashedPassword,
+      businessName: dto.businessName,
+      logContext: 'SaaS signup',
+    });
 
     return this.createTokens(user);
+  }
+
+  /**
+   * Shared onboarding primitive (Phase 5): create a brand-new user's OWN Tenant
+   * (ACTIVE, TRIALING, full-Growth trial defaults), an OWNER Membership, and set
+   * the user's home + active tenant to it. Reused by signup, OAuth new-user, and
+   * /auth/register so the three paths never drift. The caller decides whether the
+   * user has a password (null for OAuth) and may supply the OAuth account create.
+   */
+  private async createUserOwnedTenant(params: {
+    email: string;
+    name: string;
+    password: string | null;
+    businessName?: string | null;
+    /** Extra nested writes merged into the user.create data (e.g. oauthAccounts). */
+    extraUserData?: Record<string, unknown>;
+    logContext: string;
+  }): Promise<{
+    user: {
+      id: string;
+      email: string;
+      name: string;
+      role: string;
+      tenantId: string | null;
+      activeTenantId: string | null;
+    };
+    tenant: { id: string; slug: string };
+  }> {
+    const businessName = (params.businessName || params.name).trim();
+    const slug = await this.generateUniqueSlug(businessName || params.email.split('@')[0]);
+    const trialEndsAt = computeTrialEnd();
+
+    // Trial gives the full Growth feature set; the tenant.plan reflects that.
+    const tenant = await this.prisma.tenant.create({
+      data: {
+        slug,
+        name: businessName || params.email.split('@')[0],
+        status: 'ACTIVE',
+        plan: PLANS[TRIAL_PLAN].key,
+        subscriptionStatus: 'TRIALING',
+        trialEndsAt,
+      },
+    });
+
+    // User/Tenant are NOT RLS-scoped, so user.create runs without a tenant
+    // context. The OWNER Membership, however, is FORCE RLS with a
+    // WITH CHECK (tenantId = current_setting('app.tenant_id')); it MUST be
+    // inserted in the NEW tenant's context, so we create it separately inside
+    // runWithTenant(tenant.id) rather than as a nested write under the demo
+    // (no-context) tenant — otherwise Postgres rejects it (42501).
+    const user = await this.prisma.user.create({
+      data: {
+        email: params.email,
+        name: params.name,
+        password: params.password,
+        role: 'OWNER',
+        tenantId: tenant.id,
+        activeTenantId: tenant.id,
+        ...(params.extraUserData ?? {}),
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        tenantId: true,
+        activeTenantId: true,
+      },
+    });
+
+    await runWithTenant(tenant.id, () =>
+      this.prisma.membership.create({
+        data: { userId: user.id, tenantId: tenant.id, role: 'OWNER' },
+      }),
+    );
+
+    this.logger.log(
+      `${params.logContext}: tenant ${tenant.id} (${slug}) + OWNER ${user.email}, trial ends ${trialEndsAt.toISOString()}`,
+    );
+
+    // GAPS #8: send an email-verification link for password-based signups
+    // (register/signup). OAuth/platform-linked users (no password) are
+    // considered email-verified by their provider, so skip.
+    if (params.password) {
+      await this.sendVerificationEmail(user.id, user.email, user.name);
+    }
+
+    return { user, tenant };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Email verification + password reset (GAPS #8)
+  // Tokens are single-use, time-limited, and stored HASHED (sha256). The raw
+  // token only ever travels in the emailed link. Identity-level / tenant-agnostic.
+  // ---------------------------------------------------------------------------
+
+  private hashToken(raw: string): string {
+    return createHash('sha256').update(raw).digest('hex');
+  }
+
+  /** Mint a raw token + persist its hash with a type + expiry. Returns the raw. */
+  private async createVerificationToken(
+    userId: string,
+    type: string,
+    ttlMs: number,
+  ): Promise<string> {
+    const raw = randomBytes(32).toString('hex');
+    await this.prisma.verificationToken.create({
+      data: {
+        userId,
+        tokenHash: this.hashToken(raw),
+        type,
+        expiresAt: new Date(Date.now() + ttlMs),
+      },
+    });
+    return raw;
+  }
+
+  /** Create + email an email-verification link. Best-effort (logged no-op without Resend). */
+  async sendVerificationEmail(userId: string, email: string, name: string): Promise<void> {
+    const raw = await this.createVerificationToken(
+      userId,
+      TOKEN_TYPE.EMAIL_VERIFY,
+      VERIFY_TOKEN_TTL_MS,
+    );
+    const base = process.env.DASHBOARD_URL || 'http://localhost:3000';
+    const verifyUrl = `${base}/auth/verify-email?token=${raw}`;
+    await this.email.send({
+      to: email,
+      subject: 'Verify your UniCore email',
+      html: verifyEmailHtml({ name, verifyUrl }),
+    });
+    this.logger.log(`Email-verification link issued for ${email}`);
+  }
+
+  private async isForgotRateLimited(email: string): Promise<boolean> {
+    // Per-email fixed window with a TTL == the window, so Redis self-expires
+    // the bucket (no manual sweep). Returns true once the cap is exceeded.
+    const count = await this.counter.increment(this.forgotKey(email), FORGOT_WINDOW_MS);
+    return count > FORGOT_MAX_PER_WINDOW;
+  }
+
+  /**
+   * GAPS #8 — forgot-password. ALWAYS resolves the same way (no user
+   * enumeration): if the email maps to a password account, mint a reset token
+   * and email it; otherwise do nothing. Rate-limited per email.
+   */
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const genericOk = {
+      message: 'If an account exists for that email, a reset link has been sent.',
+    };
+
+    if (await this.isForgotRateLimited(email)) {
+      this.logger.warn(`forgot-password rate-limited: ${email}`);
+      return genericOk;
+    }
+
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    // Only password accounts can reset a password; OAuth-only accounts have none.
+    if (!user || !user.password) {
+      return genericOk;
+    }
+
+    const raw = await this.createVerificationToken(
+      user.id,
+      TOKEN_TYPE.PASSWORD_RESET,
+      RESET_TOKEN_TTL_MS,
+    );
+    const base = process.env.DASHBOARD_URL || 'http://localhost:3000';
+    const resetUrl = `${base}/auth/reset-password?token=${raw}`;
+    await this.email.send({
+      to: user.email,
+      subject: 'Reset your UniCore password',
+      html: resetPasswordEmailHtml({
+        name: user.name,
+        resetUrl,
+        expiresMinutes: Math.round(RESET_TOKEN_TTL_MS / 60000),
+      }),
+    });
+    this.logger.log(`Password-reset link issued for ${user.email}`);
+    return genericOk;
+  }
+
+  /**
+   * Look up a still-valid (unconsumed, unexpired) token of a given type by its
+   * raw value. Returns the token row or null.
+   */
+  private async findValidToken(raw: string, type: string) {
+    const token = await this.prisma.verificationToken.findUnique({
+      where: { tokenHash: this.hashToken(raw) },
+    });
+    if (!token || token.type !== type) return null;
+    if (token.consumedAt) return null;
+    if (token.expiresAt < new Date()) return null;
+    return token;
+  }
+
+  /**
+   * GAPS #8 — reset-password. Validates the single-use token, sets the new
+   * password, marks the token consumed, and revokes ALL of the user's sessions
+   * (force re-login everywhere).
+   */
+  async resetPassword(raw: string, newPassword: string): Promise<{ message: string }> {
+    const token = await this.findValidToken(raw, TOKEN_TYPE.PASSWORD_RESET);
+    if (!token) {
+      throw new UnauthorizedException('Invalid or expired reset token');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: token.userId },
+        data: { password: hashedPassword },
+      }),
+      // Single-use: consume this token AND any other outstanding reset tokens.
+      this.prisma.verificationToken.updateMany({
+        where: {
+          userId: token.userId,
+          type: TOKEN_TYPE.PASSWORD_RESET,
+          consumedAt: null,
+        },
+        data: { consumedAt: new Date() },
+      }),
+      // Revoke every session so a leaked/compromised token can't keep access.
+      this.prisma.session.deleteMany({ where: { userId: token.userId } }),
+    ]);
+
+    this.logger.log(`Password reset for user ${token.userId}; sessions revoked`);
+    return { message: 'Password has been reset. Please log in again.' };
+  }
+
+  /**
+   * GAPS #8 — verify-email. Validates the single-use token and stamps
+   * User.emailVerified. Idempotent-ish: a consumed/expired token is rejected.
+   */
+  async verifyEmail(raw: string): Promise<{ message: string }> {
+    const token = await this.findValidToken(raw, TOKEN_TYPE.EMAIL_VERIFY);
+    if (!token) {
+      throw new UnauthorizedException('Invalid or expired verification token');
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: token.userId },
+        data: { emailVerified: new Date() },
+      }),
+      this.prisma.verificationToken.update({
+        where: { id: token.id },
+        data: { consumedAt: new Date() },
+      }),
+    ]);
+
+    this.logger.log(`Email verified for user ${token.userId}`);
+    return { message: 'Email verified.' };
+  }
+
+  /**
+   * Idempotent membership backfill for an EXISTING user (Phase 5): ensure the
+   * user belongs to at least one tenant and has a sensible activeTenantId, WITHOUT
+   * creating a second tenant. Used by the cross-domain token-exchange where the
+   * user typically already exists. Returns the (possibly updated) tenant ids.
+   *
+   *  - If the user already has memberships, only fix activeTenantId if unset.
+   *  - Else if the user has a home tenantId, create the missing OWNER Membership
+   *    to that tenant and select it as active.
+   *  - Else (no tenant at all) provision a fresh owned tenant via the shared
+   *    primitive — but on the existing user, never a duplicate user.
+   */
+  private async ensureMembershipForExistingUser(userId: string): Promise<{
+    tenantId: string | null;
+    activeTenantId: string | null;
+  }> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        tenantId: true,
+        activeTenantId: true,
+        memberships: { select: { tenantId: true } },
+      },
+    });
+    if (!user) {
+      return { tenantId: null, activeTenantId: null };
+    }
+
+    // Already a member of something: just make sure an active tenant is selected.
+    if (user.memberships.length > 0) {
+      const active =
+        user.activeTenantId && user.memberships.some((m) => m.tenantId === user.activeTenantId)
+          ? user.activeTenantId
+          : (user.memberships[0].tenantId ?? null);
+      if (active && active !== user.activeTenantId) {
+        await this.prisma.user.update({
+          where: { id: user.id },
+          data: { activeTenantId: active, tenantId: user.tenantId ?? active },
+        });
+      }
+      return { tenantId: user.tenantId ?? active, activeTenantId: active };
+    }
+
+    // No memberships but a home tenant exists: backfill the OWNER membership there.
+    if (user.tenantId) {
+      // memberships is FORCE RLS with WITH CHECK (tenantId = app.tenant_id):
+      // the upsert (read for conflict + insert) must run in the membership's own
+      // tenant context, not the caller's. (user.tenantId is non-null here.)
+      const homeTenantId = user.tenantId;
+      await runWithTenant(homeTenantId, () =>
+        this.prisma.membership.upsert({
+          where: { userId_tenantId: { userId: user.id, tenantId: homeTenantId } },
+          create: { userId: user.id, tenantId: homeTenantId, role: 'OWNER' },
+          update: {},
+        }),
+      );
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { activeTenantId: user.tenantId },
+      });
+      this.logger.log(
+        `Backfilled OWNER membership for ${user.email} → tenant ${user.tenantId}`,
+      );
+      return { tenantId: user.tenantId, activeTenantId: user.tenantId };
+    }
+
+    // No tenant at all: provision a fresh owned tenant for this existing user.
+    const businessName = user.name || user.email.split('@')[0];
+    const slug = await this.generateUniqueSlug(businessName);
+    const tenant = await this.prisma.tenant.create({
+      data: {
+        slug,
+        name: businessName,
+        status: 'ACTIVE',
+        plan: PLANS[TRIAL_PLAN].key,
+        subscriptionStatus: 'TRIALING',
+        trialEndsAt: computeTrialEnd(),
+      },
+    });
+    // Membership insert must run in the NEW tenant's context (RLS WITH CHECK).
+    await runWithTenant(tenant.id, () =>
+      this.prisma.membership.create({
+        data: { userId: user.id, tenantId: tenant.id, role: 'OWNER' },
+      }),
+    );
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { tenantId: tenant.id, activeTenantId: tenant.id, role: 'OWNER' },
+    });
+    this.logger.log(
+      `Provisioned owned tenant ${tenant.id} (${slug}) + OWNER membership for existing user ${user.email}`,
+    );
+    return { tenantId: tenant.id, activeTenantId: tenant.id };
+  }
+
+  /** Build a URL-safe, unique tenant slug from a business name. */
+  private async generateUniqueSlug(base: string): Promise<string> {
+    const root =
+      base
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 40) || 'tenant';
+
+    let candidate = root;
+    let suffix = 0;
+    // Collision-resistant: append a short random suffix on conflict.
+    while (await this.prisma.tenant.findUnique({ where: { slug: candidate } })) {
+      suffix += 1;
+      candidate = `${root}-${randomBytes(2).toString('hex')}`;
+      if (suffix > 5) {
+        candidate = `${root}-${randomBytes(4).toString('hex')}`;
+        break;
+      }
+    }
+    return candidate;
   }
 
   async provisionAdmin(
@@ -271,7 +751,7 @@ export class AuthService implements OnModuleDestroy {
       const updated = await this.prisma.user.update({
         where: { email },
         data: { role },
-        select: { id: true, email: true, name: true, role: true },
+        select: { id: true, email: true, name: true, role: true, tenantId: true },
       });
       this.logger.log(`Admin user updated: ${updated.email} → ${role}`);
       return updated;
@@ -281,7 +761,7 @@ export class AuthService implements OnModuleDestroy {
 
     const user = await this.prisma.user.create({
       data: { email, name, password: hashedPassword, role },
-      select: { id: true, email: true, name: true, role: true },
+      select: { id: true, email: true, name: true, role: true, tenantId: true },
     });
 
     this.logger.log(`Admin user provisioned: ${user.email} (${role})`);
@@ -293,8 +773,27 @@ export class AuthService implements OnModuleDestroy {
     email: string;
     name: string;
     role: string;
+    tenantId?: string | null;
+    activeTenantId?: string | null;
   }): Promise<AuthResponseDto> {
     this.logger.log(`User logged in: ${user.email}`);
+    return this.createTokens(user);
+  }
+
+  /**
+   * Re-issue an access/refresh token pair for a user, carrying a (possibly new)
+   * active tenant in the JWT `tid` claim (Phase 5 / W1a — tenant switch). Public
+   * wrapper around the private token factory so the tenants module can re-issue
+   * after a membership-checked switch without touching the login flow.
+   */
+  async issueTokensForUser(user: {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    tenantId?: string | null;
+    activeTenantId?: string | null;
+  }): Promise<AuthResponseDto> {
     return this.createTokens(user);
   }
 
@@ -303,7 +802,14 @@ export class AuthService implements OnModuleDestroy {
       where: { refreshToken },
       include: {
         user: {
-          select: { id: true, email: true, name: true, role: true },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            role: true,
+            tenantId: true,
+            activeTenantId: true,
+          },
         },
       },
     });
@@ -353,6 +859,7 @@ export class AuthService implements OnModuleDestroy {
         email: true,
         name: true,
         role: true,
+        isSuperAdmin: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -464,23 +971,47 @@ export class AuthService implements OnModuleDestroy {
     // 2. Find or create user in API Gateway database
     let user = await this.prisma.user.findUnique({
       where: { email },
-      select: { id: true, email: true, name: true, role: true },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        tenantId: true,
+        activeTenantId: true,
+      },
     });
 
+    let authUser: {
+      id: string;
+      email: string;
+      name: string;
+      role: string;
+      tenantId?: string | null;
+      activeTenantId?: string | null;
+    };
+
     if (!user) {
-      user = await this.prisma.user.create({
-        data: {
-          email,
-          name: customerName,
-          password: null, // Platform-linked account, no local password
-        },
-        select: { id: true, email: true, name: true, role: true },
+      // Brand-new platform-linked user: provision their OWN Tenant + OWNER
+      // Membership + activeTenantId via the shared onboarding primitive, exactly
+      // like signup/register/oauth (Phase 5). No password (platform-linked).
+      const created = await this.createUserOwnedTenant({
+        email,
+        name: customerName,
+        password: null,
+        logContext: 'Platform-linked user via token exchange',
       });
-      this.logger.log(`Platform-linked user created via token exchange: ${email}`);
+      authUser = created.user;
+    } else {
+      // Existing user: ENSURE a Membership + sensible activeTenantId idempotently.
+      // Never creates a second tenant for a user who already has one.
+      const { tenantId, activeTenantId } = await this.ensureMembershipForExistingUser(
+        user.id,
+      );
+      authUser = { ...user, tenantId, activeTenantId };
     }
 
     // 3. Generate API Gateway tokens
-    const tokens = await this.createTokens(user);
+    const tokens = await this.createTokens(authUser);
 
     this.logger.log(
       `Token exchange successful: ${email}${targetApp ? ` → ${targetApp}` : ''}`,
@@ -494,12 +1025,19 @@ export class AuthService implements OnModuleDestroy {
     email: string;
     name: string;
     role: string;
+    tenantId?: string | null;
+    activeTenantId?: string | null;
   }): Promise<AuthResponseDto> {
     const jti = randomBytes(16).toString('hex');
+    // Multi-tenant SaaS (Phase 5): the JWT `tid` carries the user's ACTIVE tenant
+    // (the currently-selected business). Falls back to the home tenantId, then to
+    // the local/demo bootstrap tenant for legacy/bootstrap users with no tenant.
+    const tid = user.activeTenantId ?? user.tenantId ?? DEMO_TENANT_ID;
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
       role: user.role,
+      tid,
       jti,
     };
 

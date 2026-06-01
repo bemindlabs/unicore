@@ -11,8 +11,11 @@ import { OutboundSenderService } from './outbound-sender.service';
 
 const CONVERSATION_ID = 'conv-aaa';
 
+const CONVERSATION_TENANT_ID = '44444444-4444-4444-4444-444444444444';
+
 const mockConversation = {
   id: CONVERSATION_ID,
+  tenantId: CONVERSATION_TENANT_ID,
   channel: 'TELEGRAM',
   status: 'OPEN',
   metadata: {},
@@ -145,7 +148,7 @@ describe('OutboundSenderService', () => {
 
       await service.send(dto);
 
-      expect(channelsMock.send).toHaveBeenCalledWith('telegram', CONVERSATION_ID, 'Hello!', '123456');
+      expect(channelsMock.send).toHaveBeenCalledWith('telegram', CONVERSATION_ID, 'Hello!', '123456', CONVERSATION_TENANT_ID);
     });
 
     it('updates message with deliveredAt and externalId on success', async () => {
@@ -219,7 +222,7 @@ describe('OutboundSenderService', () => {
 
       await service.send({ ...dto, channelType: '' });
 
-      expect(channelsMock.send).toHaveBeenCalledWith('line', expect.any(String), expect.any(String), expect.any(String));
+      expect(channelsMock.send).toHaveBeenCalledWith('line', expect.any(String), expect.any(String), expect.any(String), CONVERSATION_TENANT_ID);
     });
   });
 
@@ -313,7 +316,7 @@ describe('OutboundSenderService', () => {
 
       await service.retryFailed('msg-001');
 
-      expect(channelsMock.send).toHaveBeenCalledWith('telegram', CONVERSATION_ID, 'Hello!', '123');
+      expect(channelsMock.send).toHaveBeenCalledWith('telegram', CONVERSATION_ID, 'Hello!', '123', CONVERSATION_TENANT_ID);
     });
   });
 

@@ -2,8 +2,6 @@
 
 import type { BoardTask } from '@/lib/tasks/types';
 import { PRIORITY_CONFIG } from '@/lib/tasks/types';
-const RetroDeskOnly = ({ children }: { children: React.ReactNode }) => null;
-const DefaultOnly = ({ children }: { children: React.ReactNode }) => <>{children}</>;
 
 function relativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -26,8 +24,6 @@ export function TaskCard({ task, onClick, onDragStart }: Props): JSX.Element {
   const priorityCfg = PRIORITY_CONFIG[task.priority];
 
   return (
-    <>
-    <DefaultOnly>
     <div
       draggable
       role="button"
@@ -97,7 +93,5 @@ export function TaskCard({ task, onClick, onDragStart }: Props): JSX.Element {
         </div>
       </div>
     </div>
-    </DefaultOnly>
-    </>
   );
 }

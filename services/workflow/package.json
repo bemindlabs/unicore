@@ -1,6 +1,11 @@
 {
   "name": "@bemindlabs/unicore-workflow",
   "version": "0.0.2",
+  "author": {
+    "name": "Bemind Technology Co., Ltd.",
+    "url": "https://bemind.tech"
+  },
+  "license": "UNLICENSED",
   "private": true,
   "scripts": {
     "dev": "nest start --watch",
@@ -35,6 +40,9 @@
     "@types/jest": "^29.5.0",
     "@types/node": "^20.14.0",
     "@types/uuid": "^9.0.8",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.0",
     "jest": "^29.7.0",
     "source-map-support": "^0.5.21",
     "ts-jest": "^29.1.0",

@@ -13,6 +13,7 @@ import { EmailWebhookController } from './email-webhook.controller';
 import { WebchatWebhookController } from './webchat-webhook.controller';
 import { InboundRouterService } from './inbound-router.service';
 import { WebhooksGateway } from './webhooks.gateway';
+import { WebhookTenantResolver } from './webhook-tenant-resolver.service';
 
 @Module({
   imports: [ConfigModule, LicenseModule],
@@ -28,7 +29,7 @@ import { WebhooksGateway } from './webhooks.gateway';
     EmailWebhookController,
     WebchatWebhookController,
   ],
-  providers: [InboundRouterService, WebhooksGateway],
-  exports: [InboundRouterService],
+  providers: [InboundRouterService, WebhooksGateway, WebhookTenantResolver],
+  exports: [InboundRouterService, WebhookTenantResolver],
 })
 export class WebhooksModule {}

@@ -8,6 +8,7 @@ import { Crown, ExternalLink, Lock, PanelLeftClose, PanelLeftOpen, LogOut } from
 import { Avatar, AvatarFallback, AvatarImage, Button, cn, Separator } from '@bemindlabs/unicore-ui';
 import { useAuth } from '@/hooks/use-auth';
 import { useLicense } from '@/hooks/use-license';
+import { useSaas } from '@/contexts/saas-context';
 import { useBranding } from '@/components/BrandingProvider';
 import { filterSectionsByRole, isNavItemLocked } from '@/lib/navigation';
 import { UpgradeModal } from '@/components/upgrade-modal';
@@ -22,14 +23,19 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const { isPro, edition, hasFeature } = useLicense();
+  const { isSuperAdmin } = useSaas();
   const { config } = useBranding();
   const appName = config?.appName ?? 'UniCore';
   const t = useTranslations('common');
-  const sections = user ? filterSectionsByRole(user.role) : [];
+  // Hide the Bemind super-admin control plane unless the user cleared the
+  // backend SuperAdminGuard (saas + isSuperAdmin). Self-host reports false.
+  const sections = (user ? filterSectionsByRole(user.role) : []).filter(
+    (section) => !section.superAdmin || isSuperAdmin,
+  );
 
   const [upgradeModal, setUpgradeModal] = useState<{
     open: boolean;
-    tier: 'pro' | 'enterprise';
+    tier: 'pro';
     featureName?: string;
   }>({ open: false, tier: 'pro' });
 

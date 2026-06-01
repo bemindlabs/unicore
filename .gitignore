@@ -45,6 +45,13 @@ pnpm-debug.log*
 prisma/*.db
 .prisma/
 *.dylib.node
+# Mis-pathed duplicate Prisma client (debt #8): a stray `prisma generate` run
+# from the wrong cwd resolves `output = "../generated/prisma"` to a doubly-nested
+# `generated/generated/` (~22MB dup). Ignore it so it can't recur. NOTE: this is
+# deliberately the doubly-nested path only — do NOT use the over-broad
+# `**/generated/`, which would also exclude the REAL client at src/generated/prisma.
+generated/generated/
+**/src/generated/generated/
 
 # Misc
 *.pem

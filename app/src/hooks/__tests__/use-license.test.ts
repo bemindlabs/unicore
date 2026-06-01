@@ -50,19 +50,13 @@ describe('useLicense', () => {
 
   it('isPro is false for community edition', () => {
     const { edition } = mockContextValue.status;
-    const isPro = edition === 'pro' || edition === 'enterprise';
+    const isPro = edition === 'pro';
     expect(isPro).toBe(false);
   });
 
   it('isPro is true for pro edition', () => {
     mockContextValue.status.edition = 'pro';
     const isPro = mockContextValue.status.edition === 'pro';
-    expect(isPro).toBe(true);
-  });
-
-  it('isPro is true for enterprise edition', () => {
-    mockContextValue.status.edition = 'enterprise';
-    const isPro = mockContextValue.status.edition === 'enterprise';
     expect(isPro).toBe(true);
   });
 

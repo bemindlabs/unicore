@@ -13,6 +13,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 import { Public } from '../auth/decorators/public.decorator';
 import { LicenseGuard } from '../license/guards/license.guard';
 import { ProFeatureRequired } from '../license/decorators/pro-feature.decorator';
+import { WebhookTenantResolver } from './webhook-tenant-resolver.service';
 
 /**
  * Minimal LINE webhook event shape.
@@ -46,7 +47,10 @@ interface LineWebhookBody {
 export class LineWebhookController {
   private readonly logger = new Logger(LineWebhookController.name);
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly tenantResolver: WebhookTenantResolver,
+  ) {}
 
   /**
    * Receives LINE webhook events.
@@ -56,10 +60,10 @@ export class LineWebhookController {
   @Public()
   @Post()
   @HttpCode(200)
-  handleWebhook(
+  async handleWebhook(
     @Body() body: LineWebhookBody,
     @Headers('x-line-signature') signature?: string,
-  ): { ok: true } {
+  ): Promise<{ ok: true }> {
     // Validate signature (channel secret configured via dashboard Settings → Channels)
     const channelSecret = this.config.get<string>('LINE_CHANNEL_SECRET');
     if (channelSecret) {
@@ -83,6 +87,17 @@ export class LineWebhookController {
       this.logger.log('LINE webhook verification (empty events)');
       return { ok: true };
     }
+
+    // GAPS #1: resolve which tenant owns this LINE bot from the webhook
+    // `destination` (the bot's own LINE userId), so the message is processed in
+    // that tenant's context instead of a shared/default tenant. Falls back to the
+    // DEMO tenant when no tenant claims the destination.
+    const resolvedTenantId =
+      (await this.tenantResolver.resolveLine(body.destination)) ??
+      this.tenantResolver.fallbackTenantId;
+    this.logger.log(
+      `LINE webhook destination=${body.destination ?? 'n/a'} → tenant=${resolvedTenantId}`,
+    );
 
     for (const event of events) {
       const userId = event.source?.userId ?? 'unknown';
@@ -112,6 +127,7 @@ export class LineWebhookController {
 
         const payload = {
           channel: 'line',
+          tenantId: resolvedTenantId,
           senderId: userId,
           senderName: userId,
           text,
@@ -120,7 +136,10 @@ export class LineWebhookController {
 
         fetch(openclawUrl, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'x-tenant-id': resolvedTenantId,
+          },
           body: JSON.stringify(payload),
         }).catch((err: unknown) => {
           this.logger.error(

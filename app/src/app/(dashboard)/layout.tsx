@@ -8,22 +8,17 @@ import { Header } from '@/components/layout/header';
 import { MobileNav } from '@/components/layout/mobile-nav';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { useAuth } from '@/hooks/use-auth';
-import { useTheme } from '@/hooks/use-theme';
 import { useDemoMode } from '@/hooks/use-demo-mode';
-import { DemoBanner } from '@/components/demo/DemoBanner';
-import { DeployButton } from '@/components/demo/DeployButton';
+import { DemoBanner, DeployButton } from '@/components/demo';
 import { UpgradeBanner } from '@/components/license/upgrade-banner';
-const RetroDeskThemeProvider = ({ children }: { children: React.ReactNode }) => <>{children}</>;
-const isRetroDeskFamily = (_theme: string | null) => false;
+import { TrialBanner } from '@/components/saas/trial-banner';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
-  const { characterTheme } = useTheme();
   const router = useRouter();
   const { collapsed, toggle } = useSidebar();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const demoMode = useDemoMode();
-  const isRetroDesk = isRetroDeskFamily(characterTheme);
 
   // Keyboard shortcut: Ctrl/Cmd+B to toggle sidebar
   useEffect(() => {
@@ -60,24 +55,17 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     return null;
   }
 
-  const bgClass = isRetroDesk
-    ? 'retrodesk-body'
-    : 'bg-muted/30';
-  const bgStyle = isRetroDesk
-    ? { background: 'var(--retrodesk-bg, #faf8f5)', color: 'var(--retrodesk-text, #2d2d2d)' }
-    : undefined;
-
   return (
-    <RetroDeskThemeProvider>
+    <>
       {demoMode && <DemoBanner />}
       <div
-        className={`flex h-screen overflow-hidden ${bgClass}${demoMode ? ' pt-9' : ''}`}
-        style={bgStyle}
+        className={`flex h-screen overflow-hidden bg-muted/30${demoMode ? ' pt-9' : ''}`}
       >
         <Sidebar collapsed={collapsed} onToggle={toggle} />
         <MobileNav open={mobileNavOpen} onOpenChange={setMobileNavOpen} />
         <div className="flex flex-1 flex-col overflow-hidden">
           <Header onMobileMenuToggle={() => setMobileNavOpen(true)} />
+          <TrialBanner />
           <UpgradeBanner />
           <main className="flex-1 overflow-y-auto">
             <div className="w-full p-4 lg:p-6">{children}</div>
@@ -85,6 +73,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
       </div>
       {demoMode && <DeployButton />}
-    </RetroDeskThemeProvider>
+    </>
   );
 }

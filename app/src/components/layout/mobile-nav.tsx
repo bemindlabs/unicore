@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { cn, Separator, Sheet, SheetContent, SheetHeader, SheetTitle } from '@bemindlabs/unicore-ui';
 import { useAuth } from '@/hooks/use-auth';
 import { useLicense } from '@/hooks/use-license';
+import { useSaas } from '@/contexts/saas-context';
 import { useBranding } from '@/components/BrandingProvider';
 import { filterSectionsByRole, isNavItemLocked } from '@/lib/navigation';
 
@@ -17,9 +18,12 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps): JSX.Element {
   const pathname = usePathname();
   const { user } = useAuth();
   const { isPro, edition, hasFeature } = useLicense();
+  const { isSuperAdmin } = useSaas();
   const { config } = useBranding();
   const appName = config?.appName ?? 'UniCore';
-  const sections = user ? filterSectionsByRole(user.role) : [];
+  const sections = (user ? filterSectionsByRole(user.role) : []).filter(
+    (section) => !section.superAdmin || isSuperAdmin,
+  );
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>

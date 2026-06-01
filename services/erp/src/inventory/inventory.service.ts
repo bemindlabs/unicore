@@ -25,7 +25,8 @@ export class InventoryService {
   ) {}
 
   async create(dto: CreateProductDto): Promise<ProductRecord & { quantity?: number }> {
-    const existing = await this.prisma.product.findUnique({ where: { sku: dto.sku } });
+    // Per-tenant uniqueness (FU-03): sku is unique per tenant, not globally.
+    const existing = await this.prisma.product.findFirst({ where: { sku: dto.sku } });
     if (existing) throw new ConflictException(`Product with SKU ${dto.sku} already exists`);
     const product = await this.prisma.product.create({
       data: {
@@ -110,7 +111,8 @@ export class InventoryService {
   }
 
   async findBySku(sku: string): Promise<ProductRecord> {
-    const product = await this.prisma.product.findUnique({ where: { sku } });
+    // Per-tenant uniqueness (FU-03): sku is unique per tenant; findFirst scopes via RLS.
+    const product = await this.prisma.product.findFirst({ where: { sku } });
     if (!product) throw new NotFoundException(`Product with SKU ${sku} not found`);
     return product;
   }
