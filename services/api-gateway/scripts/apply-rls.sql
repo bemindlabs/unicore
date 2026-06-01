@@ -48,23 +48,31 @@
 
 -- ── 1. Provision the application role (NOSUPERUSER / NOBYPASSRLS) ────────────
 -- Idempotent: created only if absent, then (re)granted the table DML it needs.
--- Password is read from the PSQL variable :app_password if provided, else a
--- placeholder is used and MUST be reset out-of-band before the role logs in:
---   psql -v app_password="$UNICORE_APP_DB_PASSWORD" -f apply-rls.sql
+-- The password is read from the GUC `unicore.app_password`. It MUST be set when
+-- the role does not yet exist — there is NO placeholder fallback (debt #1, fail
+-- closed): a deploy must never silently create a default-password login role.
+-- Set it via the canonical deploy wrapper (TODO: full IaC — see scripts/deploy-db.sh):
+--   psql -v ON_ERROR_STOP=1 \
+--     -c "SET unicore.app_password = '$UNICORE_APP_DB_PASSWORD';" -f apply-rls.sql
+-- On the ALTER path (role already exists) the password is left UNCHANGED, so the
+-- GUC is not required for re-runs against an already-provisioned role.
 DO $$
 DECLARE
-  app_pw text := COALESCE(
-    current_setting('unicore.app_password', true),
-    'CHANGE_ME_unicore_app'
-  );
+  app_pw text := current_setting('unicore.app_password', true);
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'unicore_app') THEN
+    -- FAIL CLOSED: refuse to create the login role without an explicit password.
+    IF app_pw IS NULL OR app_pw = '' THEN
+      RAISE EXCEPTION
+        'unicore.app_password is unset/empty: refusing to create role unicore_app with a default password. Set it (e.g. UNICORE_APP_DB_PASSWORD via scripts/deploy-db.sh) and re-run.';
+    END IF;
     EXECUTE format(
       'CREATE ROLE unicore_app LOGIN PASSWORD %L NOSUPERUSER NOBYPASSRLS INHERIT;',
       app_pw
     );
   ELSE
     -- Ensure an existing role can never bypass RLS, even if altered elsewhere.
+    -- Password is left unchanged on this path (GUC not required).
     EXECUTE 'ALTER ROLE unicore_app NOSUPERUSER NOBYPASSRLS;';
   END IF;
 END $$;

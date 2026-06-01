@@ -1,0 +1,190 @@
+name: CI
+
+# Per-repo CI for the `unicore` repository (debt #7).
+#
+# The aggregate-root workspace CI (one level up) is NOT part of this pushed repo,
+# so it never runs on PRs against github.com/bemindlabs/unicore. This workflow is
+# the repo's OWN gate. Every job below is BLOCKING — there is no
+# `continue-on-error` and no soft "advisory" job. A red job fails the build.
+#
+# The tenant-isolation / cross-tenant-leak suites are a HARD GATE: they spin a
+# real Postgres, provision the NOSUPERUSER NOBYPASSRLS `unicore_app` role via
+# apply-rls.sql, connect the app as that role (RLS live), and run the leak suites.
+# A SKIPPED suite is NOT a pass — the gate asserts the suites were collected & ran.
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  # ── Hard gate: typecheck + build + test for the whole repo workspace ────────
+  build-test:
+    name: typecheck + build + test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma clients
+        run: pnpm -r exec prisma generate || true
+
+      - name: Typecheck (hard gate)
+        run: pnpm --filter @bemindlabs/unicore-api-gateway run typecheck
+
+      - name: Build (hard gate)
+        run: pnpm --filter @bemindlabs/unicore-api-gateway run build
+
+      - name: Test (hard gate)
+        env:
+          CI: 'true'
+        run: pnpm --filter @bemindlabs/unicore-api-gateway run test
+
+  # ── Tenant-isolation / cross-tenant-leak suites over a NON-SUPERUSER role ───
+  # HARD GATE. Proves RLS actually isolates tenants: the app connects as the
+  # NOSUPERUSER NOBYPASSRLS `unicore_app` role via RLS_DATABASE_URL, while seeding
+  # runs as the privileged owner via SEED_DATABASE_URL. A skip is NOT a pass.
+  isolation:
+    name: tenant-isolation leak gate
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      # Privileged (table-owner / superuser) base URL — runs db push + backfills +
+      # RLS provisioning, and the tests seed rows through it (bypassing RLS,
+      # exactly as a real seed/backfill does before the app connects as unicore_app).
+      ADMIN_DATABASE_URL: postgresql://postgres:postgres@localhost:5432
+      # Password for the unicore_app role. apply-rls.sql FAILS CLOSED without it
+      # (debt #1) — there is no placeholder fallback.
+      APP_DB_PASSWORD: ci_unicore_app_pw
+      JWT_SECRET: test-tenant-isolation-secret-at-least-32-chars-long
+      SETTINGS_ENCRYPTION_KEY: test-settings-encryption-key-32-chars!!
+      DEPLOYMENT_MODE: saas
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install psql client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Create per-service databases
+        run: |
+          export PGPASSWORD=postgres
+          psql "$ADMIN_DATABASE_URL/postgres" -v ON_ERROR_STOP=1 \
+            -c "CREATE DATABASE unicore;" \
+            -c "CREATE DATABASE unicore_erp;"
+
+      # api-gateway: push schema as owner, backfill, then provision the
+      # NOSUPERUSER role + RLS policies via apply-rls.sql (password via GUC).
+      - name: api-gateway — db push + backfill + apply-rls
+        working-directory: services/api-gateway
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/unicore
+        run: |
+          export PGPASSWORD=postgres
+          pnpm exec prisma db push --schema=src/prisma/schema.prisma --skip-generate --accept-data-loss
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/backfill-settings-tenant-key.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
+            -c "SET unicore.app_password = '$APP_DB_PASSWORD';" \
+            -f scripts/apply-rls.sql
+
+      # erp: same order against unicore_erp. The unicore_app role already exists
+      # (cross-database role); apply-rls re-asserts NOSUPERUSER/NOBYPASSRLS and
+      # grants on this DB's tables (no password needed on the ALTER path).
+      - name: erp — db push + backfill + apply-rls
+        working-directory: services/erp
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/unicore_erp
+        run: |
+          export PGPASSWORD=postgres
+          pnpm exec prisma db push --schema=src/prisma/schema.prisma --skip-generate --accept-data-loss
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/backfill-tenant.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
+            -c "SET unicore.app_password = '$APP_DB_PASSWORD';" \
+            -f scripts/apply-rls.sql
+
+      - name: Verify unicore_app is NOSUPERUSER / NOBYPASSRLS
+        run: |
+          export PGPASSWORD=postgres
+          BAD=$(psql "$ADMIN_DATABASE_URL/unicore" -tA \
+            -c "SELECT 1 FROM pg_roles WHERE rolname='unicore_app' AND (rolsuper OR rolbypassrls);")
+          if [ -n "$BAD" ]; then
+            echo "::error::unicore_app can bypass RLS — isolation would be a no-op"; exit 1
+          fi
+          echo "unicore_app verified NOSUPERUSER NOBYPASSRLS"
+
+      - name: api-gateway — isolation + cross-tenant-leak + signup-rls suites (HARD GATE)
+        working-directory: services/api-gateway
+        env:
+          # App connects as the NON-SUPERUSER role — RLS is live.
+          RLS_DATABASE_URL: postgresql://unicore_app:ci_unicore_app_pw@localhost:5432/unicore
+          # Seeding runs as the privileged owner (bypasses RLS).
+          SEED_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/unicore
+          DATABASE_URL: postgresql://unicore_app:ci_unicore_app_pw@localhost:5432/unicore
+        run: |
+          pnpm exec jest --config ./test/jest-e2e.json --runInBand \
+            tenant-isolation cross-tenant-leak signup-rls \
+            --verbose 2>&1 | tee jest.out
+          # A skip is NOT a pass: fail if no isolation suite actually ran.
+          if grep -q "0 passed" jest.out || ! grep -qE "Tests:.*[1-9][0-9]* passed" jest.out; then
+            echo "::error::isolation suites did not run (skipped == not a pass)"; exit 1
+          fi
+
+      - name: erp — tenant-isolation suites (HARD GATE)
+        working-directory: services/erp
+        env:
+          RLS_DATABASE_URL: postgresql://unicore_app:ci_unicore_app_pw@localhost:5432/unicore_erp
+          SEED_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/unicore_erp
+          DATABASE_URL: postgresql://unicore_app:ci_unicore_app_pw@localhost:5432/unicore_erp
+        run: |
+          pnpm exec jest --config ./test/jest-e2e.json --runInBand \
+            tenant-isolation \
+            --verbose 2>&1 | tee jest.out
+          if grep -q "0 passed" jest.out || ! grep -qE "Tests:.*[1-9][0-9]* passed" jest.out; then
+            echo "::error::erp isolation suites did not run (skipped == not a pass)"; exit 1
+          fi
