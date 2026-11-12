@@ -194,12 +194,15 @@ export class DashboardService {
 
   async getChart(metric: string, period: string) {
     const days = parsePeriodDays(period);
-    const points = metric === 'orders' ? await this.getDailyOrders(days) : await this.getDailyRevenue(days);
+    // Whitelist: anything else falls back to revenue. Keeps the label lookup off
+    // inherited object keys and off values the caller controls.
+    const metricKey = metric === 'orders' ? 'orders' : 'revenue';
+    const points = metricKey === 'orders' ? await this.getDailyOrders(days) : await this.getDailyRevenue(days);
     const labelMap: Record<string, string> = { revenue: 'USD', orders: 'Orders' };
 
     return {
-      title: `${metric.charAt(0).toUpperCase() + metric.slice(1)} — Last ${days} Days`,
-      yAxisLabel: labelMap[metric] ?? metric,
+      title: `${metricKey.charAt(0).toUpperCase() + metricKey.slice(1)} — Last ${days} Days`,
+      yAxisLabel: labelMap[metricKey],
       points,
     };
   }

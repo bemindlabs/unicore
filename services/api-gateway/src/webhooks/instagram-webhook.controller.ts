@@ -8,6 +8,8 @@ import {
   HttpCode,
   Logger,
   ForbiddenException,
+  BadRequestException,
+  Header,
   UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -56,6 +58,7 @@ export class InstagramWebhookController {
   @Public()
   @Get()
   @HttpCode(200)
+  @Header('Content-Type', 'text/plain; charset=utf-8')
   verifyWebhook(
     @Query('hub.mode') mode: string,
     @Query('hub.verify_token') verifyToken: string,
@@ -64,6 +67,13 @@ export class InstagramWebhookController {
     const expectedToken = this.config.get<string>('INSTAGRAM_VERIFY_TOKEN');
 
     if (mode === 'subscribe' && verifyToken === expectedToken) {
+      // Echo Meta's challenge verbatim, but only when it really is the numeric
+      // challenge Meta sends. The value arrives in the query string and is
+      // written straight back to the caller, so anything else would be a
+      // reflected-XSS gadget.
+      if (!/^\d{1,64}$/.test(typeof challenge === 'string' ? challenge : '')) {
+        throw new BadRequestException('Invalid challenge');
+      }
       this.logger.log('Instagram webhook verification successful');
       return challenge;
     }

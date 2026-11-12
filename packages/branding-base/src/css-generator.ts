@@ -3,6 +3,19 @@
 
 import type { BrandingConfig, BrandingFont, CssGeneratorOptions } from './types';
 
+/**
+ * Escapes a value for interpolation inside a single-quoted CSS string.
+ * Backslashes must be doubled first: escaping only `'` lets a trailing
+ * backslash in the value swallow the closing quote and inject declarations.
+ */
+function cssString(value: string): string {
+  const bounded = (typeof value === 'string' ? value : '').slice(0, 200)
+  return `'${bounded
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/[\r\n\f]/g, ' ')}'`
+}
+
 /** Map a color key to a CSS variable name */
 export const COLOR_VAR_MAP: Record<string, string> = {
   primary: '--color-primary',
@@ -155,7 +168,7 @@ export function generateCssTheme(
   }
 
   // App name as a CSS custom property
-  declarations.push(`  --app-name: '${config.appName.replace(/'/g, "\\'")}';`);
+  declarations.push(`  --app-name: ${cssString(config.appName)};`);
 
   lines.push(`${selector} {`);
   lines.push(...declarations);

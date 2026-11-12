@@ -238,11 +238,16 @@ export class TenantsService {
 
   /** Build a URL-safe, unique tenant slug from a business name. */
   private async generateUniqueSlug(base: string): Promise<string> {
+    // Bound the input before any regex runs, and trim the leading/trailing dashes
+    // with two separate patterns. `^-+|-+$` is ambiguous under backtracking and
+    // CodeQL reports it as a polynomial ReDoS sink on caller-controlled names.
+    const input = (typeof base === 'string' ? base : '').slice(0, 200);
     const root =
-      base
+      input
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '')
+        .replace(/^-+/, '')
+        .replace(/-+$/, '')
         .slice(0, 40) || 'tenant';
 
     let candidate = root;
