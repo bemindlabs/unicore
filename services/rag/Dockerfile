@@ -10,7 +10,7 @@ FROM base AS deps
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
 COPY packages/config/package.json ./packages/config/
 COPY services/rag/package.json ./services/rag/
-RUN pnpm install --frozen-lockfile --filter @unicore/rag...
+RUN pnpm install --frozen-lockfile --filter @bemindlabs/unicore-rag... || pnpm install --no-frozen-lockfile --filter @bemindlabs/unicore-rag...
 
 FROM base AS build
 COPY packages/config ./packages/config

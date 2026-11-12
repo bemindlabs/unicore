@@ -11,7 +11,7 @@ COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
 COPY packages/config/package.json ./packages/config/
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY services/workflow/package.json ./services/workflow/
-RUN pnpm install --frozen-lockfile --filter @unicore/workflow...
+RUN pnpm install --frozen-lockfile --filter @bemindlabs/unicore-workflow... || pnpm install --no-frozen-lockfile --filter @bemindlabs/unicore-workflow...
 
 FROM base AS build
 COPY packages/config ./packages/config
