@@ -43,8 +43,30 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Workspace packages the gateway imports (shared-types, plugin-sdk, branding)
+      # publish types from dist/, which is gitignored — build them before
+      # typechecking, otherwise tsc reports "Cannot find module".
+      - name: Build workspace packages
+        run: |
+          pnpm --filter @bemindlabs/unicore-shared-types run build
+          pnpm --filter @bemindlabs/unicore-plugin-sdk run build
+          pnpm --filter @bemindlabs/unicore-branding-base run build
+          pnpm --filter @bemindlabs/unicore-branding-community run build
+
+      # `pnpm -r exec` runs in every workspace package, including ones with no
+      # schema, so it always printed a schema-not-found error before the `|| true`
+      # swallowed it. Run it only where a schema actually exists.
       - name: Generate Prisma clients
-        run: pnpm -r exec prisma generate || true
+        run: |
+          set -euo pipefail
+          git ls-files '*schema.prisma' \
+            | grep -v '/generated/' \
+            | xargs -n1 dirname \
+            | sort -u \
+            | while read -r d; do
+                echo "→ prisma generate in $d"
+                (cd "$d" && pnpm exec prisma generate)
+              done
 
       - name: Typecheck (hard gate)
         run: pnpm --filter @bemindlabs/unicore-api-gateway run typecheck
