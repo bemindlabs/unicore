@@ -11,7 +11,7 @@ COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
 COPY packages/config/package.json ./packages/config/
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY services/bootstrap/package.json ./services/bootstrap/
-RUN pnpm install --frozen-lockfile --filter @unicore/bootstrap...
+RUN pnpm install --frozen-lockfile --filter @bemindlabs/unicore-bootstrap... || pnpm install --no-frozen-lockfile --filter @bemindlabs/unicore-bootstrap...
 
 FROM base AS build
 COPY packages/config ./packages/config

@@ -28,7 +28,7 @@ RUN rm -f pnpm-lock.yaml && pnpm install
 RUN cd packages/shared-types && npx tsc
 RUN cd packages/branding-base && npx tsc 2>&1 || echo "branding-base tsc failed"
 RUN cd packages/branding && npx tsc 2>&1 || echo "branding tsc failed"
-RUN cd app && npx next build
+RUN cd app && npx next build --webpack
 
 ARG VERSION=0.0.0
 FROM --platform=$TARGETPLATFORM node:20.20.1-alpine AS runner
