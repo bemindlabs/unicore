@@ -24,33 +24,59 @@ import { TasksModule } from './tasks/tasks.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { ChatHistoryModule } from './chat-history/chat-history.module';
 import { NotificationsModule } from './notifications/notifications.module';
-import { GamificationModule } from './gamification/gamification.module';
 import { ChannelsModule } from './channels/channels.module';
 import { ConversationIntelligenceModule } from './conversation-intelligence/conversation-intelligence.module';
 import { ConversationsModule } from './conversations/conversations.module';
 import { ConversationsAnalyticsModule } from './conversations-analytics/conversations-analytics.module';
 import { ContactProfileModule } from './contact-profile/contact-profile.module';
 import { PluginsModule } from './plugins/plugins.module';
+import { EmailModule } from './email/email.module';
+import { TenancyModule } from './common/tenancy/tenancy.module';
+import { TenantContextMiddleware } from './common/tenancy/tenant-context.middleware';
+import { TenantContextInterceptor } from './common/tenancy/tenant-context.interceptor';
+import { TenantModule } from './tenant/tenant.module';
+import { SuspendedTenantGuard } from './common/guards/suspended-tenant.guard';
+import { TenantRateLimitGuard } from './common/guards/tenant-rate-limit.guard';
+import { TenantUsageModule } from './common/tenancy/tenant-usage.module';
+import { RedisCounterModule } from './common/redis/redis-counter.module';
+import { ObservabilityModule } from './common/observability/observability.module';
+import { RequestContextMiddleware } from './common/observability/request-context.middleware';
 @Module({
-  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule, AdminModule, AuditModule, SettingsModule, TasksModule, WebhooksModule, ChatHistoryModule, NotificationsModule, GamificationModule, ChannelsModule, ConversationsAnalyticsModule, ConversationsModule, ContactProfileModule, ConversationIntelligenceModule, PluginsModule],
+  imports: [PrismaModule, HealthModule, AuthModule, ProxyModule, LicenseModule, DomainModule, DashboardModule, AdminModule, AuditModule, SettingsModule, TasksModule, WebhooksModule, ChatHistoryModule, NotificationsModule, ChannelsModule, ConversationsAnalyticsModule, ConversationsModule, ContactProfileModule, ConversationIntelligenceModule, PluginsModule, EmailModule, TenancyModule, TenantUsageModule, RedisCounterModule, TenantModule, ObservabilityModule],
   controllers: [AppController],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
     { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
+    // Seeds the request-scoped tenant store (runs after JwtAuthGuard, so
+    // req.user.tenantId is resolved) for the gateway's own RLS-scoped queries.
+    { provide: APP_INTERCEPTOR, useClass: TenantContextInterceptor },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
     { provide: APP_GUARD, useClass: DemoModeGuard },
+    // Enforces read-only for SUSPENDED tenants; runs after the JWT guard so
+    // req.user.tenantId is resolved.
+    { provide: APP_GUARD, useClass: SuspendedTenantGuard },
+    // Per-tenant noisy-neighbor protection (FU-04): burst rate limit + monthly
+    // usage cap, keyed by the resolved tenant.
+    { provide: APP_GUARD, useClass: TenantRateLimitGuard },
     RateLimitStore,
     RateLimitMiddleware,
     RequestValidationMiddleware,
+    TenantContextMiddleware,
+    RequestContextMiddleware,
   ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
     consumer
-      // DomainRoutingMiddleware runs first — it attaches tenantId to req and
-      // sets per-domain CORS headers before rate limiting or auth kicks in.
-      .apply(DomainRoutingMiddleware, RequestValidationMiddleware, RateLimitMiddleware)
+      // RequestContextMiddleware runs FIRST — it mints/propagates the
+      // X-Request-Id correlation id and opens the request-context ALS scope so
+      // every later middleware, guard, interceptor and log line is correlated.
+      // DomainRoutingMiddleware then attaches tenantId to req and sets
+      // per-domain CORS headers before rate limiting or auth kicks in.
+      // TenantContextMiddleware strips client-supplied x-tenant-id before auth
+      // resolves the SaaS tenant from the JWT.
+      .apply(RequestContextMiddleware, DomainRoutingMiddleware, TenantContextMiddleware, RequestValidationMiddleware, RateLimitMiddleware)
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
 }

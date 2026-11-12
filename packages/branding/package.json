@@ -1,8 +1,13 @@
 {
   "name": "@bemindlabs/unicore-branding-community",
   "version": "0.0.2",
+  "author": {
+    "name": "Bemind Technology Co., Ltd.",
+    "url": "https://bemind.tech"
+  },
+  "license": "UNLICENSED",
   "private": true,
-  "description": "White-label branding customization for UniCore Pro — config, CSS generator, Tailwind integration, React context",
+  "description": "White-label branding customization for UniCore Pro \u2014 config, CSS generator, Tailwind integration, React context",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {

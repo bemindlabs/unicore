@@ -7,7 +7,7 @@ interface UpgradePromptProps {
   /** Human-readable feature name, e.g. "Single Sign-On" */
   feature: string;
   /** Target tier required to unlock this feature */
-  targetTier?: 'Pro' | 'Enterprise';
+  targetTier?: 'Pro';
   /** Optional description override */
   description?: string;
 }

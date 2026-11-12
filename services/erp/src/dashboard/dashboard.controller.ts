@@ -37,9 +37,16 @@ export class DashboardController {
 
   @Get('chart')
   getChart(
-    @Query('metric') metric = 'revenue',
-    @Query('period') period = '30d',
+    @Query('metric') metric?: string | string[],
+    @Query('period') period?: string | string[],
   ) {
-    return this.dashboardService.getChart(metric, period);
+    // Nest binds repeated query parameters to an array, and the service calls
+    // string methods on both values (`metric.charAt`, `metric.slice`). Keep the
+    // input a string so a duplicated parameter cannot change the type underneath
+    // those calls.
+    return this.dashboardService.getChart(
+      typeof metric === 'string' ? metric : 'revenue',
+      typeof period === 'string' ? period : '30d',
+    );
   }
 }

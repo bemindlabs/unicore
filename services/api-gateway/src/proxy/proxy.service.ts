@@ -14,6 +14,7 @@ export interface ProxyRequestOptions {
   headers: Record<string, string | string[] | undefined>;
   body: Buffer | null;
   userId?: string;
+  tenantId?: string;
 }
 
 export interface ProxyResponse {
@@ -71,6 +72,19 @@ export class ProxyService {
         forwardHeaders['x-user-id'] = options.userId;
       }
 
+      // SaaS phase 4.3: same fail-closed treatment for the tenant context.
+      // Always strip any client-supplied x-tenant-id, then re-inject only the
+      // trusted value resolved from the JWT (`tid`).
+      delete forwardHeaders['x-tenant-id'];
+
+      if (
+        options.tenantId &&
+        typeof options.tenantId === 'string' &&
+        !/[\r\n\0]/.test(options.tenantId)
+      ) {
+        forwardHeaders['x-tenant-id'] = options.tenantId;
+      }
+
       delete forwardHeaders['connection'];
       delete forwardHeaders['transfer-encoding'];
       delete forwardHeaders['keep-alive'];
@@ -80,7 +94,10 @@ export class ProxyService {
       delete forwardHeaders['trailers'];
       delete forwardHeaders['upgrade'];
 
-      if (options.body) {
+      // Buffer.isBuffer both narrows the type and keeps the length honest: the
+      // body can arrive from a parsed request, where a non-Buffer value would
+      // otherwise have a meaningless `length`.
+      if (Buffer.isBuffer(options.body)) {
         forwardHeaders['content-length'] = String(options.body.length);
       }
 

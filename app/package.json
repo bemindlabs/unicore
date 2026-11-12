@@ -1,6 +1,11 @@
 {
   "name": "@bemindlabs/unicore-dashboard",
   "version": "0.0.2",
+  "author": {
+    "name": "Bemind Technology Co., Ltd.",
+    "url": "https://bemind.tech"
+  },
+  "license": "UNLICENSED",
   "private": true,
   "type": "module",
   "scripts": {

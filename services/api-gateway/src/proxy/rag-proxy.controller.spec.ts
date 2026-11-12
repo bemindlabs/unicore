@@ -48,7 +48,7 @@ describe('RagProxyController', () => {
       const res = makeRes();
       mockProxyService.forward.mockResolvedValue(successResponse);
 
-      await controller.getInfo(req, res, 'user-1');
+      await controller.getInfo(req, res, 'user-1', 'tenant-1');
 
       expect(mockProxyService.forward).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -66,7 +66,7 @@ describe('RagProxyController', () => {
       const res = makeRes();
       mockProxyService.forward.mockResolvedValue({ statusCode: 201, headers: {}, body: Buffer.from('{"id":"doc-1"}') });
 
-      await controller.ingest(req, res, 'user-1');
+      await controller.ingest(req, res, 'user-1', 'tenant-1');
 
       expect(mockProxyService.forward).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -85,7 +85,7 @@ describe('RagProxyController', () => {
       const res = makeRes();
       mockProxyService.forward.mockResolvedValue({ statusCode: 204, headers: {}, body: Buffer.from('') });
 
-      await controller.deleteDocument('doc-xyz', req, res, 'user-1');
+      await controller.deleteDocument('doc-xyz', req, res, 'user-1', 'tenant-1');
 
       expect(mockProxyService.forward).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -103,7 +103,7 @@ describe('RagProxyController', () => {
       const res = makeRes();
       mockProxyService.forward.mockResolvedValue({ statusCode: 200, headers: {}, body: Buffer.from('[{"score":0.9}]') });
 
-      await controller.query(req, res, 'user-1');
+      await controller.query(req, res, 'user-1', 'tenant-1');
 
       expect(mockProxyService.forward).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -138,7 +138,7 @@ describe('RagProxyController', () => {
       const res = makeRes();
       mockProxyService.forward.mockRejectedValue(new Error('connection reset'));
 
-      await expect(controller.getInfo(req, res, 'user-1')).rejects.toMatchObject({
+      await expect(controller.getInfo(req, res, 'user-1', 'tenant-1')).rejects.toMatchObject({
         status: HttpStatus.BAD_GATEWAY,
       });
     });
@@ -149,7 +149,7 @@ describe('RagProxyController', () => {
       const err = new HttpException('Not found', HttpStatus.NOT_FOUND);
       mockProxyService.forward.mockRejectedValue(err);
 
-      await expect(controller.getInfo(req, res, 'user-1')).rejects.toThrow(err);
+      await expect(controller.getInfo(req, res, 'user-1', 'tenant-1')).rejects.toThrow(err);
     });
 
     it('sets response headers from proxy response', async () => {
@@ -161,7 +161,7 @@ describe('RagProxyController', () => {
         body: Buffer.from('{}'),
       });
 
-      await controller.getInfo(req, res, 'user-1');
+      await controller.getInfo(req, res, 'user-1', 'tenant-1');
 
       expect(res.setHeader).toHaveBeenCalledWith('x-rag-version', '1.0');
       expect(res.setHeader).toHaveBeenCalledWith('content-type', 'application/json');
@@ -175,7 +175,7 @@ describe('RagProxyController', () => {
       const res = makeRes();
       mockProxyService.forward.mockResolvedValue(successResponse);
 
-      await controller.ingest(req, res, 'user-1');
+      await controller.ingest(req, res, 'user-1', 'tenant-1');
 
       expect(mockProxyService.forward).toHaveBeenCalledWith(
         expect.objectContaining({ body: rawBody }),
@@ -187,7 +187,7 @@ describe('RagProxyController', () => {
       const res = makeRes();
       mockProxyService.forward.mockResolvedValue(successResponse);
 
-      await controller.ingest(req, res, 'user-1');
+      await controller.ingest(req, res, 'user-1', 'tenant-1');
 
       const forwardCall = mockProxyService.forward.mock.calls[0][0];
       expect(forwardCall.body.toString()).toBe(JSON.stringify({ text: 'hello' }));

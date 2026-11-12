@@ -2873,6 +2873,7 @@ export namespace Prisma {
 
   export type ContactMinAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     type: $Enums.ContactType | null
     name: string | null
     email: string | null
@@ -2899,6 +2900,7 @@ export namespace Prisma {
 
   export type ContactMaxAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     type: $Enums.ContactType | null
     name: string | null
     email: string | null
@@ -2925,6 +2927,7 @@ export namespace Prisma {
 
   export type ContactCountAggregateOutputType = {
     id: number
+    tenantId: number
     type: number
     name: number
     email: number
@@ -2965,6 +2968,7 @@ export namespace Prisma {
 
   export type ContactMinAggregateInputType = {
     id?: true
+    tenantId?: true
     type?: true
     name?: true
     email?: true
@@ -2991,6 +2995,7 @@ export namespace Prisma {
 
   export type ContactMaxAggregateInputType = {
     id?: true
+    tenantId?: true
     type?: true
     name?: true
     email?: true
@@ -3017,6 +3022,7 @@ export namespace Prisma {
 
   export type ContactCountAggregateInputType = {
     id?: true
+    tenantId?: true
     type?: true
     name?: true
     email?: true
@@ -3132,6 +3138,7 @@ export namespace Prisma {
 
   export type ContactGroupByOutputType = {
     id: string
+    tenantId: string
     type: $Enums.ContactType
     name: string
     email: string | null
@@ -3179,6 +3186,7 @@ export namespace Prisma {
 
   export type ContactSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     type?: boolean
     name?: boolean
     email?: boolean
@@ -3214,6 +3222,7 @@ export namespace Prisma {
 
   export type ContactSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     type?: boolean
     name?: boolean
     email?: boolean
@@ -3243,6 +3252,7 @@ export namespace Prisma {
 
   export type ContactSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     type?: boolean
     name?: boolean
     email?: boolean
@@ -3272,6 +3282,7 @@ export namespace Prisma {
 
   export type ContactSelectScalar = {
     id?: boolean
+    tenantId?: boolean
     type?: boolean
     name?: boolean
     email?: boolean
@@ -3298,7 +3309,7 @@ export namespace Prisma {
     archivedAt?: boolean
   }
 
-  export type ContactOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "type" | "name" | "email" | "phone" | "company" | "website" | "avatarUrl" | "country" | "region" | "city" | "address" | "postalCode" | "tags" | "leadStage" | "leadScore" | "dealValue" | "currency" | "followUpAt" | "source" | "parentId" | "customFields" | "createdAt" | "updatedAt" | "archivedAt", ExtArgs["result"]["contact"]>
+  export type ContactOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "type" | "name" | "email" | "phone" | "company" | "website" | "avatarUrl" | "country" | "region" | "city" | "address" | "postalCode" | "tags" | "leadStage" | "leadScore" | "dealValue" | "currency" | "followUpAt" | "source" | "parentId" | "customFields" | "createdAt" | "updatedAt" | "archivedAt", ExtArgs["result"]["contact"]>
   export type ContactInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     parent?: boolean | Contact$parentArgs<ExtArgs>
     children?: boolean | Contact$childrenArgs<ExtArgs>
@@ -3327,11 +3338,20 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
+      /**
+       * Owning tenant (SaaS phase 4.4). RLS-enforced; backfilled to the default tenant.
+       */
+      tenantId: string
       type: $Enums.ContactType
       /**
        * Display name — person full name or company trading name
        */
       name: string
+      /**
+       * Unique PER TENANT (SaaS phase 4.5, FU-03), not globally — two tenants may
+       * each have a contact with the same email. In self-host the tenantId is the
+       * constant default so (tenantId, email) behaves as a unique email.
+       */
       email: string | null
       phone: string | null
       company: string | null
@@ -3811,6 +3831,7 @@ export namespace Prisma {
    */
   interface ContactFieldRefs {
     readonly id: FieldRef<"Contact", 'String'>
+    readonly tenantId: FieldRef<"Contact", 'String'>
     readonly type: FieldRef<"Contact", 'ContactType'>
     readonly name: FieldRef<"Contact", 'String'>
     readonly email: FieldRef<"Contact", 'String'>
@@ -4400,6 +4421,7 @@ export namespace Prisma {
 
   export type ContactNoteMinAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     contactId: string | null
     type: string | null
     body: string | null
@@ -4410,6 +4432,7 @@ export namespace Prisma {
 
   export type ContactNoteMaxAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     contactId: string | null
     type: string | null
     body: string | null
@@ -4420,6 +4443,7 @@ export namespace Prisma {
 
   export type ContactNoteCountAggregateOutputType = {
     id: number
+    tenantId: number
     contactId: number
     type: number
     body: number
@@ -4432,6 +4456,7 @@ export namespace Prisma {
 
   export type ContactNoteMinAggregateInputType = {
     id?: true
+    tenantId?: true
     contactId?: true
     type?: true
     body?: true
@@ -4442,6 +4467,7 @@ export namespace Prisma {
 
   export type ContactNoteMaxAggregateInputType = {
     id?: true
+    tenantId?: true
     contactId?: true
     type?: true
     body?: true
@@ -4452,6 +4478,7 @@ export namespace Prisma {
 
   export type ContactNoteCountAggregateInputType = {
     id?: true
+    tenantId?: true
     contactId?: true
     type?: true
     body?: true
@@ -4535,6 +4562,7 @@ export namespace Prisma {
 
   export type ContactNoteGroupByOutputType = {
     id: string
+    tenantId: string
     contactId: string
     type: string
     body: string
@@ -4562,6 +4590,7 @@ export namespace Prisma {
 
   export type ContactNoteSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     contactId?: boolean
     type?: boolean
     body?: boolean
@@ -4573,6 +4602,7 @@ export namespace Prisma {
 
   export type ContactNoteSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     contactId?: boolean
     type?: boolean
     body?: boolean
@@ -4584,6 +4614,7 @@ export namespace Prisma {
 
   export type ContactNoteSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     contactId?: boolean
     type?: boolean
     body?: boolean
@@ -4595,6 +4626,7 @@ export namespace Prisma {
 
   export type ContactNoteSelectScalar = {
     id?: boolean
+    tenantId?: boolean
     contactId?: boolean
     type?: boolean
     body?: boolean
@@ -4603,7 +4635,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type ContactNoteOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "contactId" | "type" | "body" | "authorId" | "createdAt" | "updatedAt", ExtArgs["result"]["contactNote"]>
+  export type ContactNoteOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "contactId" | "type" | "body" | "authorId" | "createdAt" | "updatedAt", ExtArgs["result"]["contactNote"]>
   export type ContactNoteInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     contact?: boolean | ContactDefaultArgs<ExtArgs>
   }
@@ -4621,6 +4653,7 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
+      tenantId: string
       contactId: string
       type: string
       body: string
@@ -5055,6 +5088,7 @@ export namespace Prisma {
    */
   interface ContactNoteFieldRefs {
     readonly id: FieldRef<"ContactNote", 'String'>
+    readonly tenantId: FieldRef<"ContactNote", 'String'>
     readonly contactId: FieldRef<"ContactNote", 'String'>
     readonly type: FieldRef<"ContactNote", 'String'>
     readonly body: FieldRef<"ContactNote", 'String'>
@@ -5501,6 +5535,7 @@ export namespace Prisma {
 
   export type ProductMinAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     sku: string | null
     name: string | null
     description: string | null
@@ -5521,6 +5556,7 @@ export namespace Prisma {
 
   export type ProductMaxAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     sku: string | null
     name: string | null
     description: string | null
@@ -5541,6 +5577,7 @@ export namespace Prisma {
 
   export type ProductCountAggregateOutputType = {
     id: number
+    tenantId: number
     sku: number
     name: number
     description: number
@@ -5577,6 +5614,7 @@ export namespace Prisma {
 
   export type ProductMinAggregateInputType = {
     id?: true
+    tenantId?: true
     sku?: true
     name?: true
     description?: true
@@ -5597,6 +5635,7 @@ export namespace Prisma {
 
   export type ProductMaxAggregateInputType = {
     id?: true
+    tenantId?: true
     sku?: true
     name?: true
     description?: true
@@ -5617,6 +5656,7 @@ export namespace Prisma {
 
   export type ProductCountAggregateInputType = {
     id?: true
+    tenantId?: true
     sku?: true
     name?: true
     description?: true
@@ -5726,6 +5766,7 @@ export namespace Prisma {
 
   export type ProductGroupByOutputType = {
     id: string
+    tenantId: string
     sku: string
     name: string
     description: string | null
@@ -5767,6 +5808,7 @@ export namespace Prisma {
 
   export type ProductSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     sku?: boolean
     name?: boolean
     description?: boolean
@@ -5794,6 +5836,7 @@ export namespace Prisma {
 
   export type ProductSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     sku?: boolean
     name?: boolean
     description?: boolean
@@ -5816,6 +5859,7 @@ export namespace Prisma {
 
   export type ProductSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     sku?: boolean
     name?: boolean
     description?: boolean
@@ -5838,6 +5882,7 @@ export namespace Prisma {
 
   export type ProductSelectScalar = {
     id?: boolean
+    tenantId?: boolean
     sku?: boolean
     name?: boolean
     description?: boolean
@@ -5858,7 +5903,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type ProductOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "sku" | "name" | "description" | "type" | "unitPrice" | "costPrice" | "currency" | "taxRate" | "unit" | "imageUrl" | "barcode" | "brand" | "category" | "tags" | "isActive" | "customFields" | "createdAt" | "updatedAt", ExtArgs["result"]["product"]>
+  export type ProductOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "sku" | "name" | "description" | "type" | "unitPrice" | "costPrice" | "currency" | "taxRate" | "unit" | "imageUrl" | "barcode" | "brand" | "category" | "tags" | "isActive" | "customFields" | "createdAt" | "updatedAt", ExtArgs["result"]["product"]>
   export type ProductInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     inventoryItems?: boolean | Product$inventoryItemsArgs<ExtArgs>
     orderItems?: boolean | Product$orderItemsArgs<ExtArgs>
@@ -5879,6 +5924,10 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
+      tenantId: string
+      /**
+       * Unique PER TENANT (FU-03), not globally — see Contact.email.
+       */
       sku: string
       name: string
       description: string | null
@@ -6337,6 +6386,7 @@ export namespace Prisma {
    */
   interface ProductFieldRefs {
     readonly id: FieldRef<"Product", 'String'>
+    readonly tenantId: FieldRef<"Product", 'String'>
     readonly sku: FieldRef<"Product", 'String'>
     readonly name: FieldRef<"Product", 'String'>
     readonly description: FieldRef<"Product", 'String'>
@@ -6869,6 +6919,7 @@ export namespace Prisma {
 
   export type WarehouseMinAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     name: string | null
     code: string | null
     address: string | null
@@ -6881,6 +6932,7 @@ export namespace Prisma {
 
   export type WarehouseMaxAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     name: string | null
     code: string | null
     address: string | null
@@ -6893,6 +6945,7 @@ export namespace Prisma {
 
   export type WarehouseCountAggregateOutputType = {
     id: number
+    tenantId: number
     name: number
     code: number
     address: number
@@ -6907,6 +6960,7 @@ export namespace Prisma {
 
   export type WarehouseMinAggregateInputType = {
     id?: true
+    tenantId?: true
     name?: true
     code?: true
     address?: true
@@ -6919,6 +6973,7 @@ export namespace Prisma {
 
   export type WarehouseMaxAggregateInputType = {
     id?: true
+    tenantId?: true
     name?: true
     code?: true
     address?: true
@@ -6931,6 +6986,7 @@ export namespace Prisma {
 
   export type WarehouseCountAggregateInputType = {
     id?: true
+    tenantId?: true
     name?: true
     code?: true
     address?: true
@@ -7016,6 +7072,7 @@ export namespace Prisma {
 
   export type WarehouseGroupByOutputType = {
     id: string
+    tenantId: string
     name: string
     code: string
     address: string | null
@@ -7045,6 +7102,7 @@ export namespace Prisma {
 
   export type WarehouseSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     name?: boolean
     code?: boolean
     address?: boolean
@@ -7060,6 +7118,7 @@ export namespace Prisma {
 
   export type WarehouseSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     name?: boolean
     code?: boolean
     address?: boolean
@@ -7072,6 +7131,7 @@ export namespace Prisma {
 
   export type WarehouseSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     name?: boolean
     code?: boolean
     address?: boolean
@@ -7084,6 +7144,7 @@ export namespace Prisma {
 
   export type WarehouseSelectScalar = {
     id?: boolean
+    tenantId?: boolean
     name?: boolean
     code?: boolean
     address?: boolean
@@ -7094,7 +7155,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type WarehouseOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "code" | "address" | "country" | "status" | "isDefault" | "createdAt" | "updatedAt", ExtArgs["result"]["warehouse"]>
+  export type WarehouseOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "name" | "code" | "address" | "country" | "status" | "isDefault" | "createdAt" | "updatedAt", ExtArgs["result"]["warehouse"]>
   export type WarehouseInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     inventoryItems?: boolean | Warehouse$inventoryItemsArgs<ExtArgs>
     stockMovements?: boolean | Warehouse$stockMovementsArgs<ExtArgs>
@@ -7111,9 +7172,10 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
+      tenantId: string
       name: string
       /**
-       * Short unique code used in stock-transfer references
+       * Short code used in stock-transfer references — unique PER TENANT (FU-03).
        */
       code: string
       address: string | null
@@ -7548,6 +7610,7 @@ export namespace Prisma {
    */
   interface WarehouseFieldRefs {
     readonly id: FieldRef<"Warehouse", 'String'>
+    readonly tenantId: FieldRef<"Warehouse", 'String'>
     readonly name: FieldRef<"Warehouse", 'String'>
     readonly code: FieldRef<"Warehouse", 'String'>
     readonly address: FieldRef<"Warehouse", 'String'>
@@ -8042,6 +8105,7 @@ export namespace Prisma {
 
   export type InventoryItemMinAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     productId: string | null
     warehouseId: string | null
     quantityOnHand: number | null
@@ -8058,6 +8122,7 @@ export namespace Prisma {
 
   export type InventoryItemMaxAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     productId: string | null
     warehouseId: string | null
     quantityOnHand: number | null
@@ -8074,6 +8139,7 @@ export namespace Prisma {
 
   export type InventoryItemCountAggregateOutputType = {
     id: number
+    tenantId: number
     productId: number
     warehouseId: number
     quantityOnHand: number
@@ -8110,6 +8176,7 @@ export namespace Prisma {
 
   export type InventoryItemMinAggregateInputType = {
     id?: true
+    tenantId?: true
     productId?: true
     warehouseId?: true
     quantityOnHand?: true
@@ -8126,6 +8193,7 @@ export namespace Prisma {
 
   export type InventoryItemMaxAggregateInputType = {
     id?: true
+    tenantId?: true
     productId?: true
     warehouseId?: true
     quantityOnHand?: true
@@ -8142,6 +8210,7 @@ export namespace Prisma {
 
   export type InventoryItemCountAggregateInputType = {
     id?: true
+    tenantId?: true
     productId?: true
     warehouseId?: true
     quantityOnHand?: true
@@ -8245,6 +8314,7 @@ export namespace Prisma {
 
   export type InventoryItemGroupByOutputType = {
     id: string
+    tenantId: string
     productId: string
     warehouseId: string
     quantityOnHand: number
@@ -8280,6 +8350,7 @@ export namespace Prisma {
 
   export type InventoryItemSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     productId?: boolean
     warehouseId?: boolean
     quantityOnHand?: boolean
@@ -8298,6 +8369,7 @@ export namespace Prisma {
 
   export type InventoryItemSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     productId?: boolean
     warehouseId?: boolean
     quantityOnHand?: boolean
@@ -8316,6 +8388,7 @@ export namespace Prisma {
 
   export type InventoryItemSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     productId?: boolean
     warehouseId?: boolean
     quantityOnHand?: boolean
@@ -8334,6 +8407,7 @@ export namespace Prisma {
 
   export type InventoryItemSelectScalar = {
     id?: boolean
+    tenantId?: boolean
     productId?: boolean
     warehouseId?: boolean
     quantityOnHand?: boolean
@@ -8348,7 +8422,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type InventoryItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "productId" | "warehouseId" | "quantityOnHand" | "quantityReserved" | "quantityAvailable" | "reorderPoint" | "reorderQty" | "maxStock" | "binLocation" | "lastStockCheck" | "createdAt" | "updatedAt", ExtArgs["result"]["inventoryItem"]>
+  export type InventoryItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "productId" | "warehouseId" | "quantityOnHand" | "quantityReserved" | "quantityAvailable" | "reorderPoint" | "reorderQty" | "maxStock" | "binLocation" | "lastStockCheck" | "createdAt" | "updatedAt", ExtArgs["result"]["inventoryItem"]>
   export type InventoryItemInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     product?: boolean | ProductDefaultArgs<ExtArgs>
     warehouse?: boolean | WarehouseDefaultArgs<ExtArgs>
@@ -8370,6 +8444,7 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
+      tenantId: string
       productId: string
       warehouseId: string
       /**
@@ -8829,6 +8904,7 @@ export namespace Prisma {
    */
   interface InventoryItemFieldRefs {
     readonly id: FieldRef<"InventoryItem", 'String'>
+    readonly tenantId: FieldRef<"InventoryItem", 'String'>
     readonly productId: FieldRef<"InventoryItem", 'String'>
     readonly warehouseId: FieldRef<"InventoryItem", 'String'>
     readonly quantityOnHand: FieldRef<"InventoryItem", 'Int'>
@@ -9279,6 +9355,7 @@ export namespace Prisma {
 
   export type StockMovementMinAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     productId: string | null
     warehouseId: string | null
     type: $Enums.StockMovementType | null
@@ -9293,6 +9370,7 @@ export namespace Prisma {
 
   export type StockMovementMaxAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     productId: string | null
     warehouseId: string | null
     type: $Enums.StockMovementType | null
@@ -9307,6 +9385,7 @@ export namespace Prisma {
 
   export type StockMovementCountAggregateOutputType = {
     id: number
+    tenantId: number
     productId: number
     warehouseId: number
     type: number
@@ -9333,6 +9412,7 @@ export namespace Prisma {
 
   export type StockMovementMinAggregateInputType = {
     id?: true
+    tenantId?: true
     productId?: true
     warehouseId?: true
     type?: true
@@ -9347,6 +9427,7 @@ export namespace Prisma {
 
   export type StockMovementMaxAggregateInputType = {
     id?: true
+    tenantId?: true
     productId?: true
     warehouseId?: true
     type?: true
@@ -9361,6 +9442,7 @@ export namespace Prisma {
 
   export type StockMovementCountAggregateInputType = {
     id?: true
+    tenantId?: true
     productId?: true
     warehouseId?: true
     type?: true
@@ -9462,6 +9544,7 @@ export namespace Prisma {
 
   export type StockMovementGroupByOutputType = {
     id: string
+    tenantId: string
     productId: string
     warehouseId: string
     type: $Enums.StockMovementType
@@ -9495,6 +9578,7 @@ export namespace Prisma {
 
   export type StockMovementSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     productId?: boolean
     warehouseId?: boolean
     type?: boolean
@@ -9511,6 +9595,7 @@ export namespace Prisma {
 
   export type StockMovementSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     productId?: boolean
     warehouseId?: boolean
     type?: boolean
@@ -9527,6 +9612,7 @@ export namespace Prisma {
 
   export type StockMovementSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     productId?: boolean
     warehouseId?: boolean
     type?: boolean
@@ -9543,6 +9629,7 @@ export namespace Prisma {
 
   export type StockMovementSelectScalar = {
     id?: boolean
+    tenantId?: boolean
     productId?: boolean
     warehouseId?: boolean
     type?: boolean
@@ -9555,7 +9642,7 @@ export namespace Prisma {
     createdAt?: boolean
   }
 
-  export type StockMovementOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "productId" | "warehouseId" | "type" | "quantity" | "balanceAfter" | "referenceType" | "referenceId" | "note" | "createdById" | "createdAt", ExtArgs["result"]["stockMovement"]>
+  export type StockMovementOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "productId" | "warehouseId" | "type" | "quantity" | "balanceAfter" | "referenceType" | "referenceId" | "note" | "createdById" | "createdAt", ExtArgs["result"]["stockMovement"]>
   export type StockMovementInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     product?: boolean | ProductDefaultArgs<ExtArgs>
     warehouse?: boolean | WarehouseDefaultArgs<ExtArgs>
@@ -9577,6 +9664,7 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
+      tenantId: string
       productId: string
       warehouseId: string
       type: $Enums.StockMovementType
@@ -10028,6 +10116,7 @@ export namespace Prisma {
    */
   interface StockMovementFieldRefs {
     readonly id: FieldRef<"StockMovement", 'String'>
+    readonly tenantId: FieldRef<"StockMovement", 'String'>
     readonly productId: FieldRef<"StockMovement", 'String'>
     readonly warehouseId: FieldRef<"StockMovement", 'String'>
     readonly type: FieldRef<"StockMovement", 'StockMovementType'>
@@ -10482,6 +10571,7 @@ export namespace Prisma {
 
   export type OrderMinAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     orderNumber: string | null
     contactId: string | null
     status: $Enums.OrderStatus | null
@@ -10516,6 +10606,7 @@ export namespace Prisma {
 
   export type OrderMaxAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     orderNumber: string | null
     contactId: string | null
     status: $Enums.OrderStatus | null
@@ -10550,6 +10641,7 @@ export namespace Prisma {
 
   export type OrderCountAggregateOutputType = {
     id: number
+    tenantId: number
     orderNumber: number
     contactId: number
     status: number
@@ -10603,6 +10695,7 @@ export namespace Prisma {
 
   export type OrderMinAggregateInputType = {
     id?: true
+    tenantId?: true
     orderNumber?: true
     contactId?: true
     status?: true
@@ -10637,6 +10730,7 @@ export namespace Prisma {
 
   export type OrderMaxAggregateInputType = {
     id?: true
+    tenantId?: true
     orderNumber?: true
     contactId?: true
     status?: true
@@ -10671,6 +10765,7 @@ export namespace Prisma {
 
   export type OrderCountAggregateInputType = {
     id?: true
+    tenantId?: true
     orderNumber?: true
     contactId?: true
     status?: true
@@ -10793,6 +10888,7 @@ export namespace Prisma {
 
   export type OrderGroupByOutputType = {
     id: string
+    tenantId: string
     orderNumber: string
     contactId: string | null
     status: $Enums.OrderStatus
@@ -10847,6 +10943,7 @@ export namespace Prisma {
 
   export type OrderSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     orderNumber?: boolean
     contactId?: boolean
     status?: boolean
@@ -10887,6 +10984,7 @@ export namespace Prisma {
 
   export type OrderSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     orderNumber?: boolean
     contactId?: boolean
     status?: boolean
@@ -10923,6 +11021,7 @@ export namespace Prisma {
 
   export type OrderSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     orderNumber?: boolean
     contactId?: boolean
     status?: boolean
@@ -10959,6 +11058,7 @@ export namespace Prisma {
 
   export type OrderSelectScalar = {
     id?: boolean
+    tenantId?: boolean
     orderNumber?: boolean
     contactId?: boolean
     status?: boolean
@@ -10992,7 +11092,7 @@ export namespace Prisma {
     cancelledAt?: boolean
   }
 
-  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "orderNumber" | "contactId" | "status" | "fulfillmentStatus" | "subtotal" | "discountAmount" | "taxAmount" | "shippingAmount" | "total" | "currency" | "shippingName" | "shippingAddress" | "shippingCity" | "shippingPostalCode" | "shippingCountry" | "shippingCarrier" | "trackingNumber" | "trackingUrl" | "estimatedDelivery" | "shippedAt" | "deliveredAt" | "notes" | "internalNotes" | "channel" | "externalRef" | "customFields" | "createdById" | "createdAt" | "updatedAt" | "confirmedAt" | "cancelledAt", ExtArgs["result"]["order"]>
+  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "orderNumber" | "contactId" | "status" | "fulfillmentStatus" | "subtotal" | "discountAmount" | "taxAmount" | "shippingAmount" | "total" | "currency" | "shippingName" | "shippingAddress" | "shippingCity" | "shippingPostalCode" | "shippingCountry" | "shippingCarrier" | "trackingNumber" | "trackingUrl" | "estimatedDelivery" | "shippedAt" | "deliveredAt" | "notes" | "internalNotes" | "channel" | "externalRef" | "customFields" | "createdById" | "createdAt" | "updatedAt" | "confirmedAt" | "cancelledAt", ExtArgs["result"]["order"]>
   export type OrderInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     contact?: boolean | Order$contactArgs<ExtArgs>
     items?: boolean | Order$itemsArgs<ExtArgs>
@@ -11017,8 +11117,9 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
+      tenantId: string
       /**
-       * Human-readable reference e.g. "ORD-2025-00042"
+       * Human-readable reference e.g. "ORD-2025-00042" — unique PER TENANT (FU-03).
        */
       orderNumber: string
       contactId: string | null
@@ -11488,6 +11589,7 @@ export namespace Prisma {
    */
   interface OrderFieldRefs {
     readonly id: FieldRef<"Order", 'String'>
+    readonly tenantId: FieldRef<"Order", 'String'>
     readonly orderNumber: FieldRef<"Order", 'String'>
     readonly contactId: FieldRef<"Order", 'String'>
     readonly status: FieldRef<"Order", 'OrderStatus'>
@@ -12058,6 +12160,7 @@ export namespace Prisma {
 
   export type OrderItemMinAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     orderId: string | null
     productId: string | null
     sku: string | null
@@ -12076,6 +12179,7 @@ export namespace Prisma {
 
   export type OrderItemMaxAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     orderId: string | null
     productId: string | null
     sku: string | null
@@ -12094,6 +12198,7 @@ export namespace Prisma {
 
   export type OrderItemCountAggregateOutputType = {
     id: number
+    tenantId: number
     orderId: number
     productId: number
     sku: number
@@ -12134,6 +12239,7 @@ export namespace Prisma {
 
   export type OrderItemMinAggregateInputType = {
     id?: true
+    tenantId?: true
     orderId?: true
     productId?: true
     sku?: true
@@ -12152,6 +12258,7 @@ export namespace Prisma {
 
   export type OrderItemMaxAggregateInputType = {
     id?: true
+    tenantId?: true
     orderId?: true
     productId?: true
     sku?: true
@@ -12170,6 +12277,7 @@ export namespace Prisma {
 
   export type OrderItemCountAggregateInputType = {
     id?: true
+    tenantId?: true
     orderId?: true
     productId?: true
     sku?: true
@@ -12275,6 +12383,7 @@ export namespace Prisma {
 
   export type OrderItemGroupByOutputType = {
     id: string
+    tenantId: string
     orderId: string
     productId: string
     sku: string
@@ -12312,6 +12421,7 @@ export namespace Prisma {
 
   export type OrderItemSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     orderId?: boolean
     productId?: boolean
     sku?: boolean
@@ -12332,6 +12442,7 @@ export namespace Prisma {
 
   export type OrderItemSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     orderId?: boolean
     productId?: boolean
     sku?: boolean
@@ -12352,6 +12463,7 @@ export namespace Prisma {
 
   export type OrderItemSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     orderId?: boolean
     productId?: boolean
     sku?: boolean
@@ -12372,6 +12484,7 @@ export namespace Prisma {
 
   export type OrderItemSelectScalar = {
     id?: boolean
+    tenantId?: boolean
     orderId?: boolean
     productId?: boolean
     sku?: boolean
@@ -12388,7 +12501,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type OrderItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "orderId" | "productId" | "sku" | "name" | "description" | "quantity" | "unitPrice" | "taxRate" | "discount" | "lineTotal" | "qtyFulfilled" | "qtyReturned" | "createdAt" | "updatedAt", ExtArgs["result"]["orderItem"]>
+  export type OrderItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "orderId" | "productId" | "sku" | "name" | "description" | "quantity" | "unitPrice" | "taxRate" | "discount" | "lineTotal" | "qtyFulfilled" | "qtyReturned" | "createdAt" | "updatedAt", ExtArgs["result"]["orderItem"]>
   export type OrderItemInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     order?: boolean | OrderDefaultArgs<ExtArgs>
     product?: boolean | ProductDefaultArgs<ExtArgs>
@@ -12410,6 +12523,7 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
+      tenantId: string
       orderId: string
       productId: string
       /**
@@ -12859,6 +12973,7 @@ export namespace Prisma {
    */
   interface OrderItemFieldRefs {
     readonly id: FieldRef<"OrderItem", 'String'>
+    readonly tenantId: FieldRef<"OrderItem", 'String'>
     readonly orderId: FieldRef<"OrderItem", 'String'>
     readonly productId: FieldRef<"OrderItem", 'String'>
     readonly sku: FieldRef<"OrderItem", 'String'>
@@ -13299,6 +13414,7 @@ export namespace Prisma {
 
   export type FulfillmentMinAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     orderId: string | null
     status: $Enums.FulfillmentStatus | null
     carrier: string | null
@@ -13315,6 +13431,7 @@ export namespace Prisma {
 
   export type FulfillmentMaxAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     orderId: string | null
     status: $Enums.FulfillmentStatus | null
     carrier: string | null
@@ -13331,6 +13448,7 @@ export namespace Prisma {
 
   export type FulfillmentCountAggregateOutputType = {
     id: number
+    tenantId: number
     orderId: number
     status: number
     carrier: number
@@ -13349,6 +13467,7 @@ export namespace Prisma {
 
   export type FulfillmentMinAggregateInputType = {
     id?: true
+    tenantId?: true
     orderId?: true
     status?: true
     carrier?: true
@@ -13365,6 +13484,7 @@ export namespace Prisma {
 
   export type FulfillmentMaxAggregateInputType = {
     id?: true
+    tenantId?: true
     orderId?: true
     status?: true
     carrier?: true
@@ -13381,6 +13501,7 @@ export namespace Prisma {
 
   export type FulfillmentCountAggregateInputType = {
     id?: true
+    tenantId?: true
     orderId?: true
     status?: true
     carrier?: true
@@ -13470,6 +13591,7 @@ export namespace Prisma {
 
   export type FulfillmentGroupByOutputType = {
     id: string
+    tenantId: string
     orderId: string
     status: $Enums.FulfillmentStatus
     carrier: string | null
@@ -13503,6 +13625,7 @@ export namespace Prisma {
 
   export type FulfillmentSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     orderId?: boolean
     status?: boolean
     carrier?: boolean
@@ -13520,6 +13643,7 @@ export namespace Prisma {
 
   export type FulfillmentSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     orderId?: boolean
     status?: boolean
     carrier?: boolean
@@ -13537,6 +13661,7 @@ export namespace Prisma {
 
   export type FulfillmentSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     orderId?: boolean
     status?: boolean
     carrier?: boolean
@@ -13554,6 +13679,7 @@ export namespace Prisma {
 
   export type FulfillmentSelectScalar = {
     id?: boolean
+    tenantId?: boolean
     orderId?: boolean
     status?: boolean
     carrier?: boolean
@@ -13568,7 +13694,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type FulfillmentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "orderId" | "status" | "carrier" | "trackingNumber" | "trackingUrl" | "shippedAt" | "deliveredAt" | "failureReason" | "note" | "createdById" | "createdAt" | "updatedAt", ExtArgs["result"]["fulfillment"]>
+  export type FulfillmentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "orderId" | "status" | "carrier" | "trackingNumber" | "trackingUrl" | "shippedAt" | "deliveredAt" | "failureReason" | "note" | "createdById" | "createdAt" | "updatedAt", ExtArgs["result"]["fulfillment"]>
   export type FulfillmentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     order?: boolean | OrderDefaultArgs<ExtArgs>
   }
@@ -13586,6 +13712,7 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
+      tenantId: string
       orderId: string
       status: $Enums.FulfillmentStatus
       carrier: string | null
@@ -14026,6 +14153,7 @@ export namespace Prisma {
    */
   interface FulfillmentFieldRefs {
     readonly id: FieldRef<"Fulfillment", 'String'>
+    readonly tenantId: FieldRef<"Fulfillment", 'String'>
     readonly orderId: FieldRef<"Fulfillment", 'String'>
     readonly status: FieldRef<"Fulfillment", 'FulfillmentStatus'>
     readonly carrier: FieldRef<"Fulfillment", 'String'>
@@ -14484,6 +14612,7 @@ export namespace Prisma {
 
   export type InvoiceMinAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     invoiceNumber: string | null
     contactId: string | null
     orderId: string | null
@@ -14517,6 +14646,7 @@ export namespace Prisma {
 
   export type InvoiceMaxAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     invoiceNumber: string | null
     contactId: string | null
     orderId: string | null
@@ -14550,6 +14680,7 @@ export namespace Prisma {
 
   export type InvoiceCountAggregateOutputType = {
     id: number
+    tenantId: number
     invoiceNumber: number
     contactId: number
     orderId: number
@@ -14604,6 +14735,7 @@ export namespace Prisma {
 
   export type InvoiceMinAggregateInputType = {
     id?: true
+    tenantId?: true
     invoiceNumber?: true
     contactId?: true
     orderId?: true
@@ -14637,6 +14769,7 @@ export namespace Prisma {
 
   export type InvoiceMaxAggregateInputType = {
     id?: true
+    tenantId?: true
     invoiceNumber?: true
     contactId?: true
     orderId?: true
@@ -14670,6 +14803,7 @@ export namespace Prisma {
 
   export type InvoiceCountAggregateInputType = {
     id?: true
+    tenantId?: true
     invoiceNumber?: true
     contactId?: true
     orderId?: true
@@ -14791,6 +14925,7 @@ export namespace Prisma {
 
   export type InvoiceGroupByOutputType = {
     id: string
+    tenantId: string
     invoiceNumber: string
     contactId: string | null
     orderId: string | null
@@ -14844,6 +14979,7 @@ export namespace Prisma {
 
   export type InvoiceSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     invoiceNumber?: boolean
     contactId?: boolean
     orderId?: boolean
@@ -14885,6 +15021,7 @@ export namespace Prisma {
 
   export type InvoiceSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     invoiceNumber?: boolean
     contactId?: boolean
     orderId?: boolean
@@ -14922,6 +15059,7 @@ export namespace Prisma {
 
   export type InvoiceSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     invoiceNumber?: boolean
     contactId?: boolean
     orderId?: boolean
@@ -14959,6 +15097,7 @@ export namespace Prisma {
 
   export type InvoiceSelectScalar = {
     id?: boolean
+    tenantId?: boolean
     invoiceNumber?: boolean
     contactId?: boolean
     orderId?: boolean
@@ -14991,7 +15130,7 @@ export namespace Prisma {
     voidedAt?: boolean
   }
 
-  export type InvoiceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "invoiceNumber" | "contactId" | "orderId" | "status" | "issueDate" | "dueDate" | "paidAt" | "subtotal" | "discountAmount" | "taxAmount" | "total" | "amountPaid" | "amountDue" | "currency" | "isRecurring" | "recurrenceInterval" | "recurrenceStartDate" | "recurrenceEndDate" | "lastGeneratedAt" | "nextGenerationAt" | "recurringTemplateId" | "notes" | "terms" | "footer" | "customFields" | "createdById" | "createdAt" | "updatedAt" | "sentAt" | "voidedAt", ExtArgs["result"]["invoice"]>
+  export type InvoiceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "invoiceNumber" | "contactId" | "orderId" | "status" | "issueDate" | "dueDate" | "paidAt" | "subtotal" | "discountAmount" | "taxAmount" | "total" | "amountPaid" | "amountDue" | "currency" | "isRecurring" | "recurrenceInterval" | "recurrenceStartDate" | "recurrenceEndDate" | "lastGeneratedAt" | "nextGenerationAt" | "recurringTemplateId" | "notes" | "terms" | "footer" | "customFields" | "createdById" | "createdAt" | "updatedAt" | "sentAt" | "voidedAt", ExtArgs["result"]["invoice"]>
   export type InvoiceInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     contact?: boolean | Invoice$contactArgs<ExtArgs>
     order?: boolean | Invoice$orderArgs<ExtArgs>
@@ -15024,8 +15163,9 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
+      tenantId: string
       /**
-       * Human-readable reference e.g. "INV-2025-00017"
+       * Human-readable reference e.g. "INV-2025-00017" — unique PER TENANT (FU-03).
        */
       invoiceNumber: string
       contactId: string | null
@@ -15505,6 +15645,7 @@ export namespace Prisma {
    */
   interface InvoiceFieldRefs {
     readonly id: FieldRef<"Invoice", 'String'>
+    readonly tenantId: FieldRef<"Invoice", 'String'>
     readonly invoiceNumber: FieldRef<"Invoice", 'String'>
     readonly contactId: FieldRef<"Invoice", 'String'>
     readonly orderId: FieldRef<"Invoice", 'String'>
@@ -16110,6 +16251,7 @@ export namespace Prisma {
 
   export type InvoiceLineMinAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     invoiceId: string | null
     productId: string | null
     description: string | null
@@ -16125,6 +16267,7 @@ export namespace Prisma {
 
   export type InvoiceLineMaxAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     invoiceId: string | null
     productId: string | null
     description: string | null
@@ -16140,6 +16283,7 @@ export namespace Prisma {
 
   export type InvoiceLineCountAggregateOutputType = {
     id: number
+    tenantId: number
     invoiceId: number
     productId: number
     description: number
@@ -16175,6 +16319,7 @@ export namespace Prisma {
 
   export type InvoiceLineMinAggregateInputType = {
     id?: true
+    tenantId?: true
     invoiceId?: true
     productId?: true
     description?: true
@@ -16190,6 +16335,7 @@ export namespace Prisma {
 
   export type InvoiceLineMaxAggregateInputType = {
     id?: true
+    tenantId?: true
     invoiceId?: true
     productId?: true
     description?: true
@@ -16205,6 +16351,7 @@ export namespace Prisma {
 
   export type InvoiceLineCountAggregateInputType = {
     id?: true
+    tenantId?: true
     invoiceId?: true
     productId?: true
     description?: true
@@ -16307,6 +16454,7 @@ export namespace Prisma {
 
   export type InvoiceLineGroupByOutputType = {
     id: string
+    tenantId: string
     invoiceId: string
     productId: string | null
     description: string
@@ -16341,6 +16489,7 @@ export namespace Prisma {
 
   export type InvoiceLineSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     invoiceId?: boolean
     productId?: boolean
     description?: boolean
@@ -16358,6 +16507,7 @@ export namespace Prisma {
 
   export type InvoiceLineSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     invoiceId?: boolean
     productId?: boolean
     description?: boolean
@@ -16375,6 +16525,7 @@ export namespace Prisma {
 
   export type InvoiceLineSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     invoiceId?: boolean
     productId?: boolean
     description?: boolean
@@ -16392,6 +16543,7 @@ export namespace Prisma {
 
   export type InvoiceLineSelectScalar = {
     id?: boolean
+    tenantId?: boolean
     invoiceId?: boolean
     productId?: boolean
     description?: boolean
@@ -16405,7 +16557,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type InvoiceLineOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "invoiceId" | "productId" | "description" | "quantity" | "unitPrice" | "taxRate" | "discount" | "lineTotal" | "sortOrder" | "createdAt" | "updatedAt", ExtArgs["result"]["invoiceLine"]>
+  export type InvoiceLineOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "invoiceId" | "productId" | "description" | "quantity" | "unitPrice" | "taxRate" | "discount" | "lineTotal" | "sortOrder" | "createdAt" | "updatedAt", ExtArgs["result"]["invoiceLine"]>
   export type InvoiceLineInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     invoice?: boolean | InvoiceDefaultArgs<ExtArgs>
     product?: boolean | InvoiceLine$productArgs<ExtArgs>
@@ -16427,6 +16579,7 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
+      tenantId: string
       invoiceId: string
       productId: string | null
       description: string
@@ -16867,6 +17020,7 @@ export namespace Prisma {
    */
   interface InvoiceLineFieldRefs {
     readonly id: FieldRef<"InvoiceLine", 'String'>
+    readonly tenantId: FieldRef<"InvoiceLine", 'String'>
     readonly invoiceId: FieldRef<"InvoiceLine", 'String'>
     readonly productId: FieldRef<"InvoiceLine", 'String'>
     readonly description: FieldRef<"InvoiceLine", 'String'>
@@ -17333,6 +17487,7 @@ export namespace Prisma {
 
   export type PaymentMinAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     invoiceId: string | null
     amount: Decimal | null
     currency: string | null
@@ -17347,6 +17502,7 @@ export namespace Prisma {
 
   export type PaymentMaxAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     invoiceId: string | null
     amount: Decimal | null
     currency: string | null
@@ -17361,6 +17517,7 @@ export namespace Prisma {
 
   export type PaymentCountAggregateOutputType = {
     id: number
+    tenantId: number
     invoiceId: number
     amount: number
     currency: number
@@ -17385,6 +17542,7 @@ export namespace Prisma {
 
   export type PaymentMinAggregateInputType = {
     id?: true
+    tenantId?: true
     invoiceId?: true
     amount?: true
     currency?: true
@@ -17399,6 +17557,7 @@ export namespace Prisma {
 
   export type PaymentMaxAggregateInputType = {
     id?: true
+    tenantId?: true
     invoiceId?: true
     amount?: true
     currency?: true
@@ -17413,6 +17572,7 @@ export namespace Prisma {
 
   export type PaymentCountAggregateInputType = {
     id?: true
+    tenantId?: true
     invoiceId?: true
     amount?: true
     currency?: true
@@ -17514,6 +17674,7 @@ export namespace Prisma {
 
   export type PaymentGroupByOutputType = {
     id: string
+    tenantId: string
     invoiceId: string
     amount: Decimal
     currency: string
@@ -17547,6 +17708,7 @@ export namespace Prisma {
 
   export type PaymentSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     invoiceId?: boolean
     amount?: boolean
     currency?: boolean
@@ -17562,6 +17724,7 @@ export namespace Prisma {
 
   export type PaymentSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     invoiceId?: boolean
     amount?: boolean
     currency?: boolean
@@ -17577,6 +17740,7 @@ export namespace Prisma {
 
   export type PaymentSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     invoiceId?: boolean
     amount?: boolean
     currency?: boolean
@@ -17592,6 +17756,7 @@ export namespace Prisma {
 
   export type PaymentSelectScalar = {
     id?: boolean
+    tenantId?: boolean
     invoiceId?: boolean
     amount?: boolean
     currency?: boolean
@@ -17604,7 +17769,7 @@ export namespace Prisma {
     createdAt?: boolean
   }
 
-  export type PaymentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "invoiceId" | "amount" | "currency" | "method" | "transactionId" | "gateway" | "note" | "paidAt" | "createdById" | "createdAt", ExtArgs["result"]["payment"]>
+  export type PaymentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "invoiceId" | "amount" | "currency" | "method" | "transactionId" | "gateway" | "note" | "paidAt" | "createdById" | "createdAt", ExtArgs["result"]["payment"]>
   export type PaymentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     invoice?: boolean | InvoiceDefaultArgs<ExtArgs>
   }
@@ -17622,6 +17787,7 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
+      tenantId: string
       invoiceId: string
       amount: Prisma.Decimal
       currency: string
@@ -18066,6 +18232,7 @@ export namespace Prisma {
    */
   interface PaymentFieldRefs {
     readonly id: FieldRef<"Payment", 'String'>
+    readonly tenantId: FieldRef<"Payment", 'String'>
     readonly invoiceId: FieldRef<"Payment", 'String'>
     readonly amount: FieldRef<"Payment", 'Decimal'>
     readonly currency: FieldRef<"Payment", 'String'>
@@ -18520,6 +18687,7 @@ export namespace Prisma {
 
   export type ExpenseMinAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     title: string | null
     description: string | null
     category: $Enums.ExpenseCategory | null
@@ -18549,6 +18717,7 @@ export namespace Prisma {
 
   export type ExpenseMaxAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     title: string | null
     description: string | null
     category: $Enums.ExpenseCategory | null
@@ -18578,6 +18747,7 @@ export namespace Prisma {
 
   export type ExpenseCountAggregateOutputType = {
     id: number
+    tenantId: number
     title: number
     description: number
     category: number
@@ -18627,6 +18797,7 @@ export namespace Prisma {
 
   export type ExpenseMinAggregateInputType = {
     id?: true
+    tenantId?: true
     title?: true
     description?: true
     category?: true
@@ -18656,6 +18827,7 @@ export namespace Prisma {
 
   export type ExpenseMaxAggregateInputType = {
     id?: true
+    tenantId?: true
     title?: true
     description?: true
     category?: true
@@ -18685,6 +18857,7 @@ export namespace Prisma {
 
   export type ExpenseCountAggregateInputType = {
     id?: true
+    tenantId?: true
     title?: true
     description?: true
     category?: true
@@ -18803,6 +18976,7 @@ export namespace Prisma {
 
   export type ExpenseGroupByOutputType = {
     id: string
+    tenantId: string
     title: string
     description: string | null
     category: $Enums.ExpenseCategory
@@ -18853,6 +19027,7 @@ export namespace Prisma {
 
   export type ExpenseSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     title?: boolean
     description?: boolean
     category?: boolean
@@ -18885,6 +19060,7 @@ export namespace Prisma {
 
   export type ExpenseSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     title?: boolean
     description?: boolean
     category?: boolean
@@ -18917,6 +19093,7 @@ export namespace Prisma {
 
   export type ExpenseSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     title?: boolean
     description?: boolean
     category?: boolean
@@ -18949,6 +19126,7 @@ export namespace Prisma {
 
   export type ExpenseSelectScalar = {
     id?: boolean
+    tenantId?: boolean
     title?: boolean
     description?: boolean
     category?: boolean
@@ -18978,7 +19156,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type ExpenseOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "title" | "description" | "category" | "status" | "amount" | "taxAmount" | "currency" | "exchangeRate" | "baseAmount" | "expenseDate" | "vendorId" | "receiptUrl" | "receiptFilename" | "receiptMimeType" | "receiptOcrText" | "ocrConfidence" | "isTaxDeductible" | "reference" | "notes" | "tags" | "submittedById" | "approvedById" | "approvedAt" | "rejectedReason" | "customFields" | "createdAt" | "updatedAt", ExtArgs["result"]["expense"]>
+  export type ExpenseOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "title" | "description" | "category" | "status" | "amount" | "taxAmount" | "currency" | "exchangeRate" | "baseAmount" | "expenseDate" | "vendorId" | "receiptUrl" | "receiptFilename" | "receiptMimeType" | "receiptOcrText" | "ocrConfidence" | "isTaxDeductible" | "reference" | "notes" | "tags" | "submittedById" | "approvedById" | "approvedAt" | "rejectedReason" | "customFields" | "createdAt" | "updatedAt", ExtArgs["result"]["expense"]>
   export type ExpenseInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     vendor?: boolean | Expense$vendorArgs<ExtArgs>
   }
@@ -18996,6 +19174,7 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
+      tenantId: string
       title: string
       description: string | null
       category: $Enums.ExpenseCategory
@@ -19475,6 +19654,7 @@ export namespace Prisma {
    */
   interface ExpenseFieldRefs {
     readonly id: FieldRef<"Expense", 'String'>
+    readonly tenantId: FieldRef<"Expense", 'String'>
     readonly title: FieldRef<"Expense", 'String'>
     readonly description: FieldRef<"Expense", 'String'>
     readonly category: FieldRef<"Expense", 'ExpenseCategory'>
@@ -19957,6 +20137,7 @@ export namespace Prisma {
 
   export type ReportMinAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     name: string | null
     type: $Enums.ReportType | null
     period: $Enums.ReportPeriod | null
@@ -19976,6 +20157,7 @@ export namespace Prisma {
 
   export type ReportMaxAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     name: string | null
     type: $Enums.ReportType | null
     period: $Enums.ReportPeriod | null
@@ -19995,6 +20177,7 @@ export namespace Prisma {
 
   export type ReportCountAggregateOutputType = {
     id: number
+    tenantId: number
     name: number
     type: number
     period: number
@@ -20026,6 +20209,7 @@ export namespace Prisma {
 
   export type ReportMinAggregateInputType = {
     id?: true
+    tenantId?: true
     name?: true
     type?: true
     period?: true
@@ -20045,6 +20229,7 @@ export namespace Prisma {
 
   export type ReportMaxAggregateInputType = {
     id?: true
+    tenantId?: true
     name?: true
     type?: true
     period?: true
@@ -20064,6 +20249,7 @@ export namespace Prisma {
 
   export type ReportCountAggregateInputType = {
     id?: true
+    tenantId?: true
     name?: true
     type?: true
     period?: true
@@ -20172,6 +20358,7 @@ export namespace Prisma {
 
   export type ReportGroupByOutputType = {
     id: string
+    tenantId: string
     name: string
     type: $Enums.ReportType
     period: $Enums.ReportPeriod
@@ -20212,6 +20399,7 @@ export namespace Prisma {
 
   export type ReportSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     name?: boolean
     type?: boolean
     period?: boolean
@@ -20235,6 +20423,7 @@ export namespace Prisma {
 
   export type ReportSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     name?: boolean
     type?: boolean
     period?: boolean
@@ -20256,6 +20445,7 @@ export namespace Prisma {
 
   export type ReportSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     name?: boolean
     type?: boolean
     period?: boolean
@@ -20277,6 +20467,7 @@ export namespace Prisma {
 
   export type ReportSelectScalar = {
     id?: boolean
+    tenantId?: boolean
     name?: boolean
     type?: boolean
     period?: boolean
@@ -20296,7 +20487,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type ReportOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "type" | "period" | "startDate" | "endDate" | "currency" | "filters" | "data" | "dataVersion" | "generatedAt" | "isScheduled" | "scheduleAt" | "lastRunAt" | "nextRunAt" | "createdById" | "createdAt" | "updatedAt", ExtArgs["result"]["report"]>
+  export type ReportOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "name" | "type" | "period" | "startDate" | "endDate" | "currency" | "filters" | "data" | "dataVersion" | "generatedAt" | "isScheduled" | "scheduleAt" | "lastRunAt" | "nextRunAt" | "createdById" | "createdAt" | "updatedAt", ExtArgs["result"]["report"]>
   export type ReportInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     snapshots?: boolean | Report$snapshotsArgs<ExtArgs>
     _count?: boolean | ReportCountOutputTypeDefaultArgs<ExtArgs>
@@ -20311,6 +20502,7 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
+      tenantId: string
       name: string
       type: $Enums.ReportType
       period: $Enums.ReportPeriod
@@ -20768,6 +20960,7 @@ export namespace Prisma {
    */
   interface ReportFieldRefs {
     readonly id: FieldRef<"Report", 'String'>
+    readonly tenantId: FieldRef<"Report", 'String'>
     readonly name: FieldRef<"Report", 'String'>
     readonly type: FieldRef<"Report", 'ReportType'>
     readonly period: FieldRef<"Report", 'ReportPeriod'>
@@ -21237,6 +21430,7 @@ export namespace Prisma {
 
   export type ReportSnapshotMinAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     reportId: string | null
     version: number | null
     createdAt: Date | null
@@ -21244,6 +21438,7 @@ export namespace Prisma {
 
   export type ReportSnapshotMaxAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     reportId: string | null
     version: number | null
     createdAt: Date | null
@@ -21251,6 +21446,7 @@ export namespace Prisma {
 
   export type ReportSnapshotCountAggregateOutputType = {
     id: number
+    tenantId: number
     reportId: number
     version: number
     data: number
@@ -21269,6 +21465,7 @@ export namespace Prisma {
 
   export type ReportSnapshotMinAggregateInputType = {
     id?: true
+    tenantId?: true
     reportId?: true
     version?: true
     createdAt?: true
@@ -21276,6 +21473,7 @@ export namespace Prisma {
 
   export type ReportSnapshotMaxAggregateInputType = {
     id?: true
+    tenantId?: true
     reportId?: true
     version?: true
     createdAt?: true
@@ -21283,6 +21481,7 @@ export namespace Prisma {
 
   export type ReportSnapshotCountAggregateInputType = {
     id?: true
+    tenantId?: true
     reportId?: true
     version?: true
     data?: true
@@ -21378,6 +21577,7 @@ export namespace Prisma {
 
   export type ReportSnapshotGroupByOutputType = {
     id: string
+    tenantId: string
     reportId: string
     version: number
     data: JsonValue
@@ -21405,6 +21605,7 @@ export namespace Prisma {
 
   export type ReportSnapshotSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     reportId?: boolean
     version?: boolean
     data?: boolean
@@ -21414,6 +21615,7 @@ export namespace Prisma {
 
   export type ReportSnapshotSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     reportId?: boolean
     version?: boolean
     data?: boolean
@@ -21423,6 +21625,7 @@ export namespace Prisma {
 
   export type ReportSnapshotSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     reportId?: boolean
     version?: boolean
     data?: boolean
@@ -21432,13 +21635,14 @@ export namespace Prisma {
 
   export type ReportSnapshotSelectScalar = {
     id?: boolean
+    tenantId?: boolean
     reportId?: boolean
     version?: boolean
     data?: boolean
     createdAt?: boolean
   }
 
-  export type ReportSnapshotOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "reportId" | "version" | "data" | "createdAt", ExtArgs["result"]["reportSnapshot"]>
+  export type ReportSnapshotOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "reportId" | "version" | "data" | "createdAt", ExtArgs["result"]["reportSnapshot"]>
   export type ReportSnapshotInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     report?: boolean | ReportDefaultArgs<ExtArgs>
   }
@@ -21456,6 +21660,7 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
+      tenantId: string
       reportId: string
       /**
        * Matches Report.dataVersion at the time of capture
@@ -21888,6 +22093,7 @@ export namespace Prisma {
    */
   interface ReportSnapshotFieldRefs {
     readonly id: FieldRef<"ReportSnapshot", 'String'>
+    readonly tenantId: FieldRef<"ReportSnapshot", 'String'>
     readonly reportId: FieldRef<"ReportSnapshot", 'String'>
     readonly version: FieldRef<"ReportSnapshot", 'Int'>
     readonly data: FieldRef<"ReportSnapshot", 'Json'>
@@ -22331,6 +22537,7 @@ export namespace Prisma {
   }
 
   export type PnlMonthlyMinAggregateOutputType = {
+    tenantId: string | null
     month: string | null
     currency: string | null
     totalRevenue: Decimal | null
@@ -22339,6 +22546,7 @@ export namespace Prisma {
   }
 
   export type PnlMonthlyMaxAggregateOutputType = {
+    tenantId: string | null
     month: string | null
     currency: string | null
     totalRevenue: Decimal | null
@@ -22347,6 +22555,7 @@ export namespace Prisma {
   }
 
   export type PnlMonthlyCountAggregateOutputType = {
+    tenantId: number
     month: number
     currency: number
     totalRevenue: number
@@ -22369,6 +22578,7 @@ export namespace Prisma {
   }
 
   export type PnlMonthlyMinAggregateInputType = {
+    tenantId?: true
     month?: true
     currency?: true
     totalRevenue?: true
@@ -22377,6 +22587,7 @@ export namespace Prisma {
   }
 
   export type PnlMonthlyMaxAggregateInputType = {
+    tenantId?: true
     month?: true
     currency?: true
     totalRevenue?: true
@@ -22385,6 +22596,7 @@ export namespace Prisma {
   }
 
   export type PnlMonthlyCountAggregateInputType = {
+    tenantId?: true
     month?: true
     currency?: true
     totalRevenue?: true
@@ -22480,6 +22692,7 @@ export namespace Prisma {
   }
 
   export type PnlMonthlyGroupByOutputType = {
+    tenantId: string
     month: string
     currency: string
     totalRevenue: Decimal
@@ -22507,6 +22720,7 @@ export namespace Prisma {
 
 
   export type PnlMonthlySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    tenantId?: boolean
     month?: boolean
     currency?: boolean
     totalRevenue?: boolean
@@ -22517,6 +22731,7 @@ export namespace Prisma {
 
 
   export type PnlMonthlySelectScalar = {
+    tenantId?: boolean
     month?: boolean
     currency?: boolean
     totalRevenue?: boolean
@@ -22524,12 +22739,16 @@ export namespace Prisma {
     grossProfit?: boolean
   }
 
-  export type PnlMonthlyOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"month" | "currency" | "totalRevenue" | "totalExpenses" | "grossProfit", ExtArgs["result"]["pnlMonthly"]>
+  export type PnlMonthlyOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"tenantId" | "month" | "currency" | "totalRevenue" | "totalExpenses" | "grossProfit", ExtArgs["result"]["pnlMonthly"]>
 
   export type $PnlMonthlyPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "PnlMonthly"
     objects: {}
     scalars: $Extensions.GetPayloadResult<{
+      /**
+       * Owning tenant (SaaS phase 4.4) — flows from RLS on the base tables.
+       */
+      tenantId: string
       /**
        * "YYYY-MM" bucket e.g. "2025-03"
        */
@@ -22621,8 +22840,8 @@ export namespace Prisma {
      * // Get first 10 PnlMonthlies
      * const pnlMonthlies = await prisma.pnlMonthly.findMany({ take: 10 })
      * 
-     * // Only select the `month`
-     * const pnlMonthlyWithMonthOnly = await prisma.pnlMonthly.findMany({ select: { month: true } })
+     * // Only select the `tenantId`
+     * const pnlMonthlyWithTenantIdOnly = await prisma.pnlMonthly.findMany({ select: { tenantId: true } })
      * 
      */
     findMany<T extends PnlMonthlyFindManyArgs>(args?: SelectSubset<T, PnlMonthlyFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PnlMonthlyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
@@ -22796,6 +23015,7 @@ export namespace Prisma {
    * Fields of the PnlMonthly model
    */
   interface PnlMonthlyFieldRefs {
+    readonly tenantId: FieldRef<"PnlMonthly", 'String'>
     readonly month: FieldRef<"PnlMonthly", 'String'>
     readonly currency: FieldRef<"PnlMonthly", 'String'>
     readonly totalRevenue: FieldRef<"PnlMonthly", 'Decimal'>
@@ -23021,6 +23241,7 @@ export namespace Prisma {
 
   export type ArAgingMinAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     invoiceNumber: string | null
     contactName: string | null
     total: Decimal | null
@@ -23031,6 +23252,7 @@ export namespace Prisma {
 
   export type ArAgingMaxAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     invoiceNumber: string | null
     contactName: string | null
     total: Decimal | null
@@ -23041,6 +23263,7 @@ export namespace Prisma {
 
   export type ArAgingCountAggregateOutputType = {
     id: number
+    tenantId: number
     invoiceNumber: number
     contactName: number
     total: number
@@ -23065,6 +23288,7 @@ export namespace Prisma {
 
   export type ArAgingMinAggregateInputType = {
     id?: true
+    tenantId?: true
     invoiceNumber?: true
     contactName?: true
     total?: true
@@ -23075,6 +23299,7 @@ export namespace Prisma {
 
   export type ArAgingMaxAggregateInputType = {
     id?: true
+    tenantId?: true
     invoiceNumber?: true
     contactName?: true
     total?: true
@@ -23085,6 +23310,7 @@ export namespace Prisma {
 
   export type ArAgingCountAggregateInputType = {
     id?: true
+    tenantId?: true
     invoiceNumber?: true
     contactName?: true
     total?: true
@@ -23182,6 +23408,7 @@ export namespace Prisma {
 
   export type ArAgingGroupByOutputType = {
     id: string
+    tenantId: string
     invoiceNumber: string
     contactName: string
     total: Decimal
@@ -23211,6 +23438,7 @@ export namespace Prisma {
 
   export type ArAgingSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     invoiceNumber?: boolean
     contactName?: boolean
     total?: boolean
@@ -23223,6 +23451,7 @@ export namespace Prisma {
 
   export type ArAgingSelectScalar = {
     id?: boolean
+    tenantId?: boolean
     invoiceNumber?: boolean
     contactName?: boolean
     total?: boolean
@@ -23231,13 +23460,14 @@ export namespace Prisma {
     agingBucket?: boolean
   }
 
-  export type ArAgingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "invoiceNumber" | "contactName" | "total" | "amountDue" | "daysOverdue" | "agingBucket", ExtArgs["result"]["arAging"]>
+  export type ArAgingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "invoiceNumber" | "contactName" | "total" | "amountDue" | "daysOverdue" | "agingBucket", ExtArgs["result"]["arAging"]>
 
   export type $ArAgingPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "ArAging"
     objects: {}
     scalars: $Extensions.GetPayloadResult<{
       id: string
+      tenantId: string
       invoiceNumber: string
       contactName: string
       total: Prisma.Decimal
@@ -23506,6 +23736,7 @@ export namespace Prisma {
    */
   interface ArAgingFieldRefs {
     readonly id: FieldRef<"ArAging", 'String'>
+    readonly tenantId: FieldRef<"ArAging", 'String'>
     readonly invoiceNumber: FieldRef<"ArAging", 'String'>
     readonly contactName: FieldRef<"ArAging", 'String'>
     readonly total: FieldRef<"ArAging", 'Decimal'>
@@ -23732,6 +23963,7 @@ export namespace Prisma {
 
   export type LowStockAlertMinAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     sku: string | null
     productName: string | null
     warehouseName: string | null
@@ -23742,6 +23974,7 @@ export namespace Prisma {
 
   export type LowStockAlertMaxAggregateOutputType = {
     id: string | null
+    tenantId: string | null
     sku: string | null
     productName: string | null
     warehouseName: string | null
@@ -23752,6 +23985,7 @@ export namespace Prisma {
 
   export type LowStockAlertCountAggregateOutputType = {
     id: number
+    tenantId: number
     sku: number
     productName: number
     warehouseName: number
@@ -23776,6 +24010,7 @@ export namespace Prisma {
 
   export type LowStockAlertMinAggregateInputType = {
     id?: true
+    tenantId?: true
     sku?: true
     productName?: true
     warehouseName?: true
@@ -23786,6 +24021,7 @@ export namespace Prisma {
 
   export type LowStockAlertMaxAggregateInputType = {
     id?: true
+    tenantId?: true
     sku?: true
     productName?: true
     warehouseName?: true
@@ -23796,6 +24032,7 @@ export namespace Prisma {
 
   export type LowStockAlertCountAggregateInputType = {
     id?: true
+    tenantId?: true
     sku?: true
     productName?: true
     warehouseName?: true
@@ -23893,6 +24130,7 @@ export namespace Prisma {
 
   export type LowStockAlertGroupByOutputType = {
     id: string
+    tenantId: string
     sku: string
     productName: string
     warehouseName: string
@@ -23922,6 +24160,7 @@ export namespace Prisma {
 
   export type LowStockAlertSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    tenantId?: boolean
     sku?: boolean
     productName?: boolean
     warehouseName?: boolean
@@ -23934,6 +24173,7 @@ export namespace Prisma {
 
   export type LowStockAlertSelectScalar = {
     id?: boolean
+    tenantId?: boolean
     sku?: boolean
     productName?: boolean
     warehouseName?: boolean
@@ -23942,13 +24182,14 @@ export namespace Prisma {
     reorderQty?: boolean
   }
 
-  export type LowStockAlertOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "sku" | "productName" | "warehouseName" | "quantityAvailable" | "reorderPoint" | "reorderQty", ExtArgs["result"]["lowStockAlert"]>
+  export type LowStockAlertOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "sku" | "productName" | "warehouseName" | "quantityAvailable" | "reorderPoint" | "reorderQty", ExtArgs["result"]["lowStockAlert"]>
 
   export type $LowStockAlertPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "LowStockAlert"
     objects: {}
     scalars: $Extensions.GetPayloadResult<{
       id: string
+      tenantId: string
       sku: string
       productName: string
       warehouseName: string
@@ -24214,6 +24455,7 @@ export namespace Prisma {
    */
   interface LowStockAlertFieldRefs {
     readonly id: FieldRef<"LowStockAlert", 'String'>
+    readonly tenantId: FieldRef<"LowStockAlert", 'String'>
     readonly sku: FieldRef<"LowStockAlert", 'String'>
     readonly productName: FieldRef<"LowStockAlert", 'String'>
     readonly warehouseName: FieldRef<"LowStockAlert", 'String'>
@@ -24430,6 +24672,7 @@ export namespace Prisma {
 
   export const ContactScalarFieldEnum: {
     id: 'id',
+    tenantId: 'tenantId',
     type: 'type',
     name: 'name',
     email: 'email',
@@ -24461,6 +24704,7 @@ export namespace Prisma {
 
   export const ContactNoteScalarFieldEnum: {
     id: 'id',
+    tenantId: 'tenantId',
     contactId: 'contactId',
     type: 'type',
     body: 'body',
@@ -24474,6 +24718,7 @@ export namespace Prisma {
 
   export const ProductScalarFieldEnum: {
     id: 'id',
+    tenantId: 'tenantId',
     sku: 'sku',
     name: 'name',
     description: 'description',
@@ -24499,6 +24744,7 @@ export namespace Prisma {
 
   export const WarehouseScalarFieldEnum: {
     id: 'id',
+    tenantId: 'tenantId',
     name: 'name',
     code: 'code',
     address: 'address',
@@ -24514,6 +24760,7 @@ export namespace Prisma {
 
   export const InventoryItemScalarFieldEnum: {
     id: 'id',
+    tenantId: 'tenantId',
     productId: 'productId',
     warehouseId: 'warehouseId',
     quantityOnHand: 'quantityOnHand',
@@ -24533,6 +24780,7 @@ export namespace Prisma {
 
   export const StockMovementScalarFieldEnum: {
     id: 'id',
+    tenantId: 'tenantId',
     productId: 'productId',
     warehouseId: 'warehouseId',
     type: 'type',
@@ -24550,6 +24798,7 @@ export namespace Prisma {
 
   export const OrderScalarFieldEnum: {
     id: 'id',
+    tenantId: 'tenantId',
     orderNumber: 'orderNumber',
     contactId: 'contactId',
     status: 'status',
@@ -24588,6 +24837,7 @@ export namespace Prisma {
 
   export const OrderItemScalarFieldEnum: {
     id: 'id',
+    tenantId: 'tenantId',
     orderId: 'orderId',
     productId: 'productId',
     sku: 'sku',
@@ -24609,6 +24859,7 @@ export namespace Prisma {
 
   export const FulfillmentScalarFieldEnum: {
     id: 'id',
+    tenantId: 'tenantId',
     orderId: 'orderId',
     status: 'status',
     carrier: 'carrier',
@@ -24628,6 +24879,7 @@ export namespace Prisma {
 
   export const InvoiceScalarFieldEnum: {
     id: 'id',
+    tenantId: 'tenantId',
     invoiceNumber: 'invoiceNumber',
     contactId: 'contactId',
     orderId: 'orderId',
@@ -24665,6 +24917,7 @@ export namespace Prisma {
 
   export const InvoiceLineScalarFieldEnum: {
     id: 'id',
+    tenantId: 'tenantId',
     invoiceId: 'invoiceId',
     productId: 'productId',
     description: 'description',
@@ -24683,6 +24936,7 @@ export namespace Prisma {
 
   export const PaymentScalarFieldEnum: {
     id: 'id',
+    tenantId: 'tenantId',
     invoiceId: 'invoiceId',
     amount: 'amount',
     currency: 'currency',
@@ -24700,6 +24954,7 @@ export namespace Prisma {
 
   export const ExpenseScalarFieldEnum: {
     id: 'id',
+    tenantId: 'tenantId',
     title: 'title',
     description: 'description',
     category: 'category',
@@ -24734,6 +24989,7 @@ export namespace Prisma {
 
   export const ReportScalarFieldEnum: {
     id: 'id',
+    tenantId: 'tenantId',
     name: 'name',
     type: 'type',
     period: 'period',
@@ -24758,6 +25014,7 @@ export namespace Prisma {
 
   export const ReportSnapshotScalarFieldEnum: {
     id: 'id',
+    tenantId: 'tenantId',
     reportId: 'reportId',
     version: 'version',
     data: 'data',
@@ -24768,6 +25025,7 @@ export namespace Prisma {
 
 
   export const PnlMonthlyScalarFieldEnum: {
+    tenantId: 'tenantId',
     month: 'month',
     currency: 'currency',
     totalRevenue: 'totalRevenue',
@@ -24780,6 +25038,7 @@ export namespace Prisma {
 
   export const ArAgingScalarFieldEnum: {
     id: 'id',
+    tenantId: 'tenantId',
     invoiceNumber: 'invoiceNumber',
     contactName: 'contactName',
     total: 'total',
@@ -24793,6 +25052,7 @@ export namespace Prisma {
 
   export const LowStockAlertScalarFieldEnum: {
     id: 'id',
+    tenantId: 'tenantId',
     sku: 'sku',
     productName: 'productName',
     warehouseName: 'warehouseName',
@@ -25138,6 +25398,7 @@ export namespace Prisma {
     OR?: ContactWhereInput[]
     NOT?: ContactWhereInput | ContactWhereInput[]
     id?: UuidFilter<"Contact"> | string
+    tenantId?: UuidFilter<"Contact"> | string
     type?: EnumContactTypeFilter<"Contact"> | $Enums.ContactType
     name?: StringFilter<"Contact"> | string
     email?: StringNullableFilter<"Contact"> | string | null
@@ -25172,6 +25433,7 @@ export namespace Prisma {
 
   export type ContactOrderByWithRelationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     type?: SortOrder
     name?: SortOrder
     email?: SortOrderInput | SortOrder
@@ -25206,12 +25468,14 @@ export namespace Prisma {
 
   export type ContactWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    email?: string
+    tenantId_email?: ContactTenantIdEmailCompoundUniqueInput
     AND?: ContactWhereInput | ContactWhereInput[]
     OR?: ContactWhereInput[]
     NOT?: ContactWhereInput | ContactWhereInput[]
+    tenantId?: UuidFilter<"Contact"> | string
     type?: EnumContactTypeFilter<"Contact"> | $Enums.ContactType
     name?: StringFilter<"Contact"> | string
+    email?: StringNullableFilter<"Contact"> | string | null
     phone?: StringNullableFilter<"Contact"> | string | null
     company?: StringNullableFilter<"Contact"> | string | null
     website?: StringNullableFilter<"Contact"> | string | null
@@ -25239,10 +25503,11 @@ export namespace Prisma {
     orders?: OrderListRelationFilter
     invoices?: InvoiceListRelationFilter
     expenses?: ExpenseListRelationFilter
-  }, "id" | "email">
+  }, "id" | "tenantId_email">
 
   export type ContactOrderByWithAggregationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     type?: SortOrder
     name?: SortOrder
     email?: SortOrderInput | SortOrder
@@ -25279,6 +25544,7 @@ export namespace Prisma {
     OR?: ContactScalarWhereWithAggregatesInput[]
     NOT?: ContactScalarWhereWithAggregatesInput | ContactScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"Contact"> | string
+    tenantId?: UuidWithAggregatesFilter<"Contact"> | string
     type?: EnumContactTypeWithAggregatesFilter<"Contact"> | $Enums.ContactType
     name?: StringWithAggregatesFilter<"Contact"> | string
     email?: StringNullableWithAggregatesFilter<"Contact"> | string | null
@@ -25310,6 +25576,7 @@ export namespace Prisma {
     OR?: ContactNoteWhereInput[]
     NOT?: ContactNoteWhereInput | ContactNoteWhereInput[]
     id?: UuidFilter<"ContactNote"> | string
+    tenantId?: UuidFilter<"ContactNote"> | string
     contactId?: UuidFilter<"ContactNote"> | string
     type?: StringFilter<"ContactNote"> | string
     body?: StringFilter<"ContactNote"> | string
@@ -25321,6 +25588,7 @@ export namespace Prisma {
 
   export type ContactNoteOrderByWithRelationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     contactId?: SortOrder
     type?: SortOrder
     body?: SortOrder
@@ -25335,6 +25603,7 @@ export namespace Prisma {
     AND?: ContactNoteWhereInput | ContactNoteWhereInput[]
     OR?: ContactNoteWhereInput[]
     NOT?: ContactNoteWhereInput | ContactNoteWhereInput[]
+    tenantId?: UuidFilter<"ContactNote"> | string
     contactId?: UuidFilter<"ContactNote"> | string
     type?: StringFilter<"ContactNote"> | string
     body?: StringFilter<"ContactNote"> | string
@@ -25346,6 +25615,7 @@ export namespace Prisma {
 
   export type ContactNoteOrderByWithAggregationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     contactId?: SortOrder
     type?: SortOrder
     body?: SortOrder
@@ -25362,6 +25632,7 @@ export namespace Prisma {
     OR?: ContactNoteScalarWhereWithAggregatesInput[]
     NOT?: ContactNoteScalarWhereWithAggregatesInput | ContactNoteScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"ContactNote"> | string
+    tenantId?: UuidWithAggregatesFilter<"ContactNote"> | string
     contactId?: UuidWithAggregatesFilter<"ContactNote"> | string
     type?: StringWithAggregatesFilter<"ContactNote"> | string
     body?: StringWithAggregatesFilter<"ContactNote"> | string
@@ -25375,6 +25646,7 @@ export namespace Prisma {
     OR?: ProductWhereInput[]
     NOT?: ProductWhereInput | ProductWhereInput[]
     id?: UuidFilter<"Product"> | string
+    tenantId?: UuidFilter<"Product"> | string
     sku?: StringFilter<"Product"> | string
     name?: StringFilter<"Product"> | string
     description?: StringNullableFilter<"Product"> | string | null
@@ -25401,6 +25673,7 @@ export namespace Prisma {
 
   export type ProductOrderByWithRelationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     sku?: SortOrder
     name?: SortOrder
     description?: SortOrderInput | SortOrder
@@ -25427,10 +25700,12 @@ export namespace Prisma {
 
   export type ProductWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    sku?: string
+    tenantId_sku?: ProductTenantIdSkuCompoundUniqueInput
     AND?: ProductWhereInput | ProductWhereInput[]
     OR?: ProductWhereInput[]
     NOT?: ProductWhereInput | ProductWhereInput[]
+    tenantId?: UuidFilter<"Product"> | string
+    sku?: StringFilter<"Product"> | string
     name?: StringFilter<"Product"> | string
     description?: StringNullableFilter<"Product"> | string | null
     type?: StringFilter<"Product"> | string
@@ -25452,10 +25727,11 @@ export namespace Prisma {
     orderItems?: OrderItemListRelationFilter
     invoiceLines?: InvoiceLineListRelationFilter
     stockMovements?: StockMovementListRelationFilter
-  }, "id" | "sku">
+  }, "id" | "tenantId_sku">
 
   export type ProductOrderByWithAggregationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     sku?: SortOrder
     name?: SortOrder
     description?: SortOrderInput | SortOrder
@@ -25486,6 +25762,7 @@ export namespace Prisma {
     OR?: ProductScalarWhereWithAggregatesInput[]
     NOT?: ProductScalarWhereWithAggregatesInput | ProductScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"Product"> | string
+    tenantId?: UuidWithAggregatesFilter<"Product"> | string
     sku?: StringWithAggregatesFilter<"Product"> | string
     name?: StringWithAggregatesFilter<"Product"> | string
     description?: StringNullableWithAggregatesFilter<"Product"> | string | null
@@ -25511,6 +25788,7 @@ export namespace Prisma {
     OR?: WarehouseWhereInput[]
     NOT?: WarehouseWhereInput | WarehouseWhereInput[]
     id?: UuidFilter<"Warehouse"> | string
+    tenantId?: UuidFilter<"Warehouse"> | string
     name?: StringFilter<"Warehouse"> | string
     code?: StringFilter<"Warehouse"> | string
     address?: StringNullableFilter<"Warehouse"> | string | null
@@ -25525,6 +25803,7 @@ export namespace Prisma {
 
   export type WarehouseOrderByWithRelationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     name?: SortOrder
     code?: SortOrder
     address?: SortOrderInput | SortOrder
@@ -25539,11 +25818,13 @@ export namespace Prisma {
 
   export type WarehouseWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    code?: string
+    tenantId_code?: WarehouseTenantIdCodeCompoundUniqueInput
     AND?: WarehouseWhereInput | WarehouseWhereInput[]
     OR?: WarehouseWhereInput[]
     NOT?: WarehouseWhereInput | WarehouseWhereInput[]
+    tenantId?: UuidFilter<"Warehouse"> | string
     name?: StringFilter<"Warehouse"> | string
+    code?: StringFilter<"Warehouse"> | string
     address?: StringNullableFilter<"Warehouse"> | string | null
     country?: StringNullableFilter<"Warehouse"> | string | null
     status?: EnumWarehouseStatusFilter<"Warehouse"> | $Enums.WarehouseStatus
@@ -25552,10 +25833,11 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Warehouse"> | Date | string
     inventoryItems?: InventoryItemListRelationFilter
     stockMovements?: StockMovementListRelationFilter
-  }, "id" | "code">
+  }, "id" | "tenantId_code">
 
   export type WarehouseOrderByWithAggregationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     name?: SortOrder
     code?: SortOrder
     address?: SortOrderInput | SortOrder
@@ -25574,6 +25856,7 @@ export namespace Prisma {
     OR?: WarehouseScalarWhereWithAggregatesInput[]
     NOT?: WarehouseScalarWhereWithAggregatesInput | WarehouseScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"Warehouse"> | string
+    tenantId?: UuidWithAggregatesFilter<"Warehouse"> | string
     name?: StringWithAggregatesFilter<"Warehouse"> | string
     code?: StringWithAggregatesFilter<"Warehouse"> | string
     address?: StringNullableWithAggregatesFilter<"Warehouse"> | string | null
@@ -25589,6 +25872,7 @@ export namespace Prisma {
     OR?: InventoryItemWhereInput[]
     NOT?: InventoryItemWhereInput | InventoryItemWhereInput[]
     id?: UuidFilter<"InventoryItem"> | string
+    tenantId?: UuidFilter<"InventoryItem"> | string
     productId?: UuidFilter<"InventoryItem"> | string
     warehouseId?: UuidFilter<"InventoryItem"> | string
     quantityOnHand?: IntFilter<"InventoryItem"> | number
@@ -25607,6 +25891,7 @@ export namespace Prisma {
 
   export type InventoryItemOrderByWithRelationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     productId?: SortOrder
     warehouseId?: SortOrder
     quantityOnHand?: SortOrder
@@ -25629,6 +25914,7 @@ export namespace Prisma {
     AND?: InventoryItemWhereInput | InventoryItemWhereInput[]
     OR?: InventoryItemWhereInput[]
     NOT?: InventoryItemWhereInput | InventoryItemWhereInput[]
+    tenantId?: UuidFilter<"InventoryItem"> | string
     productId?: UuidFilter<"InventoryItem"> | string
     warehouseId?: UuidFilter<"InventoryItem"> | string
     quantityOnHand?: IntFilter<"InventoryItem"> | number
@@ -25647,6 +25933,7 @@ export namespace Prisma {
 
   export type InventoryItemOrderByWithAggregationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     productId?: SortOrder
     warehouseId?: SortOrder
     quantityOnHand?: SortOrder
@@ -25671,6 +25958,7 @@ export namespace Prisma {
     OR?: InventoryItemScalarWhereWithAggregatesInput[]
     NOT?: InventoryItemScalarWhereWithAggregatesInput | InventoryItemScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"InventoryItem"> | string
+    tenantId?: UuidWithAggregatesFilter<"InventoryItem"> | string
     productId?: UuidWithAggregatesFilter<"InventoryItem"> | string
     warehouseId?: UuidWithAggregatesFilter<"InventoryItem"> | string
     quantityOnHand?: IntWithAggregatesFilter<"InventoryItem"> | number
@@ -25690,6 +25978,7 @@ export namespace Prisma {
     OR?: StockMovementWhereInput[]
     NOT?: StockMovementWhereInput | StockMovementWhereInput[]
     id?: UuidFilter<"StockMovement"> | string
+    tenantId?: UuidFilter<"StockMovement"> | string
     productId?: UuidFilter<"StockMovement"> | string
     warehouseId?: UuidFilter<"StockMovement"> | string
     type?: EnumStockMovementTypeFilter<"StockMovement"> | $Enums.StockMovementType
@@ -25706,6 +25995,7 @@ export namespace Prisma {
 
   export type StockMovementOrderByWithRelationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     productId?: SortOrder
     warehouseId?: SortOrder
     type?: SortOrder
@@ -25725,6 +26015,7 @@ export namespace Prisma {
     AND?: StockMovementWhereInput | StockMovementWhereInput[]
     OR?: StockMovementWhereInput[]
     NOT?: StockMovementWhereInput | StockMovementWhereInput[]
+    tenantId?: UuidFilter<"StockMovement"> | string
     productId?: UuidFilter<"StockMovement"> | string
     warehouseId?: UuidFilter<"StockMovement"> | string
     type?: EnumStockMovementTypeFilter<"StockMovement"> | $Enums.StockMovementType
@@ -25741,6 +26032,7 @@ export namespace Prisma {
 
   export type StockMovementOrderByWithAggregationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     productId?: SortOrder
     warehouseId?: SortOrder
     type?: SortOrder
@@ -25763,6 +26055,7 @@ export namespace Prisma {
     OR?: StockMovementScalarWhereWithAggregatesInput[]
     NOT?: StockMovementScalarWhereWithAggregatesInput | StockMovementScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"StockMovement"> | string
+    tenantId?: UuidWithAggregatesFilter<"StockMovement"> | string
     productId?: UuidWithAggregatesFilter<"StockMovement"> | string
     warehouseId?: UuidWithAggregatesFilter<"StockMovement"> | string
     type?: EnumStockMovementTypeWithAggregatesFilter<"StockMovement"> | $Enums.StockMovementType
@@ -25780,6 +26073,7 @@ export namespace Prisma {
     OR?: OrderWhereInput[]
     NOT?: OrderWhereInput | OrderWhereInput[]
     id?: UuidFilter<"Order"> | string
+    tenantId?: UuidFilter<"Order"> | string
     orderNumber?: StringFilter<"Order"> | string
     contactId?: UuidNullableFilter<"Order"> | string | null
     status?: EnumOrderStatusFilter<"Order"> | $Enums.OrderStatus
@@ -25819,6 +26113,7 @@ export namespace Prisma {
 
   export type OrderOrderByWithRelationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     orderNumber?: SortOrder
     contactId?: SortOrderInput | SortOrder
     status?: SortOrder
@@ -25858,10 +26153,12 @@ export namespace Prisma {
 
   export type OrderWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    orderNumber?: string
+    tenantId_orderNumber?: OrderTenantIdOrderNumberCompoundUniqueInput
     AND?: OrderWhereInput | OrderWhereInput[]
     OR?: OrderWhereInput[]
     NOT?: OrderWhereInput | OrderWhereInput[]
+    tenantId?: UuidFilter<"Order"> | string
+    orderNumber?: StringFilter<"Order"> | string
     contactId?: UuidNullableFilter<"Order"> | string | null
     status?: EnumOrderStatusFilter<"Order"> | $Enums.OrderStatus
     fulfillmentStatus?: EnumFulfillmentStatusFilter<"Order"> | $Enums.FulfillmentStatus
@@ -25896,10 +26193,11 @@ export namespace Prisma {
     items?: OrderItemListRelationFilter
     invoices?: InvoiceListRelationFilter
     fulfillments?: FulfillmentListRelationFilter
-  }, "id" | "orderNumber">
+  }, "id" | "tenantId_orderNumber">
 
   export type OrderOrderByWithAggregationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     orderNumber?: SortOrder
     contactId?: SortOrderInput | SortOrder
     status?: SortOrder
@@ -25943,6 +26241,7 @@ export namespace Prisma {
     OR?: OrderScalarWhereWithAggregatesInput[]
     NOT?: OrderScalarWhereWithAggregatesInput | OrderScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"Order"> | string
+    tenantId?: UuidWithAggregatesFilter<"Order"> | string
     orderNumber?: StringWithAggregatesFilter<"Order"> | string
     contactId?: UuidNullableWithAggregatesFilter<"Order"> | string | null
     status?: EnumOrderStatusWithAggregatesFilter<"Order"> | $Enums.OrderStatus
@@ -25981,6 +26280,7 @@ export namespace Prisma {
     OR?: OrderItemWhereInput[]
     NOT?: OrderItemWhereInput | OrderItemWhereInput[]
     id?: UuidFilter<"OrderItem"> | string
+    tenantId?: UuidFilter<"OrderItem"> | string
     orderId?: UuidFilter<"OrderItem"> | string
     productId?: UuidFilter<"OrderItem"> | string
     sku?: StringFilter<"OrderItem"> | string
@@ -26001,6 +26301,7 @@ export namespace Prisma {
 
   export type OrderItemOrderByWithRelationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     orderId?: SortOrder
     productId?: SortOrder
     sku?: SortOrder
@@ -26024,6 +26325,7 @@ export namespace Prisma {
     AND?: OrderItemWhereInput | OrderItemWhereInput[]
     OR?: OrderItemWhereInput[]
     NOT?: OrderItemWhereInput | OrderItemWhereInput[]
+    tenantId?: UuidFilter<"OrderItem"> | string
     orderId?: UuidFilter<"OrderItem"> | string
     productId?: UuidFilter<"OrderItem"> | string
     sku?: StringFilter<"OrderItem"> | string
@@ -26044,6 +26346,7 @@ export namespace Prisma {
 
   export type OrderItemOrderByWithAggregationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     orderId?: SortOrder
     productId?: SortOrder
     sku?: SortOrder
@@ -26070,6 +26373,7 @@ export namespace Prisma {
     OR?: OrderItemScalarWhereWithAggregatesInput[]
     NOT?: OrderItemScalarWhereWithAggregatesInput | OrderItemScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"OrderItem"> | string
+    tenantId?: UuidWithAggregatesFilter<"OrderItem"> | string
     orderId?: UuidWithAggregatesFilter<"OrderItem"> | string
     productId?: UuidWithAggregatesFilter<"OrderItem"> | string
     sku?: StringWithAggregatesFilter<"OrderItem"> | string
@@ -26091,6 +26395,7 @@ export namespace Prisma {
     OR?: FulfillmentWhereInput[]
     NOT?: FulfillmentWhereInput | FulfillmentWhereInput[]
     id?: UuidFilter<"Fulfillment"> | string
+    tenantId?: UuidFilter<"Fulfillment"> | string
     orderId?: UuidFilter<"Fulfillment"> | string
     status?: EnumFulfillmentStatusFilter<"Fulfillment"> | $Enums.FulfillmentStatus
     carrier?: StringNullableFilter<"Fulfillment"> | string | null
@@ -26108,6 +26413,7 @@ export namespace Prisma {
 
   export type FulfillmentOrderByWithRelationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     orderId?: SortOrder
     status?: SortOrder
     carrier?: SortOrderInput | SortOrder
@@ -26128,6 +26434,7 @@ export namespace Prisma {
     AND?: FulfillmentWhereInput | FulfillmentWhereInput[]
     OR?: FulfillmentWhereInput[]
     NOT?: FulfillmentWhereInput | FulfillmentWhereInput[]
+    tenantId?: UuidFilter<"Fulfillment"> | string
     orderId?: UuidFilter<"Fulfillment"> | string
     status?: EnumFulfillmentStatusFilter<"Fulfillment"> | $Enums.FulfillmentStatus
     carrier?: StringNullableFilter<"Fulfillment"> | string | null
@@ -26145,6 +26452,7 @@ export namespace Prisma {
 
   export type FulfillmentOrderByWithAggregationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     orderId?: SortOrder
     status?: SortOrder
     carrier?: SortOrderInput | SortOrder
@@ -26167,6 +26475,7 @@ export namespace Prisma {
     OR?: FulfillmentScalarWhereWithAggregatesInput[]
     NOT?: FulfillmentScalarWhereWithAggregatesInput | FulfillmentScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"Fulfillment"> | string
+    tenantId?: UuidWithAggregatesFilter<"Fulfillment"> | string
     orderId?: UuidWithAggregatesFilter<"Fulfillment"> | string
     status?: EnumFulfillmentStatusWithAggregatesFilter<"Fulfillment"> | $Enums.FulfillmentStatus
     carrier?: StringNullableWithAggregatesFilter<"Fulfillment"> | string | null
@@ -26186,6 +26495,7 @@ export namespace Prisma {
     OR?: InvoiceWhereInput[]
     NOT?: InvoiceWhereInput | InvoiceWhereInput[]
     id?: UuidFilter<"Invoice"> | string
+    tenantId?: UuidFilter<"Invoice"> | string
     invoiceNumber?: StringFilter<"Invoice"> | string
     contactId?: UuidNullableFilter<"Invoice"> | string | null
     orderId?: UuidNullableFilter<"Invoice"> | string | null
@@ -26226,6 +26536,7 @@ export namespace Prisma {
 
   export type InvoiceOrderByWithRelationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     invoiceNumber?: SortOrder
     contactId?: SortOrderInput | SortOrder
     orderId?: SortOrderInput | SortOrder
@@ -26266,10 +26577,12 @@ export namespace Prisma {
 
   export type InvoiceWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    invoiceNumber?: string
+    tenantId_invoiceNumber?: InvoiceTenantIdInvoiceNumberCompoundUniqueInput
     AND?: InvoiceWhereInput | InvoiceWhereInput[]
     OR?: InvoiceWhereInput[]
     NOT?: InvoiceWhereInput | InvoiceWhereInput[]
+    tenantId?: UuidFilter<"Invoice"> | string
+    invoiceNumber?: StringFilter<"Invoice"> | string
     contactId?: UuidNullableFilter<"Invoice"> | string | null
     orderId?: UuidNullableFilter<"Invoice"> | string | null
     status?: EnumInvoiceStatusFilter<"Invoice"> | $Enums.InvoiceStatus
@@ -26305,10 +26618,11 @@ export namespace Prisma {
     recurringInstances?: InvoiceListRelationFilter
     lines?: InvoiceLineListRelationFilter
     payments?: PaymentListRelationFilter
-  }, "id" | "invoiceNumber">
+  }, "id" | "tenantId_invoiceNumber">
 
   export type InvoiceOrderByWithAggregationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     invoiceNumber?: SortOrder
     contactId?: SortOrderInput | SortOrder
     orderId?: SortOrderInput | SortOrder
@@ -26351,6 +26665,7 @@ export namespace Prisma {
     OR?: InvoiceScalarWhereWithAggregatesInput[]
     NOT?: InvoiceScalarWhereWithAggregatesInput | InvoiceScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"Invoice"> | string
+    tenantId?: UuidWithAggregatesFilter<"Invoice"> | string
     invoiceNumber?: StringWithAggregatesFilter<"Invoice"> | string
     contactId?: UuidNullableWithAggregatesFilter<"Invoice"> | string | null
     orderId?: UuidNullableWithAggregatesFilter<"Invoice"> | string | null
@@ -26388,6 +26703,7 @@ export namespace Prisma {
     OR?: InvoiceLineWhereInput[]
     NOT?: InvoiceLineWhereInput | InvoiceLineWhereInput[]
     id?: UuidFilter<"InvoiceLine"> | string
+    tenantId?: UuidFilter<"InvoiceLine"> | string
     invoiceId?: UuidFilter<"InvoiceLine"> | string
     productId?: UuidNullableFilter<"InvoiceLine"> | string | null
     description?: StringFilter<"InvoiceLine"> | string
@@ -26405,6 +26721,7 @@ export namespace Prisma {
 
   export type InvoiceLineOrderByWithRelationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     invoiceId?: SortOrder
     productId?: SortOrderInput | SortOrder
     description?: SortOrder
@@ -26425,6 +26742,7 @@ export namespace Prisma {
     AND?: InvoiceLineWhereInput | InvoiceLineWhereInput[]
     OR?: InvoiceLineWhereInput[]
     NOT?: InvoiceLineWhereInput | InvoiceLineWhereInput[]
+    tenantId?: UuidFilter<"InvoiceLine"> | string
     invoiceId?: UuidFilter<"InvoiceLine"> | string
     productId?: UuidNullableFilter<"InvoiceLine"> | string | null
     description?: StringFilter<"InvoiceLine"> | string
@@ -26442,6 +26760,7 @@ export namespace Prisma {
 
   export type InvoiceLineOrderByWithAggregationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     invoiceId?: SortOrder
     productId?: SortOrderInput | SortOrder
     description?: SortOrder
@@ -26465,6 +26784,7 @@ export namespace Prisma {
     OR?: InvoiceLineScalarWhereWithAggregatesInput[]
     NOT?: InvoiceLineScalarWhereWithAggregatesInput | InvoiceLineScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"InvoiceLine"> | string
+    tenantId?: UuidWithAggregatesFilter<"InvoiceLine"> | string
     invoiceId?: UuidWithAggregatesFilter<"InvoiceLine"> | string
     productId?: UuidNullableWithAggregatesFilter<"InvoiceLine"> | string | null
     description?: StringWithAggregatesFilter<"InvoiceLine"> | string
@@ -26483,6 +26803,7 @@ export namespace Prisma {
     OR?: PaymentWhereInput[]
     NOT?: PaymentWhereInput | PaymentWhereInput[]
     id?: UuidFilter<"Payment"> | string
+    tenantId?: UuidFilter<"Payment"> | string
     invoiceId?: UuidFilter<"Payment"> | string
     amount?: DecimalFilter<"Payment"> | Decimal | DecimalJsLike | number | string
     currency?: StringFilter<"Payment"> | string
@@ -26498,6 +26819,7 @@ export namespace Prisma {
 
   export type PaymentOrderByWithRelationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     invoiceId?: SortOrder
     amount?: SortOrder
     currency?: SortOrder
@@ -26516,6 +26838,7 @@ export namespace Prisma {
     AND?: PaymentWhereInput | PaymentWhereInput[]
     OR?: PaymentWhereInput[]
     NOT?: PaymentWhereInput | PaymentWhereInput[]
+    tenantId?: UuidFilter<"Payment"> | string
     invoiceId?: UuidFilter<"Payment"> | string
     amount?: DecimalFilter<"Payment"> | Decimal | DecimalJsLike | number | string
     currency?: StringFilter<"Payment"> | string
@@ -26531,6 +26854,7 @@ export namespace Prisma {
 
   export type PaymentOrderByWithAggregationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     invoiceId?: SortOrder
     amount?: SortOrder
     currency?: SortOrder
@@ -26553,6 +26877,7 @@ export namespace Prisma {
     OR?: PaymentScalarWhereWithAggregatesInput[]
     NOT?: PaymentScalarWhereWithAggregatesInput | PaymentScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"Payment"> | string
+    tenantId?: UuidWithAggregatesFilter<"Payment"> | string
     invoiceId?: UuidWithAggregatesFilter<"Payment"> | string
     amount?: DecimalWithAggregatesFilter<"Payment"> | Decimal | DecimalJsLike | number | string
     currency?: StringWithAggregatesFilter<"Payment"> | string
@@ -26570,6 +26895,7 @@ export namespace Prisma {
     OR?: ExpenseWhereInput[]
     NOT?: ExpenseWhereInput | ExpenseWhereInput[]
     id?: UuidFilter<"Expense"> | string
+    tenantId?: UuidFilter<"Expense"> | string
     title?: StringFilter<"Expense"> | string
     description?: StringNullableFilter<"Expense"> | string | null
     category?: EnumExpenseCategoryFilter<"Expense"> | $Enums.ExpenseCategory
@@ -26602,6 +26928,7 @@ export namespace Prisma {
 
   export type ExpenseOrderByWithRelationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     title?: SortOrder
     description?: SortOrderInput | SortOrder
     category?: SortOrder
@@ -26637,6 +26964,7 @@ export namespace Prisma {
     AND?: ExpenseWhereInput | ExpenseWhereInput[]
     OR?: ExpenseWhereInput[]
     NOT?: ExpenseWhereInput | ExpenseWhereInput[]
+    tenantId?: UuidFilter<"Expense"> | string
     title?: StringFilter<"Expense"> | string
     description?: StringNullableFilter<"Expense"> | string | null
     category?: EnumExpenseCategoryFilter<"Expense"> | $Enums.ExpenseCategory
@@ -26669,6 +26997,7 @@ export namespace Prisma {
 
   export type ExpenseOrderByWithAggregationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     title?: SortOrder
     description?: SortOrderInput | SortOrder
     category?: SortOrder
@@ -26708,6 +27037,7 @@ export namespace Prisma {
     OR?: ExpenseScalarWhereWithAggregatesInput[]
     NOT?: ExpenseScalarWhereWithAggregatesInput | ExpenseScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"Expense"> | string
+    tenantId?: UuidWithAggregatesFilter<"Expense"> | string
     title?: StringWithAggregatesFilter<"Expense"> | string
     description?: StringNullableWithAggregatesFilter<"Expense"> | string | null
     category?: EnumExpenseCategoryWithAggregatesFilter<"Expense"> | $Enums.ExpenseCategory
@@ -26742,6 +27072,7 @@ export namespace Prisma {
     OR?: ReportWhereInput[]
     NOT?: ReportWhereInput | ReportWhereInput[]
     id?: UuidFilter<"Report"> | string
+    tenantId?: UuidFilter<"Report"> | string
     name?: StringFilter<"Report"> | string
     type?: EnumReportTypeFilter<"Report"> | $Enums.ReportType
     period?: EnumReportPeriodFilter<"Report"> | $Enums.ReportPeriod
@@ -26764,6 +27095,7 @@ export namespace Prisma {
 
   export type ReportOrderByWithRelationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     name?: SortOrder
     type?: SortOrder
     period?: SortOrder
@@ -26789,6 +27121,7 @@ export namespace Prisma {
     AND?: ReportWhereInput | ReportWhereInput[]
     OR?: ReportWhereInput[]
     NOT?: ReportWhereInput | ReportWhereInput[]
+    tenantId?: UuidFilter<"Report"> | string
     name?: StringFilter<"Report"> | string
     type?: EnumReportTypeFilter<"Report"> | $Enums.ReportType
     period?: EnumReportPeriodFilter<"Report"> | $Enums.ReportPeriod
@@ -26811,6 +27144,7 @@ export namespace Prisma {
 
   export type ReportOrderByWithAggregationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     name?: SortOrder
     type?: SortOrder
     period?: SortOrder
@@ -26840,6 +27174,7 @@ export namespace Prisma {
     OR?: ReportScalarWhereWithAggregatesInput[]
     NOT?: ReportScalarWhereWithAggregatesInput | ReportScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"Report"> | string
+    tenantId?: UuidWithAggregatesFilter<"Report"> | string
     name?: StringWithAggregatesFilter<"Report"> | string
     type?: EnumReportTypeWithAggregatesFilter<"Report"> | $Enums.ReportType
     period?: EnumReportPeriodWithAggregatesFilter<"Report"> | $Enums.ReportPeriod
@@ -26864,6 +27199,7 @@ export namespace Prisma {
     OR?: ReportSnapshotWhereInput[]
     NOT?: ReportSnapshotWhereInput | ReportSnapshotWhereInput[]
     id?: UuidFilter<"ReportSnapshot"> | string
+    tenantId?: UuidFilter<"ReportSnapshot"> | string
     reportId?: UuidFilter<"ReportSnapshot"> | string
     version?: IntFilter<"ReportSnapshot"> | number
     data?: JsonFilter<"ReportSnapshot">
@@ -26873,6 +27209,7 @@ export namespace Prisma {
 
   export type ReportSnapshotOrderByWithRelationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     reportId?: SortOrder
     version?: SortOrder
     data?: SortOrder
@@ -26886,6 +27223,7 @@ export namespace Prisma {
     AND?: ReportSnapshotWhereInput | ReportSnapshotWhereInput[]
     OR?: ReportSnapshotWhereInput[]
     NOT?: ReportSnapshotWhereInput | ReportSnapshotWhereInput[]
+    tenantId?: UuidFilter<"ReportSnapshot"> | string
     reportId?: UuidFilter<"ReportSnapshot"> | string
     version?: IntFilter<"ReportSnapshot"> | number
     data?: JsonFilter<"ReportSnapshot">
@@ -26895,6 +27233,7 @@ export namespace Prisma {
 
   export type ReportSnapshotOrderByWithAggregationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     reportId?: SortOrder
     version?: SortOrder
     data?: SortOrder
@@ -26911,6 +27250,7 @@ export namespace Prisma {
     OR?: ReportSnapshotScalarWhereWithAggregatesInput[]
     NOT?: ReportSnapshotScalarWhereWithAggregatesInput | ReportSnapshotScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"ReportSnapshot"> | string
+    tenantId?: UuidWithAggregatesFilter<"ReportSnapshot"> | string
     reportId?: UuidWithAggregatesFilter<"ReportSnapshot"> | string
     version?: IntWithAggregatesFilter<"ReportSnapshot"> | number
     data?: JsonWithAggregatesFilter<"ReportSnapshot">
@@ -26921,6 +27261,7 @@ export namespace Prisma {
     AND?: PnlMonthlyWhereInput | PnlMonthlyWhereInput[]
     OR?: PnlMonthlyWhereInput[]
     NOT?: PnlMonthlyWhereInput | PnlMonthlyWhereInput[]
+    tenantId?: UuidFilter<"PnlMonthly"> | string
     month?: StringFilter<"PnlMonthly"> | string
     currency?: StringFilter<"PnlMonthly"> | string
     totalRevenue?: DecimalFilter<"PnlMonthly"> | Decimal | DecimalJsLike | number | string
@@ -26929,6 +27270,7 @@ export namespace Prisma {
   }
 
   export type PnlMonthlyOrderByWithRelationInput = {
+    tenantId?: SortOrder
     month?: SortOrder
     currency?: SortOrder
     totalRevenue?: SortOrder
@@ -26941,6 +27283,7 @@ export namespace Prisma {
     AND?: PnlMonthlyWhereInput | PnlMonthlyWhereInput[]
     OR?: PnlMonthlyWhereInput[]
     NOT?: PnlMonthlyWhereInput | PnlMonthlyWhereInput[]
+    tenantId?: UuidFilter<"PnlMonthly"> | string
     currency?: StringFilter<"PnlMonthly"> | string
     totalRevenue?: DecimalFilter<"PnlMonthly"> | Decimal | DecimalJsLike | number | string
     totalExpenses?: DecimalFilter<"PnlMonthly"> | Decimal | DecimalJsLike | number | string
@@ -26948,6 +27291,7 @@ export namespace Prisma {
   }, "month">
 
   export type PnlMonthlyOrderByWithAggregationInput = {
+    tenantId?: SortOrder
     month?: SortOrder
     currency?: SortOrder
     totalRevenue?: SortOrder
@@ -26964,6 +27308,7 @@ export namespace Prisma {
     AND?: PnlMonthlyScalarWhereWithAggregatesInput | PnlMonthlyScalarWhereWithAggregatesInput[]
     OR?: PnlMonthlyScalarWhereWithAggregatesInput[]
     NOT?: PnlMonthlyScalarWhereWithAggregatesInput | PnlMonthlyScalarWhereWithAggregatesInput[]
+    tenantId?: UuidWithAggregatesFilter<"PnlMonthly"> | string
     month?: StringWithAggregatesFilter<"PnlMonthly"> | string
     currency?: StringWithAggregatesFilter<"PnlMonthly"> | string
     totalRevenue?: DecimalWithAggregatesFilter<"PnlMonthly"> | Decimal | DecimalJsLike | number | string
@@ -26976,6 +27321,7 @@ export namespace Prisma {
     OR?: ArAgingWhereInput[]
     NOT?: ArAgingWhereInput | ArAgingWhereInput[]
     id?: UuidFilter<"ArAging"> | string
+    tenantId?: UuidFilter<"ArAging"> | string
     invoiceNumber?: StringFilter<"ArAging"> | string
     contactName?: StringFilter<"ArAging"> | string
     total?: DecimalFilter<"ArAging"> | Decimal | DecimalJsLike | number | string
@@ -26986,6 +27332,7 @@ export namespace Prisma {
 
   export type ArAgingOrderByWithRelationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     invoiceNumber?: SortOrder
     contactName?: SortOrder
     total?: SortOrder
@@ -26999,6 +27346,7 @@ export namespace Prisma {
     AND?: ArAgingWhereInput | ArAgingWhereInput[]
     OR?: ArAgingWhereInput[]
     NOT?: ArAgingWhereInput | ArAgingWhereInput[]
+    tenantId?: UuidFilter<"ArAging"> | string
     invoiceNumber?: StringFilter<"ArAging"> | string
     contactName?: StringFilter<"ArAging"> | string
     total?: DecimalFilter<"ArAging"> | Decimal | DecimalJsLike | number | string
@@ -27009,6 +27357,7 @@ export namespace Prisma {
 
   export type ArAgingOrderByWithAggregationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     invoiceNumber?: SortOrder
     contactName?: SortOrder
     total?: SortOrder
@@ -27027,6 +27376,7 @@ export namespace Prisma {
     OR?: ArAgingScalarWhereWithAggregatesInput[]
     NOT?: ArAgingScalarWhereWithAggregatesInput | ArAgingScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"ArAging"> | string
+    tenantId?: UuidWithAggregatesFilter<"ArAging"> | string
     invoiceNumber?: StringWithAggregatesFilter<"ArAging"> | string
     contactName?: StringWithAggregatesFilter<"ArAging"> | string
     total?: DecimalWithAggregatesFilter<"ArAging"> | Decimal | DecimalJsLike | number | string
@@ -27040,6 +27390,7 @@ export namespace Prisma {
     OR?: LowStockAlertWhereInput[]
     NOT?: LowStockAlertWhereInput | LowStockAlertWhereInput[]
     id?: UuidFilter<"LowStockAlert"> | string
+    tenantId?: UuidFilter<"LowStockAlert"> | string
     sku?: StringFilter<"LowStockAlert"> | string
     productName?: StringFilter<"LowStockAlert"> | string
     warehouseName?: StringFilter<"LowStockAlert"> | string
@@ -27050,6 +27401,7 @@ export namespace Prisma {
 
   export type LowStockAlertOrderByWithRelationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     sku?: SortOrder
     productName?: SortOrder
     warehouseName?: SortOrder
@@ -27063,6 +27415,7 @@ export namespace Prisma {
     AND?: LowStockAlertWhereInput | LowStockAlertWhereInput[]
     OR?: LowStockAlertWhereInput[]
     NOT?: LowStockAlertWhereInput | LowStockAlertWhereInput[]
+    tenantId?: UuidFilter<"LowStockAlert"> | string
     sku?: StringFilter<"LowStockAlert"> | string
     productName?: StringFilter<"LowStockAlert"> | string
     warehouseName?: StringFilter<"LowStockAlert"> | string
@@ -27073,6 +27426,7 @@ export namespace Prisma {
 
   export type LowStockAlertOrderByWithAggregationInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     sku?: SortOrder
     productName?: SortOrder
     warehouseName?: SortOrder
@@ -27091,6 +27445,7 @@ export namespace Prisma {
     OR?: LowStockAlertScalarWhereWithAggregatesInput[]
     NOT?: LowStockAlertScalarWhereWithAggregatesInput | LowStockAlertScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"LowStockAlert"> | string
+    tenantId?: UuidWithAggregatesFilter<"LowStockAlert"> | string
     sku?: StringWithAggregatesFilter<"LowStockAlert"> | string
     productName?: StringWithAggregatesFilter<"LowStockAlert"> | string
     warehouseName?: StringWithAggregatesFilter<"LowStockAlert"> | string
@@ -27101,6 +27456,7 @@ export namespace Prisma {
 
   export type ContactCreateInput = {
     id?: string
+    tenantId?: string
     type?: $Enums.ContactType
     name: string
     email?: string | null
@@ -27134,6 +27490,7 @@ export namespace Prisma {
 
   export type ContactUncheckedCreateInput = {
     id?: string
+    tenantId?: string
     type?: $Enums.ContactType
     name: string
     email?: string | null
@@ -27167,6 +27524,7 @@ export namespace Prisma {
 
   export type ContactUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     type?: EnumContactTypeFieldUpdateOperationsInput | $Enums.ContactType
     name?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
@@ -27200,6 +27558,7 @@ export namespace Prisma {
 
   export type ContactUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     type?: EnumContactTypeFieldUpdateOperationsInput | $Enums.ContactType
     name?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
@@ -27233,6 +27592,7 @@ export namespace Prisma {
 
   export type ContactCreateManyInput = {
     id?: string
+    tenantId?: string
     type?: $Enums.ContactType
     name: string
     email?: string | null
@@ -27261,6 +27621,7 @@ export namespace Prisma {
 
   export type ContactUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     type?: EnumContactTypeFieldUpdateOperationsInput | $Enums.ContactType
     name?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
@@ -27288,6 +27649,7 @@ export namespace Prisma {
 
   export type ContactUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     type?: EnumContactTypeFieldUpdateOperationsInput | $Enums.ContactType
     name?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
@@ -27316,6 +27678,7 @@ export namespace Prisma {
 
   export type ContactNoteCreateInput = {
     id?: string
+    tenantId?: string
     type?: string
     body: string
     authorId: string
@@ -27326,6 +27689,7 @@ export namespace Prisma {
 
   export type ContactNoteUncheckedCreateInput = {
     id?: string
+    tenantId?: string
     contactId: string
     type?: string
     body: string
@@ -27336,6 +27700,7 @@ export namespace Prisma {
 
   export type ContactNoteUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     type?: StringFieldUpdateOperationsInput | string
     body?: StringFieldUpdateOperationsInput | string
     authorId?: StringFieldUpdateOperationsInput | string
@@ -27346,6 +27711,7 @@ export namespace Prisma {
 
   export type ContactNoteUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     contactId?: StringFieldUpdateOperationsInput | string
     type?: StringFieldUpdateOperationsInput | string
     body?: StringFieldUpdateOperationsInput | string
@@ -27356,6 +27722,7 @@ export namespace Prisma {
 
   export type ContactNoteCreateManyInput = {
     id?: string
+    tenantId?: string
     contactId: string
     type?: string
     body: string
@@ -27366,6 +27733,7 @@ export namespace Prisma {
 
   export type ContactNoteUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     type?: StringFieldUpdateOperationsInput | string
     body?: StringFieldUpdateOperationsInput | string
     authorId?: StringFieldUpdateOperationsInput | string
@@ -27375,6 +27743,7 @@ export namespace Prisma {
 
   export type ContactNoteUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     contactId?: StringFieldUpdateOperationsInput | string
     type?: StringFieldUpdateOperationsInput | string
     body?: StringFieldUpdateOperationsInput | string
@@ -27385,6 +27754,7 @@ export namespace Prisma {
 
   export type ProductCreateInput = {
     id?: string
+    tenantId?: string
     sku: string
     name: string
     description?: string | null
@@ -27411,6 +27781,7 @@ export namespace Prisma {
 
   export type ProductUncheckedCreateInput = {
     id?: string
+    tenantId?: string
     sku: string
     name: string
     description?: string | null
@@ -27437,6 +27808,7 @@ export namespace Prisma {
 
   export type ProductUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     sku?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -27463,6 +27835,7 @@ export namespace Prisma {
 
   export type ProductUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     sku?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -27489,6 +27862,7 @@ export namespace Prisma {
 
   export type ProductCreateManyInput = {
     id?: string
+    tenantId?: string
     sku: string
     name: string
     description?: string | null
@@ -27511,6 +27885,7 @@ export namespace Prisma {
 
   export type ProductUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     sku?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -27533,6 +27908,7 @@ export namespace Prisma {
 
   export type ProductUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     sku?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -27555,6 +27931,7 @@ export namespace Prisma {
 
   export type WarehouseCreateInput = {
     id?: string
+    tenantId?: string
     name: string
     code: string
     address?: string | null
@@ -27569,6 +27946,7 @@ export namespace Prisma {
 
   export type WarehouseUncheckedCreateInput = {
     id?: string
+    tenantId?: string
     name: string
     code: string
     address?: string | null
@@ -27583,6 +27961,7 @@ export namespace Prisma {
 
   export type WarehouseUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
@@ -27597,6 +27976,7 @@ export namespace Prisma {
 
   export type WarehouseUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
@@ -27611,6 +27991,7 @@ export namespace Prisma {
 
   export type WarehouseCreateManyInput = {
     id?: string
+    tenantId?: string
     name: string
     code: string
     address?: string | null
@@ -27623,6 +28004,7 @@ export namespace Prisma {
 
   export type WarehouseUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
@@ -27635,6 +28017,7 @@ export namespace Prisma {
 
   export type WarehouseUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
@@ -27647,6 +28030,7 @@ export namespace Prisma {
 
   export type InventoryItemCreateInput = {
     id?: string
+    tenantId?: string
     quantityOnHand?: number
     quantityReserved?: number
     quantityAvailable?: number
@@ -27663,6 +28047,7 @@ export namespace Prisma {
 
   export type InventoryItemUncheckedCreateInput = {
     id?: string
+    tenantId?: string
     productId: string
     warehouseId: string
     quantityOnHand?: number
@@ -27679,6 +28064,7 @@ export namespace Prisma {
 
   export type InventoryItemUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     quantityOnHand?: IntFieldUpdateOperationsInput | number
     quantityReserved?: IntFieldUpdateOperationsInput | number
     quantityAvailable?: IntFieldUpdateOperationsInput | number
@@ -27695,6 +28081,7 @@ export namespace Prisma {
 
   export type InventoryItemUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     productId?: StringFieldUpdateOperationsInput | string
     warehouseId?: StringFieldUpdateOperationsInput | string
     quantityOnHand?: IntFieldUpdateOperationsInput | number
@@ -27711,6 +28098,7 @@ export namespace Prisma {
 
   export type InventoryItemCreateManyInput = {
     id?: string
+    tenantId?: string
     productId: string
     warehouseId: string
     quantityOnHand?: number
@@ -27727,6 +28115,7 @@ export namespace Prisma {
 
   export type InventoryItemUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     quantityOnHand?: IntFieldUpdateOperationsInput | number
     quantityReserved?: IntFieldUpdateOperationsInput | number
     quantityAvailable?: IntFieldUpdateOperationsInput | number
@@ -27741,6 +28130,7 @@ export namespace Prisma {
 
   export type InventoryItemUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     productId?: StringFieldUpdateOperationsInput | string
     warehouseId?: StringFieldUpdateOperationsInput | string
     quantityOnHand?: IntFieldUpdateOperationsInput | number
@@ -27757,6 +28147,7 @@ export namespace Prisma {
 
   export type StockMovementCreateInput = {
     id?: string
+    tenantId?: string
     type: $Enums.StockMovementType
     quantity: number
     balanceAfter: number
@@ -27771,6 +28162,7 @@ export namespace Prisma {
 
   export type StockMovementUncheckedCreateInput = {
     id?: string
+    tenantId?: string
     productId: string
     warehouseId: string
     type: $Enums.StockMovementType
@@ -27785,6 +28177,7 @@ export namespace Prisma {
 
   export type StockMovementUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     type?: EnumStockMovementTypeFieldUpdateOperationsInput | $Enums.StockMovementType
     quantity?: IntFieldUpdateOperationsInput | number
     balanceAfter?: IntFieldUpdateOperationsInput | number
@@ -27799,6 +28192,7 @@ export namespace Prisma {
 
   export type StockMovementUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     productId?: StringFieldUpdateOperationsInput | string
     warehouseId?: StringFieldUpdateOperationsInput | string
     type?: EnumStockMovementTypeFieldUpdateOperationsInput | $Enums.StockMovementType
@@ -27813,6 +28207,7 @@ export namespace Prisma {
 
   export type StockMovementCreateManyInput = {
     id?: string
+    tenantId?: string
     productId: string
     warehouseId: string
     type: $Enums.StockMovementType
@@ -27827,6 +28222,7 @@ export namespace Prisma {
 
   export type StockMovementUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     type?: EnumStockMovementTypeFieldUpdateOperationsInput | $Enums.StockMovementType
     quantity?: IntFieldUpdateOperationsInput | number
     balanceAfter?: IntFieldUpdateOperationsInput | number
@@ -27839,6 +28235,7 @@ export namespace Prisma {
 
   export type StockMovementUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     productId?: StringFieldUpdateOperationsInput | string
     warehouseId?: StringFieldUpdateOperationsInput | string
     type?: EnumStockMovementTypeFieldUpdateOperationsInput | $Enums.StockMovementType
@@ -27853,6 +28250,7 @@ export namespace Prisma {
 
   export type OrderCreateInput = {
     id?: string
+    tenantId?: string
     orderNumber: string
     status?: $Enums.OrderStatus
     fulfillmentStatus?: $Enums.FulfillmentStatus
@@ -27891,6 +28289,7 @@ export namespace Prisma {
 
   export type OrderUncheckedCreateInput = {
     id?: string
+    tenantId?: string
     orderNumber: string
     contactId?: string | null
     status?: $Enums.OrderStatus
@@ -27929,6 +28328,7 @@ export namespace Prisma {
 
   export type OrderUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     orderNumber?: StringFieldUpdateOperationsInput | string
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
     fulfillmentStatus?: EnumFulfillmentStatusFieldUpdateOperationsInput | $Enums.FulfillmentStatus
@@ -27967,6 +28367,7 @@ export namespace Prisma {
 
   export type OrderUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     orderNumber?: StringFieldUpdateOperationsInput | string
     contactId?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -28005,6 +28406,7 @@ export namespace Prisma {
 
   export type OrderCreateManyInput = {
     id?: string
+    tenantId?: string
     orderNumber: string
     contactId?: string | null
     status?: $Enums.OrderStatus
@@ -28040,6 +28442,7 @@ export namespace Prisma {
 
   export type OrderUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     orderNumber?: StringFieldUpdateOperationsInput | string
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
     fulfillmentStatus?: EnumFulfillmentStatusFieldUpdateOperationsInput | $Enums.FulfillmentStatus
@@ -28074,6 +28477,7 @@ export namespace Prisma {
 
   export type OrderUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     orderNumber?: StringFieldUpdateOperationsInput | string
     contactId?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -28109,6 +28513,7 @@ export namespace Prisma {
 
   export type OrderItemCreateInput = {
     id?: string
+    tenantId?: string
     sku: string
     name: string
     description?: string | null
@@ -28127,6 +28532,7 @@ export namespace Prisma {
 
   export type OrderItemUncheckedCreateInput = {
     id?: string
+    tenantId?: string
     orderId: string
     productId: string
     sku: string
@@ -28145,6 +28551,7 @@ export namespace Prisma {
 
   export type OrderItemUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     sku?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -28163,6 +28570,7 @@ export namespace Prisma {
 
   export type OrderItemUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     orderId?: StringFieldUpdateOperationsInput | string
     productId?: StringFieldUpdateOperationsInput | string
     sku?: StringFieldUpdateOperationsInput | string
@@ -28181,6 +28589,7 @@ export namespace Prisma {
 
   export type OrderItemCreateManyInput = {
     id?: string
+    tenantId?: string
     orderId: string
     productId: string
     sku: string
@@ -28199,6 +28608,7 @@ export namespace Prisma {
 
   export type OrderItemUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     sku?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -28215,6 +28625,7 @@ export namespace Prisma {
 
   export type OrderItemUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     orderId?: StringFieldUpdateOperationsInput | string
     productId?: StringFieldUpdateOperationsInput | string
     sku?: StringFieldUpdateOperationsInput | string
@@ -28233,6 +28644,7 @@ export namespace Prisma {
 
   export type FulfillmentCreateInput = {
     id?: string
+    tenantId?: string
     status?: $Enums.FulfillmentStatus
     carrier?: string | null
     trackingNumber?: string | null
@@ -28249,6 +28661,7 @@ export namespace Prisma {
 
   export type FulfillmentUncheckedCreateInput = {
     id?: string
+    tenantId?: string
     orderId: string
     status?: $Enums.FulfillmentStatus
     carrier?: string | null
@@ -28265,6 +28678,7 @@ export namespace Prisma {
 
   export type FulfillmentUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     status?: EnumFulfillmentStatusFieldUpdateOperationsInput | $Enums.FulfillmentStatus
     carrier?: NullableStringFieldUpdateOperationsInput | string | null
     trackingNumber?: NullableStringFieldUpdateOperationsInput | string | null
@@ -28281,6 +28695,7 @@ export namespace Prisma {
 
   export type FulfillmentUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     orderId?: StringFieldUpdateOperationsInput | string
     status?: EnumFulfillmentStatusFieldUpdateOperationsInput | $Enums.FulfillmentStatus
     carrier?: NullableStringFieldUpdateOperationsInput | string | null
@@ -28297,6 +28712,7 @@ export namespace Prisma {
 
   export type FulfillmentCreateManyInput = {
     id?: string
+    tenantId?: string
     orderId: string
     status?: $Enums.FulfillmentStatus
     carrier?: string | null
@@ -28313,6 +28729,7 @@ export namespace Prisma {
 
   export type FulfillmentUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     status?: EnumFulfillmentStatusFieldUpdateOperationsInput | $Enums.FulfillmentStatus
     carrier?: NullableStringFieldUpdateOperationsInput | string | null
     trackingNumber?: NullableStringFieldUpdateOperationsInput | string | null
@@ -28328,6 +28745,7 @@ export namespace Prisma {
 
   export type FulfillmentUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     orderId?: StringFieldUpdateOperationsInput | string
     status?: EnumFulfillmentStatusFieldUpdateOperationsInput | $Enums.FulfillmentStatus
     carrier?: NullableStringFieldUpdateOperationsInput | string | null
@@ -28344,6 +28762,7 @@ export namespace Prisma {
 
   export type InvoiceCreateInput = {
     id?: string
+    tenantId?: string
     invoiceNumber: string
     status?: $Enums.InvoiceStatus
     issueDate?: Date | string
@@ -28381,6 +28800,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedCreateInput = {
     id?: string
+    tenantId?: string
     invoiceNumber: string
     contactId?: string | null
     orderId?: string | null
@@ -28418,6 +28838,7 @@ export namespace Prisma {
 
   export type InvoiceUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     status?: EnumInvoiceStatusFieldUpdateOperationsInput | $Enums.InvoiceStatus
     issueDate?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -28455,6 +28876,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     contactId?: NullableStringFieldUpdateOperationsInput | string | null
     orderId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -28492,6 +28914,7 @@ export namespace Prisma {
 
   export type InvoiceCreateManyInput = {
     id?: string
+    tenantId?: string
     invoiceNumber: string
     contactId?: string | null
     orderId?: string | null
@@ -28526,6 +28949,7 @@ export namespace Prisma {
 
   export type InvoiceUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     status?: EnumInvoiceStatusFieldUpdateOperationsInput | $Enums.InvoiceStatus
     issueDate?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -28557,6 +28981,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     contactId?: NullableStringFieldUpdateOperationsInput | string | null
     orderId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -28591,6 +29016,7 @@ export namespace Prisma {
 
   export type InvoiceLineCreateInput = {
     id?: string
+    tenantId?: string
     description: string
     quantity: Decimal | DecimalJsLike | number | string
     unitPrice: Decimal | DecimalJsLike | number | string
@@ -28606,6 +29032,7 @@ export namespace Prisma {
 
   export type InvoiceLineUncheckedCreateInput = {
     id?: string
+    tenantId?: string
     invoiceId: string
     productId?: string | null
     description: string
@@ -28621,6 +29048,7 @@ export namespace Prisma {
 
   export type InvoiceLineUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
     quantity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     unitPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -28636,6 +29064,7 @@ export namespace Prisma {
 
   export type InvoiceLineUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     invoiceId?: StringFieldUpdateOperationsInput | string
     productId?: NullableStringFieldUpdateOperationsInput | string | null
     description?: StringFieldUpdateOperationsInput | string
@@ -28651,6 +29080,7 @@ export namespace Prisma {
 
   export type InvoiceLineCreateManyInput = {
     id?: string
+    tenantId?: string
     invoiceId: string
     productId?: string | null
     description: string
@@ -28666,6 +29096,7 @@ export namespace Prisma {
 
   export type InvoiceLineUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
     quantity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     unitPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -28679,6 +29110,7 @@ export namespace Prisma {
 
   export type InvoiceLineUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     invoiceId?: StringFieldUpdateOperationsInput | string
     productId?: NullableStringFieldUpdateOperationsInput | string | null
     description?: StringFieldUpdateOperationsInput | string
@@ -28694,6 +29126,7 @@ export namespace Prisma {
 
   export type PaymentCreateInput = {
     id?: string
+    tenantId?: string
     amount: Decimal | DecimalJsLike | number | string
     currency?: string
     method?: $Enums.PaymentMethod
@@ -28708,6 +29141,7 @@ export namespace Prisma {
 
   export type PaymentUncheckedCreateInput = {
     id?: string
+    tenantId?: string
     invoiceId: string
     amount: Decimal | DecimalJsLike | number | string
     currency?: string
@@ -28722,6 +29156,7 @@ export namespace Prisma {
 
   export type PaymentUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     currency?: StringFieldUpdateOperationsInput | string
     method?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
@@ -28736,6 +29171,7 @@ export namespace Prisma {
 
   export type PaymentUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     invoiceId?: StringFieldUpdateOperationsInput | string
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     currency?: StringFieldUpdateOperationsInput | string
@@ -28750,6 +29186,7 @@ export namespace Prisma {
 
   export type PaymentCreateManyInput = {
     id?: string
+    tenantId?: string
     invoiceId: string
     amount: Decimal | DecimalJsLike | number | string
     currency?: string
@@ -28764,6 +29201,7 @@ export namespace Prisma {
 
   export type PaymentUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     currency?: StringFieldUpdateOperationsInput | string
     method?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
@@ -28777,6 +29215,7 @@ export namespace Prisma {
 
   export type PaymentUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     invoiceId?: StringFieldUpdateOperationsInput | string
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     currency?: StringFieldUpdateOperationsInput | string
@@ -28791,6 +29230,7 @@ export namespace Prisma {
 
   export type ExpenseCreateInput = {
     id?: string
+    tenantId?: string
     title: string
     description?: string | null
     category?: $Enums.ExpenseCategory
@@ -28822,6 +29262,7 @@ export namespace Prisma {
 
   export type ExpenseUncheckedCreateInput = {
     id?: string
+    tenantId?: string
     title: string
     description?: string | null
     category?: $Enums.ExpenseCategory
@@ -28853,6 +29294,7 @@ export namespace Prisma {
 
   export type ExpenseUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     category?: EnumExpenseCategoryFieldUpdateOperationsInput | $Enums.ExpenseCategory
@@ -28884,6 +29326,7 @@ export namespace Prisma {
 
   export type ExpenseUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     category?: EnumExpenseCategoryFieldUpdateOperationsInput | $Enums.ExpenseCategory
@@ -28915,6 +29358,7 @@ export namespace Prisma {
 
   export type ExpenseCreateManyInput = {
     id?: string
+    tenantId?: string
     title: string
     description?: string | null
     category?: $Enums.ExpenseCategory
@@ -28946,6 +29390,7 @@ export namespace Prisma {
 
   export type ExpenseUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     category?: EnumExpenseCategoryFieldUpdateOperationsInput | $Enums.ExpenseCategory
@@ -28976,6 +29421,7 @@ export namespace Prisma {
 
   export type ExpenseUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     category?: EnumExpenseCategoryFieldUpdateOperationsInput | $Enums.ExpenseCategory
@@ -29007,6 +29453,7 @@ export namespace Prisma {
 
   export type ReportCreateInput = {
     id?: string
+    tenantId?: string
     name: string
     type: $Enums.ReportType
     period?: $Enums.ReportPeriod
@@ -29029,6 +29476,7 @@ export namespace Prisma {
 
   export type ReportUncheckedCreateInput = {
     id?: string
+    tenantId?: string
     name: string
     type: $Enums.ReportType
     period?: $Enums.ReportPeriod
@@ -29051,6 +29499,7 @@ export namespace Prisma {
 
   export type ReportUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     type?: EnumReportTypeFieldUpdateOperationsInput | $Enums.ReportType
     period?: EnumReportPeriodFieldUpdateOperationsInput | $Enums.ReportPeriod
@@ -29073,6 +29522,7 @@ export namespace Prisma {
 
   export type ReportUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     type?: EnumReportTypeFieldUpdateOperationsInput | $Enums.ReportType
     period?: EnumReportPeriodFieldUpdateOperationsInput | $Enums.ReportPeriod
@@ -29095,6 +29545,7 @@ export namespace Prisma {
 
   export type ReportCreateManyInput = {
     id?: string
+    tenantId?: string
     name: string
     type: $Enums.ReportType
     period?: $Enums.ReportPeriod
@@ -29116,6 +29567,7 @@ export namespace Prisma {
 
   export type ReportUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     type?: EnumReportTypeFieldUpdateOperationsInput | $Enums.ReportType
     period?: EnumReportPeriodFieldUpdateOperationsInput | $Enums.ReportPeriod
@@ -29137,6 +29589,7 @@ export namespace Prisma {
 
   export type ReportUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     type?: EnumReportTypeFieldUpdateOperationsInput | $Enums.ReportType
     period?: EnumReportPeriodFieldUpdateOperationsInput | $Enums.ReportPeriod
@@ -29158,6 +29611,7 @@ export namespace Prisma {
 
   export type ReportSnapshotCreateInput = {
     id?: string
+    tenantId?: string
     version: number
     data: JsonNullValueInput | InputJsonValue
     createdAt?: Date | string
@@ -29166,6 +29620,7 @@ export namespace Prisma {
 
   export type ReportSnapshotUncheckedCreateInput = {
     id?: string
+    tenantId?: string
     reportId: string
     version: number
     data: JsonNullValueInput | InputJsonValue
@@ -29174,6 +29629,7 @@ export namespace Prisma {
 
   export type ReportSnapshotUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     version?: IntFieldUpdateOperationsInput | number
     data?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -29182,6 +29638,7 @@ export namespace Prisma {
 
   export type ReportSnapshotUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     reportId?: StringFieldUpdateOperationsInput | string
     version?: IntFieldUpdateOperationsInput | number
     data?: JsonNullValueInput | InputJsonValue
@@ -29190,6 +29647,7 @@ export namespace Prisma {
 
   export type ReportSnapshotCreateManyInput = {
     id?: string
+    tenantId?: string
     reportId: string
     version: number
     data: JsonNullValueInput | InputJsonValue
@@ -29198,6 +29656,7 @@ export namespace Prisma {
 
   export type ReportSnapshotUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     version?: IntFieldUpdateOperationsInput | number
     data?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -29205,6 +29664,7 @@ export namespace Prisma {
 
   export type ReportSnapshotUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     reportId?: StringFieldUpdateOperationsInput | string
     version?: IntFieldUpdateOperationsInput | number
     data?: JsonNullValueInput | InputJsonValue
@@ -29414,8 +29874,14 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
+  export type ContactTenantIdEmailCompoundUniqueInput = {
+    tenantId: string
+    email: string
+  }
+
   export type ContactCountOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     type?: SortOrder
     name?: SortOrder
     email?: SortOrder
@@ -29449,6 +29915,7 @@ export namespace Prisma {
 
   export type ContactMaxOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     type?: SortOrder
     name?: SortOrder
     email?: SortOrder
@@ -29475,6 +29942,7 @@ export namespace Prisma {
 
   export type ContactMinOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     type?: SortOrder
     name?: SortOrder
     email?: SortOrder
@@ -29683,6 +30151,7 @@ export namespace Prisma {
 
   export type ContactNoteCountOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     contactId?: SortOrder
     type?: SortOrder
     body?: SortOrder
@@ -29693,6 +30162,7 @@ export namespace Prisma {
 
   export type ContactNoteMaxOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     contactId?: SortOrder
     type?: SortOrder
     body?: SortOrder
@@ -29703,6 +30173,7 @@ export namespace Prisma {
 
   export type ContactNoteMinOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     contactId?: SortOrder
     type?: SortOrder
     body?: SortOrder
@@ -29767,8 +30238,14 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
+  export type ProductTenantIdSkuCompoundUniqueInput = {
+    tenantId: string
+    sku: string
+  }
+
   export type ProductCountOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     sku?: SortOrder
     name?: SortOrder
     description?: SortOrder
@@ -29797,6 +30274,7 @@ export namespace Prisma {
 
   export type ProductMaxOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     sku?: SortOrder
     name?: SortOrder
     description?: SortOrder
@@ -29817,6 +30295,7 @@ export namespace Prisma {
 
   export type ProductMinOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     sku?: SortOrder
     name?: SortOrder
     description?: SortOrder
@@ -29872,8 +30351,14 @@ export namespace Prisma {
     not?: NestedEnumWarehouseStatusFilter<$PrismaModel> | $Enums.WarehouseStatus
   }
 
+  export type WarehouseTenantIdCodeCompoundUniqueInput = {
+    tenantId: string
+    code: string
+  }
+
   export type WarehouseCountOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     name?: SortOrder
     code?: SortOrder
     address?: SortOrder
@@ -29886,6 +30371,7 @@ export namespace Prisma {
 
   export type WarehouseMaxOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     name?: SortOrder
     code?: SortOrder
     address?: SortOrder
@@ -29898,6 +30384,7 @@ export namespace Prisma {
 
   export type WarehouseMinOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     name?: SortOrder
     code?: SortOrder
     address?: SortOrder
@@ -29946,6 +30433,7 @@ export namespace Prisma {
 
   export type InventoryItemCountOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     productId?: SortOrder
     warehouseId?: SortOrder
     quantityOnHand?: SortOrder
@@ -29971,6 +30459,7 @@ export namespace Prisma {
 
   export type InventoryItemMaxOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     productId?: SortOrder
     warehouseId?: SortOrder
     quantityOnHand?: SortOrder
@@ -29987,6 +30476,7 @@ export namespace Prisma {
 
   export type InventoryItemMinOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     productId?: SortOrder
     warehouseId?: SortOrder
     quantityOnHand?: SortOrder
@@ -30035,6 +30525,7 @@ export namespace Prisma {
 
   export type StockMovementCountOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     productId?: SortOrder
     warehouseId?: SortOrder
     type?: SortOrder
@@ -30054,6 +30545,7 @@ export namespace Prisma {
 
   export type StockMovementMaxOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     productId?: SortOrder
     warehouseId?: SortOrder
     type?: SortOrder
@@ -30068,6 +30560,7 @@ export namespace Prisma {
 
   export type StockMovementMinOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     productId?: SortOrder
     warehouseId?: SortOrder
     type?: SortOrder
@@ -30119,8 +30612,14 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
+  export type OrderTenantIdOrderNumberCompoundUniqueInput = {
+    tenantId: string
+    orderNumber: string
+  }
+
   export type OrderCountOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     orderNumber?: SortOrder
     contactId?: SortOrder
     status?: SortOrder
@@ -30164,6 +30663,7 @@ export namespace Prisma {
 
   export type OrderMaxOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     orderNumber?: SortOrder
     contactId?: SortOrder
     status?: SortOrder
@@ -30198,6 +30698,7 @@ export namespace Prisma {
 
   export type OrderMinOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     orderNumber?: SortOrder
     contactId?: SortOrder
     status?: SortOrder
@@ -30265,6 +30766,7 @@ export namespace Prisma {
 
   export type OrderItemCountOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     orderId?: SortOrder
     productId?: SortOrder
     sku?: SortOrder
@@ -30293,6 +30795,7 @@ export namespace Prisma {
 
   export type OrderItemMaxOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     orderId?: SortOrder
     productId?: SortOrder
     sku?: SortOrder
@@ -30311,6 +30814,7 @@ export namespace Prisma {
 
   export type OrderItemMinOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     orderId?: SortOrder
     productId?: SortOrder
     sku?: SortOrder
@@ -30339,6 +30843,7 @@ export namespace Prisma {
 
   export type FulfillmentCountOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     orderId?: SortOrder
     status?: SortOrder
     carrier?: SortOrder
@@ -30355,6 +30860,7 @@ export namespace Prisma {
 
   export type FulfillmentMaxOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     orderId?: SortOrder
     status?: SortOrder
     carrier?: SortOrder
@@ -30371,6 +30877,7 @@ export namespace Prisma {
 
   export type FulfillmentMinOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     orderId?: SortOrder
     status?: SortOrder
     carrier?: SortOrder
@@ -30419,8 +30926,14 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
+  export type InvoiceTenantIdInvoiceNumberCompoundUniqueInput = {
+    tenantId: string
+    invoiceNumber: string
+  }
+
   export type InvoiceCountOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     invoiceNumber?: SortOrder
     contactId?: SortOrder
     orderId?: SortOrder
@@ -30464,6 +30977,7 @@ export namespace Prisma {
 
   export type InvoiceMaxOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     invoiceNumber?: SortOrder
     contactId?: SortOrder
     orderId?: SortOrder
@@ -30497,6 +31011,7 @@ export namespace Prisma {
 
   export type InvoiceMinOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     invoiceNumber?: SortOrder
     contactId?: SortOrder
     orderId?: SortOrder
@@ -30569,6 +31084,7 @@ export namespace Prisma {
 
   export type InvoiceLineCountOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     invoiceId?: SortOrder
     productId?: SortOrder
     description?: SortOrder
@@ -30593,6 +31109,7 @@ export namespace Prisma {
 
   export type InvoiceLineMaxOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     invoiceId?: SortOrder
     productId?: SortOrder
     description?: SortOrder
@@ -30608,6 +31125,7 @@ export namespace Prisma {
 
   export type InvoiceLineMinOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     invoiceId?: SortOrder
     productId?: SortOrder
     description?: SortOrder
@@ -30639,6 +31157,7 @@ export namespace Prisma {
 
   export type PaymentCountOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     invoiceId?: SortOrder
     amount?: SortOrder
     currency?: SortOrder
@@ -30657,6 +31176,7 @@ export namespace Prisma {
 
   export type PaymentMaxOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     invoiceId?: SortOrder
     amount?: SortOrder
     currency?: SortOrder
@@ -30671,6 +31191,7 @@ export namespace Prisma {
 
   export type PaymentMinOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     invoiceId?: SortOrder
     amount?: SortOrder
     currency?: SortOrder
@@ -30713,6 +31234,7 @@ export namespace Prisma {
 
   export type ExpenseCountOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     title?: SortOrder
     description?: SortOrder
     category?: SortOrder
@@ -30752,6 +31274,7 @@ export namespace Prisma {
 
   export type ExpenseMaxOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     title?: SortOrder
     description?: SortOrder
     category?: SortOrder
@@ -30781,6 +31304,7 @@ export namespace Prisma {
 
   export type ExpenseMinOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     title?: SortOrder
     description?: SortOrder
     category?: SortOrder
@@ -30862,6 +31386,7 @@ export namespace Prisma {
 
   export type ReportCountOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     name?: SortOrder
     type?: SortOrder
     period?: SortOrder
@@ -30887,6 +31412,7 @@ export namespace Prisma {
 
   export type ReportMaxOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     name?: SortOrder
     type?: SortOrder
     period?: SortOrder
@@ -30906,6 +31432,7 @@ export namespace Prisma {
 
   export type ReportMinOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     name?: SortOrder
     type?: SortOrder
     period?: SortOrder
@@ -30982,6 +31509,7 @@ export namespace Prisma {
 
   export type ReportSnapshotCountOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     reportId?: SortOrder
     version?: SortOrder
     data?: SortOrder
@@ -30994,6 +31522,7 @@ export namespace Prisma {
 
   export type ReportSnapshotMaxOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     reportId?: SortOrder
     version?: SortOrder
     createdAt?: SortOrder
@@ -31001,6 +31530,7 @@ export namespace Prisma {
 
   export type ReportSnapshotMinOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     reportId?: SortOrder
     version?: SortOrder
     createdAt?: SortOrder
@@ -31037,6 +31567,7 @@ export namespace Prisma {
   }
 
   export type PnlMonthlyCountOrderByAggregateInput = {
+    tenantId?: SortOrder
     month?: SortOrder
     currency?: SortOrder
     totalRevenue?: SortOrder
@@ -31051,6 +31582,7 @@ export namespace Prisma {
   }
 
   export type PnlMonthlyMaxOrderByAggregateInput = {
+    tenantId?: SortOrder
     month?: SortOrder
     currency?: SortOrder
     totalRevenue?: SortOrder
@@ -31059,6 +31591,7 @@ export namespace Prisma {
   }
 
   export type PnlMonthlyMinOrderByAggregateInput = {
+    tenantId?: SortOrder
     month?: SortOrder
     currency?: SortOrder
     totalRevenue?: SortOrder
@@ -31074,6 +31607,7 @@ export namespace Prisma {
 
   export type ArAgingCountOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     invoiceNumber?: SortOrder
     contactName?: SortOrder
     total?: SortOrder
@@ -31090,6 +31624,7 @@ export namespace Prisma {
 
   export type ArAgingMaxOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     invoiceNumber?: SortOrder
     contactName?: SortOrder
     total?: SortOrder
@@ -31100,6 +31635,7 @@ export namespace Prisma {
 
   export type ArAgingMinOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     invoiceNumber?: SortOrder
     contactName?: SortOrder
     total?: SortOrder
@@ -31116,6 +31652,7 @@ export namespace Prisma {
 
   export type LowStockAlertCountOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     sku?: SortOrder
     productName?: SortOrder
     warehouseName?: SortOrder
@@ -31132,6 +31669,7 @@ export namespace Prisma {
 
   export type LowStockAlertMaxOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     sku?: SortOrder
     productName?: SortOrder
     warehouseName?: SortOrder
@@ -31142,6 +31680,7 @@ export namespace Prisma {
 
   export type LowStockAlertMinOrderByAggregateInput = {
     id?: SortOrder
+    tenantId?: SortOrder
     sku?: SortOrder
     productName?: SortOrder
     warehouseName?: SortOrder
@@ -32883,6 +33422,7 @@ export namespace Prisma {
 
   export type ContactCreateWithoutChildrenInput = {
     id?: string
+    tenantId?: string
     type?: $Enums.ContactType
     name: string
     email?: string | null
@@ -32915,6 +33455,7 @@ export namespace Prisma {
 
   export type ContactUncheckedCreateWithoutChildrenInput = {
     id?: string
+    tenantId?: string
     type?: $Enums.ContactType
     name: string
     email?: string | null
@@ -32952,6 +33493,7 @@ export namespace Prisma {
 
   export type ContactCreateWithoutParentInput = {
     id?: string
+    tenantId?: string
     type?: $Enums.ContactType
     name: string
     email?: string | null
@@ -32984,6 +33526,7 @@ export namespace Prisma {
 
   export type ContactUncheckedCreateWithoutParentInput = {
     id?: string
+    tenantId?: string
     type?: $Enums.ContactType
     name: string
     email?: string | null
@@ -33026,6 +33569,7 @@ export namespace Prisma {
 
   export type ContactNoteCreateWithoutContactInput = {
     id?: string
+    tenantId?: string
     type?: string
     body: string
     authorId: string
@@ -33035,6 +33579,7 @@ export namespace Prisma {
 
   export type ContactNoteUncheckedCreateWithoutContactInput = {
     id?: string
+    tenantId?: string
     type?: string
     body: string
     authorId: string
@@ -33054,6 +33599,7 @@ export namespace Prisma {
 
   export type OrderCreateWithoutContactInput = {
     id?: string
+    tenantId?: string
     orderNumber: string
     status?: $Enums.OrderStatus
     fulfillmentStatus?: $Enums.FulfillmentStatus
@@ -33091,6 +33637,7 @@ export namespace Prisma {
 
   export type OrderUncheckedCreateWithoutContactInput = {
     id?: string
+    tenantId?: string
     orderNumber: string
     status?: $Enums.OrderStatus
     fulfillmentStatus?: $Enums.FulfillmentStatus
@@ -33138,6 +33685,7 @@ export namespace Prisma {
 
   export type InvoiceCreateWithoutContactInput = {
     id?: string
+    tenantId?: string
     invoiceNumber: string
     status?: $Enums.InvoiceStatus
     issueDate?: Date | string
@@ -33174,6 +33722,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedCreateWithoutContactInput = {
     id?: string
+    tenantId?: string
     invoiceNumber: string
     orderId?: string | null
     status?: $Enums.InvoiceStatus
@@ -33220,6 +33769,7 @@ export namespace Prisma {
 
   export type ExpenseCreateWithoutVendorInput = {
     id?: string
+    tenantId?: string
     title: string
     description?: string | null
     category?: $Enums.ExpenseCategory
@@ -33250,6 +33800,7 @@ export namespace Prisma {
 
   export type ExpenseUncheckedCreateWithoutVendorInput = {
     id?: string
+    tenantId?: string
     title: string
     description?: string | null
     category?: $Enums.ExpenseCategory
@@ -33301,6 +33852,7 @@ export namespace Prisma {
 
   export type ContactUpdateWithoutChildrenInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     type?: EnumContactTypeFieldUpdateOperationsInput | $Enums.ContactType
     name?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
@@ -33333,6 +33885,7 @@ export namespace Prisma {
 
   export type ContactUncheckedUpdateWithoutChildrenInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     type?: EnumContactTypeFieldUpdateOperationsInput | $Enums.ContactType
     name?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
@@ -33384,6 +33937,7 @@ export namespace Prisma {
     OR?: ContactScalarWhereInput[]
     NOT?: ContactScalarWhereInput | ContactScalarWhereInput[]
     id?: UuidFilter<"Contact"> | string
+    tenantId?: UuidFilter<"Contact"> | string
     type?: EnumContactTypeFilter<"Contact"> | $Enums.ContactType
     name?: StringFilter<"Contact"> | string
     email?: StringNullableFilter<"Contact"> | string | null
@@ -33431,6 +33985,7 @@ export namespace Prisma {
     OR?: ContactNoteScalarWhereInput[]
     NOT?: ContactNoteScalarWhereInput | ContactNoteScalarWhereInput[]
     id?: UuidFilter<"ContactNote"> | string
+    tenantId?: UuidFilter<"ContactNote"> | string
     contactId?: UuidFilter<"ContactNote"> | string
     type?: StringFilter<"ContactNote"> | string
     body?: StringFilter<"ContactNote"> | string
@@ -33460,6 +34015,7 @@ export namespace Prisma {
     OR?: OrderScalarWhereInput[]
     NOT?: OrderScalarWhereInput | OrderScalarWhereInput[]
     id?: UuidFilter<"Order"> | string
+    tenantId?: UuidFilter<"Order"> | string
     orderNumber?: StringFilter<"Order"> | string
     contactId?: UuidNullableFilter<"Order"> | string | null
     status?: EnumOrderStatusFilter<"Order"> | $Enums.OrderStatus
@@ -33514,6 +34070,7 @@ export namespace Prisma {
     OR?: InvoiceScalarWhereInput[]
     NOT?: InvoiceScalarWhereInput | InvoiceScalarWhereInput[]
     id?: UuidFilter<"Invoice"> | string
+    tenantId?: UuidFilter<"Invoice"> | string
     invoiceNumber?: StringFilter<"Invoice"> | string
     contactId?: UuidNullableFilter<"Invoice"> | string | null
     orderId?: UuidNullableFilter<"Invoice"> | string | null
@@ -33567,6 +34124,7 @@ export namespace Prisma {
     OR?: ExpenseScalarWhereInput[]
     NOT?: ExpenseScalarWhereInput | ExpenseScalarWhereInput[]
     id?: UuidFilter<"Expense"> | string
+    tenantId?: UuidFilter<"Expense"> | string
     title?: StringFilter<"Expense"> | string
     description?: StringNullableFilter<"Expense"> | string | null
     category?: EnumExpenseCategoryFilter<"Expense"> | $Enums.ExpenseCategory
@@ -33598,6 +34156,7 @@ export namespace Prisma {
 
   export type ContactCreateWithoutNotesInput = {
     id?: string
+    tenantId?: string
     type?: $Enums.ContactType
     name: string
     email?: string | null
@@ -33630,6 +34189,7 @@ export namespace Prisma {
 
   export type ContactUncheckedCreateWithoutNotesInput = {
     id?: string
+    tenantId?: string
     type?: $Enums.ContactType
     name: string
     email?: string | null
@@ -33678,6 +34238,7 @@ export namespace Prisma {
 
   export type ContactUpdateWithoutNotesInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     type?: EnumContactTypeFieldUpdateOperationsInput | $Enums.ContactType
     name?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
@@ -33710,6 +34271,7 @@ export namespace Prisma {
 
   export type ContactUncheckedUpdateWithoutNotesInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     type?: EnumContactTypeFieldUpdateOperationsInput | $Enums.ContactType
     name?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
@@ -33742,6 +34304,7 @@ export namespace Prisma {
 
   export type InventoryItemCreateWithoutProductInput = {
     id?: string
+    tenantId?: string
     quantityOnHand?: number
     quantityReserved?: number
     quantityAvailable?: number
@@ -33757,6 +34320,7 @@ export namespace Prisma {
 
   export type InventoryItemUncheckedCreateWithoutProductInput = {
     id?: string
+    tenantId?: string
     warehouseId: string
     quantityOnHand?: number
     quantityReserved?: number
@@ -33782,6 +34346,7 @@ export namespace Prisma {
 
   export type OrderItemCreateWithoutProductInput = {
     id?: string
+    tenantId?: string
     sku: string
     name: string
     description?: string | null
@@ -33799,6 +34364,7 @@ export namespace Prisma {
 
   export type OrderItemUncheckedCreateWithoutProductInput = {
     id?: string
+    tenantId?: string
     orderId: string
     sku: string
     name: string
@@ -33826,6 +34392,7 @@ export namespace Prisma {
 
   export type InvoiceLineCreateWithoutProductInput = {
     id?: string
+    tenantId?: string
     description: string
     quantity: Decimal | DecimalJsLike | number | string
     unitPrice: Decimal | DecimalJsLike | number | string
@@ -33840,6 +34407,7 @@ export namespace Prisma {
 
   export type InvoiceLineUncheckedCreateWithoutProductInput = {
     id?: string
+    tenantId?: string
     invoiceId: string
     description: string
     quantity: Decimal | DecimalJsLike | number | string
@@ -33864,6 +34432,7 @@ export namespace Prisma {
 
   export type StockMovementCreateWithoutProductInput = {
     id?: string
+    tenantId?: string
     type: $Enums.StockMovementType
     quantity: number
     balanceAfter: number
@@ -33877,6 +34446,7 @@ export namespace Prisma {
 
   export type StockMovementUncheckedCreateWithoutProductInput = {
     id?: string
+    tenantId?: string
     warehouseId: string
     type: $Enums.StockMovementType
     quantity: number
@@ -33919,6 +34489,7 @@ export namespace Prisma {
     OR?: InventoryItemScalarWhereInput[]
     NOT?: InventoryItemScalarWhereInput | InventoryItemScalarWhereInput[]
     id?: UuidFilter<"InventoryItem"> | string
+    tenantId?: UuidFilter<"InventoryItem"> | string
     productId?: UuidFilter<"InventoryItem"> | string
     warehouseId?: UuidFilter<"InventoryItem"> | string
     quantityOnHand?: IntFilter<"InventoryItem"> | number
@@ -33954,6 +34525,7 @@ export namespace Prisma {
     OR?: OrderItemScalarWhereInput[]
     NOT?: OrderItemScalarWhereInput | OrderItemScalarWhereInput[]
     id?: UuidFilter<"OrderItem"> | string
+    tenantId?: UuidFilter<"OrderItem"> | string
     orderId?: UuidFilter<"OrderItem"> | string
     productId?: UuidFilter<"OrderItem"> | string
     sku?: StringFilter<"OrderItem"> | string
@@ -33991,6 +34563,7 @@ export namespace Prisma {
     OR?: InvoiceLineScalarWhereInput[]
     NOT?: InvoiceLineScalarWhereInput | InvoiceLineScalarWhereInput[]
     id?: UuidFilter<"InvoiceLine"> | string
+    tenantId?: UuidFilter<"InvoiceLine"> | string
     invoiceId?: UuidFilter<"InvoiceLine"> | string
     productId?: UuidNullableFilter<"InvoiceLine"> | string | null
     description?: StringFilter<"InvoiceLine"> | string
@@ -34025,6 +34598,7 @@ export namespace Prisma {
     OR?: StockMovementScalarWhereInput[]
     NOT?: StockMovementScalarWhereInput | StockMovementScalarWhereInput[]
     id?: UuidFilter<"StockMovement"> | string
+    tenantId?: UuidFilter<"StockMovement"> | string
     productId?: UuidFilter<"StockMovement"> | string
     warehouseId?: UuidFilter<"StockMovement"> | string
     type?: EnumStockMovementTypeFilter<"StockMovement"> | $Enums.StockMovementType
@@ -34039,6 +34613,7 @@ export namespace Prisma {
 
   export type InventoryItemCreateWithoutWarehouseInput = {
     id?: string
+    tenantId?: string
     quantityOnHand?: number
     quantityReserved?: number
     quantityAvailable?: number
@@ -34054,6 +34629,7 @@ export namespace Prisma {
 
   export type InventoryItemUncheckedCreateWithoutWarehouseInput = {
     id?: string
+    tenantId?: string
     productId: string
     quantityOnHand?: number
     quantityReserved?: number
@@ -34079,6 +34655,7 @@ export namespace Prisma {
 
   export type StockMovementCreateWithoutWarehouseInput = {
     id?: string
+    tenantId?: string
     type: $Enums.StockMovementType
     quantity: number
     balanceAfter: number
@@ -34092,6 +34669,7 @@ export namespace Prisma {
 
   export type StockMovementUncheckedCreateWithoutWarehouseInput = {
     id?: string
+    tenantId?: string
     productId: string
     type: $Enums.StockMovementType
     quantity: number
@@ -34147,6 +34725,7 @@ export namespace Prisma {
 
   export type ProductCreateWithoutInventoryItemsInput = {
     id?: string
+    tenantId?: string
     sku: string
     name: string
     description?: string | null
@@ -34172,6 +34751,7 @@ export namespace Prisma {
 
   export type ProductUncheckedCreateWithoutInventoryItemsInput = {
     id?: string
+    tenantId?: string
     sku: string
     name: string
     description?: string | null
@@ -34202,6 +34782,7 @@ export namespace Prisma {
 
   export type WarehouseCreateWithoutInventoryItemsInput = {
     id?: string
+    tenantId?: string
     name: string
     code: string
     address?: string | null
@@ -34215,6 +34796,7 @@ export namespace Prisma {
 
   export type WarehouseUncheckedCreateWithoutInventoryItemsInput = {
     id?: string
+    tenantId?: string
     name: string
     code: string
     address?: string | null
@@ -34244,6 +34826,7 @@ export namespace Prisma {
 
   export type ProductUpdateWithoutInventoryItemsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     sku?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34269,6 +34852,7 @@ export namespace Prisma {
 
   export type ProductUncheckedUpdateWithoutInventoryItemsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     sku?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34305,6 +34889,7 @@ export namespace Prisma {
 
   export type WarehouseUpdateWithoutInventoryItemsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34318,6 +34903,7 @@ export namespace Prisma {
 
   export type WarehouseUncheckedUpdateWithoutInventoryItemsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34331,6 +34917,7 @@ export namespace Prisma {
 
   export type ProductCreateWithoutStockMovementsInput = {
     id?: string
+    tenantId?: string
     sku: string
     name: string
     description?: string | null
@@ -34356,6 +34943,7 @@ export namespace Prisma {
 
   export type ProductUncheckedCreateWithoutStockMovementsInput = {
     id?: string
+    tenantId?: string
     sku: string
     name: string
     description?: string | null
@@ -34386,6 +34974,7 @@ export namespace Prisma {
 
   export type WarehouseCreateWithoutStockMovementsInput = {
     id?: string
+    tenantId?: string
     name: string
     code: string
     address?: string | null
@@ -34399,6 +34988,7 @@ export namespace Prisma {
 
   export type WarehouseUncheckedCreateWithoutStockMovementsInput = {
     id?: string
+    tenantId?: string
     name: string
     code: string
     address?: string | null
@@ -34428,6 +35018,7 @@ export namespace Prisma {
 
   export type ProductUpdateWithoutStockMovementsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     sku?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34453,6 +35044,7 @@ export namespace Prisma {
 
   export type ProductUncheckedUpdateWithoutStockMovementsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     sku?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34489,6 +35081,7 @@ export namespace Prisma {
 
   export type WarehouseUpdateWithoutStockMovementsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34502,6 +35095,7 @@ export namespace Prisma {
 
   export type WarehouseUncheckedUpdateWithoutStockMovementsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34515,6 +35109,7 @@ export namespace Prisma {
 
   export type ContactCreateWithoutOrdersInput = {
     id?: string
+    tenantId?: string
     type?: $Enums.ContactType
     name: string
     email?: string | null
@@ -34547,6 +35142,7 @@ export namespace Prisma {
 
   export type ContactUncheckedCreateWithoutOrdersInput = {
     id?: string
+    tenantId?: string
     type?: $Enums.ContactType
     name: string
     email?: string | null
@@ -34584,6 +35180,7 @@ export namespace Prisma {
 
   export type OrderItemCreateWithoutOrderInput = {
     id?: string
+    tenantId?: string
     sku: string
     name: string
     description?: string | null
@@ -34601,6 +35198,7 @@ export namespace Prisma {
 
   export type OrderItemUncheckedCreateWithoutOrderInput = {
     id?: string
+    tenantId?: string
     productId: string
     sku: string
     name: string
@@ -34628,6 +35226,7 @@ export namespace Prisma {
 
   export type InvoiceCreateWithoutOrderInput = {
     id?: string
+    tenantId?: string
     invoiceNumber: string
     status?: $Enums.InvoiceStatus
     issueDate?: Date | string
@@ -34664,6 +35263,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedCreateWithoutOrderInput = {
     id?: string
+    tenantId?: string
     invoiceNumber: string
     contactId?: string | null
     status?: $Enums.InvoiceStatus
@@ -34710,6 +35310,7 @@ export namespace Prisma {
 
   export type FulfillmentCreateWithoutOrderInput = {
     id?: string
+    tenantId?: string
     status?: $Enums.FulfillmentStatus
     carrier?: string | null
     trackingNumber?: string | null
@@ -34725,6 +35326,7 @@ export namespace Prisma {
 
   export type FulfillmentUncheckedCreateWithoutOrderInput = {
     id?: string
+    tenantId?: string
     status?: $Enums.FulfillmentStatus
     carrier?: string | null
     trackingNumber?: string | null
@@ -34761,6 +35363,7 @@ export namespace Prisma {
 
   export type ContactUpdateWithoutOrdersInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     type?: EnumContactTypeFieldUpdateOperationsInput | $Enums.ContactType
     name?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34793,6 +35396,7 @@ export namespace Prisma {
 
   export type ContactUncheckedUpdateWithoutOrdersInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     type?: EnumContactTypeFieldUpdateOperationsInput | $Enums.ContactType
     name?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34876,6 +35480,7 @@ export namespace Prisma {
     OR?: FulfillmentScalarWhereInput[]
     NOT?: FulfillmentScalarWhereInput | FulfillmentScalarWhereInput[]
     id?: UuidFilter<"Fulfillment"> | string
+    tenantId?: UuidFilter<"Fulfillment"> | string
     orderId?: UuidFilter<"Fulfillment"> | string
     status?: EnumFulfillmentStatusFilter<"Fulfillment"> | $Enums.FulfillmentStatus
     carrier?: StringNullableFilter<"Fulfillment"> | string | null
@@ -34892,6 +35497,7 @@ export namespace Prisma {
 
   export type OrderCreateWithoutItemsInput = {
     id?: string
+    tenantId?: string
     orderNumber: string
     status?: $Enums.OrderStatus
     fulfillmentStatus?: $Enums.FulfillmentStatus
@@ -34929,6 +35535,7 @@ export namespace Prisma {
 
   export type OrderUncheckedCreateWithoutItemsInput = {
     id?: string
+    tenantId?: string
     orderNumber: string
     contactId?: string | null
     status?: $Enums.OrderStatus
@@ -34971,6 +35578,7 @@ export namespace Prisma {
 
   export type ProductCreateWithoutOrderItemsInput = {
     id?: string
+    tenantId?: string
     sku: string
     name: string
     description?: string | null
@@ -34996,6 +35604,7 @@ export namespace Prisma {
 
   export type ProductUncheckedCreateWithoutOrderItemsInput = {
     id?: string
+    tenantId?: string
     sku: string
     name: string
     description?: string | null
@@ -35037,6 +35646,7 @@ export namespace Prisma {
 
   export type OrderUpdateWithoutItemsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     orderNumber?: StringFieldUpdateOperationsInput | string
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
     fulfillmentStatus?: EnumFulfillmentStatusFieldUpdateOperationsInput | $Enums.FulfillmentStatus
@@ -35074,6 +35684,7 @@ export namespace Prisma {
 
   export type OrderUncheckedUpdateWithoutItemsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     orderNumber?: StringFieldUpdateOperationsInput | string
     contactId?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -35122,6 +35733,7 @@ export namespace Prisma {
 
   export type ProductUpdateWithoutOrderItemsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     sku?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -35147,6 +35759,7 @@ export namespace Prisma {
 
   export type ProductUncheckedUpdateWithoutOrderItemsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     sku?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -35172,6 +35785,7 @@ export namespace Prisma {
 
   export type OrderCreateWithoutFulfillmentsInput = {
     id?: string
+    tenantId?: string
     orderNumber: string
     status?: $Enums.OrderStatus
     fulfillmentStatus?: $Enums.FulfillmentStatus
@@ -35209,6 +35823,7 @@ export namespace Prisma {
 
   export type OrderUncheckedCreateWithoutFulfillmentsInput = {
     id?: string
+    tenantId?: string
     orderNumber: string
     contactId?: string | null
     status?: $Enums.OrderStatus
@@ -35262,6 +35877,7 @@ export namespace Prisma {
 
   export type OrderUpdateWithoutFulfillmentsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     orderNumber?: StringFieldUpdateOperationsInput | string
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
     fulfillmentStatus?: EnumFulfillmentStatusFieldUpdateOperationsInput | $Enums.FulfillmentStatus
@@ -35299,6 +35915,7 @@ export namespace Prisma {
 
   export type OrderUncheckedUpdateWithoutFulfillmentsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     orderNumber?: StringFieldUpdateOperationsInput | string
     contactId?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -35336,6 +35953,7 @@ export namespace Prisma {
 
   export type ContactCreateWithoutInvoicesInput = {
     id?: string
+    tenantId?: string
     type?: $Enums.ContactType
     name: string
     email?: string | null
@@ -35368,6 +35986,7 @@ export namespace Prisma {
 
   export type ContactUncheckedCreateWithoutInvoicesInput = {
     id?: string
+    tenantId?: string
     type?: $Enums.ContactType
     name: string
     email?: string | null
@@ -35405,6 +36024,7 @@ export namespace Prisma {
 
   export type OrderCreateWithoutInvoicesInput = {
     id?: string
+    tenantId?: string
     orderNumber: string
     status?: $Enums.OrderStatus
     fulfillmentStatus?: $Enums.FulfillmentStatus
@@ -35442,6 +36062,7 @@ export namespace Prisma {
 
   export type OrderUncheckedCreateWithoutInvoicesInput = {
     id?: string
+    tenantId?: string
     orderNumber: string
     contactId?: string | null
     status?: $Enums.OrderStatus
@@ -35484,6 +36105,7 @@ export namespace Prisma {
 
   export type InvoiceCreateWithoutRecurringInstancesInput = {
     id?: string
+    tenantId?: string
     invoiceNumber: string
     status?: $Enums.InvoiceStatus
     issueDate?: Date | string
@@ -35520,6 +36142,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedCreateWithoutRecurringInstancesInput = {
     id?: string
+    tenantId?: string
     invoiceNumber: string
     contactId?: string | null
     orderId?: string | null
@@ -35561,6 +36184,7 @@ export namespace Prisma {
 
   export type InvoiceCreateWithoutRecurringTemplateInput = {
     id?: string
+    tenantId?: string
     invoiceNumber: string
     status?: $Enums.InvoiceStatus
     issueDate?: Date | string
@@ -35597,6 +36221,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedCreateWithoutRecurringTemplateInput = {
     id?: string
+    tenantId?: string
     invoiceNumber: string
     contactId?: string | null
     orderId?: string | null
@@ -35643,6 +36268,7 @@ export namespace Prisma {
 
   export type InvoiceLineCreateWithoutInvoiceInput = {
     id?: string
+    tenantId?: string
     description: string
     quantity: Decimal | DecimalJsLike | number | string
     unitPrice: Decimal | DecimalJsLike | number | string
@@ -35657,6 +36283,7 @@ export namespace Prisma {
 
   export type InvoiceLineUncheckedCreateWithoutInvoiceInput = {
     id?: string
+    tenantId?: string
     productId?: string | null
     description: string
     quantity: Decimal | DecimalJsLike | number | string
@@ -35681,6 +36308,7 @@ export namespace Prisma {
 
   export type PaymentCreateWithoutInvoiceInput = {
     id?: string
+    tenantId?: string
     amount: Decimal | DecimalJsLike | number | string
     currency?: string
     method?: $Enums.PaymentMethod
@@ -35694,6 +36322,7 @@ export namespace Prisma {
 
   export type PaymentUncheckedCreateWithoutInvoiceInput = {
     id?: string
+    tenantId?: string
     amount: Decimal | DecimalJsLike | number | string
     currency?: string
     method?: $Enums.PaymentMethod
@@ -35728,6 +36357,7 @@ export namespace Prisma {
 
   export type ContactUpdateWithoutInvoicesInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     type?: EnumContactTypeFieldUpdateOperationsInput | $Enums.ContactType
     name?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
@@ -35760,6 +36390,7 @@ export namespace Prisma {
 
   export type ContactUncheckedUpdateWithoutInvoicesInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     type?: EnumContactTypeFieldUpdateOperationsInput | $Enums.ContactType
     name?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
@@ -35803,6 +36434,7 @@ export namespace Prisma {
 
   export type OrderUpdateWithoutInvoicesInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     orderNumber?: StringFieldUpdateOperationsInput | string
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
     fulfillmentStatus?: EnumFulfillmentStatusFieldUpdateOperationsInput | $Enums.FulfillmentStatus
@@ -35840,6 +36472,7 @@ export namespace Prisma {
 
   export type OrderUncheckedUpdateWithoutInvoicesInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     orderNumber?: StringFieldUpdateOperationsInput | string
     contactId?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -35888,6 +36521,7 @@ export namespace Prisma {
 
   export type InvoiceUpdateWithoutRecurringInstancesInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     status?: EnumInvoiceStatusFieldUpdateOperationsInput | $Enums.InvoiceStatus
     issueDate?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -35924,6 +36558,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateWithoutRecurringInstancesInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     contactId?: NullableStringFieldUpdateOperationsInput | string | null
     orderId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -36011,6 +36646,7 @@ export namespace Prisma {
     OR?: PaymentScalarWhereInput[]
     NOT?: PaymentScalarWhereInput | PaymentScalarWhereInput[]
     id?: UuidFilter<"Payment"> | string
+    tenantId?: UuidFilter<"Payment"> | string
     invoiceId?: UuidFilter<"Payment"> | string
     amount?: DecimalFilter<"Payment"> | Decimal | DecimalJsLike | number | string
     currency?: StringFilter<"Payment"> | string
@@ -36025,6 +36661,7 @@ export namespace Prisma {
 
   export type InvoiceCreateWithoutLinesInput = {
     id?: string
+    tenantId?: string
     invoiceNumber: string
     status?: $Enums.InvoiceStatus
     issueDate?: Date | string
@@ -36061,6 +36698,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedCreateWithoutLinesInput = {
     id?: string
+    tenantId?: string
     invoiceNumber: string
     contactId?: string | null
     orderId?: string | null
@@ -36102,6 +36740,7 @@ export namespace Prisma {
 
   export type ProductCreateWithoutInvoiceLinesInput = {
     id?: string
+    tenantId?: string
     sku: string
     name: string
     description?: string | null
@@ -36127,6 +36766,7 @@ export namespace Prisma {
 
   export type ProductUncheckedCreateWithoutInvoiceLinesInput = {
     id?: string
+    tenantId?: string
     sku: string
     name: string
     description?: string | null
@@ -36168,6 +36808,7 @@ export namespace Prisma {
 
   export type InvoiceUpdateWithoutLinesInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     status?: EnumInvoiceStatusFieldUpdateOperationsInput | $Enums.InvoiceStatus
     issueDate?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -36204,6 +36845,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateWithoutLinesInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     contactId?: NullableStringFieldUpdateOperationsInput | string | null
     orderId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -36251,6 +36893,7 @@ export namespace Prisma {
 
   export type ProductUpdateWithoutInvoiceLinesInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     sku?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -36276,6 +36919,7 @@ export namespace Prisma {
 
   export type ProductUncheckedUpdateWithoutInvoiceLinesInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     sku?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -36301,6 +36945,7 @@ export namespace Prisma {
 
   export type InvoiceCreateWithoutPaymentsInput = {
     id?: string
+    tenantId?: string
     invoiceNumber: string
     status?: $Enums.InvoiceStatus
     issueDate?: Date | string
@@ -36337,6 +36982,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedCreateWithoutPaymentsInput = {
     id?: string
+    tenantId?: string
     invoiceNumber: string
     contactId?: string | null
     orderId?: string | null
@@ -36389,6 +37035,7 @@ export namespace Prisma {
 
   export type InvoiceUpdateWithoutPaymentsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     status?: EnumInvoiceStatusFieldUpdateOperationsInput | $Enums.InvoiceStatus
     issueDate?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -36425,6 +37072,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateWithoutPaymentsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     contactId?: NullableStringFieldUpdateOperationsInput | string | null
     orderId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -36461,6 +37109,7 @@ export namespace Prisma {
 
   export type ContactCreateWithoutExpensesInput = {
     id?: string
+    tenantId?: string
     type?: $Enums.ContactType
     name: string
     email?: string | null
@@ -36493,6 +37142,7 @@ export namespace Prisma {
 
   export type ContactUncheckedCreateWithoutExpensesInput = {
     id?: string
+    tenantId?: string
     type?: $Enums.ContactType
     name: string
     email?: string | null
@@ -36541,6 +37191,7 @@ export namespace Prisma {
 
   export type ContactUpdateWithoutExpensesInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     type?: EnumContactTypeFieldUpdateOperationsInput | $Enums.ContactType
     name?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
@@ -36573,6 +37224,7 @@ export namespace Prisma {
 
   export type ContactUncheckedUpdateWithoutExpensesInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     type?: EnumContactTypeFieldUpdateOperationsInput | $Enums.ContactType
     name?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
@@ -36605,6 +37257,7 @@ export namespace Prisma {
 
   export type ReportSnapshotCreateWithoutReportInput = {
     id?: string
+    tenantId?: string
     version: number
     data: JsonNullValueInput | InputJsonValue
     createdAt?: Date | string
@@ -36612,6 +37265,7 @@ export namespace Prisma {
 
   export type ReportSnapshotUncheckedCreateWithoutReportInput = {
     id?: string
+    tenantId?: string
     version: number
     data: JsonNullValueInput | InputJsonValue
     createdAt?: Date | string
@@ -36648,6 +37302,7 @@ export namespace Prisma {
     OR?: ReportSnapshotScalarWhereInput[]
     NOT?: ReportSnapshotScalarWhereInput | ReportSnapshotScalarWhereInput[]
     id?: UuidFilter<"ReportSnapshot"> | string
+    tenantId?: UuidFilter<"ReportSnapshot"> | string
     reportId?: UuidFilter<"ReportSnapshot"> | string
     version?: IntFilter<"ReportSnapshot"> | number
     data?: JsonFilter<"ReportSnapshot">
@@ -36656,6 +37311,7 @@ export namespace Prisma {
 
   export type ReportCreateWithoutSnapshotsInput = {
     id?: string
+    tenantId?: string
     name: string
     type: $Enums.ReportType
     period?: $Enums.ReportPeriod
@@ -36677,6 +37333,7 @@ export namespace Prisma {
 
   export type ReportUncheckedCreateWithoutSnapshotsInput = {
     id?: string
+    tenantId?: string
     name: string
     type: $Enums.ReportType
     period?: $Enums.ReportPeriod
@@ -36714,6 +37371,7 @@ export namespace Prisma {
 
   export type ReportUpdateWithoutSnapshotsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     type?: EnumReportTypeFieldUpdateOperationsInput | $Enums.ReportType
     period?: EnumReportPeriodFieldUpdateOperationsInput | $Enums.ReportPeriod
@@ -36735,6 +37393,7 @@ export namespace Prisma {
 
   export type ReportUncheckedUpdateWithoutSnapshotsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     type?: EnumReportTypeFieldUpdateOperationsInput | $Enums.ReportType
     period?: EnumReportPeriodFieldUpdateOperationsInput | $Enums.ReportPeriod
@@ -36756,6 +37415,7 @@ export namespace Prisma {
 
   export type ContactCreateManyParentInput = {
     id?: string
+    tenantId?: string
     type?: $Enums.ContactType
     name: string
     email?: string | null
@@ -36783,6 +37443,7 @@ export namespace Prisma {
 
   export type ContactNoteCreateManyContactInput = {
     id?: string
+    tenantId?: string
     type?: string
     body: string
     authorId: string
@@ -36792,6 +37453,7 @@ export namespace Prisma {
 
   export type OrderCreateManyContactInput = {
     id?: string
+    tenantId?: string
     orderNumber: string
     status?: $Enums.OrderStatus
     fulfillmentStatus?: $Enums.FulfillmentStatus
@@ -36826,6 +37488,7 @@ export namespace Prisma {
 
   export type InvoiceCreateManyContactInput = {
     id?: string
+    tenantId?: string
     invoiceNumber: string
     orderId?: string | null
     status?: $Enums.InvoiceStatus
@@ -36859,6 +37522,7 @@ export namespace Prisma {
 
   export type ExpenseCreateManyVendorInput = {
     id?: string
+    tenantId?: string
     title: string
     description?: string | null
     category?: $Enums.ExpenseCategory
@@ -36889,6 +37553,7 @@ export namespace Prisma {
 
   export type ContactUpdateWithoutParentInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     type?: EnumContactTypeFieldUpdateOperationsInput | $Enums.ContactType
     name?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
@@ -36921,6 +37586,7 @@ export namespace Prisma {
 
   export type ContactUncheckedUpdateWithoutParentInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     type?: EnumContactTypeFieldUpdateOperationsInput | $Enums.ContactType
     name?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
@@ -36953,6 +37619,7 @@ export namespace Prisma {
 
   export type ContactUncheckedUpdateManyWithoutParentInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     type?: EnumContactTypeFieldUpdateOperationsInput | $Enums.ContactType
     name?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
@@ -36980,6 +37647,7 @@ export namespace Prisma {
 
   export type ContactNoteUpdateWithoutContactInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     type?: StringFieldUpdateOperationsInput | string
     body?: StringFieldUpdateOperationsInput | string
     authorId?: StringFieldUpdateOperationsInput | string
@@ -36989,6 +37657,7 @@ export namespace Prisma {
 
   export type ContactNoteUncheckedUpdateWithoutContactInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     type?: StringFieldUpdateOperationsInput | string
     body?: StringFieldUpdateOperationsInput | string
     authorId?: StringFieldUpdateOperationsInput | string
@@ -36998,6 +37667,7 @@ export namespace Prisma {
 
   export type ContactNoteUncheckedUpdateManyWithoutContactInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     type?: StringFieldUpdateOperationsInput | string
     body?: StringFieldUpdateOperationsInput | string
     authorId?: StringFieldUpdateOperationsInput | string
@@ -37007,6 +37677,7 @@ export namespace Prisma {
 
   export type OrderUpdateWithoutContactInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     orderNumber?: StringFieldUpdateOperationsInput | string
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
     fulfillmentStatus?: EnumFulfillmentStatusFieldUpdateOperationsInput | $Enums.FulfillmentStatus
@@ -37044,6 +37715,7 @@ export namespace Prisma {
 
   export type OrderUncheckedUpdateWithoutContactInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     orderNumber?: StringFieldUpdateOperationsInput | string
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
     fulfillmentStatus?: EnumFulfillmentStatusFieldUpdateOperationsInput | $Enums.FulfillmentStatus
@@ -37081,6 +37753,7 @@ export namespace Prisma {
 
   export type OrderUncheckedUpdateManyWithoutContactInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     orderNumber?: StringFieldUpdateOperationsInput | string
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
     fulfillmentStatus?: EnumFulfillmentStatusFieldUpdateOperationsInput | $Enums.FulfillmentStatus
@@ -37115,6 +37788,7 @@ export namespace Prisma {
 
   export type InvoiceUpdateWithoutContactInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     status?: EnumInvoiceStatusFieldUpdateOperationsInput | $Enums.InvoiceStatus
     issueDate?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -37151,6 +37825,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateWithoutContactInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     orderId?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumInvoiceStatusFieldUpdateOperationsInput | $Enums.InvoiceStatus
@@ -37187,6 +37862,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateManyWithoutContactInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     orderId?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumInvoiceStatusFieldUpdateOperationsInput | $Enums.InvoiceStatus
@@ -37220,6 +37896,7 @@ export namespace Prisma {
 
   export type ExpenseUpdateWithoutVendorInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     category?: EnumExpenseCategoryFieldUpdateOperationsInput | $Enums.ExpenseCategory
@@ -37250,6 +37927,7 @@ export namespace Prisma {
 
   export type ExpenseUncheckedUpdateWithoutVendorInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     category?: EnumExpenseCategoryFieldUpdateOperationsInput | $Enums.ExpenseCategory
@@ -37280,6 +37958,7 @@ export namespace Prisma {
 
   export type ExpenseUncheckedUpdateManyWithoutVendorInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     category?: EnumExpenseCategoryFieldUpdateOperationsInput | $Enums.ExpenseCategory
@@ -37310,6 +37989,7 @@ export namespace Prisma {
 
   export type InventoryItemCreateManyProductInput = {
     id?: string
+    tenantId?: string
     warehouseId: string
     quantityOnHand?: number
     quantityReserved?: number
@@ -37325,6 +38005,7 @@ export namespace Prisma {
 
   export type OrderItemCreateManyProductInput = {
     id?: string
+    tenantId?: string
     orderId: string
     sku: string
     name: string
@@ -37342,6 +38023,7 @@ export namespace Prisma {
 
   export type InvoiceLineCreateManyProductInput = {
     id?: string
+    tenantId?: string
     invoiceId: string
     description: string
     quantity: Decimal | DecimalJsLike | number | string
@@ -37356,6 +38038,7 @@ export namespace Prisma {
 
   export type StockMovementCreateManyProductInput = {
     id?: string
+    tenantId?: string
     warehouseId: string
     type: $Enums.StockMovementType
     quantity: number
@@ -37369,6 +38052,7 @@ export namespace Prisma {
 
   export type InventoryItemUpdateWithoutProductInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     quantityOnHand?: IntFieldUpdateOperationsInput | number
     quantityReserved?: IntFieldUpdateOperationsInput | number
     quantityAvailable?: IntFieldUpdateOperationsInput | number
@@ -37384,6 +38068,7 @@ export namespace Prisma {
 
   export type InventoryItemUncheckedUpdateWithoutProductInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     warehouseId?: StringFieldUpdateOperationsInput | string
     quantityOnHand?: IntFieldUpdateOperationsInput | number
     quantityReserved?: IntFieldUpdateOperationsInput | number
@@ -37399,6 +38084,7 @@ export namespace Prisma {
 
   export type InventoryItemUncheckedUpdateManyWithoutProductInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     warehouseId?: StringFieldUpdateOperationsInput | string
     quantityOnHand?: IntFieldUpdateOperationsInput | number
     quantityReserved?: IntFieldUpdateOperationsInput | number
@@ -37414,6 +38100,7 @@ export namespace Prisma {
 
   export type OrderItemUpdateWithoutProductInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     sku?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -37431,6 +38118,7 @@ export namespace Prisma {
 
   export type OrderItemUncheckedUpdateWithoutProductInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     orderId?: StringFieldUpdateOperationsInput | string
     sku?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
@@ -37448,6 +38136,7 @@ export namespace Prisma {
 
   export type OrderItemUncheckedUpdateManyWithoutProductInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     orderId?: StringFieldUpdateOperationsInput | string
     sku?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
@@ -37465,6 +38154,7 @@ export namespace Prisma {
 
   export type InvoiceLineUpdateWithoutProductInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
     quantity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     unitPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -37479,6 +38169,7 @@ export namespace Prisma {
 
   export type InvoiceLineUncheckedUpdateWithoutProductInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     invoiceId?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
     quantity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -37493,6 +38184,7 @@ export namespace Prisma {
 
   export type InvoiceLineUncheckedUpdateManyWithoutProductInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     invoiceId?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
     quantity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -37507,6 +38199,7 @@ export namespace Prisma {
 
   export type StockMovementUpdateWithoutProductInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     type?: EnumStockMovementTypeFieldUpdateOperationsInput | $Enums.StockMovementType
     quantity?: IntFieldUpdateOperationsInput | number
     balanceAfter?: IntFieldUpdateOperationsInput | number
@@ -37520,6 +38213,7 @@ export namespace Prisma {
 
   export type StockMovementUncheckedUpdateWithoutProductInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     warehouseId?: StringFieldUpdateOperationsInput | string
     type?: EnumStockMovementTypeFieldUpdateOperationsInput | $Enums.StockMovementType
     quantity?: IntFieldUpdateOperationsInput | number
@@ -37533,6 +38227,7 @@ export namespace Prisma {
 
   export type StockMovementUncheckedUpdateManyWithoutProductInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     warehouseId?: StringFieldUpdateOperationsInput | string
     type?: EnumStockMovementTypeFieldUpdateOperationsInput | $Enums.StockMovementType
     quantity?: IntFieldUpdateOperationsInput | number
@@ -37546,6 +38241,7 @@ export namespace Prisma {
 
   export type InventoryItemCreateManyWarehouseInput = {
     id?: string
+    tenantId?: string
     productId: string
     quantityOnHand?: number
     quantityReserved?: number
@@ -37561,6 +38257,7 @@ export namespace Prisma {
 
   export type StockMovementCreateManyWarehouseInput = {
     id?: string
+    tenantId?: string
     productId: string
     type: $Enums.StockMovementType
     quantity: number
@@ -37574,6 +38271,7 @@ export namespace Prisma {
 
   export type InventoryItemUpdateWithoutWarehouseInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     quantityOnHand?: IntFieldUpdateOperationsInput | number
     quantityReserved?: IntFieldUpdateOperationsInput | number
     quantityAvailable?: IntFieldUpdateOperationsInput | number
@@ -37589,6 +38287,7 @@ export namespace Prisma {
 
   export type InventoryItemUncheckedUpdateWithoutWarehouseInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     productId?: StringFieldUpdateOperationsInput | string
     quantityOnHand?: IntFieldUpdateOperationsInput | number
     quantityReserved?: IntFieldUpdateOperationsInput | number
@@ -37604,6 +38303,7 @@ export namespace Prisma {
 
   export type InventoryItemUncheckedUpdateManyWithoutWarehouseInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     productId?: StringFieldUpdateOperationsInput | string
     quantityOnHand?: IntFieldUpdateOperationsInput | number
     quantityReserved?: IntFieldUpdateOperationsInput | number
@@ -37619,6 +38319,7 @@ export namespace Prisma {
 
   export type StockMovementUpdateWithoutWarehouseInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     type?: EnumStockMovementTypeFieldUpdateOperationsInput | $Enums.StockMovementType
     quantity?: IntFieldUpdateOperationsInput | number
     balanceAfter?: IntFieldUpdateOperationsInput | number
@@ -37632,6 +38333,7 @@ export namespace Prisma {
 
   export type StockMovementUncheckedUpdateWithoutWarehouseInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     productId?: StringFieldUpdateOperationsInput | string
     type?: EnumStockMovementTypeFieldUpdateOperationsInput | $Enums.StockMovementType
     quantity?: IntFieldUpdateOperationsInput | number
@@ -37645,6 +38347,7 @@ export namespace Prisma {
 
   export type StockMovementUncheckedUpdateManyWithoutWarehouseInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     productId?: StringFieldUpdateOperationsInput | string
     type?: EnumStockMovementTypeFieldUpdateOperationsInput | $Enums.StockMovementType
     quantity?: IntFieldUpdateOperationsInput | number
@@ -37658,6 +38361,7 @@ export namespace Prisma {
 
   export type OrderItemCreateManyOrderInput = {
     id?: string
+    tenantId?: string
     productId: string
     sku: string
     name: string
@@ -37675,6 +38379,7 @@ export namespace Prisma {
 
   export type InvoiceCreateManyOrderInput = {
     id?: string
+    tenantId?: string
     invoiceNumber: string
     contactId?: string | null
     status?: $Enums.InvoiceStatus
@@ -37708,6 +38413,7 @@ export namespace Prisma {
 
   export type FulfillmentCreateManyOrderInput = {
     id?: string
+    tenantId?: string
     status?: $Enums.FulfillmentStatus
     carrier?: string | null
     trackingNumber?: string | null
@@ -37723,6 +38429,7 @@ export namespace Prisma {
 
   export type OrderItemUpdateWithoutOrderInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     sku?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -37740,6 +38447,7 @@ export namespace Prisma {
 
   export type OrderItemUncheckedUpdateWithoutOrderInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     productId?: StringFieldUpdateOperationsInput | string
     sku?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
@@ -37757,6 +38465,7 @@ export namespace Prisma {
 
   export type OrderItemUncheckedUpdateManyWithoutOrderInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     productId?: StringFieldUpdateOperationsInput | string
     sku?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
@@ -37774,6 +38483,7 @@ export namespace Prisma {
 
   export type InvoiceUpdateWithoutOrderInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     status?: EnumInvoiceStatusFieldUpdateOperationsInput | $Enums.InvoiceStatus
     issueDate?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -37810,6 +38520,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateWithoutOrderInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     contactId?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumInvoiceStatusFieldUpdateOperationsInput | $Enums.InvoiceStatus
@@ -37846,6 +38557,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateManyWithoutOrderInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     contactId?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumInvoiceStatusFieldUpdateOperationsInput | $Enums.InvoiceStatus
@@ -37879,6 +38591,7 @@ export namespace Prisma {
 
   export type FulfillmentUpdateWithoutOrderInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     status?: EnumFulfillmentStatusFieldUpdateOperationsInput | $Enums.FulfillmentStatus
     carrier?: NullableStringFieldUpdateOperationsInput | string | null
     trackingNumber?: NullableStringFieldUpdateOperationsInput | string | null
@@ -37894,6 +38607,7 @@ export namespace Prisma {
 
   export type FulfillmentUncheckedUpdateWithoutOrderInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     status?: EnumFulfillmentStatusFieldUpdateOperationsInput | $Enums.FulfillmentStatus
     carrier?: NullableStringFieldUpdateOperationsInput | string | null
     trackingNumber?: NullableStringFieldUpdateOperationsInput | string | null
@@ -37909,6 +38623,7 @@ export namespace Prisma {
 
   export type FulfillmentUncheckedUpdateManyWithoutOrderInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     status?: EnumFulfillmentStatusFieldUpdateOperationsInput | $Enums.FulfillmentStatus
     carrier?: NullableStringFieldUpdateOperationsInput | string | null
     trackingNumber?: NullableStringFieldUpdateOperationsInput | string | null
@@ -37924,6 +38639,7 @@ export namespace Prisma {
 
   export type InvoiceCreateManyRecurringTemplateInput = {
     id?: string
+    tenantId?: string
     invoiceNumber: string
     contactId?: string | null
     orderId?: string | null
@@ -37957,6 +38673,7 @@ export namespace Prisma {
 
   export type InvoiceLineCreateManyInvoiceInput = {
     id?: string
+    tenantId?: string
     productId?: string | null
     description: string
     quantity: Decimal | DecimalJsLike | number | string
@@ -37971,6 +38688,7 @@ export namespace Prisma {
 
   export type PaymentCreateManyInvoiceInput = {
     id?: string
+    tenantId?: string
     amount: Decimal | DecimalJsLike | number | string
     currency?: string
     method?: $Enums.PaymentMethod
@@ -37984,6 +38702,7 @@ export namespace Prisma {
 
   export type InvoiceUpdateWithoutRecurringTemplateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     status?: EnumInvoiceStatusFieldUpdateOperationsInput | $Enums.InvoiceStatus
     issueDate?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -38020,6 +38739,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateWithoutRecurringTemplateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     contactId?: NullableStringFieldUpdateOperationsInput | string | null
     orderId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -38056,6 +38776,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateManyWithoutRecurringTemplateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     contactId?: NullableStringFieldUpdateOperationsInput | string | null
     orderId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -38089,6 +38810,7 @@ export namespace Prisma {
 
   export type InvoiceLineUpdateWithoutInvoiceInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
     quantity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     unitPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -38103,6 +38825,7 @@ export namespace Prisma {
 
   export type InvoiceLineUncheckedUpdateWithoutInvoiceInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     productId?: NullableStringFieldUpdateOperationsInput | string | null
     description?: StringFieldUpdateOperationsInput | string
     quantity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -38117,6 +38840,7 @@ export namespace Prisma {
 
   export type InvoiceLineUncheckedUpdateManyWithoutInvoiceInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     productId?: NullableStringFieldUpdateOperationsInput | string | null
     description?: StringFieldUpdateOperationsInput | string
     quantity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -38131,6 +38855,7 @@ export namespace Prisma {
 
   export type PaymentUpdateWithoutInvoiceInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     currency?: StringFieldUpdateOperationsInput | string
     method?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
@@ -38144,6 +38869,7 @@ export namespace Prisma {
 
   export type PaymentUncheckedUpdateWithoutInvoiceInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     currency?: StringFieldUpdateOperationsInput | string
     method?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
@@ -38157,6 +38883,7 @@ export namespace Prisma {
 
   export type PaymentUncheckedUpdateManyWithoutInvoiceInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     currency?: StringFieldUpdateOperationsInput | string
     method?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
@@ -38170,6 +38897,7 @@ export namespace Prisma {
 
   export type ReportSnapshotCreateManyReportInput = {
     id?: string
+    tenantId?: string
     version: number
     data: JsonNullValueInput | InputJsonValue
     createdAt?: Date | string
@@ -38177,6 +38905,7 @@ export namespace Prisma {
 
   export type ReportSnapshotUpdateWithoutReportInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     version?: IntFieldUpdateOperationsInput | number
     data?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -38184,6 +38913,7 @@ export namespace Prisma {
 
   export type ReportSnapshotUncheckedUpdateWithoutReportInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     version?: IntFieldUpdateOperationsInput | number
     data?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -38191,6 +38921,7 @@ export namespace Prisma {
 
   export type ReportSnapshotUncheckedUpdateManyWithoutReportInput = {
     id?: StringFieldUpdateOperationsInput | string
+    tenantId?: StringFieldUpdateOperationsInput | string
     version?: IntFieldUpdateOperationsInput | number
     data?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string

@@ -7,6 +7,7 @@ import { CreateContactDto } from './dto/create-contact.dto';
 import { UpdateContactDto } from './dto/update-contact.dto';
 import { QueryContactsDto } from './dto/query-contacts.dto';
 import { paginate, PaginatedResult } from '../common/dto/pagination.dto';
+import { getTenantId } from '../common/tenancy/tenant-context';
 
 type ContactRecord = Contact;
 
@@ -18,11 +19,15 @@ export class ContactsService {
 
   async create(dto: CreateContactDto): Promise<ContactRecord> {
     if (dto.email) {
-      const existing = await this.prisma.contact.findUnique({ where: { email: dto.email } });
+      // Per-tenant uniqueness (FU-03): email is unique per tenant, not globally.
+      // findFirst respects the request's RLS tenant scope.
+      const existing = await this.prisma.contact.findFirst({ where: { email: dto.email } });
       if (existing) throw new ConflictException(`A contact with email ${dto.email} already exists`);
     }
+    const tenantId = getTenantId();
     const contact = await this.prisma.contact.create({
       data: {
+        tenantId,
         type: dto.type ?? 'LEAD',
         name: `${dto.firstName} ${dto.lastName}`.trim(),
         email: dto.email,
@@ -35,7 +40,7 @@ export class ContactsService {
         currency: dto.currency ?? 'USD',
         leadScore: dto.leadScore ?? 0,
         tags: dto.tags ?? [],
-        ...(dto.notes && { notes: { create: { body: dto.notes, authorId: '00000000-0000-0000-0000-000000000000' } } }),
+        ...(dto.notes && { notes: { create: { tenantId, body: dto.notes, authorId: '00000000-0000-0000-0000-000000000000' } } }),
       },
     });
     this.logger.log(`Contact created: ${contact.id}`);
@@ -46,6 +51,8 @@ export class ContactsService {
     const { page = 1, limit = 20, search, type, minLeadScore } = query;
     const skip = (page - 1) * limit;
     const where = {
+      // Belt-and-braces tenant filter (SaaS phase 4.5); RLS is the primary guard.
+      tenantId: getTenantId(),
       ...(type && { type }),
       ...(minLeadScore !== undefined && { leadScore: { gte: minLeadScore } }),
       ...(search && {

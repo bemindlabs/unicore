@@ -39,8 +39,9 @@ export class AiProxyController {
     @Req() req: Request,
     @Res() res: Response,
     @CurrentUser('id') userId: string,
+    @CurrentUser('tenantId') tenantId: string,
   ) {
-    return this.proxyAi(req, res, userId);
+    return this.proxyAi(req, res, userId, tenantId);
   }
 
   @All('*')
@@ -48,6 +49,7 @@ export class AiProxyController {
     @Req() req: Request,
     @Res() res: Response,
     @CurrentUser('id') userId: string,
+    @CurrentUser('tenantId') tenantId: string,
   ) {
     const prefix = '/api/proxy/ai';
     const subPath = req.originalUrl.startsWith(prefix)
@@ -64,6 +66,7 @@ export class AiProxyController {
         headers: req.headers as Record<string, string | string[] | undefined>,
         body,
         userId,
+        tenantId,
       });
 
       res.status(proxyResponse.statusCode);

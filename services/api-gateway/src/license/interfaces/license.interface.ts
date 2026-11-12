@@ -1,4 +1,4 @@
-export type LicenseEdition = 'community' | 'pro' | 'enterprise';
+export type LicenseEdition = 'community' | 'pro';
 
 /** @deprecated Use LicenseEdition instead. */
 export type LicenseTier = LicenseEdition;
@@ -18,8 +18,7 @@ export type ProFeature =
   | 'sso'
   | 'auditLogs'
   | 'prioritySupport'
-  | 'geekCli'
-  | 'aiDlc';
+  | 'multiTenancy';
 
 export interface LicenseStatus {
   valid: boolean;

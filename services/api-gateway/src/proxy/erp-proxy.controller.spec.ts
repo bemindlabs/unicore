@@ -55,7 +55,7 @@ describe('ErpProxyController', () => {
       body: Buffer.from('[]'),
     });
 
-    await controller.proxyErp(req, res, 'user-1');
+    await controller.proxyErp(req, res, 'user-1', 'tenant-1');
 
     expect(mockProxyService.forward).toHaveBeenCalledWith(
       expect.objectContaining({ path: '/erp/api/v1/contacts' }),
@@ -73,7 +73,7 @@ describe('ErpProxyController', () => {
       body: Buffer.from('{}'),
     });
 
-    await controller.proxyErp(req, res, 'user-1');
+    await controller.proxyErp(req, res, 'user-1', 'tenant-1');
 
     expect(mockProxyService.forward).toHaveBeenCalledWith(
       expect.objectContaining({ path: '/erp/api/v1/contacts?page=2&limit=10' }),
@@ -85,10 +85,22 @@ describe('ErpProxyController', () => {
     const res = makeRes();
     mockProxyService.forward.mockResolvedValue({ statusCode: 200, headers: {}, body: Buffer.from('{}') });
 
-    await controller.proxyErp(req, res, 'user-abc');
+    await controller.proxyErp(req, res, 'user-abc', 'tenant-1');
 
     expect(mockProxyService.forward).toHaveBeenCalledWith(
       expect.objectContaining({ userId: 'user-abc' }),
+    );
+  });
+
+  it('injects tenantId into forward call', async () => {
+    const req = makeReq({ originalUrl: '/api/proxy/erp/orders' });
+    const res = makeRes();
+    mockProxyService.forward.mockResolvedValue({ statusCode: 200, headers: {}, body: Buffer.from('{}') });
+
+    await controller.proxyErp(req, res, 'user-abc', 'tenant-xyz');
+
+    expect(mockProxyService.forward).toHaveBeenCalledWith(
+      expect.objectContaining({ tenantId: 'tenant-xyz' }),
     );
   });
 
@@ -98,7 +110,7 @@ describe('ErpProxyController', () => {
     const res = makeRes();
     mockProxyService.forward.mockResolvedValue({ statusCode: 201, headers: {}, body: Buffer.from('{}') });
 
-    await controller.proxyErp(req, res, 'user-1');
+    await controller.proxyErp(req, res, 'user-1', 'tenant-1');
 
     expect(mockProxyService.forward).toHaveBeenCalledWith(
       expect.objectContaining({ body: rawBody }),
@@ -110,7 +122,7 @@ describe('ErpProxyController', () => {
     const res = makeRes();
     mockProxyService.forward.mockResolvedValue({ statusCode: 200, headers: {}, body: Buffer.from('{}') });
 
-    await controller.proxyErp(req, res, 'user-1');
+    await controller.proxyErp(req, res, 'user-1', 'tenant-1');
 
     const forwardCall = mockProxyService.forward.mock.calls[0][0];
     expect(forwardCall.body.toString()).toBe(JSON.stringify({ name: 'Acme' }));
@@ -125,7 +137,7 @@ describe('ErpProxyController', () => {
       body: Buffer.from('{}'),
     });
 
-    await controller.proxyErp(req, res, 'user-1');
+    await controller.proxyErp(req, res, 'user-1', 'tenant-1');
 
     expect(res.setHeader).toHaveBeenCalledWith('content-type', 'application/json');
     expect(res.setHeader).toHaveBeenCalledWith('x-custom', 'value');
@@ -136,9 +148,9 @@ describe('ErpProxyController', () => {
     const res = makeRes();
     mockProxyService.forward.mockRejectedValue(new Error('ECONNREFUSED'));
 
-    await expect(controller.proxyErp(req, res, 'user-1')).rejects.toThrow(HttpException);
+    await expect(controller.proxyErp(req, res, 'user-1', 'tenant-1')).rejects.toThrow(HttpException);
     await expect(
-      controller.proxyErp(makeReq({ originalUrl: '/api/proxy/erp/contacts' }), makeRes(), 'user-1'),
+      controller.proxyErp(makeReq({ originalUrl: '/api/proxy/erp/contacts' }), makeRes(), 'user-1', 'tenant-1'),
     ).rejects.toMatchObject({ status: HttpStatus.BAD_GATEWAY });
   });
 
@@ -148,6 +160,6 @@ describe('ErpProxyController', () => {
     const notFound = new HttpException('Not found', HttpStatus.NOT_FOUND);
     mockProxyService.forward.mockRejectedValue(notFound);
 
-    await expect(controller.proxyErp(req, res, 'user-1')).rejects.toThrow(notFound);
+    await expect(controller.proxyErp(req, res, 'user-1', 'tenant-1')).rejects.toThrow(notFound);
   });
 });

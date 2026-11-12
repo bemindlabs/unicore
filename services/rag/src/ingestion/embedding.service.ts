@@ -110,9 +110,12 @@ export class EmbeddingService implements EmbeddingProvider {
   }
 
   private simpleHash(str: string): number {
+    // Bound the input: the loop runs once per character of caller-supplied text,
+    // so an unbounded length makes the hash a denial-of-service vector.
+    const input = (typeof str === 'string' ? str : '').slice(0, 100_000);
     let h = 0x811c9dc5;
-    for (let i = 0; i < str.length; i++) {
-      h ^= str.charCodeAt(i);
+    for (let i = 0; i < input.length; i++) {
+      h ^= input.charCodeAt(i);
       h = Math.imul(h, 0x01000193);
     }
     return h >>> 0;

@@ -3,8 +3,9 @@
 import { Rocket } from 'lucide-react';
 
 /**
- * Replaces a page or section that should be blocked in demo mode.
- * Usage: return <DemoGuard /> from a page component when demoMode is true.
+ * Full-section placeholder shown in place of a page that is unavailable in the
+ * demo tenant (Phase 5 / W3). Self-host is gone, so the CTA points prospects at
+ * a real hosted trial. Usage: `if (demoMode) return <DemoGuard />;`
  */
 export function DemoGuard(): JSX.Element {
   return (
@@ -14,10 +15,11 @@ export function DemoGuard(): JSX.Element {
       </div>
       <div>
         <h2 className="text-lg font-semibold text-amber-900 dark:text-amber-200">
-          Not available in Demo Mode
+          Not available in the demo
         </h2>
         <p className="mt-1 text-sm text-amber-700 dark:text-amber-400">
-          Deploy your own UniCore instance to access billing and license management.
+          Billing and account settings are disabled in the sandbox. Start a free
+          trial to manage your own business.
         </p>
       </div>
       <a
@@ -26,7 +28,7 @@ export function DemoGuard(): JSX.Element {
         rel="noopener noreferrer"
         className="mt-2 rounded-lg bg-amber-500 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-amber-600 transition-colors"
       >
-        Get Started →
+        Start free trial →
       </a>
     </div>
   );

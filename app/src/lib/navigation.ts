@@ -14,7 +14,6 @@ import {
   LayoutDashboard,
   MessageSquare,
   Megaphone,
-  Monitor,
   Package,
   ScrollText,
   Settings,
@@ -25,7 +24,6 @@ import {
   Users,
   UsersRound,
   Wand2,
-  Zap,
   LineChart,
 } from 'lucide-react';
 import { UserRole } from '@bemindlabs/unicore-shared-types';
@@ -174,78 +172,41 @@ export const menuSections: NavSection[] = [
     ],
   },
   {
-    label: 'Add-ons',
-    items: [
-      {
-        label: 'Virtual Office',
-        icon: Monitor,
-        href: process.env.NEXT_PUBLIC_VIRTUAL_OFFICE_URL ?? 'https://vo-unicore-demo.bemind.tech',
-        roles: [UserRole.Owner, UserRole.Operator],
-        license: { tier: 'pro', feature: 'virtualOffice', upgradeLabel: 'Pro' },
-        external: true,
-      },
-      {
-        label: 'Geek CLI',
-        icon: Terminal,
-        href: process.env.NEXT_PUBLIC_GEEK_PORTAL_URL ?? 'https://geek-unicore-demo.bemind.tech',
-        roles: [UserRole.Owner, UserRole.Operator],
-        license: { tier: 'pro', feature: 'geekCli', upgradeLabel: 'Pro' },
-        external: true,
-      },
-      {
-        label: 'AI-DLC',
-        icon: Zap,
-        href: process.env.NEXT_PUBLIC_DLC_PORTAL_URL ?? 'https://dlc-unicore-demo.bemind.tech',
-        roles: [UserRole.Owner, UserRole.Operator],
-        license: { tier: 'pro', feature: 'aiDlc', upgradeLabel: 'Pro' },
-        external: true,
-      },
-    ],
-  },
-  {
-    label: 'Enterprise',
+    // Bemind super-admin control plane (M4/E5). Gated on the live `isSuperAdmin`
+    // signal (see SaasContext), not a dead license tier. Dropped "Compliance"
+    // and "HA Cluster" (deleted enterprise edition concerns — SAAS-ARCHITECTURE §6).
+    label: 'Bemind Admin',
+    superAdmin: true,
     items: [
       {
         label: 'Platform Overview',
         icon: Globe,
         href: '/platform-admin',
         roles: [UserRole.Owner],
-        license: { tier: 'enterprise', upgradeLabel: 'Enterprise' },
       },
       {
-        label: 'Multi-Tenancy',
+        label: 'Tenants',
         icon: Building2,
         href: '/platform-admin/tenants',
         roles: [UserRole.Owner],
-        license: { tier: 'enterprise', upgradeLabel: 'Enterprise' },
       },
       {
-        label: 'Compliance',
-        icon: Shield,
-        href: '/platform-admin/compliance',
-        roles: [UserRole.Owner],
-        license: { tier: 'enterprise', upgradeLabel: 'Enterprise' },
-      },
-      {
-        label: 'HA Cluster',
+        label: 'Health',
         icon: Activity,
         href: '/platform-admin/health',
         roles: [UserRole.Owner],
-        license: { tier: 'enterprise', upgradeLabel: 'Enterprise' },
       },
       {
         label: 'Analytics',
         icon: BarChart3,
         href: '/platform-admin/analytics',
         roles: [UserRole.Owner],
-        license: { tier: 'enterprise', upgradeLabel: 'Enterprise' },
       },
       {
         label: 'Platform Settings',
         icon: Shield,
         href: '/platform-admin/settings',
         roles: [UserRole.Owner],
-        license: { tier: 'enterprise', upgradeLabel: 'Enterprise' },
       },
     ],
   },
@@ -274,11 +235,10 @@ export function filterSectionsByRole(role: UserRole): NavSection[] {
 export function isNavItemLocked(
   item: NavItem,
   isPro: boolean,
-  edition: string,
+  _edition: string,
   hasFeature: (f: string) => boolean,
 ): boolean {
   if (!item.license) return false;
-  if (item.license.tier === 'enterprise') return edition !== 'enterprise';
   if (item.license.tier === 'pro') {
     if (item.license.feature) return !hasFeature(item.license.feature);
     return !isPro;

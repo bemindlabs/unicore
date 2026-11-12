@@ -121,14 +121,43 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
+exports.Prisma.TenantScalarFieldEnum = {
+  id: 'id',
+  slug: 'slug',
+  name: 'name',
+  status: 'status',
+  plan: 'plan',
+  customDomain: 'customDomain',
+  licenseKey: 'licenseKey',
+  trialEndsAt: 'trialEndsAt',
+  subscriptionStatus: 'subscriptionStatus',
+  stripeCustomerId: 'stripeCustomerId',
+  stripeSubscriptionId: 'stripeSubscriptionId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   email: 'email',
   name: 'name',
   password: 'password',
   role: 'role',
+  isSuperAdmin: 'isSuperAdmin',
+  emailVerified: 'emailVerified',
+  tenantId: 'tenantId',
+  activeTenantId: 'activeTenantId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
+};
+
+exports.Prisma.MembershipScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  tenantId: 'tenantId',
+  role: 'role',
+  status: 'status',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.OAuthAccountScalarFieldEnum = {
@@ -154,6 +183,16 @@ exports.Prisma.SessionScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.VerificationTokenScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  tokenHash: 'tokenHash',
+  type: 'type',
+  expiresAt: 'expiresAt',
+  consumedAt: 'consumedAt',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.CustomDomainScalarFieldEnum = {
   id: 'id',
   hostname: 'hostname',
@@ -166,6 +205,7 @@ exports.Prisma.CustomDomainScalarFieldEnum = {
 
 exports.Prisma.AuditLogScalarFieldEnum = {
   id: 'id',
+  tenantId: 'tenantId',
   timestamp: 'timestamp',
   userId: 'userId',
   userEmail: 'userEmail',
@@ -180,12 +220,15 @@ exports.Prisma.AuditLogScalarFieldEnum = {
 
 exports.Prisma.SettingsScalarFieldEnum = {
   id: 'id',
+  tenantId: 'tenantId',
+  key: 'key',
   data: 'data',
   updatedAt: 'updatedAt'
 };
 
 exports.Prisma.TaskScalarFieldEnum = {
   id: 'id',
+  tenantId: 'tenantId',
   title: 'title',
   description: 'description',
   status: 'status',
@@ -206,6 +249,7 @@ exports.Prisma.TaskScalarFieldEnum = {
 
 exports.Prisma.ChatHistoryScalarFieldEnum = {
   id: 'id',
+  tenantId: 'tenantId',
   agentId: 'agentId',
   agentName: 'agentName',
   userId: 'userId',
@@ -292,6 +336,7 @@ exports.Prisma.PluginInstallationScalarFieldEnum = {
 
 exports.Prisma.ContactChannelScalarFieldEnum = {
   id: 'id',
+  tenantId: 'tenantId',
   channel: 'channel',
   externalId: 'externalId',
   displayName: 'displayName',
@@ -304,6 +349,7 @@ exports.Prisma.ContactChannelScalarFieldEnum = {
 
 exports.Prisma.ConversationScalarFieldEnum = {
   id: 'id',
+  tenantId: 'tenantId',
   channel: 'channel',
   status: 'status',
   subject: 'subject',
@@ -514,9 +560,12 @@ exports.MessageType = exports.$Enums.MessageType = {
 };
 
 exports.Prisma.ModelName = {
+  Tenant: 'Tenant',
   User: 'User',
+  Membership: 'Membership',
   OAuthAccount: 'OAuthAccount',
   Session: 'Session',
+  VerificationToken: 'VerificationToken',
   CustomDomain: 'CustomDomain',
   AuditLog: 'AuditLog',
   Settings: 'Settings',

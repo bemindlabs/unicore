@@ -46,8 +46,9 @@ export class RagProxyController {
     @Req() req: Request,
     @Res() res: Response,
     @CurrentUser('id') userId: string,
+    @CurrentUser('tenantId') tenantId: string,
   ) {
-    return this.forward(req, res, 'GET', '/rag/api/v1/ingest/info/default', userId);
+    return this.forward(req, res, 'GET', '/rag/api/v1/ingest/info/default', userId, tenantId);
   }
 
   /**
@@ -60,8 +61,9 @@ export class RagProxyController {
     @Req() req: Request,
     @Res() res: Response,
     @CurrentUser('id') userId: string,
+    @CurrentUser('tenantId') tenantId: string,
   ) {
-    return this.forward(req, res, 'POST', '/rag/api/v1/ingest', userId);
+    return this.forward(req, res, 'POST', '/rag/api/v1/ingest', userId, tenantId);
   }
 
   /**
@@ -75,8 +77,9 @@ export class RagProxyController {
     @Req() req: Request,
     @Res() res: Response,
     @CurrentUser('id') userId: string,
+    @CurrentUser('tenantId') tenantId: string,
   ) {
-    return this.forward(req, res, 'DELETE', `/rag/api/v1/ingest/${id}`, userId);
+    return this.forward(req, res, 'DELETE', `/rag/api/v1/ingest/${id}`, userId, tenantId);
   }
 
   /**
@@ -89,8 +92,9 @@ export class RagProxyController {
     @Req() req: Request,
     @Res() res: Response,
     @CurrentUser('id') userId: string,
+    @CurrentUser('tenantId') tenantId: string,
   ) {
-    return this.forward(req, res, 'POST', '/rag/api/v1/query', userId);
+    return this.forward(req, res, 'POST', '/rag/api/v1/query', userId, tenantId);
   }
 
   /**
@@ -102,7 +106,7 @@ export class RagProxyController {
   @Public()
   @Get('health')
   async health(@Req() req: Request, @Res() res: Response) {
-    return this.forward(req, res, 'GET', '/rag/health', undefined);
+    return this.forward(req, res, 'GET', '/rag/health', undefined, undefined);
   }
 
   private async forward(
@@ -111,6 +115,7 @@ export class RagProxyController {
     method: string,
     ragPath: string,
     userId: string | undefined,
+    tenantId: string | undefined,
   ): Promise<void> {
     try {
       const body = await this.readBody(req);
@@ -121,6 +126,7 @@ export class RagProxyController {
         headers: req.headers as Record<string, string | string[] | undefined>,
         body,
         userId,
+        tenantId,
       });
 
       res.status(proxyResponse.statusCode);

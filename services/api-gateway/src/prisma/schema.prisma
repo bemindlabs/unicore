@@ -8,17 +8,105 @@ generator client {
   output   = "../generated/prisma"
 }
 
+// ---------------------------------------------------------------------------
+// Tenancy (SaaS phase 4.1)
+// A Tenant (a.k.a. Organization) is the isolation boundary — one solopreneur's
+// business. In self-host mode a single implicit default tenant
+// (00000000-0000-0000-0000-000000000000) is used; in saas mode signup creates
+// one Tenant + OWNER User per business. See SAAS-ARCHITECTURE.md §1.
+// ---------------------------------------------------------------------------
+
+model Tenant {
+  id           String   @id @default(uuid())
+  /// Subdomain slug: {slug}.unicore.bemind.tech
+  slug         String   @unique
+  name         String
+  /// ACTIVE | SUSPENDED | PENDING | ARCHIVED
+  status       String   @default("ACTIVE")
+  /// STARTER | GROWTH | CUSTOM
+  plan         String   @default("STARTER")
+  customDomain String?  @unique
+  /// Links to unicore-license edition/flags
+  licenseKey   String?
+  memberships  Membership[]
+  /// End of the 30-day free trial (saas mode). Null in self-host. (M3/E3)
+  trialEndsAt  DateTime?
+  /// Stripe-mirrored billing state: TRIALING | ACTIVE | PAST_DUE | CANCELED. (M3/E3)
+  subscriptionStatus String @default("TRIALING")
+  /// Stripe linkage, populated on conversion to a paid subscription. (M3/E4)
+  stripeCustomerId     String?
+  stripeSubscriptionId String? @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  users        User[]
+
+  @@map("tenants")
+}
+
 model User {
   id            String         @id @default(uuid())
   email         String         @unique
   name          String
   password      String?
   role          Role           @default(VIEWER)
+  /// Platform super-admin flag (M4/E5). Distinguishes Bemind ops staff (who may
+  /// administer ALL tenants via /api/v1/admin/* in saas mode) from a tenant
+  /// OWNER (who only governs their own tenant). Always false for normal signups;
+  /// set out-of-band by Bemind ops. In self-host mode this flag is irrelevant —
+  /// the SuperAdminGuard short-circuits to allow the single OWNER. See
+  /// SAAS-ARCHITECTURE.md §6.
+  isSuperAdmin  Boolean        @default(false)
+  /// When the user's email address was verified (GAPS #8). Null = unverified.
+  /// SaaS identity is global, so this lives on the user, not per-tenant.
+  emailVerified DateTime?
+  /// Owning tenant. Nullable for migration; backfilled to the default tenant.
+  /// Phase 5: kept as a fallback / "home" tenant. The REQUEST tenant context now
+  /// resolves from activeTenantId (see below) so one user can operate multiple
+  /// solopreneur businesses (tenants) via Membership.
+  tenantId      String?
+  tenant        Tenant?        @relation(fields: [tenantId], references: [id])
+  /// Phase 5: currently-selected tenant. The request tenant context (JWT `tid`)
+  /// resolves from this; falls back to tenantId when null. Set on signup and by
+  /// POST /tenants/switch.
+  activeTenantId String?
+  memberships   Membership[]
   sessions      Session[]
   notifications Notification[]
   oauthAccounts OAuthAccount[]
+  verificationTokens VerificationToken[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+
+  @@index([tenantId])
+}
+
+// ---------------------------------------------------------------------------
+// Multi-business memberships (Phase 5 / W1a)
+// One user can own/operate MULTIPLE solopreneur businesses (tenants). Each
+// (user, tenant) pair is a Membership carrying the user's role in THAT tenant.
+// The active tenant for a request resolves from User.activeTenantId, and the
+// tenant-context layer verifies a Membership exists for it (defense-in-depth).
+// ---------------------------------------------------------------------------
+
+model Membership {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  /// The user's role WITHIN this tenant.
+  role      Role     @default(OWNER)
+  /// The user's membership status in THIS tenant (Phase 5). ACTIVE | SUSPENDED.
+  /// A SUSPENDED membership is locked out of this tenant only (switching in is
+  /// rejected and a stale token resolving to it is rejected at auth) — the
+  /// user's access to their OTHER businesses is unaffected.
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+
+  @@unique([userId, tenantId])
+  @@index([userId])
+  @@index([tenantId])
+  @@map("memberships")
 }
 
 model OAuthAccount {
@@ -48,6 +136,33 @@ model Session {
   refreshToken String?  @unique
   expiresAt    DateTime
   createdAt    DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Verification Tokens (GAPS #8) — email verification + password reset.
+// Identity-level (tenant-agnostic): one user can have tokens regardless of the
+// tenant they operate. Tokens are stored HASHED (sha256) — the raw token only
+// ever lives in the email link. Single-use (consumedAt) and time-limited
+// (expiresAt). `type` is PASSWORD_RESET | EMAIL_VERIFY.
+// ---------------------------------------------------------------------------
+
+model VerificationToken {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// sha256 hex of the raw token handed to the user. The raw value is never stored.
+  tokenHash  String    @unique
+  /// PASSWORD_RESET | EMAIL_VERIFY
+  type       String
+  expiresAt  DateTime
+  /// Set when the token is redeemed — a token is single-use.
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
+  @@index([type])
+  @@index([expiresAt])
+  @@map("verification_tokens")
 }
 
 enum Role {
@@ -86,6 +201,8 @@ model CustomDomain {
 
 model AuditLog {
   id         String   @id @default(uuid())
+  /// Owning tenant (SaaS phase 4.4). RLS-enforced; backfilled to the default tenant.
+  tenantId   String   @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   timestamp  DateTime @default(now())
   userId     String?
   userEmail  String?
@@ -97,6 +214,7 @@ model AuditLog {
   success    Boolean  @default(true)
   createdAt  DateTime @default(now())
 
+  @@index([tenantId])
   @@index([timestamp])
   @@index([userId])
   @@index([action])
@@ -109,9 +227,24 @@ model AuditLog {
 // ---------------------------------------------------------------------------
 
 model Settings {
-  id        String   @id @default("default")
+  /// Per-tenant settings row (GAPS #1). Each tenant gets its OWN row per semantic
+  /// `key` — secrets (AI keys, channel bot tokens) MUST NOT leak across tenants.
+  ///
+  /// `id` remains the opaque uuid PK. The real lookup key is the composite
+  /// (`tenantId`, `key`): `key` carries the former constant ids
+  /// ('ai-config' | 'default' | 'branding' | 'domains' | 'line' | 'telegram' |
+  /// 'wizard-status' | 'erp-modules' | …). All reads/writes resolve by
+  /// `tenantId_key`, never by a global constant id.
+  id        String   @id @default(uuid())
+  /// Owning tenant. RLS-enforced (scripts/apply-rls.sql).
+  tenantId  String   @default("00000000-0000-0000-0000-000000000000") @db.Uuid
+  /// Semantic settings key within the tenant (the former constant `id`).
+  key       String   @default("default")
   data      Json     @default("{}")
   updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, key])
+  @@index([tenantId])
 }
 
 // ---------------------------------------------------------------------------
@@ -120,6 +253,7 @@ model Settings {
 
 model Task {
   id            String    @id @default(uuid())
+  tenantId      String    @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   title         String
   description   String?
   status        String    @default("todo")
@@ -137,6 +271,7 @@ model Task {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  @@index([tenantId])
   @@index([status])
   @@map("tasks")
 }
@@ -147,6 +282,7 @@ model Task {
 
 model ChatHistory {
   id                String    @id @default(uuid())
+  tenantId          String    @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   agentId           String
   agentName         String
   userId            String
@@ -163,6 +299,7 @@ model ChatHistory {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
+  @@index([tenantId])
   @@index([agentId])
   @@index([userId])
   @@index([createdAt])
@@ -323,6 +460,7 @@ enum MessageDirection {
 /// A contact's identity on a specific messaging channel
 model ContactChannel {
   id            String              @id @default(uuid())
+  tenantId      String              @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   channel       ConversationChannel
   /// Unique identifier on the channel (e.g. Telegram user_id, LINE userId)
   externalId    String
@@ -336,7 +474,10 @@ model ContactChannel {
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
 
-  @@unique([channel, externalId])
+  // Unique PER TENANT (FU-03): the same channel identity (e.g. a Telegram
+  // user_id) may contact two different tenants' businesses independently.
+  @@unique([tenantId, channel, externalId])
+  @@index([tenantId])
   @@index([channel])
   @@index([erpContactId])
   @@map("contact_channels")
@@ -345,6 +486,7 @@ model ContactChannel {
 /// An omni-channel conversation thread
 model Conversation {
   id               String                    @id @default(uuid())
+  tenantId         String                    @default("00000000-0000-0000-0000-000000000000") @db.Uuid
   channel          ConversationChannel
   status           ConversationStatus        @default(OPEN)
   subject          String?
@@ -374,6 +516,7 @@ model Conversation {
   createdAt        DateTime                  @default(now())
   updatedAt        DateTime                  @updatedAt
 
+  @@index([tenantId])
   @@index([channel])
   @@index([status])
   @@index([userId])

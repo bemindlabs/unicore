@@ -21,11 +21,15 @@ import { GithubAuthGuard } from './guards/github-auth.guard';
 import { Public } from './decorators/public.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { RegisterDto } from './dto/register.dto';
+import { SignupDto } from './dto/signup.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { TokenExchangeDto } from './dto/token-exchange.dto';
 import { LoginDto } from './dto/login.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
 import { AuditService } from '../audit/audit.service';
 import { LicenseService } from '../license/license.service';
 
@@ -41,6 +45,26 @@ export class AuthController {
   @Post('register')
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
+  }
+
+  /**
+   * Self-serve SaaS signup (M3/E3): creates a Tenant + OWNER User, starts the
+   * 30-day free trial (no card), and logs the user in. Public, saas-mode only.
+   */
+  @Public()
+  @Post('signup')
+  @HttpCode(HttpStatus.CREATED)
+  async signup(@Body() dto: SignupDto, @Req() req: Request) {
+    const result = await this.authService.signup(dto);
+    await this.auditService.log({
+      userId: result.user.id,
+      userEmail: result.user.email,
+      action: 'create',
+      resource: 'tenants',
+      detail: `SaaS signup + 30-day trial started`,
+      ip: req.ip,
+    });
+    return result;
   }
 
   @Public()
@@ -77,6 +101,55 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   refresh(@Body() dto: RefreshTokenDto) {
     return this.authService.refresh(dto.refreshToken);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Password reset + email verification (GAPS #8). Tenant-agnostic identity
+  // endpoints — all Public. forgot-password ALWAYS returns 200 (no enumeration).
+  // ---------------------------------------------------------------------------
+
+  @Public()
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  async forgotPassword(@Body() dto: ForgotPasswordDto, @Req() req: Request) {
+    const result = await this.authService.forgotPassword(dto.email);
+    // Non-enumerating audit: record the request, never whether the user existed.
+    await this.auditService.log({
+      userEmail: dto.email,
+      action: 'password-reset-request',
+      resource: 'auth',
+      detail: 'Password reset requested',
+      ip: req.ip,
+    });
+    return result;
+  }
+
+  @Public()
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(@Body() dto: ResetPasswordDto, @Req() req: Request) {
+    const result = await this.authService.resetPassword(dto.token, dto.newPassword);
+    await this.auditService.log({
+      action: 'password-reset',
+      resource: 'auth',
+      detail: 'Password reset via token; sessions revoked',
+      ip: req.ip,
+    });
+    return result;
+  }
+
+  @Public()
+  @Post('verify-email')
+  @HttpCode(HttpStatus.OK)
+  async verifyEmail(@Body() dto: VerifyEmailDto, @Req() req: Request) {
+    const result = await this.authService.verifyEmail(dto.token);
+    await this.auditService.log({
+      action: 'email-verify',
+      resource: 'auth',
+      detail: 'Email verified via token',
+      ip: req.ip,
+    });
+    return result;
   }
 
   @Public()
@@ -237,7 +310,14 @@ export class AuthController {
   @UseGuards(GoogleAuthGuard)
   @Get('google/callback')
   async googleCallback(@Req() req: Request, @Res() res: Response) {
-    const user = req.user as { id: string; email: string; name: string; role: string };
+    const user = req.user as {
+      id: string;
+      email: string;
+      name: string;
+      role: string;
+      tenantId?: string | null;
+      activeTenantId?: string | null;
+    };
     const tokens = await this.authService.login(user);
     await this.auditService.log({
       userId: user.id,
@@ -270,7 +350,14 @@ export class AuthController {
   @UseGuards(GithubAuthGuard)
   @Get('github/callback')
   async githubCallback(@Req() req: Request, @Res() res: Response) {
-    const user = req.user as { id: string; email: string; name: string; role: string };
+    const user = req.user as {
+      id: string;
+      email: string;
+      name: string;
+      role: string;
+      tenantId?: string | null;
+      activeTenantId?: string | null;
+    };
     const tokens = await this.authService.login(user);
     await this.auditService.log({
       userId: user.id,

@@ -116,13 +116,20 @@ export class EmailWebhookController {
 
   /** Extracts bare email address from "Name <email@example.com>" or "email@example.com". */
   #extractEmail(from: string): string {
-    const match = from.match(/<([^>]+)>/);
-    return match ? match[1].trim() : from.trim();
+    // indexOf instead of a regex: the From header is attacker-controlled and the
+    // previous patterns were reported as polynomial ReDoS sinks.
+    const value = (typeof from === 'string' ? from : '').slice(0, 998);
+    const start = value.indexOf('<');
+    const end = start === -1 ? -1 : value.indexOf('>', start + 1);
+    if (start !== -1 && end > start) return value.slice(start + 1, end).trim();
+    return value.trim();
   }
 
   /** Extracts display name from "Name <email@example.com>", falls back to bare address. */
   #extractName(from: string): string {
-    const match = from.match(/^([^<]+)<[^>]+>/);
-    return match ? match[1].trim() : this.#extractEmail(from);
+    const value = (typeof from === 'string' ? from : '').slice(0, 998);
+    const start = value.indexOf('<');
+    if (start > 0) return value.slice(0, start).trim();
+    return this.#extractEmail(value);
   }
 }

@@ -525,10 +525,13 @@ export class DashboardService {
       orders: 'Orders',
       signups: 'Signups',
     };
+    // Whitelist so the lookup cannot reach inherited object keys and the title
+    // never interpolates a caller-controlled string.
+    const metricKey = Object.hasOwn(labelMap, metric) ? metric : 'revenue';
 
     return {
-      title: `${(metric.charAt(0).toUpperCase() + metric.slice(1))} — Last ${days} Days`,
-      yAxisLabel: labelMap[metric] ?? metric,
+      title: `${(metricKey.charAt(0).toUpperCase() + metricKey.slice(1))} — Last ${days} Days`,
+      yAxisLabel: labelMap[metricKey],
       points,
     };
   }

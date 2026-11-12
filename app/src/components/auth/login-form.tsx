@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import {
   Button,
@@ -81,6 +82,13 @@ export function LoginForm() {
               {isSubmitting ? t('signingIn') : t('signIn')}
             </Button>
           </form>
+          {/* Self-serve SaaS signup (M4/E5). */}
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            New to UniCore?{' '}
+            <Link href="/signup" className="font-medium text-primary hover:underline">
+              Start your free trial
+            </Link>
+          </p>
         </CardContent>
       </Card>
     </div>

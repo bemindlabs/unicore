@@ -3,6 +3,7 @@ import {
 } from '@nestjs/common';
 import { OrderStatus as PrismaOrderStatus } from '../generated/prisma';
 import { PrismaService } from '../prisma/prisma.service';
+import { getTenantId } from '../common/tenancy/tenant-context';
 import { EventPublisherService } from '../kafka/event-publisher.service';
 import { ERP_TOPICS } from '../events/event-types';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -63,12 +64,15 @@ export class OrdersService {
     const total = subtotal + taxAmount - discount;
     const orderNumber = await this.generateOrderNumber();
 
+    const tenantId = getTenantId();
     const order = await this.prisma.order.create({
       data: {
+        tenantId,
         orderNumber,
         contact: { connect: { id: dto.contactId } },
         status: 'DRAFT' as PrismaOrderStatus,
-        items: { create: lineItemsData },
+        // Child OrderItems inherit the request tenant for saas WITH CHECK.
+        items: { create: lineItemsData.map((li) => ({ ...li, tenantId })) } as never,
         subtotal, taxAmount, discountAmount: discount, total,
         currency: dto.currency ?? 'USD',
         notes: dto.notes,
@@ -98,6 +102,8 @@ export class OrdersService {
     const { page = 1, limit = 20, status, contactId, search } = query;
     const skip = (page - 1) * limit;
     const where: Record<string, unknown> = {
+      // Belt-and-braces tenant filter (SaaS phase 4.5); RLS is the primary guard.
+      tenantId: getTenantId(),
       ...(status && { status: status as unknown as PrismaOrderStatus }),
       ...(contactId && { contactId }),
       ...(search && {

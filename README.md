@@ -2,12 +2,12 @@
 
 # UniCore
 
-Updated: 2026-03-24
+Updated: 2026-05-31
 
 **AI-First Ecosystem Dashboard for Solopreneurs**
 
-[![License: BSL 1.1](https://img.shields.io/badge/License-BSL_1.1-orange.svg)](LICENSE)
-[![Community Edition](https://img.shields.io/badge/Edition-Community-10b981)](LICENSE)
+[![License: Proprietary](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
+[![Hosted SaaS](https://img.shields.io/badge/Delivery-Hosted_SaaS-6366f1)](https://unicore.bemind.tech)
 [![TypeScript 5.5](https://img.shields.io/badge/TypeScript-5.5-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Next.js 16](https://img.shields.io/badge/Next.js-16.2-black?logo=next.js&logoColor=white)](https://nextjs.org/)
 [![NestJS 10](https://img.shields.io/badge/NestJS-10.4-e0234e?logo=nestjs&logoColor=white)](https://nestjs.com/)
@@ -393,7 +393,6 @@ curl -X POST http://localhost:4000/auth/provision-admin \
 - [ ] Custom agent builder UI (Pro)
 - [ ] Workflow visual builder
 - [ ] OpenAPI 3.0 auto-generation from NestJS decorators
-- [ ] Self-hosted installer CLI
 
 ### v0.3 — Marketplace & Scale (Planned)
 
@@ -424,10 +423,14 @@ We welcome contributions! Please read our [Contributing Guide](CONTRIBUTING.md) 
 
 ## License
 
-[Business Source License 1.1](LICENSE) (BSL 1.1)
+[Proprietary — All Rights Reserved](LICENSE)
 
-- **Community Edition** — Free for personal and small-team use
-- **Pro Edition** — Requires a valid license key for advanced features
+UniCore is proprietary software offered solely as a hosted, multi-tenant
+Software-as-a-Service operated by Bemind Technology Co., Ltd. It is not
+available for self-hosting or redistribution. Use of the hosted service is
+governed by the applicable Bemind Terms of Service and subscription agreement.
 
-Licensor: [BeMind Technology](https://bemind.tech)
-Contact: license@bemind.tech
+Licensor: [Bemind Technology Co., Ltd.](https://bemind.tech)
+Contact: legal@bemind.tech
+
+© 2026 Bemind Technology Co., Ltd. All rights reserved.

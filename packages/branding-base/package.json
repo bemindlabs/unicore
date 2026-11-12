@@ -1,8 +1,13 @@
 {
   "name": "@bemindlabs/unicore-branding-base",
   "version": "0.1.0",
+  "author": {
+    "name": "Bemind Technology Co., Ltd.",
+    "url": "https://bemind.tech"
+  },
+  "license": "UNLICENSED",
   "private": true,
-  "description": "Base branding system — colors, fonts, dark/light mode theming for UniCore community edition",
+  "description": "Base branding system \u2014 colors, fonts, dark/light mode theming for UniCore community edition",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {

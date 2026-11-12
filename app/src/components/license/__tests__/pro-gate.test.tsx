@@ -46,13 +46,8 @@ describe('ProGate component logic', () => {
 
   it('defaults targetTier to Pro', () => {
     // ProGate has default targetTier='Pro'
-    const defaultTier: 'Pro' | 'Enterprise' = 'Pro';
+    const defaultTier: 'Pro' = 'Pro';
     expect(defaultTier).toBe('Pro');
-  });
-
-  it('accepts Enterprise as targetTier', () => {
-    const tier: 'Pro' | 'Enterprise' = 'Enterprise';
-    expect(tier).toBe('Enterprise');
   });
 });
 

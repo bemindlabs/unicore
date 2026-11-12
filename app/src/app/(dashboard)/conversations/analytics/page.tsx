@@ -454,7 +454,7 @@ export default function ConversationAnalyticsPage() {
               onClick={() => setDateRange(range)}
               className="h-8 text-xs"
             >
-              Last {range.replace('d', 'd')}
+              Last {range}
             </Button>
           ))}
         </div>

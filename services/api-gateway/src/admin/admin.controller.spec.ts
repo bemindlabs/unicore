@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { TokenBlacklistService } from '../auth/token-blacklist.service';
 import { LicenseService } from '../license/license.service';
+import { TenantUsageService } from '../common/tenancy/tenant-usage.service';
 
 describe('AdminController', () => {
   let controller: AdminController;
@@ -18,13 +19,16 @@ describe('AdminController', () => {
     user: {
       findMany: jest.fn(),
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       update: jest.fn(),
+      updateMany: jest.fn(),
       delete: jest.fn(),
       count: jest.fn(),
     },
     session: {
-      findMany: jest.fn(),
-      deleteMany: jest.fn(),
+      findMany: jest.fn().mockResolvedValue([]),
+      deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
+      count: jest.fn(),
     },
     chatHistory: {
       deleteMany: jest.fn(),
@@ -32,11 +36,28 @@ describe('AdminController', () => {
     task: {
       updateMany: jest.fn(),
     },
+    tenant: {
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      count: jest.fn(),
+      update: jest.fn(),
+    },
+    membership: {
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      count: jest.fn(),
+      delete: jest.fn(),
+      update: jest.fn(),
+    },
+    auditLog: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
     $queryRaw: jest.fn(),
   };
 
   const mockAuditService = { log: jest.fn() };
   const mockTokenBlacklist = { blacklist: jest.fn() };
+  const mockTenantUsage = { current: jest.fn().mockResolvedValue(0), increment: jest.fn() };
 
   const currentUser = {
     id: 'owner-1',
@@ -52,6 +73,7 @@ describe('AdminController', () => {
         { provide: AuditService, useValue: mockAuditService },
         { provide: TokenBlacklistService, useValue: mockTokenBlacklist },
         { provide: LicenseService, useValue: mockLicenseService },
+        { provide: TenantUsageService, useValue: mockTenantUsage },
       ],
     }).compile();
 
@@ -275,6 +297,375 @@ describe('AdminController', () => {
       // The deleteUser method does NOT explicitly delete sessions;
       // Prisma handles session cleanup via onDelete: Cascade on the User relation
       expect(mockPrismaService.session.deleteMany).not.toHaveBeenCalled();
+    });
+  });
+
+  // ─── Control plane: real Tenant queries (M4/E5) ───────────────────────────
+
+  describe('listTenants', () => {
+    const tenantRow = {
+      id: 't-1',
+      slug: 'acme',
+      name: 'Acme Inc',
+      status: 'ACTIVE',
+      plan: 'GROWTH',
+      customDomain: 'app.acme.com',
+      createdAt: new Date('2025-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2025-01-02T00:00:00.000Z'),
+    };
+
+    it('queries real Tenant rows, paginates, and maps to the DTO shape', async () => {
+      mockPrismaService.tenant.findMany.mockResolvedValue([tenantRow]);
+      mockPrismaService.tenant.count.mockResolvedValue(1);
+      mockPrismaService.user.count.mockResolvedValue(3);
+      mockPrismaService.user.findFirst.mockResolvedValue({ email: 'owner@acme.com' });
+
+      const result = await controller.listTenants({ page: '2', limit: '10' });
+
+      expect(mockPrismaService.tenant.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 10, take: 10, orderBy: { createdAt: 'desc' } }),
+      );
+      expect(result.total).toBe(1);
+      expect(result.page).toBe(2);
+      expect(result.items[0]).toMatchObject({
+        id: 't-1',
+        slug: 'acme',
+        name: 'Acme Inc',
+        status: 'ACTIVE',
+        plan: 'GROWTH',
+        ownerEmail: 'owner@acme.com',
+        memberCount: 3,
+        storageUsageBytes: 0,
+        apiCallsThisMonth: 0,
+      });
+    });
+
+    it('filters by status and plan', async () => {
+      mockPrismaService.tenant.findMany.mockResolvedValue([]);
+      mockPrismaService.tenant.count.mockResolvedValue(0);
+
+      await controller.listTenants({ status: 'SUSPENDED', plan: 'STARTER' });
+
+      expect(mockPrismaService.tenant.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ status: 'SUSPENDED', plan: 'STARTER' }) }),
+      );
+    });
+  });
+
+  describe('suspendTenant / activateTenant', () => {
+    const tenantRow = {
+      id: 't-1',
+      slug: 'acme',
+      name: 'Acme Inc',
+      status: 'ACTIVE',
+      plan: 'GROWTH',
+      customDomain: null,
+      createdAt: new Date('2025-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2025-01-02T00:00:00.000Z'),
+    };
+
+    it('suspend sets Tenant.status = SUSPENDED on a real row', async () => {
+      mockPrismaService.tenant.findUnique.mockResolvedValue({ id: 't-1' });
+      mockPrismaService.tenant.update.mockResolvedValue({ ...tenantRow, status: 'SUSPENDED' });
+      mockPrismaService.user.count.mockResolvedValue(1);
+      mockPrismaService.user.findFirst.mockResolvedValue({ email: 'owner@acme.com' });
+
+      const result = await controller.suspendTenant('t-1', { reason: 'abuse' }, currentUser);
+
+      expect(mockPrismaService.tenant.update).toHaveBeenCalledWith({
+        where: { id: 't-1' },
+        data: { status: 'SUSPENDED' },
+      });
+      expect(result.status).toBe('SUSPENDED');
+      expect(result.suspendReason).toBe('abuse');
+      expect(mockAuditService.log).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'suspend', resource: 'tenants', resourceId: 't-1' }),
+      );
+    });
+
+    it('activate sets Tenant.status = ACTIVE on a real row', async () => {
+      mockPrismaService.tenant.findUnique.mockResolvedValue({ id: 't-1' });
+      mockPrismaService.tenant.update.mockResolvedValue({ ...tenantRow, status: 'ACTIVE' });
+      mockPrismaService.user.count.mockResolvedValue(1);
+      mockPrismaService.user.findFirst.mockResolvedValue({ email: 'owner@acme.com' });
+
+      const result = await controller.activateTenant('t-1', currentUser);
+
+      expect(mockPrismaService.tenant.update).toHaveBeenCalledWith({
+        where: { id: 't-1' },
+        data: { status: 'ACTIVE' },
+      });
+      expect(result.status).toBe('ACTIVE');
+    });
+
+    it('throws NotFoundException when suspending a missing tenant', async () => {
+      mockPrismaService.tenant.findUnique.mockResolvedValue(null);
+      await expect(
+        controller.suspendTenant('missing', {}, currentUser),
+      ).rejects.toThrow(NotFoundException);
+      expect(mockPrismaService.tenant.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('overview', () => {
+    it('returns real tenant counts by status/subscription', async () => {
+      // Order of count() calls matches the Promise.all in the controller:
+      // user, session, newUsers, tenant total, ACTIVE, SUSPENDED, TRIALING, newTenants
+      mockPrismaService.user.count
+        .mockResolvedValueOnce(42) // total users
+        .mockResolvedValueOnce(5); // new users this week
+      mockPrismaService.session.count.mockResolvedValue(7);
+      mockPrismaService.tenant.count
+        .mockResolvedValueOnce(10) // total
+        .mockResolvedValueOnce(8) // active
+        .mockResolvedValueOnce(1) // suspended
+        .mockResolvedValueOnce(3) // trialing
+        .mockResolvedValueOnce(2); // new this week
+
+      const result = await controller.overview();
+
+      expect(result).toMatchObject({
+        tenantCount: 10,
+        activeTenantCount: 8,
+        suspendedTenantCount: 1,
+        trialingTenantCount: 3,
+        totalUserCount: 42,
+        activeSessionCount: 7,
+        newTenantsThisWeek: 2,
+        newUsersThisWeek: 5,
+      });
+    });
+  });
+
+  // ─── Per-tenant monitor + user controls (Phase 5 / W1b) ───────────────────
+
+  describe('listTenantUsers', () => {
+    it('returns memberships mapped to the per-tenant user list with the membership role', async () => {
+      mockPrismaService.tenant.findUnique.mockResolvedValue({ id: 't-1' });
+      mockPrismaService.membership.findMany.mockResolvedValue([
+        {
+          role: 'OWNER',
+          createdAt: new Date('2025-01-01T00:00:00.000Z'),
+          user: { id: 'u1', email: 'owner@acme.com', name: 'Owner', role: 'OWNER', isSuperAdmin: false, createdAt: new Date('2025-01-01T00:00:00.000Z') },
+        },
+        {
+          role: 'MARKETER',
+          createdAt: new Date('2025-02-01T00:00:00.000Z'),
+          user: { id: 'u2', email: 'mkt@acme.com', name: 'Mkt', role: 'VIEWER', isSuperAdmin: false, createdAt: new Date('2025-01-15T00:00:00.000Z') },
+        },
+      ]);
+
+      const result = await controller.listTenantUsers('t-1');
+
+      expect(mockPrismaService.membership.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { tenantId: 't-1' }, orderBy: { createdAt: 'asc' } }),
+      );
+      expect(result.total).toBe(2);
+      // role reflects the membership role within the tenant, not the global User.role
+      expect(result.items[0]).toMatchObject({ id: 'u1', email: 'owner@acme.com', role: 'OWNER' });
+      expect(result.items[1]).toMatchObject({ id: 'u2', email: 'mkt@acme.com', role: 'MARKETER' });
+    });
+
+    it('throws NotFoundException for a missing tenant', async () => {
+      mockPrismaService.tenant.findUnique.mockResolvedValue(null);
+      await expect(controller.listTenantUsers('missing')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('tenantDetail', () => {
+    const tenantRow = {
+      id: 't-1',
+      slug: 'acme',
+      name: 'Acme Inc',
+      status: 'ACTIVE',
+      plan: 'GROWTH',
+      customDomain: null,
+      subscriptionStatus: 'TRIALING',
+      trialEndsAt: new Date('2025-03-01T00:00:00.000Z'),
+      stripeCustomerId: 'cus_123',
+      stripeSubscriptionId: 'sub_123',
+      createdAt: new Date('2025-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2025-01-02T00:00:00.000Z'),
+    };
+
+    it('aggregates tenant DTO, subscription, usage, users, and recent activity', async () => {
+      mockPrismaService.tenant.findUnique.mockResolvedValue(tenantRow);
+      // mapTenantRecord member count + owner lookup
+      mockPrismaService.user.count.mockResolvedValue(2);
+      mockPrismaService.user.findFirst.mockResolvedValue({ email: 'owner@acme.com' });
+      mockTenantUsage.current.mockResolvedValue(1234);
+      mockPrismaService.membership.findMany.mockResolvedValue([
+        {
+          role: 'OWNER',
+          createdAt: new Date('2025-01-01T00:00:00.000Z'),
+          user: { id: 'u1', email: 'owner@acme.com', name: 'Owner', role: 'OWNER', isSuperAdmin: false, createdAt: new Date('2025-01-01T00:00:00.000Z') },
+        },
+      ]);
+      mockPrismaService.auditLog.findMany.mockResolvedValue([
+        { id: 'a1', timestamp: new Date('2025-02-10T00:00:00.000Z'), userId: 'u1', userEmail: 'owner@acme.com', action: 'login', resource: 'auth', resourceId: null, detail: null, success: true },
+      ]);
+
+      const result = await controller.tenantDetail('t-1');
+
+      expect(result).toMatchObject({
+        id: 't-1',
+        slug: 'acme',
+        subscription: {
+          status: 'TRIALING',
+          plan: 'GROWTH',
+          trialEndsAt: '2025-03-01T00:00:00.000Z',
+          stripeCustomerId: 'cus_123',
+          stripeSubscriptionId: 'sub_123',
+        },
+        usage: { apiCallsThisMonth: 1234, storageUsageBytes: 0 },
+      });
+      expect(result.users).toHaveLength(1);
+      expect(result.recentActivity[0]).toMatchObject({ id: 'a1', action: 'login', timestamp: '2025-02-10T00:00:00.000Z' });
+      expect(mockPrismaService.auditLog.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { tenantId: 't-1' }, take: 20 }),
+      );
+    });
+
+    it('throws NotFoundException for a missing tenant', async () => {
+      mockPrismaService.tenant.findUnique.mockResolvedValue(null);
+      await expect(controller.tenantDetail('missing')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('updateTenantPlan', () => {
+    const tenantRow = {
+      id: 't-1', slug: 'acme', name: 'Acme', status: 'ACTIVE', plan: 'GROWTH',
+      customDomain: null, createdAt: new Date('2025-01-01'), updatedAt: new Date('2025-01-02'),
+    };
+
+    it('changes the plan and audit-logs the change', async () => {
+      mockPrismaService.tenant.findUnique.mockResolvedValue({ id: 't-1', plan: 'STARTER' });
+      mockPrismaService.tenant.update.mockResolvedValue(tenantRow);
+      mockPrismaService.user.count.mockResolvedValue(1);
+      mockPrismaService.user.findFirst.mockResolvedValue({ email: 'owner@acme.com' });
+
+      const result = await controller.updateTenantPlan('t-1', { plan: 'growth' }, currentUser);
+
+      expect(mockPrismaService.tenant.update).toHaveBeenCalledWith({ where: { id: 't-1' }, data: { plan: 'GROWTH' } });
+      expect(result).toMatchObject({ id: 't-1', plan: 'GROWTH' });
+      expect(mockAuditService.log).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'update', resource: 'tenants', resourceId: 't-1' }),
+      );
+    });
+
+    it('rejects an invalid plan', async () => {
+      await expect(controller.updateTenantPlan('t-1', { plan: 'FREE' }, currentUser)).rejects.toThrow(BadRequestException);
+      expect(mockPrismaService.tenant.update).not.toHaveBeenCalled();
+    });
+
+    it('throws NotFoundException for a missing tenant', async () => {
+      mockPrismaService.tenant.findUnique.mockResolvedValue(null);
+      await expect(controller.updateTenantPlan('missing', { plan: 'GROWTH' }, currentUser)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('suspendTenantUser / activateTenantUser', () => {
+    const member = {
+      id: 'm1',
+      role: 'MARKETER',
+      user: { id: 'u2', email: 'mkt@acme.com', isSuperAdmin: false },
+    };
+
+    it('suspend revokes the user sessions and audit-logs', async () => {
+      mockPrismaService.tenant.findUnique.mockResolvedValue({ id: 't-1', slug: 'acme' });
+      mockPrismaService.membership.findUnique.mockResolvedValue(member);
+
+      const payload = { jti: 'jti-x', exp: Math.floor(Date.now() / 1000) + 3600 };
+      const fakeToken = `h.${Buffer.from(JSON.stringify(payload)).toString('base64url')}.s`;
+      mockPrismaService.session.findMany.mockResolvedValue([{ id: 's1', token: fakeToken }]);
+
+      const result = await controller.suspendTenantUser('t-1', 'u2', { reason: 'spam' }, currentUser);
+
+      expect(result).toMatchObject({ tenantId: 't-1', userId: 'u2', status: 'SUSPENDED', sessionsRevoked: 1, suspendReason: 'spam' });
+      // Persists the suspended membership status (not just session revocation).
+      expect(mockPrismaService.membership.update).toHaveBeenCalledWith({
+        where: { userId_tenantId: { userId: 'u2', tenantId: 't-1' } },
+        data: { status: 'SUSPENDED' },
+      });
+      expect(mockTokenBlacklist.blacklist).toHaveBeenCalledWith('jti-x', expect.any(Number));
+      expect(mockPrismaService.session.deleteMany).toHaveBeenCalledWith({ where: { userId: 'u2' } });
+      expect(mockAuditService.log).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'suspend', resource: 'users', resourceId: 'u2' }),
+      );
+    });
+
+    it('refuses to suspend a platform super-admin', async () => {
+      mockPrismaService.tenant.findUnique.mockResolvedValue({ id: 't-1', slug: 'acme' });
+      mockPrismaService.membership.findUnique.mockResolvedValue({ ...member, user: { ...member.user, isSuperAdmin: true } });
+
+      await expect(controller.suspendTenantUser('t-1', 'u2', {}, currentUser)).rejects.toThrow(BadRequestException);
+      expect(mockPrismaService.session.deleteMany).not.toHaveBeenCalled();
+    });
+
+    it('throws NotFoundException when the user is not a member of the tenant', async () => {
+      mockPrismaService.tenant.findUnique.mockResolvedValue({ id: 't-1', slug: 'acme' });
+      mockPrismaService.membership.findUnique.mockResolvedValue(null);
+      await expect(controller.suspendTenantUser('t-1', 'ghost', {}, currentUser)).rejects.toThrow(NotFoundException);
+    });
+
+    it('activate audit-logs the reinstatement', async () => {
+      mockPrismaService.tenant.findUnique.mockResolvedValue({ id: 't-1', slug: 'acme' });
+      mockPrismaService.membership.findUnique.mockResolvedValue(member);
+
+      const result = await controller.activateTenantUser('t-1', 'u2', currentUser);
+
+      expect(result).toMatchObject({ tenantId: 't-1', userId: 'u2', status: 'ACTIVE' });
+      // Clears the persisted suspended status back to ACTIVE.
+      expect(mockPrismaService.membership.update).toHaveBeenCalledWith({
+        where: { userId_tenantId: { userId: 'u2', tenantId: 't-1' } },
+        data: { status: 'ACTIVE' },
+      });
+      expect(mockAuditService.log).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'activate', resource: 'users', resourceId: 'u2' }),
+      );
+    });
+  });
+
+  describe('removeTenantUser', () => {
+    it('deletes the membership, clears active tenant, revokes sessions, and audit-logs', async () => {
+      mockPrismaService.tenant.findUnique.mockResolvedValue({ id: 't-1', slug: 'acme' });
+      mockPrismaService.membership.findUnique.mockResolvedValue({
+        id: 'm2', role: 'MARKETER', user: { id: 'u2', email: 'mkt@acme.com', isSuperAdmin: false },
+      });
+      mockPrismaService.membership.delete.mockResolvedValue({});
+      mockPrismaService.user.updateMany.mockResolvedValue({ count: 1 });
+
+      const result = await controller.removeTenantUser('t-1', 'u2', currentUser);
+
+      expect(result).toBeUndefined();
+      expect(mockPrismaService.membership.delete).toHaveBeenCalledWith({
+        where: { userId_tenantId: { userId: 'u2', tenantId: 't-1' } },
+      });
+      expect(mockPrismaService.user.updateMany).toHaveBeenCalledWith({
+        where: { id: 'u2', activeTenantId: 't-1' },
+        data: { activeTenantId: null },
+      });
+      expect(mockPrismaService.session.deleteMany).toHaveBeenCalledWith({ where: { userId: 'u2' } });
+      expect(mockAuditService.log).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'delete', resource: 'memberships', resourceId: 'm2' }),
+      );
+    });
+
+    it('refuses to remove the last OWNER membership of a tenant', async () => {
+      mockPrismaService.tenant.findUnique.mockResolvedValue({ id: 't-1', slug: 'acme' });
+      mockPrismaService.membership.findUnique.mockResolvedValue({
+        id: 'm1', role: 'OWNER', user: { id: 'u1', email: 'owner@acme.com', isSuperAdmin: false },
+      });
+      mockPrismaService.membership.count.mockResolvedValue(1);
+
+      await expect(controller.removeTenantUser('t-1', 'u1', currentUser)).rejects.toThrow(BadRequestException);
+      expect(mockPrismaService.membership.delete).not.toHaveBeenCalled();
+    });
+
+    it('throws NotFoundException when the user is not a member', async () => {
+      mockPrismaService.tenant.findUnique.mockResolvedValue({ id: 't-1', slug: 'acme' });
+      mockPrismaService.membership.findUnique.mockResolvedValue(null);
+      await expect(controller.removeTenantUser('t-1', 'ghost', currentUser)).rejects.toThrow(NotFoundException);
     });
   });
 });

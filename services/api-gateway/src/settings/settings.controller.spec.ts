@@ -3,6 +3,8 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { SettingsController, TENANT_CONTEXT_PROVIDER } from './settings.controller';
 import { PrismaService } from '../prisma/prisma.service';
 import { LicenseService } from '../license/license.service';
+import { DEMO_TENANT_ID } from '../common/tenancy/tenancy.config';
+import { runWithTenant } from '../common/tenancy/tenant-store';
 import * as fs from 'fs';
 
 // Mock non-configurable fs methods so jest.spyOn can override them per test
@@ -82,8 +84,8 @@ describe('SettingsController', () => {
 
       expect(mockPrismaService.settings.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 'wizard-status' },
-          create: expect.objectContaining({ id: 'wizard-status' }),
+          where: { tenantId_key: { tenantId: DEMO_TENANT_ID, key: 'wizard-status' } },
+          create: expect.objectContaining({ key: 'wizard-status', tenantId: DEMO_TENANT_ID }),
           update: expect.any(Object),
         }),
       );
@@ -118,7 +120,7 @@ describe('SettingsController', () => {
 
       expect(mockPrismaService.settings.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 'branding' },
+          where: { tenantId_key: { tenantId: DEMO_TENANT_ID, key: 'branding' } },
         }),
       );
       expect(result).toEqual(dto);
@@ -439,8 +441,8 @@ describe('SettingsController', () => {
 
       expect(mockPrismaService.settings.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 'my-key' },
-          create: { id: 'my-key', data: body },
+          where: { tenantId_key: { tenantId: DEMO_TENANT_ID, key: 'my-key' } },
+          create: { tenantId: DEMO_TENANT_ID, key: 'my-key', data: body },
           update: { data: body },
         }),
       );
@@ -450,12 +452,12 @@ describe('SettingsController', () => {
 
   // ── Tenant-scoped branding ──
 
-  describe('getBrandingKey (tenant context)', () => {
-    it('uses global branding key when no tenant context', async () => {
+  describe('branding (tenant scope, no enterprise ctx)', () => {
+    it('reads the DEMO tenant branding row by (tenantId, key)', async () => {
       mockPrismaService.settings.findUnique.mockResolvedValue({ data: {} });
       await controller.getBranding();
       expect(mockPrismaService.settings.findUnique).toHaveBeenCalledWith({
-        where: { id: 'branding' },
+        where: { tenantId_key: { tenantId: DEMO_TENANT_ID, key: 'branding' } },
       });
     });
   });
@@ -465,7 +467,7 @@ describe('SettingsController with tenant context', () => {
   let controller: SettingsController;
 
   const mockTenantCtx = {
-    get: jest.fn().mockReturnValue({ tenantId: 'tenant-abc' }),
+    get: jest.fn().mockReturnValue({ tenantId: '33333333-3333-3333-3333-333333333333' }),
   };
 
   beforeEach(async () => {
@@ -488,25 +490,115 @@ describe('SettingsController with tenant context', () => {
     jest.clearAllMocks();
   });
 
-  it('uses tenant-scoped branding key in enterprise mode', async () => {
+  it('scopes branding to the enterprise tenant via (tenantId, key)', async () => {
     mockPrismaService.settings.findUnique.mockResolvedValue({ data: { primaryColor: '#tenantColor' } });
 
     const result = await controller.getBranding();
 
     expect(mockPrismaService.settings.findUnique).toHaveBeenCalledWith({
-      where: { id: 'branding:tenant-abc' },
+      where: { tenantId_key: { tenantId: '33333333-3333-3333-3333-333333333333', key: 'branding' } },
     });
     expect(result).toEqual({ primaryColor: '#tenantColor' });
   });
 
-  it('falls back to global branding if tenant-specific not found', async () => {
-    // First call (tenant key) returns null, second call (global) returns data
-    mockPrismaService.settings.findUnique
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({ data: { primaryColor: '#globalColor' } });
+  it('does NOT fall back to another tenant when the row is missing', async () => {
+    mockPrismaService.settings.findUnique.mockResolvedValue(null);
 
     const result = await controller.getBranding();
 
-    expect(result).toEqual({ primaryColor: '#globalColor' });
+    // Exactly one scoped lookup, no global/cross-tenant second read.
+    expect(mockPrismaService.settings.findUnique).toHaveBeenCalledTimes(1);
+    expect(result).toEqual({});
+  });
+});
+
+// ── GAPS #1: cross-tenant Settings isolation ──
+describe('SettingsController tenant isolation (GAPS #1)', () => {
+  function controllerForTenant(tenantId: string) {
+    const prisma = {
+      settings: { findUnique: jest.fn(), upsert: jest.fn() },
+      user: { count: jest.fn() },
+    };
+    const ctx = { get: () => ({ tenantId }) };
+    return { prisma, ctx };
+  }
+
+  async function build(prisma: any, ctx: any) {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [SettingsController],
+      providers: [
+        { provide: PrismaService, useValue: prisma },
+        { provide: TENANT_CONTEXT_PROVIDER, useValue: ctx },
+        {
+          provide: LicenseService,
+          useValue: {
+            hasFeature: jest.fn().mockResolvedValue(true),
+            getLicenseStatus: jest.fn().mockResolvedValue({ edition: 'community' }),
+          },
+        },
+      ],
+    }).compile();
+    return module.get<SettingsController>(SettingsController);
+  }
+
+  const TENANT_A = '11111111-1111-1111-1111-111111111111';
+  const TENANT_B = '22222222-2222-2222-2222-222222222222';
+
+  it('tenant A reads only its OWN ai-config row (cannot read tenant B)', async () => {
+    const { prisma, ctx } = controllerForTenant(TENANT_A);
+    prisma.settings.findUnique.mockResolvedValue({ data: { defaultProvider: 'openai' } });
+    const controller = await build(prisma, ctx);
+
+    await controller.getAiConfig();
+
+    expect(prisma.settings.findUnique).toHaveBeenCalledWith({
+      where: { tenantId_key: { tenantId: TENANT_A, key: 'ai-config' } },
+    });
+  });
+
+  it('ai-config/keys scopes decrypted reads to the forwarded x-tenant-id', async () => {
+    const { prisma, ctx } = controllerForTenant(TENANT_B);
+    const { encrypt } = await import('./crypto.util');
+    prisma.settings.findUnique.mockResolvedValue({
+      data: { openaiKey: encrypt('sk-tenant-B-secret'), defaultProvider: 'openai' },
+    });
+    const controller = await build(prisma, ctx);
+
+    const result = await runWithTenant(TENANT_A, () =>
+      controller.getAiConfigKeys('ai-engine', TENANT_A),
+    );
+
+    // Read MUST be scoped to the forwarded tenant (A), not the ambient ctx (B).
+    expect(prisma.settings.findUnique).toHaveBeenCalledWith({
+      where: { tenantId_key: { tenantId: TENANT_A, key: 'ai-config' } },
+    });
+    expect(result.openaiKey).toBe('sk-tenant-B-secret'); // value comes from the (mocked) A-scoped read
+  });
+
+  it('ai-config/keys with no/invalid x-tenant-id falls back to the DEMO tenant', async () => {
+    const { prisma, ctx } = controllerForTenant(TENANT_A);
+    prisma.settings.findUnique.mockResolvedValue(null);
+    const controller = await build(prisma, ctx);
+
+    await controller.getAiConfigKeys('ai-engine', undefined);
+
+    expect(prisma.settings.findUnique).toHaveBeenCalledWith({
+      where: { tenantId_key: { tenantId: DEMO_TENANT_ID, key: 'ai-config' } },
+    });
+  });
+
+  it('ai-config writes are scoped to the writing tenant', async () => {
+    const { prisma, ctx } = controllerForTenant(TENANT_A);
+    prisma.settings.findUnique.mockResolvedValue(null);
+    prisma.settings.upsert.mockResolvedValue({ data: {} });
+    const controller = await build(prisma, ctx);
+
+    await controller.putAiConfig({ openaiKey: 'sk-newkey', defaultProvider: 'openai' });
+
+    expect(prisma.settings.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { tenantId_key: { tenantId: TENANT_A, key: 'ai-config' } },
+      }),
+    );
   });
 });

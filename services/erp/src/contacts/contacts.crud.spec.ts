@@ -33,7 +33,7 @@ describe('ContactsService — create / update / remove / getTopLeads', () => {
 
   describe('create', () => {
     it('creates a contact when no email conflict', async () => {
-      mockPrisma.contact.findUnique.mockResolvedValue(null);
+      mockPrisma.contact.findFirst.mockResolvedValue(null);
       const created = { id: '1', name: 'Jane Doe', email: 'jane@example.com' };
       mockPrisma.contact.create.mockResolvedValue(created);
 
@@ -43,7 +43,7 @@ describe('ContactsService — create / update / remove / getTopLeads', () => {
     });
 
     it('throws ConflictException when email already in use', async () => {
-      mockPrisma.contact.findUnique.mockResolvedValue({ id: 'other', email: 'jane@example.com' });
+      mockPrisma.contact.findFirst.mockResolvedValue({ id: 'other', email: 'jane@example.com' });
 
       await expect(
         service.create({ firstName: 'Jane', lastName: 'Doe', email: 'jane@example.com' }),
@@ -56,12 +56,12 @@ describe('ContactsService — create / update / remove / getTopLeads', () => {
       mockPrisma.contact.create.mockResolvedValue(created);
 
       await service.create({ firstName: 'No', lastName: 'Email' });
-      expect(mockPrisma.contact.findUnique).not.toHaveBeenCalled();
+      expect(mockPrisma.contact.findFirst).not.toHaveBeenCalled();
       expect(mockPrisma.contact.create).toHaveBeenCalledTimes(1);
     });
 
     it('defaults type to LEAD and leadScore to 0', async () => {
-      mockPrisma.contact.findUnique.mockResolvedValue(null);
+      mockPrisma.contact.findFirst.mockResolvedValue(null);
       mockPrisma.contact.create.mockResolvedValue({ id: '3' });
 
       await service.create({ firstName: 'Test', lastName: 'User', email: 'test@example.com' });

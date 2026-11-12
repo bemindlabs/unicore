@@ -9,49 +9,58 @@
 -- v_pnl_monthly
 -- Monthly P&L: paid invoice revenue vs approved expense costs.
 -- ---------------------------------------------------------------------------
-CREATE OR REPLACE VIEW v_pnl_monthly AS
+-- SaaS phase 4.4: views run with security_invoker = on so RLS on the base
+-- tables flows through to the view (Postgres 15+); each view also exposes
+-- tenant_id so downstream callers and belt-and-braces filters can scope.
+CREATE OR REPLACE VIEW v_pnl_monthly
+WITH (security_invoker = on) AS
 WITH revenue AS (
   SELECT
+    "tenantId"                                        AS tenant_id,
     to_char(date_trunc('month', "paidAt"), 'YYYY-MM') AS month,
     currency,
     COALESCE(SUM(total), 0)                           AS total_revenue
   FROM "Invoice"
   WHERE status = 'PAID'
     AND "paidAt" IS NOT NULL
-  GROUP BY 1, 2
+  GROUP BY 1, 2, 3
 ),
 expenses AS (
   SELECT
+    "tenantId"                                             AS tenant_id,
     to_char(date_trunc('month', "expenseDate"), 'YYYY-MM') AS month,
     currency,
     COALESCE(SUM(COALESCE("baseAmount", amount)), 0)       AS total_expenses
   FROM "Expense"
   WHERE status = 'APPROVED'
-  GROUP BY 1, 2
+  GROUP BY 1, 2, 3
 ),
 months AS (
-  SELECT month, currency FROM revenue
+  SELECT tenant_id, month, currency FROM revenue
   UNION
-  SELECT month, currency FROM expenses
+  SELECT tenant_id, month, currency FROM expenses
 )
 SELECT
+  m.tenant_id                                                  AS "tenantId",
   m.month,
   m.currency,
   COALESCE(r.total_revenue,  0)                                AS "totalRevenue",
   COALESCE(e.total_expenses, 0)                                AS "totalExpenses",
   COALESCE(r.total_revenue,  0) - COALESCE(e.total_expenses, 0) AS "grossProfit"
 FROM months m
-LEFT JOIN revenue  r ON r.month = m.month AND r.currency = m.currency
-LEFT JOIN expenses e ON e.month = m.month AND e.currency = m.currency
+LEFT JOIN revenue  r ON r.tenant_id = m.tenant_id AND r.month = m.month AND r.currency = m.currency
+LEFT JOIN expenses e ON e.tenant_id = m.tenant_id AND e.month = m.month AND e.currency = m.currency
 ORDER BY m.month DESC, m.currency;
 
 -- ---------------------------------------------------------------------------
 -- v_ar_aging
 -- Accounts-receivable aging: outstanding invoices bucketed by days overdue.
 -- ---------------------------------------------------------------------------
-CREATE OR REPLACE VIEW v_ar_aging AS
+CREATE OR REPLACE VIEW v_ar_aging
+WITH (security_invoker = on) AS
 SELECT
   i.id                                             AS id,
+  i."tenantId"                                     AS "tenantId",
   i."invoiceNumber"                                AS "invoiceNumber",
   COALESCE(c.name, 'Unknown')                      AS "contactName",
   i.total                                          AS total,
@@ -81,9 +90,11 @@ WHERE i."amountDue" > 0
 -- Products whose quantityAvailable is at or below their reorderPoint.
 -- Polled by the Kafka inventory.low event publisher.
 -- ---------------------------------------------------------------------------
-CREATE OR REPLACE VIEW v_low_stock_alert AS
+CREATE OR REPLACE VIEW v_low_stock_alert
+WITH (security_invoker = on) AS
 SELECT
   inv.id                  AS id,
+  inv."tenantId"          AS "tenantId",
   p.sku                   AS sku,
   p.name                  AS "productName",
   w.name                  AS "warehouseName",
