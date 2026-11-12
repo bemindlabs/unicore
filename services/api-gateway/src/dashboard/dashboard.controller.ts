@@ -57,9 +57,14 @@ export class DashboardController {
   @Public()
   @Get('api/v1/dashboard/widgets/chart')
   getChartWidget(
-    @Query('metric') metric?: string,
-    @Query('period') period?: string,
+    @Query('metric') metric?: string | string[],
+    @Query('period') period?: string | string[],
   ) {
-    return this.dashboardService.getChartWidget(metric ?? 'revenue', period ?? '30d');
+    // Repeated query parameters bind to arrays; the service calls string
+    // methods on both values, so narrow them here.
+    return this.dashboardService.getChartWidget(
+      typeof metric === 'string' ? metric : 'revenue',
+      typeof period === 'string' ? period : '30d',
+    );
   }
 }

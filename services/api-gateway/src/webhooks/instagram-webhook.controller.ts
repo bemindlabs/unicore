@@ -71,11 +71,16 @@ export class InstagramWebhookController {
       // challenge Meta sends. The value arrives in the query string and is
       // written straight back to the caller, so anything else would be a
       // reflected-XSS gadget.
-      if (!/^\d{1,64}$/.test(typeof challenge === 'string' ? challenge : '')) {
+      // Return the validated match, not the raw query value: the response is
+      // the caller's own input echoed back, which is the reflected-XSS sink.
+      const challengeMatch = /^\d{1,64}$/.exec(
+        typeof challenge === 'string' ? challenge : '',
+      );
+      if (!challengeMatch) {
         throw new BadRequestException('Invalid challenge');
       }
       this.logger.log('Instagram webhook verification successful');
-      return challenge;
+      return challengeMatch[0];
     }
 
     this.logger.warn('Instagram webhook verification failed: invalid verify token');

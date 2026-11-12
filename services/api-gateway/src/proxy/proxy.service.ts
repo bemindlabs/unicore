@@ -94,7 +94,10 @@ export class ProxyService {
       delete forwardHeaders['trailers'];
       delete forwardHeaders['upgrade'];
 
-      if (options.body) {
+      // Buffer.isBuffer both narrows the type and keeps the length honest: the
+      // body can arrive from a parsed request, where a non-Buffer value would
+      // otherwise have a meaningless `length`.
+      if (Buffer.isBuffer(options.body)) {
         forwardHeaders['content-length'] = String(options.body.length);
       }
 

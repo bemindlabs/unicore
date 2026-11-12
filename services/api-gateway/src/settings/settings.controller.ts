@@ -211,8 +211,10 @@ export class SettingsController {
   @Public()
   @Get('branding/uploads/:filename')
   serveBrandingFile(@Param('filename') filename: string, @Res() res: Response) {
-    // Whitelist: only safe filename characters
-    if (!/^[a-zA-Z0-9._-]+$/.test(filename)) {
+    // Whitelist: only safe filename characters, and never a traversal segment.
+    // The character class alone still allows `..`, which the resolve check below
+    // would catch — reject it explicitly so the intent is visible here.
+    if (!/^[a-zA-Z0-9._-]+$/.test(filename) || filename.includes('..')) {
       throw new BadRequestException('Invalid filename');
     }
     // Resolve-then-check: ensure resolved path stays within upload dir

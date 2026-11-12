@@ -100,7 +100,9 @@ describe('generateCssTheme', () => {
       bodyFont: { family: 'Inter' },
     });
     const css = generateCssTheme(config, { includeFontImports: false });
-    assert.ok(!css.includes('fonts.googleapis.com'));
+    // Precise match rather than a substring check: a stylesheet could
+    // otherwise satisfy `includes` from an unrelated URL path.
+    assert.ok(!/@import\s+url\(\s*['"]?https:\/\/fonts\.googleapis\.com/.test(css));
   });
 
   it('hides [data-unicore-branding] when removeUnicoreBranding is true', () => {
