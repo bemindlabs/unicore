@@ -135,7 +135,7 @@ const CHANNELS: ChannelDef[] = [
     icon: Globe,
     pro: true,
     webhookPath: '/api/v1/channels/facebook/webhook',
-    color: 'text-zinc-600',
+    color: 'text-zinc-600 dark:text-zinc-400',
     fields: [
       { key: 'pageAccessToken', label: 'Page Access Token', placeholder: 'EAABcde...', secret: true },
       { key: 'verifyToken', label: 'Verify Token', placeholder: 'my-verify-token', secret: true },
