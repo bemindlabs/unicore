@@ -113,18 +113,23 @@ class ApiClient {
 
       this.flushQueue(false);
       this.handleRefreshFailure();
-      throw new Error('Authentication expired');
+      throw Object.assign(new Error('Authentication expired'), { status: 401 });
     }
 
     if (response.status === 403) {
       const error = await response.json().catch(() => ({ message: 'Access denied' }));
       const msg = error.message ?? 'This feature requires a Pro license';
-      throw new Error(msg);
+      throw Object.assign(new Error(msg), { status: response.status });
     }
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: response.statusText }));
-      throw new Error(error.message ?? `API Error: ${response.status}`);
+      // Carry the status so callers can tell "not allowed" (401/403) from
+      // "come back later" (429/5xx) instead of treating every failure as an
+      // expired session.
+      throw Object.assign(new Error(error.message ?? `API Error: ${response.status}`), {
+        status: response.status,
+      });
     }
 
     if (response.status === 204 || response.headers.get('content-length') === '0') {

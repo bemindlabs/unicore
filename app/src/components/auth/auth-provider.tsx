@@ -38,6 +38,13 @@ function getJwtExp(token: string): number | null {
   }
 }
 
+
+/** Only 401/403 mean the session is unusable. 429 and 5xx are transient. */
+function isAuthFailure(err: unknown): boolean {
+  const status = (err as { status?: number } | null)?.status;
+  return status === 401 || status === 403;
+}
+
 function syncCookie(token: string | null): void {
   if (typeof document === 'undefined') return;
   if (token) {
@@ -104,7 +111,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(normalizeUser(res));
           scheduleRefresh(token);
         })
-        .catch(async () => {
+        .catch(async (err: unknown) => {
+          // 429 (rate limited by the proxy) and 5xx are "come back later", not
+          // "your session is gone". Retry those before signing the user out.
+          if (!isAuthFailure(err)) {
+            for (let attempt = 0; attempt < 2; attempt += 1) {
+              await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
+              try {
+                const me = await api.get<AuthUser>('/auth/me');
+                setUser(normalizeUser(me));
+                scheduleRefresh(token);
+                return;
+              } catch (retryErr) {
+                if (isAuthFailure(retryErr)) break;
+              }
+            }
+          }
           const refreshed = await attemptRefresh();
           if (refreshed) {
             try {
