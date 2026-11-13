@@ -1,14 +1,25 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { widgetDataFetchers, mockWidgetData } from '@/lib/widget-data';
-import type { WidgetData, WidgetType } from '@/types/widget';
+import { widgetDataFetchers } from '@/lib/widget-data';
+import type {
+  WidgetData,
+  WidgetType,
+  RevenueWidgetData,
+  OrdersWidgetData,
+  InventoryWidgetData,
+  MrrWidgetData,
+  ChurnWidgetData,
+  SignupsWidgetData,
+  ActivityWidgetData,
+  ChartWidgetData,
+} from '@/types/widget';
 
 type FetcherKey = keyof typeof widgetDataFetchers;
 
 /**
  * Generic hook that fetches data for any widget type.
- * Always calls the real API first; falls back to local data when the API is unavailable.
+ * Calls the real API; a failure surfaces as `error` so the widget can say so.
  */
 export function useWidgetData<T>(
   type: WidgetType,
@@ -40,14 +51,10 @@ export function useWidgetData<T>(
     } catch (err) {
       if (!mountedRef.current) return;
 
-      // On API failure, fall back to local data silently
-      const mockFn = mockWidgetData[type as keyof typeof mockWidgetData];
-      if (mockFn) {
-        setData((mockFn as () => T)());
-        setLastUpdated(new Date());
-      } else {
-        setError(err instanceof Error ? err.message : 'Failed to fetch widget data');
-      }
+      // No fabricated fallback: a widget that cannot reach the API must say so
+      // rather than show invented numbers next to real ones.
+      setData(null);
+      setError(err instanceof Error ? err.message : 'Failed to fetch widget data');
     } finally {
       if (mountedRef.current) {
         setLoading(false);
@@ -79,33 +86,33 @@ export function useWidgetData<T>(
 
 // Typed convenience hooks for each widget type
 export function useRevenueData(refreshInterval?: number) {
-  return useWidgetData<ReturnType<typeof mockWidgetData.revenue>>('revenue', undefined, refreshInterval);
+  return useWidgetData<RevenueWidgetData>('revenue', undefined, refreshInterval);
 }
 
 export function useOrdersData(refreshInterval?: number) {
-  return useWidgetData<ReturnType<typeof mockWidgetData.orders>>('orders', undefined, refreshInterval);
+  return useWidgetData<OrdersWidgetData>('orders', undefined, refreshInterval);
 }
 
 export function useInventoryData(refreshInterval?: number) {
-  return useWidgetData<ReturnType<typeof mockWidgetData.inventory>>('inventory', undefined, refreshInterval);
+  return useWidgetData<InventoryWidgetData>('inventory', undefined, refreshInterval);
 }
 
 export function useMrrData(refreshInterval?: number) {
-  return useWidgetData<ReturnType<typeof mockWidgetData.mrr>>('mrr', undefined, refreshInterval);
+  return useWidgetData<MrrWidgetData>('mrr', undefined, refreshInterval);
 }
 
 export function useChurnData(refreshInterval?: number) {
-  return useWidgetData<ReturnType<typeof mockWidgetData.churn>>('churn', undefined, refreshInterval);
+  return useWidgetData<ChurnWidgetData>('churn', undefined, refreshInterval);
 }
 
 export function useSignupsData(refreshInterval?: number) {
-  return useWidgetData<ReturnType<typeof mockWidgetData.signups>>('signups', undefined, refreshInterval);
+  return useWidgetData<SignupsWidgetData>('signups', undefined, refreshInterval);
 }
 
 export function useActivityData(refreshInterval?: number) {
-  return useWidgetData<ReturnType<typeof mockWidgetData.activity>>('activity', undefined, refreshInterval);
+  return useWidgetData<ActivityWidgetData>('activity', undefined, refreshInterval);
 }
 
 export function useChartData(options?: Record<string, unknown>, refreshInterval?: number) {
-  return useWidgetData<ReturnType<typeof mockWidgetData.chart>>('chart', options, refreshInterval);
+  return useWidgetData<ChartWidgetData>('chart', options, refreshInterval);
 }
