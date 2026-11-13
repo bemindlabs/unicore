@@ -140,6 +140,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       syncCookie(res.accessToken);
       setUser(normalizeUser(res.user));
       scheduleRefresh(res.accessToken);
+      // Providers that fetch per-session data (licence, branding) mount before
+      // there is a token, get a 401 and fall back to defaults. Tell them the
+      // session changed so they refetch without a page reload.
+      window.dispatchEvent(new Event('unicore:auth-changed'));
     },
     [scheduleRefresh],
   );
