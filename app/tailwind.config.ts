@@ -19,7 +19,11 @@ const config: Config = {
   ...baseConfig,
   content: [
     './src/**/*.{ts,tsx}',
-    '../../packages/ui/src/**/*.{ts,tsx}',
+    // One level up, not two: the app lives at <repo>/app and the package at
+    // <repo>/packages/ui. With '../..' the glob matched nothing, so every class
+    // used only inside the UI package was purged from the stylesheet (the mobile
+    // sheet's `inset-y-0` among them).
+    '../packages/ui/src/**/*.{ts,tsx}',
   ],
   darkMode: 'class',
   theme: {
