@@ -9,9 +9,6 @@ import { MobileNav } from '@/components/layout/mobile-nav';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
-import { useDemoMode } from '@/hooks/use-demo-mode';
-import { DemoBanner } from '@/components/demo/DemoBanner';
-import { DeployButton } from '@/components/demo/DeployButton';
 import { UpgradeBanner } from '@/components/license/upgrade-banner';
 const RetroDeskThemeProvider = ({ children }: { children: React.ReactNode }) => <>{children}</>;
 const isRetroDeskFamily = (_theme: string | null) => false;
@@ -22,7 +19,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { collapsed, toggle } = useSidebar();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const demoMode = useDemoMode();
   const isRetroDesk = isRetroDeskFamily(characterTheme);
 
   useEffect(() => {
@@ -57,9 +53,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   return (
     <RetroDeskThemeProvider>
-      {demoMode && <DemoBanner />}
       <div
-        className={`flex h-screen overflow-hidden ${bgClass}${demoMode ? ' pt-9' : ''}`}
+        className={`flex h-screen overflow-hidden ${bgClass}`}
         style={bgStyle}
       >
         <Sidebar collapsed={collapsed} onToggle={toggle} />
@@ -72,7 +67,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </main>
         </div>
       </div>
-      {demoMode && <DeployButton />}
     </RetroDeskThemeProvider>
   );
 }
