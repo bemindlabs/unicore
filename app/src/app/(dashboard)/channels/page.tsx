@@ -1,8 +1,7 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
-  BarChart2,
   Camera,
   CheckCircle2,
   Crown,
@@ -51,12 +50,6 @@ interface ChannelDef {
   webhookPath?: string;
   fields: Array<{ key: string; label: string; placeholder?: string; secret?: boolean }>;
   color: string;
-}
-
-interface ChannelStats {
-  connected: boolean;
-  messageCount: number;
-  weeklyData: number[]; // 7 days
 }
 
 // ── Channel definitions ────────────────────────────────────────────────────
@@ -221,48 +214,17 @@ const CHANNELS: ChannelDef[] = [
   },
 ];
 
-// ── Sparkline bar chart ────────────────────────────────────────────────────
-
-function SparkBar({ data, colorClass }: { data: number[]; colorClass: string }) {
-  const max = Math.max(...data, 1);
-  return (
-    <div className="flex items-end gap-0.5 h-8">
-      {data.map((v, i) => (
-        <div
-          key={i}
-          className={`flex-1 rounded-sm opacity-60 ${colorClass}`}
-          style={{ height: `${Math.max(4, (v / max) * 32)}px`, backgroundColor: 'currentColor' }}
-        />
-      ))}
-    </div>
-  );
-}
-
-// ── Deterministic fake stats ───────────────────────────────────────────────
-
-function seedStats(id: string, connected: boolean): ChannelStats {
-  const hash = id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-  const weeklyData = Array.from({ length: 7 }, (_, i) =>
-    connected ? Math.floor(((hash * (i + 1) * 31) % 200) + 10) : 0,
-  );
-  return {
-    connected,
-    messageCount: connected ? weeklyData.reduce((a, b) => a + b, 0) : 0,
-    weeklyData,
-  };
-}
-
 // ── Channel Card ──────────────────────────────────────────────────────────
 
 function ChannelCard({
   channel,
-  stats,
+  connected,
   locked,
   onConfigure,
   onUpgrade,
 }: {
   channel: ChannelDef;
-  stats: ChannelStats;
+  connected: boolean;
   locked: boolean;
   onConfigure: () => void;
   onUpgrade: () => void;
@@ -299,17 +261,17 @@ function ChannelCard({
               <Badge
                 variant="secondary"
                 className={`gap-1 text-xs ${
-                  stats.connected
+                  connected
                     ? 'bg-emerald-500/10 text-emerald-600 border-emerald-300/40'
                     : 'bg-muted text-muted-foreground'
                 }`}
               >
-                {stats.connected ? (
+                {connected ? (
                   <CheckCircle2 className="h-2.5 w-2.5" />
                 ) : (
                   <XCircle className="h-2.5 w-2.5" />
                 )}
-                {stats.connected ? 'Connected' : 'Off'}
+                {connected ? 'Connected' : 'Off'}
               </Badge>
             )}
           </div>
@@ -319,19 +281,6 @@ function ChannelCard({
 
       <CardContent className="space-y-3">
         <CardDescription className="text-xs line-clamp-2">{channel.description}</CardDescription>
-
-        {!locked && (
-          <>
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <BarChart2 className="h-3 w-3" />
-                {stats.messageCount.toLocaleString()} msgs / 7d
-              </span>
-              <Settings2 className="h-3 w-3 opacity-40" />
-            </div>
-            <SparkBar data={stats.weeklyData} colorClass={channel.color} />
-          </>
-        )}
 
         {locked ? (
           <Button
@@ -346,7 +295,7 @@ function ChannelCard({
             <Lock className="h-3.5 w-3.5" />
             Available in Pro
           </Button>
-        ) : stats.connected ? (
+        ) : connected ? (
           <Button
             variant="outline"
             size="sm"
@@ -443,15 +392,21 @@ export default function ChannelsPage() {
   const { user } = useAuth();
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [selected, setSelected] = useState<ChannelDef | null>(null);
-  const [connectedIds, setConnectedIds] = useState<Set<string>>(
-    () => new Set(['web-widget', 'webhook']),
-  );
+  // Hydrated from GET /api/v1/channels/status — never seeded locally.
+  const [connectedIds, setConnectedIds] = useState<Set<string>>(() => new Set());
 
-  const statsMap = useMemo<Record<string, ChannelStats>>(
-    () =>
-      Object.fromEntries(CHANNELS.map((ch) => [ch.id, seedStats(ch.id, connectedIds.has(ch.id))])),
-    [connectedIds],
-  );
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .get<{ channels: Array<{ channelType: string; configured: boolean }> }>('/api/v1/channels/status')
+      .then((res) => {
+        if (cancelled) return;
+        setConnectedIds(new Set((res.channels ?? []).filter((c) => c.configured).map((c) => c.channelType)));
+      })
+      .catch(() => { /* leave empty: no channel is configured as far as we know */ });
+    return () => { cancelled = true; };
+  }, []);
+
 
   const handleUpgrade = useCallback(async () => {
     setIsUpgrading(true);
@@ -475,13 +430,6 @@ export default function ChannelsPage() {
   const communityChannels = CHANNELS.filter((c) => !c.pro);
   const proChannels = CHANNELS.filter((c) => c.pro);
 
-  const totalMessages = useMemo(
-    () =>
-      Object.values(statsMap)
-        .filter((s) => s.connected)
-        .reduce((sum, s) => sum + s.messageCount, 0),
-    [statsMap],
-  );
 
   return (
     <div className="space-y-6">
@@ -521,11 +469,6 @@ export default function ChannelsPage() {
           <p className="text-2xl font-bold mt-1">{connectedIds.size}</p>
           <p className="text-xs text-muted-foreground">of {CHANNELS.length} channels</p>
         </Card>
-        <Card className="p-4">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide">Messages (7d)</p>
-          <p className="text-2xl font-bold mt-1">{totalMessages.toLocaleString()}</p>
-          <p className="text-xs text-muted-foreground">across all channels</p>
-        </Card>
         <Card className="p-4 hidden sm:block">
           <p className="text-xs text-muted-foreground uppercase tracking-wide">Pro Channels</p>
           <p className="text-2xl font-bold mt-1">{proChannels.length}</p>
@@ -543,7 +486,7 @@ export default function ChannelsPage() {
             <ChannelCard
               key={channel.id}
               channel={channel}
-              stats={statsMap[channel.id]!}
+              connected={connectedIds.has(channel.id)}
               locked={false}
               onConfigure={() => setSelected(channel)}
               onUpgrade={handleUpgrade}
@@ -571,7 +514,7 @@ export default function ChannelsPage() {
             <ChannelCard
               key={channel.id}
               channel={channel}
-              stats={statsMap[channel.id]!}
+              connected={connectedIds.has(channel.id)}
               locked={!isPro}
               onConfigure={() => setSelected(channel)}
               onUpgrade={handleUpgrade}
