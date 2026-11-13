@@ -23,7 +23,6 @@ import {
 import { api } from '@/lib/api';
 import { formatCurrency as formatCurrencyBase } from '@/lib/format-currency';
 import { useLicense } from '@/hooks/use-license';
-import { useDemoMode } from '@/hooks/use-demo-mode';
 import { useBusinessTimezone } from '@/hooks/use-business-timezone';
 
 interface BillingInfo {
@@ -65,7 +64,6 @@ function formatDate(iso: string, timeZone: string): string {
 
 export default function BillingSettingsPage() {
   const { isPro, edition } = useLicense();
-  const isDemo = useDemoMode() as boolean;
   const tz = useBusinessTimezone();
   const [billing, setBilling] = useState<BillingInfo | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -180,7 +178,7 @@ export default function BillingSettingsPage() {
                 </Button>
               )}
               {isPro && (
-                <Button variant="outline" onClick={openBillingPortal} disabled={portalLoading || isDemo}>
+                <Button variant="outline" onClick={openBillingPortal} disabled={portalLoading}>
                   {portalLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   <ExternalLink className="mr-2 h-4 w-4" />
                   Manage Subscription
@@ -225,7 +223,7 @@ export default function BillingSettingsPage() {
                   </>
                 )}
                 <div className="ml-auto">
-                  <Button variant="ghost" size="sm" onClick={openBillingPortal} disabled={portalLoading || isDemo}>
+                  <Button variant="ghost" size="sm" onClick={openBillingPortal} disabled={portalLoading}>
                     Update
                   </Button>
                 </div>
@@ -271,7 +269,7 @@ export default function BillingSettingsPage() {
                 <CardDescription>Past invoices and payment receipts</CardDescription>
               </div>
               {isPro && (
-                <Button variant="ghost" size="sm" onClick={openBillingPortal} disabled={portalLoading || isDemo}>
+                <Button variant="ghost" size="sm" onClick={openBillingPortal} disabled={portalLoading}>
                   <Receipt className="mr-2 h-4 w-4" />
                   View All Invoices
                 </Button>
