@@ -96,6 +96,13 @@ export function LicenseProvider({ children }: { children: ReactNode }) {
     };
   }, [fetchLicense]);
 
+  // Refetch when a session starts, otherwise the pre-login 401 sticks until reload
+  useEffect(() => {
+    const onAuthChanged = () => { void fetchLicense(); };
+    window.addEventListener('unicore:auth-changed', onAuthChanged);
+    return () => window.removeEventListener('unicore:auth-changed', onAuthChanged);
+  }, [fetchLicense]);
+
   // Refresh on window focus
   useEffect(() => {
     const handleFocus = () => fetchLicense();

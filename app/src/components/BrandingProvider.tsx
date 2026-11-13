@@ -81,6 +81,11 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     void fetchConfig();
+    // Same reason as the licence context: this provider mounts before login,
+    // gets a 401 on /settings/branding and would keep the default name.
+    const onAuthChanged = () => { void fetchConfig(); };
+    window.addEventListener('unicore:auth-changed', onAuthChanged);
+    return () => window.removeEventListener('unicore:auth-changed', onAuthChanged);
   }, [fetchConfig]);
 
   return (
