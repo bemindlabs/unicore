@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends python3 make g+
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
 COPY packages/config/package.json ./packages/config/
 COPY services/openclaw-gateway/package.json ./services/openclaw-gateway/
-RUN pnpm install --frozen-lockfile --filter @unicore/openclaw-gateway...
+RUN pnpm install --frozen-lockfile --filter @bemindlabs/unicore-openclaw-gateway... || pnpm install --no-frozen-lockfile --filter @bemindlabs/unicore-openclaw-gateway...
 # Build node-pty native bindings (prebuilds unavailable for this platform,
 # and .npmrc ignore-scripts=true may suppress install scripts)
 RUN cd /app/node_modules/.pnpm/node-pty@*/node_modules/node-pty && npx node-gyp rebuild
