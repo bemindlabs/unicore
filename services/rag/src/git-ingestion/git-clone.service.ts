@@ -3,7 +3,9 @@ import { join, resolve } from 'path';
 import { tmpdir } from 'os';
 import { existsSync, mkdirSync } from 'fs';
 import { rm } from 'fs/promises';
-import simpleGit from 'simple-git';
+// simple-git 4 ships the factory as a named export; the default export is no
+// longer callable (it used to be the function itself in 3.x).
+import { simpleGit } from 'simple-git';
 
 export interface CloneResult {
   localPath: string;
