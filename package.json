@@ -33,7 +33,11 @@
       "effect": ">=3.20.0",
       "@prisma/config>effect": ">=3.20.0",
       "lodash": ">=4.17.23",
-      "tmp": ">=0.2.4"
+      "tmp": ">=0.2.4",
+      "handlebars": ">=4.7.10",
+      "proxy-addr": ">=2.0.8",
+      "protobufjs": ">=7.5.5",
+      "simple-git": ">=4.0.1"
     }
   },
   "devDependencies": {
